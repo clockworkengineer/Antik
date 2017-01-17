@@ -1,0 +1,197 @@
+/*
+ * File:   CMailSend.hpp
+ * 
+ * Author: Robert Tizzard
+ * 
+ * Created on October 24, 2016, 2:33 PM
+ *
+ * Copyright 2016.
+ 
+ */
+
+#ifndef CMAILSEND_HPP
+#define CMAILSEND_HPP
+
+//
+// C++ STL definitions
+//
+
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <locale>
+#include <sstream>
+#include <memory>
+
+// Boost date and time libraries definitions
+
+#include <boost/date_time.hpp>
+
+namespace pt = boost::posix_time;
+namespace lt = boost::local_time;
+
+//
+// libcurl definitions
+//
+
+#include <curl/curl.h>
+
+// ================
+// CLASS DEFINITION
+// ================
+
+class CMailSend {
+    
+public:
+    
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
+    
+    // Supported contents encodings
+    
+    static const std::string kEncoding7Bit;
+    static const std::string kEncodingBase64;
+ 
+    // ============
+    // CONSTRUCTORS
+    // ============
+    
+    //
+    // Main constructor
+    //
+    
+    CMailSend();
+    
+    // ==========
+    // DESTRUCTOR
+    // ==========
+    
+    virtual ~CMailSend();
+
+    // ==============
+    // PUBLIC METHODS
+    // ==============
+    
+    // Set email server account details
+
+    void setServer(const std::string& serverURL);
+    void setUserAndPassword(const std::string& userName, const std::string& userPassword);
+    
+    // Set email message header details
+    
+    void setFromAddress(const std::string& addressFrom);
+    void setToAddress(const std::string& addressTo);
+    void setCCAddress(const std::string& addressCC);
+    
+    // Set email content details
+    
+    void setMailSubject(const std::string& mailSubject);
+    void setMailMessage(const std::vector<std::string>& mailMessage);
+    void addFileAttachment(std::string fileName, std::string contentTypes, std::string contentTransferEncoding);
+    
+    // Send email
+   
+    int postMail(void);
+    
+    // Send email deferred until object destruction
+    
+    void deferredMail(void);
+    
+    // ================
+    // PUBLIC VARIABLES
+    // ================
+    
+private:
+
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
+    
+    // Email status
+    
+    struct UploadStatus {
+        std::vector<std::string> mailPayload;   // Email payload
+        int linesRead;                          // Next line to to process
+    };
+    
+    // Attachments
+    
+    struct emailAttachment {
+        std::string fileName;                       // Attached file name
+        std::string contentTypes;                   // Attached file MIME content type
+        std::string contentTransferEncoding;        // Attached file content encoding 
+        std::vector<std::string> encodedContents;   // Attached file encoded contents
+    };
+    
+    static const std::string kMimeBoundary;         // Text string used for MIME boundary
+    
+    static const int kBase64EncodeBufferSize=54;    // Optimum encode buffer size (since encoded max 76 bytes)
+  
+    static const std::string kEOL;                  // End of line
+    
+    // =====================
+    // DISABLED CONSTRUCTORS
+    // =====================
+ 
+    // ===============
+    // PRIVATE METHODS
+    // ===============
+    
+    //Encode bytes to base64 string
+    
+    void encodeToBase64(uint8_t const* bytesToEncode, uint32_t numberOfBytes, std::string& encodedString);
+    
+    // Encode email attachment
+    
+    void encodeAttachment(CMailSend::emailAttachment& attachment);
+    
+    // Add attachments to payload
+    
+    void buildAttachments(void);
+    
+    // Construct email payload
+    
+    void buildMailPayload(void);
+    
+    // libcurl read callback for payload
+    
+    static size_t payloadSource(void *ptr, size_t size, size_t nmemb, void *userData);
+    
+    // Date and time for email
+    
+    const std::string currentDateAndTime(void);
+
+    // =================
+    // PRIVATE VARIABLES
+    // =================
+    
+    std::string userName="";                // Email account user name
+    std::string userPassword="";            // Email account user name password
+    std::string serverURL="";               // SMTp server URL
+    
+    std::string addressFrom="";             // Email Sender
+    std::string addressTo="";               // Main recipients addresses
+    std::string addressCC="";               // CC recipients addresses
+    
+    std::string mailSubject="";             // Email subject
+    std::vector<std::string> mailMessage;   // Email body
+    
+    std::string  mailCABundle="";           // Path to CA bundle (Untested at present)
+    
+    CURL     *curl=nullptr;                     // curl handle
+    struct   curl_slist *recipients=nullptr;    // curl email recipients list
+    CURLcode res = CURLE_OK;                    // curl status
+    
+    CMailSend::UploadStatus uploadContext;      // curl email upload context structure (*userData)
+    
+    std::vector<CMailSend::emailAttachment> attachedFiles;  // Attached files
+    
+    bool bDeferredMail=false;                   // ==true then deferred email
+    
+};
+
+#endif /* CMAILSEND_HPP */
+
