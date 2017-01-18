@@ -36,7 +36,7 @@
 // ===========================
 
 
-// MIME multipart text boundary string 
+// MIME multi-part text boundary string 
 
 const std::string CMailSend::kMimeBoundary("xxxxCMailSendBoundaryText");
 
@@ -57,6 +57,10 @@ const std::string CMailSend::kEncodingBase64("base64");
 // PRIVATE STATIC VARIABLES
 // ========================
 
+// File extension to MIME type
+
+std::unordered_map<std::string, std::string> CMailSend::extToMimeType;
+
 // =======================
 // PUBLIC STATIC VARIABLES
 // =======================
@@ -64,6 +68,31 @@ const std::string CMailSend::kEncodingBase64("base64");
 // ===============
 // PRIVATE METHODS
 // ===============
+
+//
+// Build extension to MIME mapping table from /etc/mimes.types.
+// This is Linux dependent but use until a better solution found.
+//
+
+void CMailSend::loadMIMETypes (void) {
+    
+    std::ifstream mimeFile("/etc/mime.types");
+    std::string   extension, mimeType, line;
+
+    while (std::getline(mimeFile, line)) {
+        if (line[0] != '#') {
+            std::istringstream iss(line);
+            iss >> mimeType;
+            while (iss.good()) {
+                iss >> extension;
+                if (!extension.empty()) {
+                    CMailSend::extToMimeType.insert({extension, mimeType});
+                }
+            }
+        }
+    }
+      
+}
 
 //
 // Get string for current date time.
@@ -177,7 +206,7 @@ void CMailSend::encodeAttachment(CMailSend::emailAttachment& attachment) {
         std::unique_ptr<std::uint8_t> buffer(new uint8_t [CMailSend::kBase64EncodeBufferSize]);
 
         ifs.seekg(0, std::ios::beg);
-        while (!ifs.eof()) {
+        while (ifs.good()) {
             ifs.read((char *)buffer.get(), CMailSend::kBase64EncodeBufferSize);
             this->encodeToBase64(buffer.get(), ifs.gcount(), line);
             attachment.encodedContents.push_back(line + kEOL);
@@ -344,16 +373,27 @@ void CMailSend::setMailSubject(const std::string & mailSubject) {
 //
 
 void CMailSend::setMailMessage(const std::vector<std::string>& mailMessage) {
-
     this->mailMessage = mailMessage;
 }
 
 //
-// Add file attachment
+// Add file attachment. Try to find MIME mapping for file extension from internal table 
+// but if not found then use passed in value as a fallback.
 // 
 
 void CMailSend::addFileAttachment(std::string fileName, std::string contentTypes, std::string contentTransferEncoding) {
 
+    std::string baseFileName = basename(fileName.c_str());
+    std::size_t fullStop = baseFileName.find_last_of('.');
+    
+    if (fullStop != std::string::npos) {
+        baseFileName = baseFileName.substr(fullStop+1);
+        auto foundMapping= CMailSend::extToMimeType.find(baseFileName);
+        if (foundMapping != CMailSend::extToMimeType.end()) {
+            contentTypes = foundMapping->second;
+        }
+    }
+    
     this->attachedFiles.push_back({fileName, contentTypes, contentTransferEncoding});
 
 }
@@ -442,6 +482,8 @@ CMailSend::~CMailSend() {
 void CMailSend::init(void) {
     
     curl_global_init(CURL_GLOBAL_ALL);
+    
+    loadMIMETypes();
         
 }
 

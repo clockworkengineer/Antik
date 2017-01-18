@@ -23,6 +23,8 @@
 #include <ctime>
 #include <fstream>
 #include <stdexcept>
+#include <unordered_map>
+#include <sstream>
 
 //
 // libcurl definitions
@@ -155,7 +157,11 @@ private:
     
     // Date and time for email
     
-    const std::string currentDateAndTime(void);
+    static const std::string currentDateAndTime(void);
+    
+    // Load file extension to MIME type mapping table
+    
+    static void loadMIMETypes (void);
 
     // =================
     // PRIVATE VARIABLES
@@ -181,6 +187,8 @@ private:
     CMailSend::UploadStatus uploadContext;      // curl email upload context structure (*userData)
     
     std::vector<CMailSend::emailAttachment> attachedFiles;  // Attached files
+    
+    static std::unordered_map<std::string, std::string> extToMimeType;    // File extension to MIME type
     
 };
 
