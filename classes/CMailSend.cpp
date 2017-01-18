@@ -18,7 +18,7 @@
 // format. Note it is up to the caller to setup any MIME type and encoding
 // correctly for each attachment.
 //
-// Dependencies: C11++, libcurl, Boost C++ date and time library.
+// Dependencies: C11++, libcurl.
 //
 
 // =================
@@ -66,24 +66,19 @@ const std::string CMailSend::kEncodingBase64("base64");
 // ===============
 
 //
-// Get string for current date time. This is th only boost dependency so try
-// to find a more portble alternative.
+// Get string for current date time.
 //
 
 const std::string CMailSend::currentDateAndTime(void) {
+    
+   time_t rawtime;
+   struct tm *info;
+   char buffer[80];
 
-    static lt::time_zone_ptr const utc_time_zone(new lt::posix_time_zone("GMT"));
-
-    lt::local_time_facet* facet = new lt::local_time_facet("%a, %d %b %Y %H:%M:%S %q");
-    pt::ptime posixTime = pt::second_clock::universal_time();
-    lt::local_date_time now(posixTime, utc_time_zone);
-
-    std::ostringstream dateTimeStream;
-    dateTimeStream.imbue(std::locale(dateTimeStream.getloc(), facet));
-    dateTimeStream << now;
-
-    return (dateTimeStream.str());
-
+   time( &rawtime );
+   info = localtime( &rawtime );
+   strftime(buffer,80,"%a, %d %b %Y %H:%M:%S %z", info);
+   return(std::string(buffer));
 
 }
 
@@ -280,7 +275,6 @@ void CMailSend::buildMailPayload(void) {
 
     this->uploadContext.mailPayload.push_back("");
 
-
 }
 
 // ==============
@@ -368,15 +362,7 @@ void CMailSend::addFileAttachment(std::string fileName, std::string contentTypes
 // Post email
 //
 
-void CMailSend::deferredMail(void) {
-    this->bDeferredMail = true;
-}
-
-//
-// Post email
-//
-
-int CMailSend::postMail(void) {
+void CMailSend::postMail(void) {
 
     this->uploadContext.linesRead = 0;
 
@@ -417,8 +403,8 @@ int CMailSend::postMail(void) {
         /* Check for errors */
 
         if (this->res != CURLE_OK) {
-            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-        }
+            throw std::runtime_error(std::string("curl_easy_perform() failed: ")+curl_easy_strerror(res));
+        } 
 
         /* Free the list of this->recipients */
 
@@ -429,8 +415,6 @@ int CMailSend::postMail(void) {
         curl_easy_cleanup(curl);
 
     }
-
-    return (int) this->res;
 
 }
 
@@ -449,8 +433,25 @@ CMailSend::CMailSend() {
 
 CMailSend::~CMailSend() {
 
-    if (this->bDeferredMail) {
-        this->postMail();
-    }
+}
+
+//
+// CMailSend init
+//
+
+void CMailSend::init(void) {
+    
+    curl_global_init(CURL_GLOBAL_ALL);
+        
+}
+
+//
+// CMailSend closedown
+//
+
+void CMailSend::closedown(void) {
+    
+    curl_global_cleanup();
 
 }
+

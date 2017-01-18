@@ -16,21 +16,13 @@
 // C++ STL definitions
 //
 
-#include <cstdlib>
 #include <cstring>
-#include <iostream>
 #include <string>
 #include <vector>
-#include <locale>
-#include <sstream>
 #include <memory>
-
-// Boost date and time libraries definitions
-
-#include <boost/date_time.hpp>
-
-namespace pt = boost::posix_time;
-namespace lt = boost::local_time;
+#include <ctime>
+#include <fstream>
+#include <stdexcept>
 
 //
 // libcurl definitions
@@ -94,11 +86,12 @@ public:
     
     // Send email
    
-    int postMail(void);
+    void postMail(void);
+       
+    // Initialization and closedown processing
     
-    // Send email deferred until object destruction
-    
-    void deferredMail(void);
+    static void init(void);
+    static void closedown(void);
     
     // ================
     // PUBLIC VARIABLES
@@ -140,7 +133,7 @@ private:
     // PRIVATE METHODS
     // ===============
     
-    //Encode bytes to base64 string
+    // Encode bytes to base64 string
     
     void encodeToBase64(uint8_t const* bytesToEncode, uint32_t numberOfBytes, std::string& encodedString);
     
@@ -188,8 +181,6 @@ private:
     CMailSend::UploadStatus uploadContext;      // curl email upload context structure (*userData)
     
     std::vector<CMailSend::emailAttachment> attachedFiles;  // Attached files
-    
-    bool bDeferredMail=false;                   // ==true then deferred email
     
 };
 

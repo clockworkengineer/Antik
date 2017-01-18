@@ -23,12 +23,6 @@
 
 #include "CLogger.hpp"
 
-// Boost date and time libraries definitions
-
-#include <boost/date_time.hpp>
-
-namespace pt = boost::posix_time;
-
 // ====================
 // CLASS IMPLEMENTATION
 // ====================
@@ -65,8 +59,15 @@ bool CLogger::bDateTimeStamped = false;     // ==true then output timetamped
 //
 
 const std::string CLogger::currentDateAndTime(void) {
+    
+   time_t rawtime;
+   struct tm *info;
+   char buffer[80];
 
-    return (pt::to_simple_string(pt::second_clock::local_time()));
+   time( &rawtime );
+   info = localtime( &rawtime );
+   strftime(buffer,80,"%F %T", info);
+   return(std::string(buffer));
 
 }
 
@@ -129,7 +130,7 @@ void CLogger::cerrstr(const std::initializer_list<std::string>& errstr) {
 
     if (errstr.size() > 0) {
         if (CLogger::bDateTimeStamped) {
-            std::cout << ("[" + currentDateAndTime() + "]");
+            std::cerr << ("[" + currentDateAndTime() + "]");
         }
         for (auto str : errstr) {
             std::cerr << str;

@@ -602,7 +602,7 @@ void CFileApprise::watch(void) {
     //
 
     } catch (std::system_error &e) {
-        this->sendEvent(CFileApprise::Event_error, CFileApprise::kLogPrefix + "Caught a runtime_error exception: [" + e.what() + "]");
+        this->sendEvent(CFileApprise::Event_error, CFileApprise::kLogPrefix + "Caught a system_error exception: [" + e.what() + "]");
         this->thrownException = std::current_exception();
     } catch (std::exception &e) {
         this->sendEvent(CFileApprise::Event_error, CFileApprise::kLogPrefix + "General exception occured: [" + e.what() + "]");
