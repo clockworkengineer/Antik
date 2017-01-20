@@ -35,8 +35,17 @@ public:
     // ============
     // CONSTRUCTORS
     // ============ 
+    
+    //
+    // Set stream to redirect
+    //
 
     CRedirect(std::ostream& outStream);
+
+    //
+    // Set stream to redirect and start redirect
+    //
+    
     CRedirect(std::ostream& outStream, std::string outfileName, std::ios_base::openmode mode = std::ios_base::out);
 
     // ==========
@@ -48,8 +57,17 @@ public:
     // ==============
     // PUBLIC METHODS
     // ==============
+    
+    //
+    // Redirect stream to outfleName
+    //
 
     void change(std::string outfileName, std::ios_base::openmode mode = std::ios_base::out);
+
+    //
+    // Restore original output stream
+    //
+    
     void restore(void);
 
 private:
@@ -74,9 +92,9 @@ private:
     // PRIVATE VARIABLES
     // =================
 
-    std::unique_ptr<std::ofstream> fileStream = nullptr;
-    std::ostream *outStream = nullptr;
-    std::streambuf *outBuffer = nullptr;
+    std::unique_ptr<std::ofstream> fileStream = nullptr;    // New file stream
+    std::ostream *outStream = nullptr;                      // saved stream
+    std::streambuf *outBuffer = nullptr;                    // Saved readbuffer
 
 };
 #endif /* REDIRECT_HPP */

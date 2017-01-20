@@ -15,10 +15,11 @@
 // Description: Class that enables an email to be setup and sent
 // to a specified address using the libcurl library. SSL is supported
 // (but untested) and attached files in either 7bit or base64 encoded
-// format. Note it is up to the caller to setup any MIME type and encoding
-// correctly for each attachment.
+// format. When adding an atatchment it creates its MIME type by first
+// checking an internal table created from /etc/mime.types. If no 
+// mapping is present it uses the pass in value as default.
 //
-// Dependencies: C11++, libcurl.
+// Dependencies: C11++, libcurl, Linux.
 //
 
 // =================
@@ -122,7 +123,7 @@ size_t CMailSend::payloadSource(void *ptr, size_t size, size_t nmemb, void *user
     if ((size == 0) || (nmemb == 0) || ((size * nmemb) < 1)) {
         return 0;
     }
-            
+    
     return uploadContext->mailPayload[uploadContext->linesRead++].copy(static_cast<char *> (ptr), size*nmemb, 0);
     
 }
@@ -303,6 +304,7 @@ void CMailSend::buildMailPayload(void) {
     // End of message
 
     this->uploadContext.mailPayload.push_back("");
+    
 
 }
 
@@ -314,7 +316,7 @@ void CMailSend::buildMailPayload(void) {
 // Set STMP server URL
 // 
 
-void CMailSend::setServer(const std::string & serverURL) {
+void CMailSend::setServer(const std::string& serverURL) {
 
     this->serverURL = serverURL;
 }
@@ -323,7 +325,7 @@ void CMailSend::setServer(const std::string & serverURL) {
 // Set email account details
 //
 
-void CMailSend::setUserAndPassword(const std::string& userName, const std::string & userPassword) {
+void CMailSend::setUserAndPassword(const std::string& userName, const std::string& userPassword) {
 
     this->userName = userName;
     this->userPassword = userPassword;
@@ -334,7 +336,7 @@ void CMailSend::setUserAndPassword(const std::string& userName, const std::strin
 // Set From address
 //
 
-void CMailSend::setFromAddress(const std::string & addressFrom) {
+void CMailSend::setFromAddress(const std::string& addressFrom) {
 
     this->addressFrom = addressFrom;
 }
@@ -343,7 +345,7 @@ void CMailSend::setFromAddress(const std::string & addressFrom) {
 // Set To address
 //
 
-void CMailSend::setToAddress(const std::string & addressTo) {
+void CMailSend::setToAddress(const std::string& addressTo) {
 
     this->addressTo = addressTo;
 }
@@ -352,7 +354,7 @@ void CMailSend::setToAddress(const std::string & addressTo) {
 // Set CC recipient address
 //
 
-void CMailSend::setCCAddress(const std::string & addressCC) {
+void CMailSend::setCCAddress(const std::string& addressCC) {
 
     this->addressCC = addressCC;
 }
@@ -362,7 +364,7 @@ void CMailSend::setCCAddress(const std::string & addressCC) {
 // Set email subject
 //
 
-void CMailSend::setMailSubject(const std::string & mailSubject) {
+void CMailSend::setMailSubject(const std::string& mailSubject) {
 
     this->mailSubject = mailSubject;
 
@@ -381,8 +383,9 @@ void CMailSend::setMailMessage(const std::vector<std::string>& mailMessage) {
 // but if not found then use passed in value as a fallback.
 // 
 
-void CMailSend::addFileAttachment(std::string fileName, std::string contentTypes, std::string contentTransferEncoding) {
+void CMailSend::addFileAttachment(const std::string& fileName, const std::string& contentType, const std::string& contentTransferEncoding) {
 
+    std::string mimeMapping(contentType);
     std::string baseFileName = basename(fileName.c_str());
     std::size_t fullStop = baseFileName.find_last_of('.');
     
@@ -390,11 +393,11 @@ void CMailSend::addFileAttachment(std::string fileName, std::string contentTypes
         baseFileName = baseFileName.substr(fullStop+1);
         auto foundMapping= CMailSend::extToMimeType.find(baseFileName);
         if (foundMapping != CMailSend::extToMimeType.end()) {
-            contentTypes = foundMapping->second;
+            mimeMapping = foundMapping->second;
         }
     }
-    
-    this->attachedFiles.push_back({fileName, contentTypes, contentTransferEncoding});
+
+    this->attachedFiles.push_back({fileName, mimeMapping, contentTransferEncoding});
 
 }
 
@@ -404,6 +407,8 @@ void CMailSend::addFileAttachment(std::string fileName, std::string contentTypes
 
 void CMailSend::postMail(void) {
 
+    char errMsgBuffer[CURL_ERROR_SIZE];
+    
     this->uploadContext.linesRead = 0;
 
     this->curl = curl_easy_init();
@@ -416,6 +421,8 @@ void CMailSend::postMail(void) {
 
         curl_easy_setopt(this->curl, CURLOPT_USE_SSL, (long) CURLUSESSL_ALL);
 
+        curl_easy_setopt(this->curl, CURLOPT_ERRORBUFFER, errMsgBuffer);
+        
         if (!this->mailCABundle.empty()) {
             curl_easy_setopt(this->curl, CURLOPT_CAINFO, this->mailCABundle.c_str());
         }
@@ -437,13 +444,20 @@ void CMailSend::postMail(void) {
         curl_easy_setopt(this->curl, CURLOPT_UPLOAD, 1L);
 
         curl_easy_setopt(this->curl, CURLOPT_VERBOSE, 0L);
-
+        
+        errMsgBuffer[0] = 0;
         this->res = curl_easy_perform(this->curl);
 
         /* Check for errors */
 
         if (this->res != CURLE_OK) {
-            throw std::runtime_error(std::string("curl_easy_perform() failed: ")+curl_easy_strerror(res));
+            std::string errMsg;
+            if (std::strlen(errMsgBuffer)!=0) {
+                errMsg = errMsgBuffer;
+            } else {
+                errMsg=curl_easy_strerror(res);
+            }
+            throw std::runtime_error(std::string("curl_easy_perform() failed: ")+errMsg);
         } 
 
         /* Free the list of this->recipients */
@@ -476,7 +490,7 @@ CMailSend::~CMailSend() {
 }
 
 //
-// CMailSend init
+// CMailSend initialisation. Glocally init curl and load MIME types.
 //
 
 void CMailSend::init(void) {

@@ -20,15 +20,10 @@
 #include <cassert>
 
 //
-// CLogger trace output
+// CLogger trace output, CFileApprise file event watcher
 //
 
 #include "CLogger.hpp"
-
-//
-// CFileApprise file event watcher
-//
-
 #include "CFileApprise.hpp"
 
 // ================
@@ -51,7 +46,7 @@ public:
  
     //
     // Task options structure (optionally pass to CFileTask constructor)
-    // Note:After killCount files processed stop task (0 = disabled)
+    // Note: After killCount files processed stop task (0 = disabled)
     //
     
     struct TaskOptions {
@@ -92,7 +87,7 @@ public:
     // Control
     //
     
-    void monitor(void);                         // Monitor watch folder for file events and process added files
+    void monitor(void);                         // Monitor watch folder for directory file events and process added files
     void stop(void);                            // Stop task
 
    //

@@ -58,12 +58,17 @@
 // Task object constructor. 
 //
 
-CFileTask::CFileTask(const std::string& taskName,
-        const std::string& watchFolder,
-        TaskActionFcn taskActFcn,
-        std::shared_ptr<void> fnData,
-        int watchDepth,
-        std::shared_ptr<TaskOptions> options) : taskName{taskName}, taskActFcn{taskActFcn}, fnData{fnData}
+CFileTask::CFileTask
+(
+    const std::string& taskName,          // Task name
+    const std::string& watchFolder,       // Watch folder path
+    TaskActionFcn taskActFcn,             // Task action function
+    std::shared_ptr<void> fnData,         // Task file process function data
+    int watchDepth,                       // Watch depth -1= all, 0=just watch folder
+    std::shared_ptr<TaskOptions> options  // Task options. 
+) 
+: taskName{taskName}, taskActFcn{taskActFcn}, fnData{fnData}
+        
 {
 
     // ASSERT if passed parameters invalid

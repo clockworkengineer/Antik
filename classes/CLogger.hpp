@@ -36,7 +36,15 @@ public:
     // PUBLIC TYPES AND CONSTANTS
     // ==========================
 
+    //
+    // Logging output function
+    //
+    
     typedef  std::function<void (const std::initializer_list<std::string>& )> LogStringsFn;
+    
+    //
+    // NoOp output function
+    //
     
     static const LogStringsFn noOp;
     
@@ -55,11 +63,23 @@ public:
     // ==============
     // PUBLIC METHODS
     // ==============
+    
+    //
+    // Log to std::cout/std::cerr
+    //
 
     static void coutstr(const std::initializer_list<std::string>& outstr);
     static void cerrstr(const std::initializer_list<std::string>& errstr);
     
+    //
+    // Set output as date time stamped
+    // 
+    
     static void setDateTimeStamped(const bool bDateTimeStamped );
+    
+    //
+    // Template for string conversion method
+    //
     
     template <typename T> static  std::string toString ( T value );
      
@@ -79,6 +99,10 @@ private:
     // ===============
     // PRIVATE METHODS
     // ===============
+    
+    //
+    // Return current date/time as a string
+    //
 
     static const std::string currentDateAndTime(void);
         
@@ -86,8 +110,8 @@ private:
     // PRIVATE VARIABLES
     // =================
 
-    static std::mutex mOutput;
-    static bool bDateTimeStamped;
+    static std::mutex mOutput;      // Stream output mutex
+    static bool bDateTimeStamped;   // ==true output date/time stamped
  
 };
 

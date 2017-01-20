@@ -35,7 +35,7 @@
 // PUBLIC TYPES AND CONSTANTS
 // ==========================
 
-// Trace output no operation
+// Log output no op
 
 const CLogger::LogStringsFn CLogger::noOp = [] (const std::initializer_list<std::string>& outstr) { };
 

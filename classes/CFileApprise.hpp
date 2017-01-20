@@ -137,8 +137,8 @@ public:
     // Watch handling
     //
     
-    void addWatchFile(const std::string& filePath);     // Add path to be watched
-    void removeWatchFile(const std::string& filePath);  // Remove path being watched
+    void addWatchFile(const std::string& filePath);     // Add directory/file to be watched
+    void removeWatchFile(const std::string& filePath);  // Remove directory/file being watched
     
     //
     // Private data accessors
