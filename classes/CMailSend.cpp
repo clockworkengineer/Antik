@@ -113,19 +113,27 @@ const std::string CMailSend::currentDateAndTime(void) {
 }
 
 //
-// Next line of email required by libcurl so copy
+// Fill libcurl read request buffer.
 //
 
 size_t CMailSend::payloadSource(void *ptr, size_t size, size_t nmemb, void *userData) {
 
-    CMailSend::UploadStatus *uploadContext = (CMailSend::UploadStatus *) userData;
+    std::deque<std::string> *mailPayload = static_cast<std::deque<std::string> *> (userData);
+    size_t bytesCopied=0;
 
     if ((size == 0) || (nmemb == 0) || ((size * nmemb) < 1)) {
         return 0;
     }
+
+    while (!mailPayload->empty()) {
+        if ((mailPayload->front().length() + bytesCopied) > (size * nmemb)) break;
+        mailPayload->front().copy(& static_cast<char *> (ptr)[bytesCopied], mailPayload->front().length(), 0);
+        bytesCopied += mailPayload->front().length();
+        mailPayload->pop_front();
+    }
     
-    return uploadContext->mailPayload[uploadContext->linesRead++].copy(static_cast<char *> (ptr), size*nmemb, 0);
-    
+    return bytesCopied;
+
 }
 
 //
@@ -230,20 +238,20 @@ void CMailSend::buildAttachments(void) {
 
         this->encodeAttachment(attachment);
 
-        this->uploadContext.mailPayload.push_back("--" + CMailSend::kMimeBoundary + kEOL);
-        this->uploadContext.mailPayload.push_back("Content-Type: " + attachment.contentTypes + ";"+kEOL);
-        this->uploadContext.mailPayload.push_back("Content-transfer-encoding: " + attachment.contentTransferEncoding + kEOL);
-        this->uploadContext.mailPayload.push_back("Content-Disposition: attachment;"+kEOL);
-        this->uploadContext.mailPayload.push_back("     filename=\"" + baseFileName + "\""+kEOL);
-        this->uploadContext.mailPayload.push_back(kEOL);
+        this->mailPayload.push_back("--" + CMailSend::kMimeBoundary + kEOL);
+        this->mailPayload.push_back("Content-Type: " + attachment.contentTypes + ";"+kEOL);
+        this->mailPayload.push_back("Content-transfer-encoding: " + attachment.contentTransferEncoding + kEOL);
+        this->mailPayload.push_back("Content-Disposition: attachment;"+kEOL);
+        this->mailPayload.push_back("     filename=\"" + baseFileName + "\""+kEOL);
+        this->mailPayload.push_back(kEOL);
 
         // Encoded file
 
         for (auto str : attachment.encodedContents) {
-            this->uploadContext.mailPayload.push_back(str);
+            this->mailPayload.push_back(str);
         }
 
-        this->uploadContext.mailPayload.push_back(kEOL); // EMPTY LINE 
+        this->mailPayload.push_back(kEOL); // EMPTY LINE 
 
     }
 
@@ -260,50 +268,50 @@ void CMailSend::buildMailPayload(void) {
 
     // Email header.
 
-    this->uploadContext.mailPayload.push_back("Date: " + CMailSend::currentDateAndTime() + kEOL);
-    this->uploadContext.mailPayload.push_back("To: " + this->addressTo + kEOL);
-    this->uploadContext.mailPayload.push_back("From: " + this->addressFrom + kEOL);
+    this->mailPayload.push_back("Date: " + CMailSend::currentDateAndTime() + kEOL);
+    this->mailPayload.push_back("To: " + this->addressTo + kEOL);
+    this->mailPayload.push_back("From: " + this->addressFrom + kEOL);
 
     if (!this->addressCC.empty()) {
-        this->uploadContext.mailPayload.push_back("cc: " + this->addressCC + kEOL);
+        this->mailPayload.push_back("cc: " + this->addressCC + kEOL);
     }
 
-    this->uploadContext.mailPayload.push_back("Subject: " + this->mailSubject + kEOL);
-    this->uploadContext.mailPayload.push_back("MIME-Version: 1.0"+kEOL);
+    this->mailPayload.push_back("Subject: " + this->mailSubject + kEOL);
+    this->mailPayload.push_back("MIME-Version: 1.0"+kEOL);
 
     if (!bAttachments) {
-        this->uploadContext.mailPayload.push_back("Content-Type: text/plain; charset=UTF-8"+kEOL);
-        this->uploadContext.mailPayload.push_back("Content-Transfer-Encoding: 7bit"+kEOL);
+        this->mailPayload.push_back("Content-Type: text/plain; charset=UTF-8"+kEOL);
+        this->mailPayload.push_back("Content-Transfer-Encoding: 7bit"+kEOL);
     } else {
-        this->uploadContext.mailPayload.push_back("Content-Type: multipart/mixed;"+kEOL);
-        this->uploadContext.mailPayload.push_back("     boundary=\"" + CMailSend::kMimeBoundary + "\""+kEOL);
+        this->mailPayload.push_back("Content-Type: multipart/mixed;"+kEOL);
+        this->mailPayload.push_back("     boundary=\"" + CMailSend::kMimeBoundary + "\""+kEOL);
     }
 
-    this->uploadContext.mailPayload.push_back(kEOL); // EMPTY LINE 
+    this->mailPayload.push_back(kEOL); // EMPTY LINE 
 
     if (bAttachments) {
-        this->uploadContext.mailPayload.push_back("--" + CMailSend::kMimeBoundary + kEOL);
-        this->uploadContext.mailPayload.push_back("Content-Type: text/plain"+kEOL);
-        this->uploadContext.mailPayload.push_back("Content-Transfer-Encoding: 7bit"+kEOL);
-        this->uploadContext.mailPayload.push_back(kEOL); // EMPTY LINE 
+        this->mailPayload.push_back("--" + CMailSend::kMimeBoundary + kEOL);
+        this->mailPayload.push_back("Content-Type: text/plain"+kEOL);
+        this->mailPayload.push_back("Content-Transfer-Encoding: 7bit"+kEOL);
+        this->mailPayload.push_back(kEOL); // EMPTY LINE 
     }
 
     // Message body
 
     for (auto str : this->mailMessage) {
-        this->uploadContext.mailPayload.push_back(str + kEOL);
+        this->mailPayload.push_back(str + kEOL);
     }
 
-    this->uploadContext.mailPayload.push_back(kEOL); // EMPTY LINE 
+    this->mailPayload.push_back(kEOL); // EMPTY LINE 
 
     if (bAttachments) {
         this->buildAttachments();
-        this->uploadContext.mailPayload.push_back("--" + CMailSend::kMimeBoundary + "--"+kEOL);
+        this->mailPayload.push_back("--" + CMailSend::kMimeBoundary + "--"+kEOL);
     }
 
     // End of message
 
-    this->uploadContext.mailPayload.push_back("");
+   // this->mailPayload.push_back("");
     
 
 }
@@ -409,8 +417,6 @@ void CMailSend::postMail(void) {
 
     char errMsgBuffer[CURL_ERROR_SIZE];
     
-    this->uploadContext.linesRead = 0;
-
     this->curl = curl_easy_init();
 
     if (this->curl) {
@@ -440,7 +446,7 @@ void CMailSend::postMail(void) {
         this->buildMailPayload();
 
         curl_easy_setopt(this->curl, CURLOPT_READFUNCTION, CMailSend::payloadSource);
-        curl_easy_setopt(this->curl, CURLOPT_READDATA, &this->uploadContext);
+        curl_easy_setopt(this->curl, CURLOPT_READDATA, &this->mailPayload);
         curl_easy_setopt(this->curl, CURLOPT_UPLOAD, 1L);
 
         curl_easy_setopt(this->curl, CURLOPT_VERBOSE, 0L);

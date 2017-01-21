@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <sstream>
+#include <deque>
 
 //
 // libcurl definitions
@@ -104,14 +105,7 @@ private:
     // ===========================
     // PRIVATE TYPES AND CONSTANTS
     // ===========================
-    
-    // Email status
-    
-    struct UploadStatus {
-        std::vector<std::string> mailPayload;   // Email payload
-        int linesRead;                          // Next line to to process
-    };
-    
+       
     // Attachments
     
     struct emailAttachment {
@@ -167,24 +161,24 @@ private:
     // PRIVATE VARIABLES
     // =================
     
-    std::string userName="";                // Email account user name
-    std::string userPassword="";            // Email account user name password
-    std::string serverURL="";               // SMTp server URL
+    std::string userName="";                  // Email account user name
+    std::string userPassword="";              // Email account user name password
+    std::string serverURL="";                 // SMTp server URL
     
-    std::string addressFrom="";             // Email Sender
-    std::string addressTo="";               // Main recipients addresses
-    std::string addressCC="";               // CC recipients addresses
+    std::string addressFrom="";               // Email Sender
+    std::string addressTo="";                 // Main recipients addresses
+    std::string addressCC="";                 // CC recipients addresses
     
-    std::string mailSubject="";             // Email subject
-    std::vector<std::string> mailMessage;   // Email body
+    std::string mailSubject="";               // Email subject
+    std::vector<std::string> mailMessage;     // Email body
     
-    std::string  mailCABundle="";           // Path to CA bundle (Untested at present)
+    std::string  mailCABundle="";             // Path to CA bundle (Untested at present)
     
-    CURL     *curl=nullptr;                     // curl handle
-    struct   curl_slist *recipients=nullptr;    // curl email recipients list
-    CURLcode res = CURLE_OK;                    // curl status
+    CURL     *curl=nullptr;                   // curl handle
+    struct   curl_slist *recipients=nullptr;  // curl email recipients list
+    CURLcode res = CURLE_OK;                  // curl status
     
-    CMailSend::UploadStatus uploadContext;      // curl email upload context structure (*userData)
+    std::deque<std::string> mailPayload;      // Email payload
     
     std::vector<CMailSend::emailAttachment> attachedFiles;  // Attached files
     
