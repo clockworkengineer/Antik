@@ -40,13 +40,15 @@ public:
     // Set stream to redirect
     //
 
-    CRedirect(std::ostream& outStream);
+    CRedirect(std::ostream& outStream);  
+    CRedirect(std::FILE* stdStream);
 
     //
     // Set stream to redirect and start redirect
     //
     
-    CRedirect(std::ostream& outStream, std::string outfileName, std::ios_base::openmode mode = std::ios_base::out);
+    CRedirect(std::ostream& outStream, std::string outfileName, std::ios_base::openmode mode = std::ios_base::out); 
+    CRedirect(std::FILE* stdStream,  std::string outfileName, const char *mode = "w");
 
     // ==========
     // DESTRUCTOR
@@ -63,7 +65,8 @@ public:
     //
 
     void change(std::string outfileName, std::ios_base::openmode mode = std::ios_base::out);
-
+    void change(std::string outfileName, const char* mode = "w");
+ 
     //
     // Restore original output stream
     //
@@ -95,6 +98,7 @@ private:
     std::unique_ptr<std::ofstream> fileStream = nullptr;    // New file stream
     std::ostream *outStream = nullptr;                      // saved stream
     std::streambuf *outBuffer = nullptr;                    // Saved readbuffer
+    std::FILE *stdStream=nullptr;                           // Saved stdout/stderr
 
 };
 #endif /* REDIRECT_HPP */
