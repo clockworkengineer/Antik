@@ -10,12 +10,12 @@
  */
 
 //
-// Class: CMailSend
+// Class: CMailSMTP
 // 
 // Description: Class that enables an email to be setup and sent
 // to a specified address using the libcurl library. SSL is supported
-// (but untested) and attached files in either 7bit or base64 encoded
-// format. When adding an atatchment it creates its MIME type by first
+// and attached files in either 7bit or base64 encoded format. When
+// adding an atatchment it creates its MIME type by first
 // checking an internal table created from /etc/mime.types. If no 
 // mapping is present it uses the pass in value as default.
 //
@@ -39,7 +39,7 @@
 
 // MIME multi-part text boundary string 
 
-const std::string CMailSMTP::kMimeBoundary("xxxxCMailSendBoundaryText");
+const std::string CMailSMTP::kMimeBoundary("xxxxCMailSMTPBoundaryText");
 
 // Line terminator
 
