@@ -138,6 +138,7 @@ public:
     struct BResponse {
         std::string command;
         CMailIMAP::RespCode status;
+        std::string errorMessage;
     };
 
     struct SearchResponse : public BResponse {
@@ -246,8 +247,34 @@ private:
     // PRIVATE TYPES AND CONSTANTS
     // ===========================
 
-    static const std::string kEOLStr; // End of line
-
+    static const std::string kEOLStr;       // End of line
+    
+    //
+    // Response strings
+    //
+    
+    static const std::string kUntaggedStr;
+    static const std::string kOKStr;
+    static const std::string kBADStr;
+    static const std::string kNOStr;
+    static const std::string kFLAGSStr;
+    static const std::string kPERMANENTFLAGSStr;
+    static const std::string kUIDVALIDITYStr;
+    static const std::string kUIDNEXTStr;
+    static const std::string kHIGHESTMODSEQStr;
+    static const std::string kUNSEENStr;
+    static const std::string kEXISTSStr;
+    static const std::string kRECENTStr;
+    static const std::string kCAPABILITYStr;
+    static const std::string kDONEStr;
+    static const std::string kContinuationStr;
+  
+    //
+    // Decode function pointer
+    //
+    
+    typedef std::function<CMailIMAP::BASERESPONSE  (const std::string&, std::istringstream&)> DecodeFunction;
+    
     // =====================
     // DISABLED CONSTRUCTORS
     // =====================
@@ -271,6 +298,12 @@ private:
     static size_t writeFunction(void *ptr, size_t size, size_t nmemb, std::string* data);
   
     //
+    // Generate next command tag
+    //
+    
+    void generateTag(void);
+    
+    //
     // Command response decode utility methods
     //
     
@@ -287,6 +320,7 @@ private:
     static CMailIMAP::BASERESPONSE decodeSTATUS(const std::string& commandLine, std::istringstream& responseStream);
     static CMailIMAP::BASERESPONSE decodeEXPUNGE(const std::string& commandLine, std::istringstream& responseStream);
     static CMailIMAP::BASERESPONSE decodeSTORE(const std::string& commandLine, std::istringstream& responseStream);
+    static CMailIMAP::BASERESPONSE decodeDefault(const std::string& commandLine, std::istringstream& responseStream);
     
     static CMailIMAP::BASERESPONSE decodeResponse(const std::string& commandLine, const std::string& commandResponse);
 
@@ -306,6 +340,15 @@ private:
 
     char rxBuffer[CURL_MAX_WRITE_SIZE]; // IMAP rx buffer
     char errMsgBuffer[CURL_ERROR_SIZE]; // IMAP error string buffer
+    
+    uint64_t tagCount=1;        // Current command tag count
+    std::string currentTag;     // Current command tag
+    
+    //
+    // Command to decode response function mapping table
+    //
+    
+    static std::unordered_map<std::string, DecodeFunction> decodeCommmandMap;
 
 };
 
