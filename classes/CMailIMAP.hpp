@@ -43,6 +43,17 @@ public:
     // ==========================
 
     //
+    // STORE responses data
+    //
+    
+    struct FetchRespData {
+        uint64_t index;                         // EMail Index/UID
+        std::string flags;                      // EMail flags
+        std::vector<std::string> body;          // Fetch body
+        uint64_t bodyLength;
+    };
+    
+    //
     // LIST response data
     //
     
@@ -69,6 +80,7 @@ public:
         STARTTLS = 0,   // Supported
         AUTHENTICATE,   // Supported
         LOGIN,          // Supported
+        CAPABILITY,     // Supported
         SELECT,         // Supported
         EXAMINE,        // Supported
         CREATE,         // Supported
@@ -130,6 +142,7 @@ public:
     static const std::string kNOOPStr;
     static const std::string kLOGOUTStr;
     static const std::string kIDLEStr;
+    static const std::string kCAPABILITYStr;
 
     //
     // Decoded command structures.
@@ -175,6 +188,14 @@ public:
         std::vector<StoreRespData> storeList;
     };
     
+    struct CapabilityResponse : public BResponse {
+        std::string capabilityList;
+    };
+    
+    struct FetchResponse : public BResponse {
+        std::vector<FetchRespData> fetchList;
+    };
+    
     //
     // Command response structure shared pointer wrapper.
     //
@@ -188,7 +209,8 @@ public:
     typedef  std::shared_ptr<CMailIMAP::StatusResponse> STATUSRESPONSE;
     typedef  std::shared_ptr<CMailIMAP::ExpungeResponse> EXPUNGERESPONSE;
     typedef  std::shared_ptr<CMailIMAP::StoreResponse> STORERESPONSE;
-    
+    typedef  std::shared_ptr<CMailIMAP::CapabilityResponse> CAPABILITYRESPONSE;
+    typedef  std::shared_ptr<CMailIMAP::FetchResponse> FETCHRESPONSE;
     
     // ============
     // CONSTRUCTORS
@@ -265,7 +287,6 @@ private:
     static const std::string kUNSEENStr;
     static const std::string kEXISTSStr;
     static const std::string kRECENTStr;
-    static const std::string kCAPABILITYStr;
     static const std::string kDONEStr;
     static const std::string kContinuationStr;
   
@@ -284,19 +305,18 @@ private:
     // ===============
 
     //
-    // IDLE command functions. Talks to server using curl_easy_send/recv() as this is the only
-    // way to get IDLE to work.
+    // Send IDLE command (requires a special handler).
+    //
+    
+    void sendCommandIDLE(void);
+       
+    //
+    // Talks to server using curl_easy_send/recv()
     //
 
     void sendCommandDirect(const std::string& command);
     void waitForCommandResponse(const std::string& commandTag, std::string& commandResponse);
 
-    //
-    // Add libcurl receive data to reply string.
-    //
-
-    static size_t writeFunction(void *ptr, size_t size, size_t nmemb, std::string* data);
-  
     //
     // Generate next command tag
     //
@@ -314,12 +334,14 @@ private:
     // Command response decode methods
     //
     
+    static CMailIMAP::BASERESPONSE decodeFETCH(const std::string& commandLine, std::istringstream& responseStream);
     static CMailIMAP::BASERESPONSE decodeLIST(const std::string& commandLine, std::istringstream& responseStream);
     static CMailIMAP::BASERESPONSE decodeSEARCH(const std::string& commandLine, std::istringstream& responseStream);
     static CMailIMAP::BASERESPONSE decodeSELECT(const std::string& commandLine, std::istringstream& responseStream);
     static CMailIMAP::BASERESPONSE decodeSTATUS(const std::string& commandLine, std::istringstream& responseStream);
     static CMailIMAP::BASERESPONSE decodeEXPUNGE(const std::string& commandLine, std::istringstream& responseStream);
     static CMailIMAP::BASERESPONSE decodeSTORE(const std::string& commandLine, std::istringstream& responseStream);
+    static CMailIMAP::BASERESPONSE decodeCAPABILITY(const std::string& commandLine, std::istringstream& responseStream);
     static CMailIMAP::BASERESPONSE decodeDefault(const std::string& commandLine, std::istringstream& responseStream);
     
     static CMailIMAP::BASERESPONSE decodeResponse(const std::string& commandLine, const std::string& commandResponse);
