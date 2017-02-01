@@ -59,6 +59,7 @@ const std::string CMailIMAP::kEXISTSStr("EXISTS");
 const std::string CMailIMAP::kRECENTStr("RECENT");
 const std::string CMailIMAP::kDONEStr("DONE");
 const std::string CMailIMAP::kContinuationStr("+");
+const std::string CMailIMAP::kENVELOPEStr("ENVELOPE");
 
 // ==========================
 // PUBLIC TYPES AND CONSTANTS
@@ -190,7 +191,7 @@ void CMailIMAP::waitForCommandResponse(const std::string& commandTag, std::strin
 // Generate next command tag
 //
 
-void CMailIMAP::generateTag() {
+inline void CMailIMAP::generateTag() {
     this->currentTag = "A" + std::to_string(this->tagCount++);
 }
 
@@ -199,7 +200,7 @@ void CMailIMAP::generateTag() {
 // Extract the contents between to delimeters
 //
 
-std::string CMailIMAP::contentsBetween(const std::string& line, const char first, const char last) {
+inline std::string CMailIMAP::contentsBetween(const std::string& line, const char first, const char last) {
     return (line.substr(line.find_first_of(first) + 1, line.find_first_of(last) - line.find_first_of(first) - 1));
 }
 
@@ -207,94 +208,118 @@ std::string CMailIMAP::contentsBetween(const std::string& line, const char first
 // Extract number between two characters (ie. number and spaces)
 //
 
-std::string CMailIMAP::cutOut(const std::string& line, const char seperator) {
+inline std::string CMailIMAP::extractNumber(const std::string& line, const char seperator) {
+    
     return (line.substr(line.find_first_of(seperator) + 1, line.find_last_of(seperator) - line.find_first_of(seperator) - 1));
+    
+}
+
+//
+// Extract tag from command line
+//
+
+inline std::string CMailIMAP::extractTag(const std::string& line) {
+    return (line.substr(0, line.find_first_of(' ')));
+}
+
+//
+// Extract command string from command line
+//
+
+inline std::string CMailIMAP::extractCommand(const std::string& line) {
+    
+   std::string command;
+   command = line.substr(line.find_first_of(' ') + 1);
+   return(command.substr(0, command.find_first_of(' ')));
+   
+}
+
+//
+// Decode command response status
+//
+
+void CMailIMAP::decodeStatus(const std::string& tag, const std::string& line, CMailIMAP::BASERESPONSE resp) {
+
+    if (line.find(tag + " " + kOKStr) == 0) {
+        resp->status = RespCode::OK;
+
+    } else if (line.find(tag + " " + kNOStr) == 0) {
+        resp->status = RespCode::NO;
+        resp->errorMessage = line;
+
+    } else if (line.find(tag + " " + kBADStr) == 0) {
+        resp->status = RespCode::BAD;
+        resp->errorMessage = line;
+        
+    } else if ((line.find(kUntaggedStr + " " + kNOStr) == 0) 
+            || (line.find(kUntaggedStr + " " + kBADStr) == 0)) {
+            std::cerr << line << std::endl;
+        
+    } else {
+        std::cerr << "UKNOWN RESPONSE TYPE = [" << line << "]" << std::endl;
+    }
+
+
 }
 
 //
 // Decode SELECT/EXAMINE Response
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeSELECT(const std::string& commandLine, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeSELECT(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
 
-    CMailIMAP::SELECTRESPONSE resp(new CMailIMAP::SelectResponse);
-    std::string responseValue;
-    std::string tag = commandLine.substr(0, commandLine.find_first_of(' '));
+    CMailIMAP::SELECTRESPONSE resp { new CMailIMAP::SelectResponse };
 
-    resp->command = commandLine.substr(commandLine.find_first_of(' ') + 1);
-    resp->command = resp->command.substr(0, resp->command.find_first_of(' '));
-
-    resp->mailBoxName = commandLine.substr(commandLine.find_last_of(' ') + 1);
-
+    resp->command = commandData.command;
+    
+    resp->mailBoxName = commandData.commandLine.substr(commandData.commandLine.find_last_of(' ') + 1);
     if (resp->mailBoxName.back() == '\"') resp->mailBoxName.pop_back();
     if (resp->mailBoxName.front() == '\"') resp->mailBoxName = resp->mailBoxName.substr(1);
 
     for (std::string line; std::getline(responseStream, line, '\n');) {
-
+            
         line.pop_back();
 
+        if (line.find(kUntaggedStr + " " + kOKStr + " [") == 0){
+            line = contentsBetween(line, '[', ']');
+        }
+        
         if (line.find(kUntaggedStr + " " + kFLAGSStr) == 0) {
-            responseValue = contentsBetween(line, '(', ')');
-            resp->responseMap.insert({kFLAGSStr, responseValue});
+            resp->responseMap.insert({kFLAGSStr, contentsBetween(line, '(', ')')});
 
-        } else if (line.find(kUntaggedStr + " " + kOKStr + " [" + kPERMANENTFLAGSStr) == 0) {
-            responseValue = contentsBetween(line, '(', ')');
-            resp->responseMap.insert({kPERMANENTFLAGSStr, responseValue});
+        } else if (line.find(kPERMANENTFLAGSStr) == 0) {
+            resp->responseMap.insert({kPERMANENTFLAGSStr, contentsBetween(line, '(', ')')});
 
-        } else if (line.find(kUntaggedStr + " " + kOKStr + " [" + kUIDVALIDITYStr) == 0) {
-            responseValue = contentsBetween(line, '[', ']');
-            responseValue = responseValue.substr(responseValue.find_first_of(' ') + 1);
-            resp->responseMap.insert({kUIDVALIDITYStr, responseValue});
+        } else if (line.find(kUIDVALIDITYStr) == 0) {
+            resp->responseMap.insert({kUIDVALIDITYStr, line.substr(line.find_first_of(' ') + 1)});
 
-        } else if (line.find(kUntaggedStr + " " + kOKStr + " [" + kUIDNEXTStr) == 0) {
-            responseValue = contentsBetween(line, '[', ']');
-            responseValue = responseValue.substr(responseValue.find_first_of(' ') + 1);
-            resp->responseMap.insert({kUIDNEXTStr, responseValue});
+        } else if (line.find(kUIDNEXTStr) == 0) {
+            resp->responseMap.insert({kUIDNEXTStr, line.substr(line.find_first_of(' ') + 1)});
 
-        } else if (line.find(kUntaggedStr + " " + kOKStr + " [" + kHIGHESTMODSEQStr) == 0) {
-            responseValue = contentsBetween(line, '[', ']');
-            responseValue = responseValue.substr(responseValue.find_first_of(' ') + 1);
-            resp->responseMap.insert({kHIGHESTMODSEQStr, responseValue});
+        } else if (line.find(kHIGHESTMODSEQStr) == 0) {
+            resp->responseMap.insert({kHIGHESTMODSEQStr, line.substr(line.find_first_of(' ') + 1)});
 
-        } else if (line.find(kUntaggedStr + " " + kOKStr + " [" + kUNSEENStr) == 0) {
-            responseValue = contentsBetween(line, '[', ']');
-            responseValue = responseValue.substr(responseValue.find_first_of(' ') + 1);
-            resp->responseMap.insert({kUNSEENStr, responseValue});
+        } else if (line.find(kUNSEENStr) == 0) {
+            resp->responseMap.insert({kUNSEENStr, line.substr(line.find_first_of(' ') + 1)});
 
         } else if (line.find(kEXISTSStr) != std::string::npos) {
-            responseValue = cutOut(line, ' ');
-            resp->responseMap.insert({kEXISTSStr, responseValue});
+            resp->responseMap.insert({kEXISTSStr, extractNumber(line, ' ')});
 
         } else if (line.find(kRECENTStr) != std::string::npos) {
-            responseValue = cutOut(line, ' ');
-            resp->responseMap.insert({kRECENTStr, responseValue});
+            resp->responseMap.insert({kRECENTStr, extractNumber(line, ' ')});
 
         } else if (line.find(kUntaggedStr + " " + kCAPABILITYStr) == 0) {
-            responseValue = line.substr((std::string(kUntaggedStr + " " + kCAPABILITYStr).length()) + 1);
-            resp->responseMap.insert({kCAPABILITYStr, responseValue});
+            line = line.substr((std::string(kUntaggedStr + " " + kCAPABILITYStr).length()) + 1);
+            resp->responseMap.insert({kCAPABILITYStr, line});
 
         } else if ((line.find("] " + resp->mailBoxName) != std::string::npos) ||
                 (line.find("] " + resp->command + " completed.") != std::string::npos)) {
             resp->mailBoxAccess = contentsBetween(line, '[', ']');
-
-        } else if (line.find(tag + " " + kOKStr) == 0) {
-            resp->status = RespCode::OK;
-
-        } else if (line.find(tag + " " + kNOStr) == 0) {
-            resp->status = RespCode::NO;
-            resp->errorMessage = line;
-
-        } else if (line.find(tag + " " + kBADStr) == 0) {
-            resp->status = RespCode::BAD;
-            resp->errorMessage = line;
-
-        } else if ((line.find(kUntaggedStr + " " + kNOStr) == 0) || (line.find(kUntaggedStr + " " + kBADStr) == 0)) {
-            std::cerr << line << std::endl;
-
         } else {
-            std::cerr << "UKNOWN RESPONSE TYPE = [" << line << "]" << std::endl;
-        }
-
+            decodeStatus(commandData.tag, line, resp);
+        }          
+        
+        
     }
 
     return (static_cast<CMailIMAP::BASERESPONSE> (resp));
@@ -305,14 +330,11 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeSELECT(const std::string& commandLine, 
 // Decode SEARCH Response
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeSEARCH(const std::string& commandLine, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeSEARCH(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
 
-    CMailIMAP::SEARCHRESPONSE resp(new CMailIMAP::SearchResponse);
-    uint64_t index;
-    std::string tag = commandLine.substr(0, commandLine.find_first_of(' '));
+    CMailIMAP::SEARCHRESPONSE resp { new CMailIMAP::SearchResponse };
 
-    resp->command = commandLine.substr(commandLine.find_first_of(' ') + 1);
-    resp->command = resp->command.substr(0, resp->command.find_first_of(' '));
+    resp->command = commandData.command;
 
     for (std::string line; std::getline(responseStream, line, '\n');) {
 
@@ -325,28 +347,14 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeSEARCH(const std::string& commandLine, 
 
             std::istringstream listStream(line);
             while (listStream.good()) {
+                uint64_t index;
                 listStream >> index;
                 resp->indexes.push_back(index);
             }
 
-        } else if (line.find(tag + " " + kOKStr) == 0) {
-            resp->status = RespCode::OK;
-
-        } else if (line.find(tag + " " + kNOStr) == 0) {
-            resp->status = RespCode::NO;
-            resp->errorMessage = line;
-
-        } else if (line.find(tag + " " + kBADStr) == 0) {
-            resp->status = RespCode::BAD;
-            resp->errorMessage = line;
-
-        } else if ((line.find(kUntaggedStr + " " + kNOStr) == 0) || (line.find(kUntaggedStr + " " + kBADStr) == 0)) {
-            std::cerr << line << std::endl;
-
         } else {
-            std::cerr << "UKNOWN RESPONSE TYPE = [" << line << "]" << std::endl;
-        }
-
+            decodeStatus(commandData.tag, line, resp);
+        }      
 
     }
 
@@ -358,16 +366,15 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeSEARCH(const std::string& commandLine, 
 // Decode LIST/LSUB Response
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeLIST(const std::string& commandLine, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeLIST(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
 
-    CMailIMAP::LISTRESPONSE resp(new CMailIMAP::ListResponse);
-    CMailIMAP::ListRespData mailBoxEntry;
-    std::string tag = commandLine.substr(0, commandLine.find_first_of(' '));
+    CMailIMAP::LISTRESPONSE resp { new CMailIMAP::ListResponse };
 
-    resp->command = commandLine.substr(commandLine.find_first_of(' ') + 1);
-    resp->command = resp->command.substr(0, resp->command.find_first_of(' '));
+    resp->command = commandData.command;
 
     for (std::string line; std::getline(responseStream, line, '\n');) {
+
+        CMailIMAP::ListRespData mailBoxEntry;
 
         line.pop_back();
 
@@ -383,23 +390,10 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeLIST(const std::string& commandLine, st
             }
             resp->mailBoxList.push_back(mailBoxEntry);
 
-        } else if (line.find(tag + " " + kOKStr) == 0) {
-            resp->status = RespCode::OK;
-
-        } else if (line.find(tag + " " + kNOStr) == 0) {
-            resp->status = RespCode::NO;
-            resp->errorMessage = line;
-
-        } else if (line.find(tag + " " + kBADStr) == 0) {
-            resp->status = RespCode::BAD;
-            resp->errorMessage = line;
-
-        } else if ((line.find(kUntaggedStr + " " + kNOStr) == 0) || (line.find(kUntaggedStr + " " + kBADStr) == 0)) {
-            std::cerr << line << std::endl;
-
         } else {
-            std::cerr << "UKNOWN RESPONSE TYPE = [" << line << "]" << std::endl;
-        }
+            decodeStatus(commandData.tag, line, resp);
+        }      
+        
     }
 
     return (static_cast<CMailIMAP::BASERESPONSE> (resp));
@@ -411,13 +405,11 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeLIST(const std::string& commandLine, st
 // Decode STATUS Response
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeSTATUS(const std::string& commandLine, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeSTATUS(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
 
-    CMailIMAP::STATUSRESPONSE resp(new CMailIMAP::StatusResponse);
-    std::string tag = commandLine.substr(0, commandLine.find_first_of(' '));
+    CMailIMAP::STATUSRESPONSE resp { new CMailIMAP::StatusResponse };
 
-    resp->command = commandLine.substr(commandLine.find_first_of(' ') + 1);
-    resp->command = resp->command.substr(0, resp->command.find_first_of(' '));
+    resp->command = commandData.command;
 
     for (std::string line; std::getline(responseStream, line, '\n');) {
 
@@ -439,23 +431,9 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeSTATUS(const std::string& commandLine, 
                 resp->responseMap.insert({item, value});
             }
 
-        } else if (line.find(tag + " " + kOKStr) == 0) {
-            resp->status = RespCode::OK;
-
-        } else if (line.find(tag + " " + kNOStr) == 0) {
-            resp->status = RespCode::NO;
-            resp->errorMessage = line;
-
-        } else if (line.find(tag + " " + kBADStr) == 0) {
-            resp->status = RespCode::BAD;
-            resp->errorMessage = line;
-
-        } else if ((line.find(kUntaggedStr + " " + kNOStr) == 0) || (line.find(kUntaggedStr + " " + kBADStr) == 0)) {
-            std::cerr << line << std::endl;
-
         } else {
-            std::cerr << "UKNOWN RESPONSE TYPE = [" << line << "]" << std::endl;
-        }
+            decodeStatus(commandData.tag, line, resp);
+        }      
 
     }
 
@@ -467,48 +445,31 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeSTATUS(const std::string& commandLine, 
 // Decode EXPUNGE Response
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeEXPUNGE(const std::string& commandLine, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeEXPUNGE(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
 
-    CMailIMAP::EXPUNGERESPONSE resp(new CMailIMAP::ExpungeResponse);
-    std::string tag = commandLine.substr(0, commandLine.find_first_of(' '));
+    CMailIMAP::EXPUNGERESPONSE resp { new CMailIMAP::ExpungeResponse };
 
-    resp->command = commandLine.substr(commandLine.find_first_of(' ') + 1);
-    resp->command = resp->command.substr(0, resp->command.find_first_of(' '));
+    resp->command = commandData.command;
 
     for (std::string line; std::getline(responseStream, line, '\n');) {
 
         line.pop_back();
 
         if (line.find(kEXISTSStr) != std::string::npos) {
-            line = cutOut(line, ' ');
+            line = extractNumber(line, ' ');
             resp->exists.push_back(std::strtoull(line.c_str(), nullptr, 10));
 
         } else if (line.find(kEXPUNGEStr) != std::string::npos) {
-            line = cutOut(line, ' ');
+            line = extractNumber(line, ' ');
             resp->expunged.push_back(std::strtoull(line.c_str(), nullptr, 10));
 
-        } else if (line.find(tag + " " + kOKStr) == 0) {
-            resp->status = RespCode::OK;
-
-        } else if (line.find(tag + " " + kNOStr) == 0) {
-            resp->status = RespCode::NO;
-            resp->errorMessage = line;
-
-        } else if (line.find(tag + " " + kBADStr) == 0) {
-            resp->status = RespCode::BAD;
-            resp->errorMessage = line;
-
-        } else if ((line.find(kUntaggedStr + " " + kNOStr) == 0) || (line.find(kUntaggedStr + " " + kBADStr) == 0)) {
-            std::cerr << line << std::endl;
-
         } else {
-            std::cerr << "UKNOWN RESPONSE TYPE = [" << line << "]" << std::endl;
-        }
+            decodeStatus(commandData.tag, line, resp);
+        }      
 
     }
 
     return (static_cast<CMailIMAP::BASERESPONSE> (resp));
-
 
 }
 
@@ -516,38 +477,26 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeEXPUNGE(const std::string& commandLine,
 // Decode STORE Response
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeSTORE(const std::string& commandLine, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeSTORE(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
 
-    CMailIMAP::STORERESPONSE resp(new CMailIMAP::StoreResponse);
-    StoreRespData storeData;
-    std::string tag = commandLine.substr(0, commandLine.find_first_of(' '));
+    CMailIMAP::STORERESPONSE resp { new CMailIMAP::StoreResponse };
 
-    resp->command = commandLine.substr(commandLine.find_first_of(' ') + 1);
-    resp->command = resp->command.substr(0, resp->command.find_first_of(' '));
+    resp->command = commandData.command;
 
     for (std::string line; std::getline(responseStream, line, '\n');) {
 
+        StoreRespData storeData;
+            
         line.pop_back();
 
         if (line.find(kFETCHStr) != std::string::npos) {
             storeData.flags = contentsBetween(line.substr(line.find_first_of('(') + 1), '(', ')');
-            storeData.index = std::strtoull(cutOut(line, ' ').c_str(), nullptr, 10);
+            storeData.index = std::strtoull(extractNumber(line, ' ').c_str(), nullptr, 10);
             resp->storeList.push_back(storeData);
 
-        } else if (line.find(tag + " " + kOKStr) == 0) {
-            resp->status = RespCode::OK;
-
-        } else if (line.find(tag + " " + kNOStr) == 0) {
-            resp->status = RespCode::NO;
-            resp->errorMessage = line;
-
-        } else if (line.find(tag + " " + kBADStr) == 0) {
-            resp->status = RespCode::BAD;
-            resp->errorMessage = line;
-
         } else {
-            std::cerr << "UKNOWN RESPONSE TYPE = [" << line << "]" << std::endl;
-        }
+            decodeStatus(commandData.tag, line, resp);
+        }      
 
     }
 
@@ -559,14 +508,11 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeSTORE(const std::string& commandLine, s
 // Decode CAPABILITY Response
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeCAPABILITY(const std::string& commandLine, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeCAPABILITY(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
 
-    CMailIMAP::CAPABILITYRESPONSE resp(new CMailIMAP::CapabilityResponse);
+    CMailIMAP::CAPABILITYRESPONSE resp { new CMailIMAP::CapabilityResponse };
 
-    std::string tag = commandLine.substr(0, commandLine.find_first_of(' '));
-
-    resp->command = commandLine.substr(commandLine.find_first_of(' ') + 1);
-    resp->command = resp->command.substr(0, resp->command.find_first_of(' '));
+    resp->command = commandData.command;
 
     for (std::string line; std::getline(responseStream, line, '\n');) {
 
@@ -576,20 +522,9 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeCAPABILITY(const std::string& commandLi
             line = line.substr(line.find_first_of(' ') + 1);
             resp->capabilityList = line.substr(line.find_first_of(' ') + 1);
 
-        } else if (line.find(tag + " " + kOKStr) == 0) {
-            resp->status = RespCode::OK;
-
-        } else if (line.find(tag + " " + kNOStr) == 0) {
-            resp->status = RespCode::NO;
-            resp->errorMessage = line;
-
-        } else if (line.find(tag + " " + kBADStr) == 0) {
-            resp->status = RespCode::BAD;
-            resp->errorMessage = line;
-
         } else {
-            std::cerr << "UKNOWN RESPONSE TYPE = [" << line << "]" << std::endl;
-        }
+            decodeStatus(commandData.tag, line, resp);
+        }      
 
     }
 
@@ -601,50 +536,50 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeCAPABILITY(const std::string& commandLi
 // Decode FETCH Response
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeFETCH(const std::string& commandLine, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeFETCH(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
 
-    CMailIMAP::FETCHRESPONSE resp(new CMailIMAP::FetchResponse);
-    FetchRespData fetchData;
+    CMailIMAP::FETCHRESPONSE resp { new CMailIMAP::FetchResponse };
 
-    std::string tag = commandLine.substr(0, commandLine.find_first_of(' '));
-
-    resp->command = commandLine.substr(commandLine.find_first_of(' ') + 1);
-    resp->command = resp->command.substr(0, resp->command.find_first_of(' '));
+    resp->command = commandData.command;
 
     for (std::string line; std::getline(responseStream, line, '\n');) {
 
+        FetchRespData fetchData;
+            
         line.pop_back();
 
         if (line.find(kFETCHStr) != std::string::npos) {
-            int bodyLength;
-            fetchData.index = std::strtoull(cutOut(line, ' ').c_str(), nullptr, 10);
-            fetchData.flags = contentsBetween(line.substr(line.find_first_of('(') + 1), '(', ')');
-            bodyLength = fetchData.bodyLength = std::strtoull(contentsBetween(line, '{', '}').c_str(), nullptr, 10);
-            for (std::string body; std::getline(responseStream, body, '\n');) {
-                body.pop_back();
-                bodyLength -= (body.length() + kEOLStr.length());
-                fetchData.body.push_back(body);
-                if (bodyLength == 0)break;
+            int bodyLength = 0;
+            fetchData.index = std::strtoull(extractNumber(line, ' ').c_str(), nullptr, 10);
+            if (line.find(kENVELOPEStr) != std::string::npos) {
+                line = line.substr(line.find_first_of('(' + 1));
+                fetchData.envelope = contentsBetween(line, '(', ')');
+                fetchData.bodyLength = 0;
+            } else {
+                if (line.find(kFLAGSStr) != std::string::npos) {
+                    fetchData.flags = contentsBetween(line.substr(line.find_first_of('(') + 1), '(', ')');
+                }
+                bodyLength = fetchData.bodyLength = std::strtoull(contentsBetween(line, '{', '}').c_str(), nullptr, 10);
+                if (bodyLength) {
+                    for (std::string body; std::getline(responseStream, body, '\n');) {
+                        body.push_back('\n');
+                        if (bodyLength < body.length()) {
+                            body.resize(bodyLength);
+                        }
+                        fetchData.body.push_back(body);
+                        bodyLength -= body.length();
+                        if (bodyLength == 0)break;
+                    }
+               }
             }
-            std::getline(responseStream, line, '\n');
-
             resp->fetchList.push_back(fetchData);
 
-        } else if (line.find(tag + " " + kOKStr) == 0) {
-            resp->status = RespCode::OK;
-
-        } else if (line.find(tag + " " + kNOStr) == 0) {
-            resp->status = RespCode::NO;
-            resp->errorMessage = line;
-
-        } else if (line.find(tag + " " + kBADStr) == 0) {
-            resp->status = RespCode::BAD;
-            resp->errorMessage = line;
-
+       } else if ((line.find(")") == 0) && line.length()==1) {
+           continue;
+                    
         } else {
-            std::cerr << "UKNOWN RESPONSE TYPE = [" << line << "]" << std::endl;
-        }
-
+            decodeStatus(commandData.tag, line, resp);
+        }      
     }
 
     return (static_cast<CMailIMAP::BASERESPONSE> (resp));
@@ -655,34 +590,15 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeFETCH(const std::string& commandLine, s
 // Default Decode Response
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeDefault(const std::string& commandLine, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeDefault(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
 
-    CMailIMAP::BASERESPONSE resp(new CMailIMAP::BResponse);
+    CMailIMAP::BASERESPONSE resp { new CMailIMAP::BResponse };
 
-    std::string tag = commandLine.substr(0, commandLine.find_first_of(' '));
-
-    resp->command = commandLine.substr(commandLine.find_first_of(' ') + 1);
-    resp->command = resp->command.substr(0, resp->command.find_first_of(' '));
+    resp->command = commandData.command;
 
     for (std::string line; std::getline(responseStream, line, '\n');) {
-
         line.pop_back();
-
-        if (line.find(tag + " " + kOKStr) == 0) {
-            resp->status = RespCode::OK;
-
-        } else if (line.find(tag + " " + kNOStr) == 0) {
-            resp->status = RespCode::NO;
-            resp->errorMessage = line;
-
-        } else if (line.find(tag + " " + kBADStr) == 0) {
-            resp->status = RespCode::BAD;
-            resp->errorMessage = line;
-
-        } else {
-            std::cerr << "UKNOWN RESPONSE TYPE = [" << line << "]" << std::endl;
-        }
-
+        decodeStatus(commandData.tag, line, resp);
     }
 
     return (static_cast<CMailIMAP::BASERESPONSE> (resp));
@@ -696,20 +612,15 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeDefault(const std::string& commandLine,
 CMailIMAP::BASERESPONSE CMailIMAP::decodeResponse(const std::string& commandLine, const std::string & commandResponse) {
 
     std::istringstream responseStream(commandResponse);
-    std::istringstream commandStream(commandLine);
-
     CMailIMAP::DecodeFunction decodeFn;
-
-    std::string command = commandLine.substr(commandLine.find_first_of(' ') + 1);
-
-    command = command.substr(0, command.find_first_of(' '));
-
-    decodeFn = CMailIMAP::decodeCommmandMap[command];
+    CommandData commandData { extractTag(commandLine) , extractCommand(commandLine), commandLine };
+     
+    decodeFn = CMailIMAP::decodeCommmandMap[commandData.command];
     if (!decodeFn) {
         decodeFn = decodeDefault;
     }
-
-    return (decodeFn(commandLine, responseStream));
+    
+    return (decodeFn(commandData, responseStream));
 
 }
 
@@ -718,7 +629,6 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeResponse(const std::string& commandLine
 //
 
 void CMailIMAP::sendCommandIDLE() {
-
 
     this->generateTag();
 
@@ -755,35 +665,6 @@ void CMailIMAP::setUserAndPassword(const std::string& userName, const std::strin
 
     this->userName = userName;
     this->userPassword = userPassword;
-
-}
-
-//
-// Wait for IDLE on a mailbox to return.
-//
-
-void CMailIMAP::waitOnIdle(const std::string& imapMailBox) {
-
-    if (this->curl) {
-
-        this->generateTag();
-
-        this->sendCommandDirect(this->currentTag + " " + kSELECTStr + " \"" + imapMailBox + "\"" + kEOLStr);
-        this->waitForCommandResponse(this->currentTag, this->commandResponse);
-
-        this->generateTag();
-
-        this->sendCommandDirect(this->currentTag + " " + kIDLEStr + kEOLStr);
-        this->waitForCommandResponse(kContinuationStr, this->commandResponse);
-        this->waitForCommandResponse(kUntaggedStr, this->commandResponse);
-
-
-        this->sendCommandDirect(kDONEStr + kEOLStr);
-
-        this->waitForCommandResponse(this->currentTag, this->commandResponse);
-
-    }
-
 
 }
 
@@ -850,6 +731,7 @@ CMailIMAP::BASERESPONSE CMailIMAP::sendCommand(const std::string& commandLine) {
     } else {
         this->sendCommandDirect(this->currentTag + " " + commandLine + kEOLStr);
         this->waitForCommandResponse(this->currentTag, this->commandResponse);
+                std::cout << this->commandResponse <<std::endl;
     }
 
     return (CMailIMAP::decodeResponse(this->currentTag + " " + commandLine, this->commandResponse));
@@ -879,15 +761,23 @@ CMailIMAP::~CMailIMAP() {
 }
 
 //
-// CMailIMAP initialisation.
+// CMailIMAP initialization.
 //
 
 void CMailIMAP::init(void) {
 
+    //
+    // Initialize curl
+    //
+    
     if (curl_global_init(CURL_GLOBAL_ALL)) {
         throw std::runtime_error(std::string("curl_global_init() : failure to initialize libcurl."));
     }
 
+    //
+    // Setup command response decode functions
+    //
+        
     CMailIMAP::decodeCommmandMap.insert({kLISTStr, decodeLIST});
     CMailIMAP::decodeCommmandMap.insert({kLSUBStr, decodeLIST});
     CMailIMAP::decodeCommmandMap.insert({kSEARCHStr, decodeSEARCH});

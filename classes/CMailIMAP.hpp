@@ -42,6 +42,12 @@ public:
     // PUBLIC TYPES AND CONSTANTS
     // ==========================
 
+    struct CommandData {
+        std::string tag;
+        std::string command;
+        std::string commandLine;
+    };
+    
     //
     // STORE responses data
     //
@@ -49,7 +55,8 @@ public:
     struct FetchRespData {
         uint64_t index;                         // EMail Index/UID
         std::string flags;                      // EMail flags
-        std::vector<std::string> body;          // Fetch body
+        std::vector<std::string> body;          // Fetch body/envelope
+        std::string envelope;
         uint64_t bodyLength;
     };
     
@@ -106,8 +113,7 @@ public:
     };
 
     //
-    // Command response code enumeration (curl_easy_perform() disconnects on
-    // any error so all codes returned are OK (need to address).
+    // Command response code enumeration.
     //
     
     enum class RespCode {
@@ -150,7 +156,7 @@ public:
     
     struct BResponse {
         std::string command;
-        CMailIMAP::RespCode status;
+        RespCode status;
         std::string errorMessage;
     };
 
@@ -168,7 +174,7 @@ public:
     };
 
     struct ListResponse : public BResponse {
-        std::vector<CMailIMAP::ListRespData> mailBoxList;
+        std::vector<ListRespData> mailBoxList;
     };
     
     struct LSubResponse : public ListResponse {
@@ -200,17 +206,17 @@ public:
     // Command response structure shared pointer wrapper.
     //
     
-    typedef  std::shared_ptr<CMailIMAP::BResponse> BASERESPONSE; 
-    typedef  std::shared_ptr<CMailIMAP::SearchResponse> SEARCHRESPONSE;
-    typedef  std::shared_ptr<CMailIMAP::SelectResponse> SELECTRESPONSE;
-    typedef  std::shared_ptr<CMailIMAP::ExamineResponse> EXAMINERESPONSE;
-    typedef  std::shared_ptr<CMailIMAP::ListResponse> LISTRESPONSE;
-    typedef  std::shared_ptr<CMailIMAP::LSubResponse> LSUBRESPONSE;
-    typedef  std::shared_ptr<CMailIMAP::StatusResponse> STATUSRESPONSE;
-    typedef  std::shared_ptr<CMailIMAP::ExpungeResponse> EXPUNGERESPONSE;
-    typedef  std::shared_ptr<CMailIMAP::StoreResponse> STORERESPONSE;
-    typedef  std::shared_ptr<CMailIMAP::CapabilityResponse> CAPABILITYRESPONSE;
-    typedef  std::shared_ptr<CMailIMAP::FetchResponse> FETCHRESPONSE;
+    typedef  std::shared_ptr<BResponse> BASERESPONSE; 
+    typedef  std::shared_ptr<SearchResponse> SEARCHRESPONSE;
+    typedef  std::shared_ptr<SelectResponse> SELECTRESPONSE;
+    typedef  std::shared_ptr<ExamineResponse> EXAMINERESPONSE;
+    typedef  std::shared_ptr<ListResponse> LISTRESPONSE;
+    typedef  std::shared_ptr<LSubResponse> LSUBRESPONSE;
+    typedef  std::shared_ptr<StatusResponse> STATUSRESPONSE;
+    typedef  std::shared_ptr<ExpungeResponse> EXPUNGERESPONSE;
+    typedef  std::shared_ptr<StoreResponse> STORERESPONSE;
+    typedef  std::shared_ptr<CapabilityResponse> CAPABILITYRESPONSE;
+    typedef  std::shared_ptr<FetchResponse> FETCHRESPONSE;
     
     // ============
     // CONSTRUCTORS
@@ -240,17 +246,11 @@ public:
     void setUserAndPassword(const std::string& userName, const std::string& userPassword);
 
     //
-    // Wait on IDLE for mailbox
-    //
-
-    void waitOnIdle(const std::string& imapMailBox);
-
-    //
     // IMAP connect, send command and disconnect
     //
 
     void connect(void);
-    std::shared_ptr<CMailIMAP::BResponse> sendCommand(const std::string& commandLine);
+    CMailIMAP::BASERESPONSE sendCommand(const std::string& commandLine);
     void disconnect(void);
 
     // IMAP initialization and closedown processing
@@ -289,12 +289,13 @@ private:
     static const std::string kRECENTStr;
     static const std::string kDONEStr;
     static const std::string kContinuationStr;
+    static const std::string kENVELOPEStr;
   
     //
     // Decode function pointer
     //
     
-    typedef std::function<CMailIMAP::BASERESPONSE  (const std::string&, std::istringstream&)> DecodeFunction;
+    typedef std::function<BASERESPONSE  (CommandData& commandData, std::istringstream&)> DecodeFunction;
     
     // =====================
     // DISABLED CONSTRUCTORS
@@ -328,23 +329,27 @@ private:
     //
     
     static std::string contentsBetween(const std::string& line, const char first, const char last);
-    static std::string cutOut(const std::string& line, const char seperator);
+    static std::string extractNumber(const std::string& line, const char seperator);
+    static std::string extractTag(const std::string& line);
+    static std::string extractCommand(const std::string& line);
     
     //
     // Command response decode methods
     //
     
-    static CMailIMAP::BASERESPONSE decodeFETCH(const std::string& commandLine, std::istringstream& responseStream);
-    static CMailIMAP::BASERESPONSE decodeLIST(const std::string& commandLine, std::istringstream& responseStream);
-    static CMailIMAP::BASERESPONSE decodeSEARCH(const std::string& commandLine, std::istringstream& responseStream);
-    static CMailIMAP::BASERESPONSE decodeSELECT(const std::string& commandLine, std::istringstream& responseStream);
-    static CMailIMAP::BASERESPONSE decodeSTATUS(const std::string& commandLine, std::istringstream& responseStream);
-    static CMailIMAP::BASERESPONSE decodeEXPUNGE(const std::string& commandLine, std::istringstream& responseStream);
-    static CMailIMAP::BASERESPONSE decodeSTORE(const std::string& commandLine, std::istringstream& responseStream);
-    static CMailIMAP::BASERESPONSE decodeCAPABILITY(const std::string& commandLine, std::istringstream& responseStream);
-    static CMailIMAP::BASERESPONSE decodeDefault(const std::string& commandLine, std::istringstream& responseStream);
+    static BASERESPONSE decodeFETCH(CommandData& commandData, std::istringstream& responseStream);
+    static BASERESPONSE decodeLIST(CommandData& commandData, std::istringstream& responseStream);
+    static BASERESPONSE decodeSEARCH(CommandData& commandData, std::istringstream& responseStream);
+    static BASERESPONSE decodeSELECT(CommandData& commandData, std::istringstream& responseStream);
+    static BASERESPONSE decodeSTATUS(CommandData& commandData, std::istringstream& responseStream);
+    static BASERESPONSE decodeEXPUNGE(CommandData& commandData, std::istringstream& responseStream);
+    static BASERESPONSE decodeSTORE(CommandData& commandData, std::istringstream& responseStream);
+    static BASERESPONSE decodeCAPABILITY(CommandData& commandData, std::istringstream& responseStream);
+    static BASERESPONSE decodeDefault(CommandData& commandData, std::istringstream& responseStream);
     
-    static CMailIMAP::BASERESPONSE decodeResponse(const std::string& commandLine, const std::string& commandResponse);
+    static void decodeStatus(const std::string& tag, const std::string& line, BASERESPONSE resp);
+ 
+    static BASERESPONSE decodeResponse(const std::string& commandLine, const std::string& commandResponse);
 
     // =================
     // PRIVATE VARIABLES
@@ -358,7 +363,7 @@ private:
     CURLcode res = CURLE_OK; // curl status
 
     std::string commandResponse; // IMAP command response
-    std::string commandHeader;   // IMAP reply header
+   // std::string commandHeader;   // IMAP reply header
 
     char rxBuffer[CURL_MAX_WRITE_SIZE]; // IMAP rx buffer
     char errMsgBuffer[CURL_ERROR_SIZE]; // IMAP error string buffer
