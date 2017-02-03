@@ -54,10 +54,13 @@ public:
     
     struct FetchRespData {
         uint64_t index;                         // EMail Index/UID
-        std::string flags;                      // EMail flags
-        std::vector<std::string> body;          // Fetch body/envelope
-        std::string envelope;
-        uint64_t bodyLength;
+     //   std::string flags;                      // EMail flags
+     //   std::vector<std::string> body;          // Fetch body
+     //   uint64_t bodyLength;                    // Fetch body length
+     //   std::string envelope;                   // Fetch envelope
+     //   std::string bodyStructure;              // Fetch body structure
+     //   std::string fastBody;                   // Fetch fast body 
+        std::unordered_map<std::string, std::string> responseMap;
     };
     
     //
@@ -103,7 +106,7 @@ public:
         CLOSE,          // Supported
         EXPUNGE,        // Supported
         SEARCH,         // Supported
-        FETCH,          // <-- Special handling (come back)
+        FETCH,          // Supported
         STORE,          // Supported
         COPY,           // Supported
         UID,            // <-- Special handling (come back)
@@ -290,7 +293,15 @@ private:
     static const std::string kDONEStr;
     static const std::string kContinuationStr;
     static const std::string kENVELOPEStr;
-  
+    static const std::string kBODYSTRUCTUREStr;
+    static const std::string kBODYStr;
+    static const std::string kRFC822Str;
+    static const std::string kINTERNALDATEStr;
+    static const std::string kRFC822HEADERStr;
+    static const std::string kRFC822SIZEStr;
+    static const std::string kRFC822TEXTStr;
+    static const std::string kUIDStr;
+      
     //
     // Decode function pointer
     //
@@ -329,10 +340,17 @@ private:
     //
     
     static std::string contentsBetween(const std::string& line, const char first, const char last);
-    static std::string extractNumber(const std::string& line, const char seperator);
+    static std::string extractBetweenDelimeter(const std::string& line, const char delimeter);
     static std::string extractTag(const std::string& line);
     static std::string extractCommand(const std::string& line);
+    static std::string extractList(const std::string& line);
     
+    static void decodeStatus(const std::string& tag, const std::string& line, BASERESPONSE resp);
+    static void decodeOctets(const std::string& commandStr, FetchRespData& fetchData, std::string& line, std::istringstream& responseStream);
+    static void decodeList(const std::string& commandStr, FetchRespData& fetchData, std::string& line);
+    static void decodeString(const std::string& commandStr, FetchRespData& fetchData, std::string& line);
+    static void decodeNumber(const std::string& commandStr, FetchRespData& fetchData, std::string& line);
+
     //
     // Command response decode methods
     //
@@ -346,9 +364,6 @@ private:
     static BASERESPONSE decodeSTORE(CommandData& commandData, std::istringstream& responseStream);
     static BASERESPONSE decodeCAPABILITY(CommandData& commandData, std::istringstream& responseStream);
     static BASERESPONSE decodeDefault(CommandData& commandData, std::istringstream& responseStream);
-    
-    static void decodeStatus(const std::string& tag, const std::string& line, BASERESPONSE resp);
- 
     static BASERESPONSE decodeResponse(const std::string& commandLine, const std::string& commandResponse);
 
     // =================
@@ -363,7 +378,6 @@ private:
     CURLcode res = CURLE_OK; // curl status
 
     std::string commandResponse; // IMAP command response
-   // std::string commandHeader;   // IMAP reply header
 
     char rxBuffer[CURL_MAX_WRITE_SIZE]; // IMAP rx buffer
     char errMsgBuffer[CURL_ERROR_SIZE]; // IMAP error string buffer
