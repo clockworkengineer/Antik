@@ -42,25 +42,23 @@ public:
     // PUBLIC TYPES AND CONSTANTS
     // ==========================
 
+    //
+    // Command data structure
+    //
+    
     struct CommandData {
-        std::string tag;
-        std::string command;
-        std::string commandLine;
+        std::string tag;            // COmmand tag
+        std::string command;        // Command string
+        std::string commandLine;    // Full command line
     };
     
     //
-    // STORE responses data
+    // FETCH response data
     //
     
     struct FetchRespData {
-        uint64_t index;                         // EMail Index/UID
-     //   std::string flags;                      // EMail flags
-     //   std::vector<std::string> body;          // Fetch body
-     //   uint64_t bodyLength;                    // Fetch body length
-     //   std::string envelope;                   // Fetch envelope
-     //   std::string bodyStructure;              // Fetch body structure
-     //   std::string fastBody;                   // Fetch fast body 
-        std::unordered_map<std::string, std::string> responseMap;
+       uint64_t index;                                              // EMail Index/UID
+       std::unordered_map<std::string, std::string> responseMap;    // Fetch command response map
     };
     
     //
@@ -74,7 +72,7 @@ public:
     };
     
     //
-    // STORE responses data
+    // STORE response data
     //
     
     struct StoreRespData {
@@ -87,9 +85,9 @@ public:
     //
 
     enum Commands {
-        STARTTLS = 0,   // Supported
-        AUTHENTICATE,   // Supported
-        LOGIN,          // Supported
+        STARTTLS = 0,   // Supported (through curl connect)
+        AUTHENTICATE,   // Supported (through curl connect)
+        LOGIN,          // Supported (through curl connect)
         CAPABILITY,     // Supported
         SELECT,         // Supported
         EXAMINE,        // Supported
@@ -109,10 +107,10 @@ public:
         FETCH,          // Supported
         STORE,          // Supported
         COPY,           // Supported
-        UID,            // <-- Special handling (come back)
-        NOOP,           // <-- Special handling (come back)
-        LOGOUT,         // <-- Special handling (come back)
-        IDLE            // Supported (waitOnIdle)
+        UID,            // Supported
+        NOOP,           // Supported
+        LOGOUT,         // Supported
+        IDLE            // Supported
     };
 
     //
@@ -157,17 +155,17 @@ public:
     // Decoded command structures.
     // 
     
-    struct BResponse {
+    struct BaseResponse {
         std::string command;
         RespCode status;
         std::string errorMessage;
     };
 
-    struct SearchResponse : public BResponse {
+    struct SearchResponse : public BaseResponse {
         std::vector<uint64_t> indexes;
     };
 
-    struct SelectResponse : public BResponse {
+    struct SelectResponse : public BaseResponse {
         std::string mailBoxName;
         std::string mailBoxAccess;
         std::unordered_map<std::string, std::string> responseMap;
@@ -176,40 +174,50 @@ public:
     struct ExamineResponse : public SelectResponse {
     };
 
-    struct ListResponse : public BResponse {
+    struct ListResponse : public BaseResponse {
         std::vector<ListRespData> mailBoxList;
     };
     
     struct LSubResponse : public ListResponse {
     };
     
-    struct StatusResponse : public BResponse {
+    struct StatusResponse : public BaseResponse {
         std::string mailBoxName;
         std::unordered_map<std::string, std::string> responseMap;
     };
     
-    struct ExpungeResponse : public BResponse {
+    struct ExpungeResponse : public BaseResponse {
         std::vector<uint64_t> exists;
         std::vector<uint64_t> expunged;
     };
    
-    struct StoreResponse : public BResponse {
+    struct StoreResponse : public BaseResponse {
         std::vector<StoreRespData> storeList;
     };
     
-    struct CapabilityResponse : public BResponse {
+    struct CapabilityResponse : public BaseResponse {
         std::string capabilityList;
     };
     
-    struct FetchResponse : public BResponse {
+    struct FetchResponse : public BaseResponse {
         std::vector<FetchRespData> fetchList;
     };
     
+    struct NoOpResponse : public BaseResponse {
+        std::vector<std::string> rawResponse;
+    };
+    
+    struct LogOutResponse : public NoOpResponse {
+    };
+    
+    struct IdleResponse : NoOpResponse {
+    };
+  
     //
     // Command response structure shared pointer wrapper.
     //
     
-    typedef  std::shared_ptr<BResponse> BASERESPONSE; 
+    typedef  std::shared_ptr<BaseResponse> BASERESPONSE; 
     typedef  std::shared_ptr<SearchResponse> SEARCHRESPONSE;
     typedef  std::shared_ptr<SelectResponse> SELECTRESPONSE;
     typedef  std::shared_ptr<ExamineResponse> EXAMINERESPONSE;
@@ -220,7 +228,10 @@ public:
     typedef  std::shared_ptr<StoreResponse> STORERESPONSE;
     typedef  std::shared_ptr<CapabilityResponse> CAPABILITYRESPONSE;
     typedef  std::shared_ptr<FetchResponse> FETCHRESPONSE;
-    
+    typedef  std::shared_ptr<NoOpResponse> NOOPRESPONSE;
+    typedef  std::shared_ptr<LogOutResponse> LOGOUTRESPONSE;
+    typedef  std::shared_ptr<IdleResponse> IDLERESPONSE;
+
     // ============
     // CONSTRUCTORS
     // ============
@@ -301,6 +312,7 @@ private:
     static const std::string kRFC822SIZEStr;
     static const std::string kRFC822TEXTStr;
     static const std::string kUIDStr;
+    static const std::string kBYEStr;
       
     //
     // Decode function pointer
@@ -339,11 +351,12 @@ private:
     // Command response decode utility methods
     //
     
-    static std::string contentsBetween(const std::string& line, const char first, const char last);
+    static std::string extractBetween(const std::string& line, const char first, const char last);
     static std::string extractBetweenDelimeter(const std::string& line, const char delimeter);
     static std::string extractTag(const std::string& line);
     static std::string extractCommand(const std::string& line);
     static std::string extractList(const std::string& line);
+    static std::string extractUntaggedNumber(const std::string& line);
     
     static void decodeStatus(const std::string& tag, const std::string& line, BASERESPONSE resp);
     static void decodeOctets(const std::string& commandStr, FetchRespData& fetchData, std::string& line, std::istringstream& responseStream);
@@ -363,6 +376,8 @@ private:
     static BASERESPONSE decodeEXPUNGE(CommandData& commandData, std::istringstream& responseStream);
     static BASERESPONSE decodeSTORE(CommandData& commandData, std::istringstream& responseStream);
     static BASERESPONSE decodeCAPABILITY(CommandData& commandData, std::istringstream& responseStream);
+    static BASERESPONSE decodeNOOP(CommandData& commandData, std::istringstream& responseStream);
+    static BASERESPONSE decodeLOGOUT(CommandData& commandData, std::istringstream& responseStream);
     static BASERESPONSE decodeDefault(CommandData& commandData, std::istringstream& responseStream);
     static BASERESPONSE decodeResponse(const std::string& commandLine, const std::string& commandResponse);
 
