@@ -81,7 +81,7 @@ public:
     };
 
     //
-    // Enumeration of command codes (not used at present)
+    // Enumeration of command codes.
     //
 
     enum Commands {
@@ -99,7 +99,7 @@ public:
         LIST,           // Supported
         LSUB,           // Supported
         STATUS,         // Supported
-        APPEND,         // <-- Special handling (come back)
+        APPEND,         // Supported
         CHECK,          // Supported
         CLOSE,          // Supported
         EXPUNGE,        // Supported
@@ -127,6 +127,8 @@ public:
     // Command string constants
     //
     
+    static const std::string kSTARTTLSStr;
+    static const std::string kAUTHENTICATEStr;
     static const std::string kSEARCHStr;
     static const std::string kSELECTStr;
     static const std::string kEXAMINEStr;
@@ -156,7 +158,7 @@ public:
     // 
     
     struct BaseResponse {
-        std::string command;
+        Commands command;
         RespCode status;
         std::string errorMessage;
     };
@@ -264,13 +266,17 @@ public:
     //
 
     void connect(void);
-    CMailIMAP::BASERESPONSE sendCommand(const std::string& commandLine);
+    BASERESPONSE sendCommand(const std::string& commandLine);
     void disconnect(void);
 
     // IMAP initialization and closedown processing
 
     static void init();
     static void closedown();
+    
+    // IMAP command string to internal enum code map table
+    
+    static std::string commandCodeString (CMailIMAP::Commands commandCode);
 
 
     // ================
@@ -329,11 +335,12 @@ private:
     // ===============
 
     //
-    // Send IDLE command (requires a special handler).
+    // Send IDLE/APPEND command (requires a special handler).
     //
     
-    void sendCommandIDLE(void);
-       
+    void sendCommandIDLE(const std::string& commandLine);
+    void sendCommandAPPEND(const std::string& commandLine);
+   
     //
     // Talks to server using curl_easy_send/recv()
     //
@@ -401,12 +408,17 @@ private:
     std::string currentTag;     // Current command tag
     
     //
-    // Command to decode response function mapping table
+    // IMAP command to decode response function mapping table
     //
     
     static std::unordered_map<std::string, DecodeFunction> decodeCommmandMap;
+    
+    //
+    // IMAP command string to code mapping table
+    //
+    
+    static std::unordered_map<std::string, Commands> stringToCodeMap; 
 
 };
-
 #endif /* CMAILIMAP_HPP */
 
