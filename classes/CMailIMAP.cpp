@@ -175,8 +175,8 @@ std::unordered_map<std::string, CMailIMAP::Commands> CMailIMAP::stringToCodeMap 
 // ===============
 
 //
-// Send IMAP command direct to server. The maximum buffer size is CURL_MAX_WRITE_SIZE
-// so split up message into chunks.
+// Send IMAP command direct to server. The maximum buffre size is CURL_MAX_WRITE_SIZE
+// so split up message in chunks.
 //
 
 void CMailIMAP::sendCommandDirect(const std::string& command) {
@@ -564,7 +564,7 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeLIST(CMailIMAP::CommandData& commandDat
                 mailBoxEntry.name = line.substr(line.find_last_of('\"'));
                 mailBoxEntry.name += '\"';
             }
-            resp->mailBoxList.push_back(mailBoxEntry);
+            resp->mailBoxList.push_back(std::move(mailBoxEntry));
 
         } else {
             decodeStatus(commandData.tag, line, resp);
@@ -668,7 +668,7 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeSTORE(CMailIMAP::CommandData& commandDa
         if (line.find(kFETCHStr) != std::string::npos) {
             storeData.flags = "("+extractBetween(line.substr(line.find_first_of('(') + 1), '(', ')')+")";
             storeData.index = std::strtoull(extractUntaggedNumber(line).c_str(), nullptr, 10);
-            resp->storeList.push_back(storeData);
+            resp->storeList.push_back(std::move(storeData));
 
         } else {
             decodeStatus(commandData.tag, line, resp);
@@ -723,7 +723,7 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeNOOP(CMailIMAP::CommandData& commandDat
         line.pop_back();        // Remove linefeed
 
         if (line.find(kUntaggedStr) == 0) {
-            resp->rawResponse.push_back(line);
+            resp->rawResponse.push_back(std::move(line));
         } else {
             decodeStatus(commandData.tag, line, resp);
         }
@@ -742,7 +742,7 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeFETCH(CMailIMAP::CommandData& commandDa
 
     CMailIMAP::FETCHRESPONSE resp{ new CMailIMAP::FetchResponse};
 
-     resp->command = CMailIMAP::stringToCodeMap[commandData.command];
+    resp->command = CMailIMAP::stringToCodeMap[commandData.command];
 
     for (std::string line; std::getline(responseStream, line, '\n');) {
 
@@ -790,8 +790,8 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeFETCH(CMailIMAP::CommandData& commandDa
 
             } while (!endOfFetch);
             
-            resp->fetchList.push_back(fetchData);
-
+            resp->fetchList.push_back(std::move(fetchData));
+   
         } else {
             decodeStatus(commandData.tag, line, resp);
         }
@@ -874,6 +874,8 @@ void CMailIMAP::sendCommandIDLE(const std::string& commandLine) {
 
     std::string response;
     
+    this->generateTag();
+
     this->sendCommandDirect(this->currentTag + " " + kIDLEStr + kEOLStr);
     this->waitForCommandResponse(kContinuationStr, this->commandResponse);
 
@@ -1002,11 +1004,11 @@ void CMailIMAP::disconnect() {
 CMailIMAP::BASERESPONSE CMailIMAP::sendCommand(const std::string& commandLine) {
 
     this->generateTag();
-
+ 
     if (commandLine.compare(kIDLEStr) == 0) {
         sendCommandIDLE(commandLine);
-    } else if (commandLine.compare(kAPPENDStr) != std::string::npos) {
-        sendCommandAPPEND(commandLine);
+    } else if (commandLine.find(kAPPENDStr) != std::string::npos) {
+         sendCommandAPPEND(commandLine);
     } else {
         this->sendCommandDirect(this->currentTag + " " + commandLine + kEOLStr);
         this->waitForCommandResponse(this->currentTag, this->commandResponse);

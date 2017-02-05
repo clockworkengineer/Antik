@@ -84,7 +84,7 @@ public:
     // Enumeration of command codes.
     //
 
-    enum Commands {
+    enum class Commands {
         STARTTLS = 0,   // Supported (through curl connect)
         AUTHENTICATE,   // Supported (through curl connect)
         LOGIN,          // Supported (through curl connect)
@@ -274,7 +274,7 @@ public:
     static void init();
     static void closedown();
     
-    // IMAP command string to internal enum code map table
+    // Get command string representation from internal code.
     
     static std::string commandCodeString (CMailIMAP::Commands commandCode);
 
