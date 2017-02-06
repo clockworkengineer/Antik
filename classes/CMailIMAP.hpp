@@ -47,9 +47,10 @@ public:
     //
     
     struct CommandData {
-        std::string tag;            // COmmand tag
-        std::string command;        // Command string
-        std::string commandLine;    // Full command line
+        std::string tag;                         // Command tag
+        std::string command;                     // Command string
+        std::string commandLine;                 // Full command line
+        std::istringstream& commandRespStream;   // Command response stream
     };
     
     //
@@ -324,7 +325,7 @@ private:
     // Decode function pointer
     //
     
-    typedef std::function<BASERESPONSE  (CommandData& commandData, std::istringstream&)> DecodeFunction;
+    typedef std::function<BASERESPONSE  (CommandData& commandData)> DecodeFunction;
     
     // =====================
     // DISABLED CONSTRUCTORS
@@ -345,8 +346,8 @@ private:
     // Talks to server using curl_easy_send/recv()
     //
 
-    void sendCommandDirect(const std::string& command);
-    void waitForCommandResponse(const std::string& commandTag, std::string& commandResponse);
+    void sendIMAPCommand(const std::string& command);
+    void waitForIMAPCommandResponse(const std::string& commandTag, std::string& commandResponse);
 
     //
     // Generate next command tag
@@ -366,26 +367,26 @@ private:
     static std::string extractUntaggedNumber(const std::string& line);
     
     static void decodeStatus(const std::string& tag, const std::string& line, BASERESPONSE resp);
-    static void decodeOctets(const std::string& commandStr, FetchRespData& fetchData, std::string& line, std::istringstream& responseStream);
-    static void decodeList(const std::string& commandStr, FetchRespData& fetchData, std::string& line);
-    static void decodeString(const std::string& commandStr, FetchRespData& fetchData, std::string& line);
-    static void decodeNumber(const std::string& commandStr, FetchRespData& fetchData, std::string& line);
+    static void decodeOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& line, std::istringstream& responseStream);
+    static void decodeList(const std::string& itemStr, FetchRespData& fetchData, std::string& line);
+    static void decodeString(const std::string& itemStr, FetchRespData& fetchData, std::string& line);
+    static void decodeNumber(const std::string& itemStr, FetchRespData& fetchData, std::string& line);
 
     //
     // Command response decode methods
     //
     
-    static BASERESPONSE decodeFETCH(CommandData& commandData, std::istringstream& responseStream);
-    static BASERESPONSE decodeLIST(CommandData& commandData, std::istringstream& responseStream);
-    static BASERESPONSE decodeSEARCH(CommandData& commandData, std::istringstream& responseStream);
-    static BASERESPONSE decodeSELECT(CommandData& commandData, std::istringstream& responseStream);
-    static BASERESPONSE decodeSTATUS(CommandData& commandData, std::istringstream& responseStream);
-    static BASERESPONSE decodeEXPUNGE(CommandData& commandData, std::istringstream& responseStream);
-    static BASERESPONSE decodeSTORE(CommandData& commandData, std::istringstream& responseStream);
-    static BASERESPONSE decodeCAPABILITY(CommandData& commandData, std::istringstream& responseStream);
-    static BASERESPONSE decodeNOOP(CommandData& commandData, std::istringstream& responseStream);
-    static BASERESPONSE decodeLOGOUT(CommandData& commandData, std::istringstream& responseStream);
-    static BASERESPONSE decodeDefault(CommandData& commandData, std::istringstream& responseStream);
+    static BASERESPONSE decodeFETCH(CommandData& commandData);
+    static BASERESPONSE decodeLIST(CommandData& commandData);
+    static BASERESPONSE decodeSEARCH(CommandData& commandData);
+    static BASERESPONSE decodeSELECT(CommandData& commandData);
+    static BASERESPONSE decodeSTATUS(CommandData& commandData);
+    static BASERESPONSE decodeEXPUNGE(CommandData& commandData);
+    static BASERESPONSE decodeSTORE(CommandData& commandData);
+    static BASERESPONSE decodeCAPABILITY(CommandData& commandData);
+    static BASERESPONSE decodeNOOP(CommandData& commandData);
+    static BASERESPONSE decodeLOGOUT(CommandData& commandData);
+    static BASERESPONSE decodeDefault(CommandData& commandData);
     static BASERESPONSE decodeResponse(const std::string& commandLine, const std::string& commandResponse);
 
     // =================

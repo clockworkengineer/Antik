@@ -175,11 +175,11 @@ std::unordered_map<std::string, CMailIMAP::Commands> CMailIMAP::stringToCodeMap 
 // ===============
 
 //
-// Send IMAP command direct to server. The maximum buffre size is CURL_MAX_WRITE_SIZE
-// so split up message in chunks.
+// Send IMAP command to server. The maximum buffer size is CURL_MAX_WRITE_SIZE
+// so split up message into chunks before sending.
 //
 
-void CMailIMAP::sendCommandDirect(const std::string& command) {
+void CMailIMAP::sendIMAPCommand(const std::string& command) {
 
     size_t len = 0;
     int bytesCopied = 0;
@@ -204,12 +204,12 @@ void CMailIMAP::sendCommandDirect(const std::string& command) {
 }
 
 //
-// Wait for reply from direct command. Keep filling buffer until the commandTag is found and
+// Wait for reply from IMAP sent command. Keep filling buffer until the commandTag is found and
 // we have a full line. Also if we run out of buffer space then append current buffer to response
-// and start at front of rxBuffer.
+// and start at front of rxBuffer. Note: Any old response left over is cleared.
 //
 
-void CMailIMAP::waitForCommandResponse(const std::string& commandTag, std::string& commandResponse) {
+void CMailIMAP::waitForIMAPCommandResponse(const std::string& commandTag, std::string& commandResponse) {
 
     std::string searchTag{ commandTag + " "};
     size_t len = 0;
@@ -258,7 +258,9 @@ void CMailIMAP::waitForCommandResponse(const std::string& commandTag, std::strin
 }
 
 //
-// Generate next command tag
+// Generate next command tag. This is just "A"+number at the moment but the
+// tag counter that is used is incremented so that the tag will be different on
+// the next call. (TO DO numeric value has leading zeros).
 //
 
 inline void CMailIMAP::generateTag() {
@@ -289,7 +291,7 @@ inline std::string CMailIMAP::extractBetweenDelimeter(const std::string& line, c
 }
 
 //
-// Extract string between two delimeters (ie. number and spaces).
+// Extract number may follow an un-tagged command response.
 //
 
 inline std::string CMailIMAP::extractUntaggedNumber(const std::string& line) {
@@ -310,95 +312,102 @@ inline std::string CMailIMAP::extractTag(const std::string& line) {
 
 //
 // Extract command string from command response line. If it the command
-// has the UID prefix command then this is skipped over.
+// has the UID prefix then this is skipped over.
 //
 
 inline std::string CMailIMAP::extractCommand(const std::string& line) {
 
-    int startComm = line.find_first_of (' ')+1;
-    int endComm =  line.find_first_of (' ', startComm);
+    int startOfCommand = line.find_first_of (' ')+1;
+    int endOfCommand =  line.find_first_of (' ', startOfCommand);
     
-    if (line.compare(startComm, endComm-startComm, kUIDStr) == 0) {
-        startComm = line.find_first_of (' ', startComm)+1;
-        endComm =  line.find_first_of (' ', startComm);
+    if (line.compare(startOfCommand, endOfCommand-startOfCommand, kUIDStr) == 0) {
+        startOfCommand = line.find_first_of (' ', startOfCommand)+1;
+        endOfCommand =  line.find_first_of (' ', startOfCommand);
     }
  
-    return(line.substr(startComm, endComm-startComm));
+    return(line.substr(startOfCommand, endOfCommand-startOfCommand));
 
 }
 
 //
-// Extract list string from command response line. Note only check
-// until the end of string.
+// Extract list  from command response line. Note only check until 
+// the end of line.
 //
 
 inline std::string CMailIMAP::extractList(const std::string& line) {
 
-    int bracketCount = 0, currIndex = 0, lineLen=line.length();
+    int bracketCount = 0, currentIndex = 0, lineLength=line.length();
 
     do {
-        if (line[currIndex] == '(') bracketCount++;
-        if (line[currIndex] == ')') bracketCount--;
-        currIndex++;
-    } while (bracketCount && (--lineLen > 0));
+        if (line[currentIndex] == '(') bracketCount++;
+        if (line[currentIndex] == ')') bracketCount--;
+        currentIndex++;
+    } while (bracketCount && (--lineLength > 0));
 
-    return (line.substr(0, currIndex));
+    return (line.substr(0, currentIndex));
 
 }
 
 //
-// Decode item/number pair in response and add to response map. Note the line is updated to remove the pair.
+// Decode item/number pair in command response and add to response map. Note the current line is 
+// updated to remove the pair and also this function is only used in FETCH command decode as the 
+// response is processed over multiple lines and not line by line.
 //
 
-void CMailIMAP::decodeNumber(const std::string& commandStr, FetchRespData& fetchData, std::string& line) {
+void CMailIMAP::decodeNumber(const std::string& itemStr, FetchRespData& fetchData, std::string& line) {
     std::string numberStr;
-    line = line.substr(line.find(commandStr) + commandStr.length());
+    line = line.substr(line.find(itemStr) + itemStr.length());
     numberStr = extractBetweenDelimeter(line, ' ');
     line = line.substr(numberStr.length() + 2);
-    fetchData.responseMap.insert({commandStr, numberStr});
+    fetchData.responseMap.insert({itemStr, numberStr});
 
 }
 
 //
-// Decode item/string pair in response and add to response map. Note the line is updated to remove the pair.
-//
+// Decode item/string pair in response and add to response map.Note the current line is 
+// updated to remove the pair and also this function is only used in FETCH command decode as the 
+// response is processed over multiple lines and not line by line.
 
-void CMailIMAP::decodeString(const std::string& commandStr, FetchRespData& fetchData, std::string& line) {
+void CMailIMAP::decodeString(const std::string& itemStr, FetchRespData& fetchData, std::string& line) {
     std::string quotedString;
-    line = line.substr(line.find(commandStr) + commandStr.length() + 1);
+    line = line.substr(line.find(itemStr) + itemStr.length() + 1);
     quotedString = "\"" + extractBetweenDelimeter(line, '\"') + "\"";
     line = line.substr(quotedString.length());
-    fetchData.responseMap.insert({commandStr, quotedString});
+    fetchData.responseMap.insert({itemStr, quotedString});
 
 }
 
 //
-// Decode list in response and add to response map.Note the line is updated to remove the list.
+// Decode item list in response and add to response map.Note the current line is 
+// updated to remove the pair and also this function is only used in FETCH 
+// command decode as the response is processed over multiple lines and not line 
+// by line.
 //
 
-void CMailIMAP::decodeList(const std::string& commandStr, FetchRespData& fetchData, std::string& line) {
+void CMailIMAP::decodeList(const std::string& itemStr, FetchRespData& fetchData, std::string& line) {
 
     std::string list;
-    line = line.substr(line.find(commandStr) + commandStr.length() + 1);
+    line = line.substr(line.find(itemStr) + itemStr.length() + 1);
     list = extractList(line);
     line = line.substr(list.length());
-    fetchData.responseMap.insert({commandStr, list});
+    fetchData.responseMap.insert({itemStr, list});
     
 }
 
 //
-// Decode octet string in response and add to response map. This involves decoding 
-// the octet string length and reading into a buffer.
+// Decode item octet string in response and add to response map. This involves decoding 
+// the octet string length and reading the string into a buffer, leaving line containing 
+// the next part of the command response to be processed.
 //
 
-void CMailIMAP::decodeOctets(const std::string& commandStr, FetchRespData& fetchData, std::string& line, std::istringstream& responseStream) {
+void CMailIMAP::decodeOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& line, std::istringstream& responseStream) {
 
     std::string octetStr, octectBuffer, commandLabel { line };
     int numberOfOctets;
     
     if (commandLabel.back() == '\r')  commandLabel.pop_back();
     
-    line = line.substr(line.find(commandStr) + commandStr.length());
+    line = line.substr(line.find(itemStr) + itemStr.length());
     octetStr = extractBetween(line, '{', '}');
     numberOfOctets = std::strtoull(octetStr.c_str(), nullptr, 10);
     line = line.substr(octetStr.length() + 2);
@@ -410,7 +419,7 @@ void CMailIMAP::decodeOctets(const std::string& commandStr, FetchRespData& fetch
 }
 
 //
-// Decode command response status. At present an un-tagged BAD/NO gets sent to std::cerr
+// Decode command response status. At present an un-tagged BAD/NO gets sent to std::cerr.
 //
 
 void CMailIMAP::decodeStatus(const std::string& tag, const std::string& line, CMailIMAP::BASERESPONSE resp) {
@@ -431,7 +440,7 @@ void CMailIMAP::decodeStatus(const std::string& tag, const std::string& line, CM
         std::cerr << line << std::endl;
 
     } else {
-        std::cerr << "UKNOWN RESPONSE TYPE = [" << line << "]" << std::endl;
+        std::cerr << "UKNOWN RESPONSE LINE = [" << line << "]" << std::endl;
     }
 
 
@@ -441,7 +450,7 @@ void CMailIMAP::decodeStatus(const std::string& tag, const std::string& line, CM
 // Decode SELECT/EXAMINE Response. 
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeSELECT(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeSELECT(CMailIMAP::CommandData& commandData) {
 
     CMailIMAP::SELECTRESPONSE resp{ new CMailIMAP::SelectResponse};
 
@@ -453,7 +462,7 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeSELECT(CMailIMAP::CommandData& commandD
     if (resp->mailBoxName.back() == '\"') resp->mailBoxName.pop_back();
     if (resp->mailBoxName.front() == '\"') resp->mailBoxName = resp->mailBoxName.substr(1);
 
-    for (std::string line; std::getline(responseStream, line, '\n');) {
+    for (std::string line; std::getline(commandData.commandRespStream, line, '\n');) {
 
         line.pop_back();    // Remove linefeed
 
@@ -506,13 +515,13 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeSELECT(CMailIMAP::CommandData& commandD
 // Decode SEARCH Response.
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeSEARCH(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeSEARCH(CMailIMAP::CommandData& commandData) {
 
     CMailIMAP::SEARCHRESPONSE resp{ new CMailIMAP::SearchResponse};
 
      resp->command = CMailIMAP::stringToCodeMap[commandData.command];
 
-    for (std::string line; std::getline(responseStream, line, '\n');) {
+    for (std::string line; std::getline(commandData.commandRespStream, line, '\n');) {
 
         line.pop_back();    // Remove linefeed
 
@@ -542,13 +551,13 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeSEARCH(CMailIMAP::CommandData& commandD
 // Decode LIST/LSUB Response.
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeLIST(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeLIST(CMailIMAP::CommandData& commandData) {
 
     CMailIMAP::LISTRESPONSE resp{ new CMailIMAP::ListResponse};
 
      resp->command = CMailIMAP::stringToCodeMap[commandData.command];
 
-    for (std::string line; std::getline(responseStream, line, '\n');) {
+    for (std::string line; std::getline(commandData.commandRespStream, line, '\n');) {
 
         CMailIMAP::ListRespData mailBoxEntry;
 
@@ -581,13 +590,13 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeLIST(CMailIMAP::CommandData& commandDat
 // Decode STATUS Response.
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeSTATUS(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeSTATUS(CMailIMAP::CommandData& commandData) {
 
     CMailIMAP::STATUSRESPONSE resp{ new CMailIMAP::StatusResponse};
 
      resp->command = CMailIMAP::stringToCodeMap[commandData.command];
 
-    for (std::string line; std::getline(responseStream, line, '\n');) {
+    for (std::string line; std::getline(commandData.commandRespStream, line, '\n');) {
 
         line.pop_back();    // Remove linefeed
 
@@ -621,13 +630,13 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeSTATUS(CMailIMAP::CommandData& commandD
 // Decode EXPUNGE Response.
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeEXPUNGE(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeEXPUNGE(CMailIMAP::CommandData& commandData) {
 
     CMailIMAP::EXPUNGERESPONSE resp{ new CMailIMAP::ExpungeResponse};
 
      resp->command = CMailIMAP::stringToCodeMap[commandData.command];
 
-    for (std::string line; std::getline(responseStream, line, '\n');) {
+    for (std::string line; std::getline(commandData.commandRespStream, line, '\n');) {
 
         line.pop_back();    // Remove linefeed
 
@@ -653,13 +662,13 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeEXPUNGE(CMailIMAP::CommandData& command
 // Decode STORE Response.
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeSTORE(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeSTORE(CMailIMAP::CommandData& commandData) {
 
     CMailIMAP::STORERESPONSE resp{ new CMailIMAP::StoreResponse};
 
      resp->command = CMailIMAP::stringToCodeMap[commandData.command];
 
-    for (std::string line; std::getline(responseStream, line, '\n');) {
+    for (std::string line; std::getline(commandData.commandRespStream, line, '\n');) {
 
         StoreRespData storeData;
 
@@ -684,13 +693,13 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeSTORE(CMailIMAP::CommandData& commandDa
 // Decode CAPABILITY Response.
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeCAPABILITY(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeCAPABILITY(CMailIMAP::CommandData& commandData) {
 
     CMailIMAP::CAPABILITYRESPONSE resp{ new CMailIMAP::CapabilityResponse};
 
      resp->command = CMailIMAP::stringToCodeMap[commandData.command];
 
-    for (std::string line; std::getline(responseStream, line, '\n');) {
+    for (std::string line; std::getline(commandData.commandRespStream, line, '\n');) {
 
         line.pop_back();        // Remove linefeed
 
@@ -712,13 +721,13 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeCAPABILITY(CMailIMAP::CommandData& comm
 // Decode NOOP/IDLE Response.
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeNOOP(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeNOOP(CMailIMAP::CommandData& commandData) {
 
     CMailIMAP::NOOPRESPONSE resp{ new CMailIMAP::NoOpResponse};
 
      resp->command = CMailIMAP::stringToCodeMap[commandData.command];
 
-    for (std::string line; std::getline(responseStream, line, '\n');) {
+    for (std::string line; std::getline(commandData.commandRespStream, line, '\n');) {
 
         line.pop_back();        // Remove linefeed
 
@@ -738,13 +747,13 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeNOOP(CMailIMAP::CommandData& commandDat
 // Decode FETCH Response
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeFETCH(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeFETCH(CMailIMAP::CommandData& commandData) {
 
     CMailIMAP::FETCHRESPONSE resp{ new CMailIMAP::FetchResponse};
 
     resp->command = CMailIMAP::stringToCodeMap[commandData.command];
 
-    for (std::string line; std::getline(responseStream, line, '\n');) {
+    for (std::string line; std::getline(commandData.commandRespStream, line, '\n');) {
 
         FetchRespData fetchData;
 
@@ -774,18 +783,18 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeFETCH(CMailIMAP::CommandData& commandDa
                 } else if (line.find(kUIDStr + " ") == 0) {
                     decodeNumber(kUIDStr, fetchData, line);
                 } else if (line.find(kRFC822HEADERStr + " ") == 0) {
-                    decodeOctets(kRFC822HEADERStr, fetchData, line, responseStream);
+                    decodeOctets(kRFC822HEADERStr, fetchData, line, commandData.commandRespStream);
                 } else if (line.find(kBODYStr+"[") == 0) {
-                    decodeOctets(kBODYStr, fetchData, line, responseStream);
+                    decodeOctets(kBODYStr, fetchData, line, commandData.commandRespStream);
                 } else if (line.find(kRFC822Str + " ") == 0) {
-                    decodeOctets(kRFC822Str, fetchData, line, responseStream);
+                    decodeOctets(kRFC822Str, fetchData, line, commandData.commandRespStream);
                 }
   
                 line = line.substr(line.find_first_not_of(' '));
                 if (line[0] == ')') {
                     endOfFetch = true;
                 } else if (line.length() == kEOLStr.length() - 1) {
-                    std::getline(responseStream, line, '\n');
+                    std::getline(commandData.commandRespStream, line, '\n');
                 }
 
             } while (!endOfFetch);
@@ -807,13 +816,13 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeFETCH(CMailIMAP::CommandData& commandDa
 // Decode LOGOUT Response
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeLOGOUT(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeLOGOUT(CMailIMAP::CommandData& commandData) {
 
     CMailIMAP::LOGOUTRESPONSE resp{ new CMailIMAP::LogOutResponse};
 
      resp->command = CMailIMAP::stringToCodeMap[commandData.command];
 
-    for (std::string line; std::getline(responseStream, line, '\n');) {
+    for (std::string line; std::getline(commandData.commandRespStream, line, '\n');) {
         
         line.pop_back();    // Remove linefeed
         
@@ -832,13 +841,13 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeLOGOUT(CMailIMAP::CommandData& commandD
 // Default Decode Response
 //
 
-CMailIMAP::BASERESPONSE CMailIMAP::decodeDefault(CMailIMAP::CommandData& commandData, std::istringstream& responseStream) {
+CMailIMAP::BASERESPONSE CMailIMAP::decodeDefault(CMailIMAP::CommandData& commandData) {
 
     CMailIMAP::BASERESPONSE resp{ new CMailIMAP::BaseResponse};
 
      resp->command = CMailIMAP::stringToCodeMap[commandData.command];
 
-    for (std::string line; std::getline(responseStream, line, '\n');) {
+    for (std::string line; std::getline(commandData.commandRespStream, line, '\n');) {
         line.pop_back();    // Remove linefeed
         decodeStatus(commandData.tag, line, resp);
     }
@@ -855,14 +864,15 @@ CMailIMAP::BASERESPONSE CMailIMAP::decodeResponse(const std::string& commandLine
 
     std::istringstream responseStream(commandResponse);
     CMailIMAP::DecodeFunction decodeFn;
-    CommandData commandData{ extractTag(commandLine), extractCommand(commandLine), commandLine};
+    CommandData commandData{ extractTag(commandLine), extractCommand(commandLine), commandLine, responseStream};
 
+    
     decodeFn = CMailIMAP::decodeCommmandMap[commandData.command];
     if (!decodeFn) {
         decodeFn = decodeDefault;
     }
 
-    return (decodeFn(commandData, responseStream));
+    return (decodeFn(commandData));
 
 }
 
@@ -876,14 +886,14 @@ void CMailIMAP::sendCommandIDLE(const std::string& commandLine) {
     
     this->generateTag();
 
-    this->sendCommandDirect(this->currentTag + " " + kIDLEStr + kEOLStr);
-    this->waitForCommandResponse(kContinuationStr, this->commandResponse);
+    this->sendIMAPCommand(this->currentTag + " " + kIDLEStr + kEOLStr);
+    this->waitForIMAPCommandResponse(kContinuationStr, this->commandResponse);
 
-    this->waitForCommandResponse(kUntaggedStr, response);
+    this->waitForIMAPCommandResponse(kUntaggedStr, response);
 
-    this->sendCommandDirect(kDONEStr + kEOLStr);
+    this->sendIMAPCommand(kDONEStr + kEOLStr);
 
-    this->waitForCommandResponse(this->currentTag, this->commandResponse);
+    this->waitForIMAPCommandResponse(this->currentTag, this->commandResponse);
     
     response += this->commandResponse;
     
@@ -899,11 +909,11 @@ void CMailIMAP::sendCommandIDLE(const std::string& commandLine) {
 
 void CMailIMAP::sendCommandAPPEND(const std::string& commandLine) {
 
-    this->sendCommandDirect(this->currentTag + " " + commandLine.substr(0, commandLine.find_first_of('}')+1) + kEOLStr);
-    this->waitForCommandResponse(kContinuationStr, this->commandResponse);
+    this->sendIMAPCommand(this->currentTag + " " + commandLine.substr(0, commandLine.find_first_of('}')+1) + kEOLStr);
+    this->waitForIMAPCommandResponse(kContinuationStr, this->commandResponse);
 
-    this->sendCommandDirect(commandLine.substr(commandLine.find_first_of('}')+1)); 
-    this->waitForCommandResponse(this->currentTag, this->commandResponse);
+    this->sendIMAPCommand(commandLine.substr(commandLine.find_first_of('}')+1)); 
+    this->waitForIMAPCommandResponse(this->currentTag, this->commandResponse);
 
 }
 
@@ -1010,8 +1020,8 @@ CMailIMAP::BASERESPONSE CMailIMAP::sendCommand(const std::string& commandLine) {
     } else if (commandLine.find(kAPPENDStr) != std::string::npos) {
          sendCommandAPPEND(commandLine);
     } else {
-        this->sendCommandDirect(this->currentTag + " " + commandLine + kEOLStr);
-        this->waitForCommandResponse(this->currentTag, this->commandResponse);
+        this->sendIMAPCommand(this->currentTag + " " + commandLine + kEOLStr);
+        this->waitForIMAPCommandResponse(this->currentTag, this->commandResponse);
     }
 
     return (CMailIMAP::decodeResponse(this->currentTag + " " + commandLine, this->commandResponse));
