@@ -302,17 +302,12 @@ void CMailSMTP::buildMailPayload(void) {
         this->mailPayload.push_back(str + kEOL);
     }
 
-    this->mailPayload.push_back(kEOL); // EMPTY LINE 
-
+ 
     if (bAttachments) {
+        this->mailPayload.push_back(kEOL); // EMPTY LINE 
         this->buildAttachments();
         this->mailPayload.push_back("--" + CMailSMTP::kMimeBoundary + "--"+kEOL);
     }
-
-    // End of message
-
-   // this->mailPayload.push_back("");
-    
 
 }
 
@@ -480,6 +475,25 @@ void CMailSMTP::postMail(void) {
 
 }
 
+//
+// Get email message body
+//
+
+std::string CMailSMTP::getMailMessage() {
+ 
+    std::string mailMessage;
+    
+    this->buildMailPayload();
+    
+    for (auto line : this->mailPayload) {
+        mailMessage.append(line);
+    }
+    
+    this->mailPayload.clear();
+    
+    return(mailMessage);
+    
+}
 
 //
 // Main CMailSend object constructor. 

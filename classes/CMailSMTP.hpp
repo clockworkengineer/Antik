@@ -96,6 +96,10 @@ public:
     static void init();
     static void closedown();
     
+    // Get email message body
+    
+    std::string getMailMessage();
+    
     // ================
     // PUBLIC VARIABLES
     // ================
