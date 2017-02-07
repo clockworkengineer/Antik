@@ -16,14 +16,9 @@
 // C++ STL definitions
 //
 
-#include <iostream>
-#include <cstring>
-#include <string>
 #include <vector>
 #include <memory>
-#include <stdexcept>
 #include <unordered_map>
-#include <sstream>
 
 //
 // libcurl definitions
@@ -41,16 +36,27 @@ public:
     // ==========================
     // PUBLIC TYPES AND CONSTANTS
     // ==========================
+    
+    //
+    // Class exception
+    //
+    
+    struct Exception : public std::runtime_error {
 
+        Exception(std::string const& message)
+        : std::runtime_error("CMailIMAP Failure: "+ message) { }
+        
+    };
+    
     //
     // Command data structure
     //
     
     struct CommandData {
-        std::string tag;                         // Command tag
-        std::string command;                     // Command string
-        std::string commandLine;                 // Full command line
-        std::istringstream& commandRespStream;   // Command response stream
+        std::string tagStr;                      // Command tag
+        std::string commandStr;                  // Command string
+        std::string commandLineStr;              // Full command line
+        std::istringstream& commandRespStream;   // Command response stream (Note reference)
     };
     
     //
@@ -259,15 +265,15 @@ public:
     // Set email server account details
     //
 
-    void setServer(const std::string& serverURL);
-    void setUserAndPassword(const std::string& userName, const std::string& userPassword);
+    void setServer(const std::string& serverURLStr);
+    void setUserAndPassword(const std::string& userNameStr, const std::string& userPasswordStr);
 
     //
     // IMAP connect, send command and disconnect
     //
 
     void connect(void);
-    BASERESPONSE sendCommand(const std::string& commandLine);
+    BASERESPONSE sendCommand(const std::string& commandLineStr);
     void disconnect(void);
 
     // IMAP initialization and closedown processing
@@ -339,15 +345,15 @@ private:
     // Send IDLE/APPEND command (requires a special handler).
     //
     
-    void sendCommandIDLE(const std::string& commandLine);
-    void sendCommandAPPEND(const std::string& commandLine);
+    void sendCommandIDLE(const std::string& commandLineStr);
+    void sendCommandAPPEND(const std::string& commandLineStr);
    
     //
     // Talks to server using curl_easy_send/recv()
     //
 
     void sendIMAPCommand(const std::string& command);
-    void waitForIMAPCommandResponse(const std::string& commandTag, std::string& commandResponse);
+    void waitForIMAPCommandResponse(const std::string& commandTag, std::string& commandResponseStr);
 
     //
     // Generate next command tag
@@ -359,18 +365,18 @@ private:
     // Command response decode utility methods
     //
     
-    static std::string extractBetween(const std::string& line, const char first, const char last);
-    static std::string extractBetweenDelimeter(const std::string& line, const char delimeter);
-    static std::string extractTag(const std::string& line);
-    static std::string extractCommand(const std::string& line);
-    static std::string extractList(const std::string& line);
-    static std::string extractUntaggedNumber(const std::string& line);
+    static std::string extractBetween(const std::string& lineStr, const char first, const char last);
+    static std::string extractBetweenDelimeter(const std::string& lineStr, const char delimeter);
+    static std::string extractTag(const std::string& lineStr);
+    static std::string extractCommand(const std::string& lineStr);
+    static std::string extractList(const std::string& lineStr);
+    static std::string extractUntaggedNumber(const std::string& lineStr);
     
-    static void decodeStatus(const std::string& tag, const std::string& line, BASERESPONSE resp);
-    static void decodeOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& line, std::istringstream& responseStream);
-    static void decodeList(const std::string& itemStr, FetchRespData& fetchData, std::string& line);
-    static void decodeString(const std::string& itemStr, FetchRespData& fetchData, std::string& line);
-    static void decodeNumber(const std::string& itemStr, FetchRespData& fetchData, std::string& line);
+    static void decodeStatus(const std::string& tagStr, const std::string& lineStr, BASERESPONSE resp);
+    static void decodeOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr, std::istringstream& responseStream);
+    static void decodeList(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
+    static void decodeString(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
+    static void decodeNumber(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
 
     //
     // Command response decode methods
@@ -387,26 +393,28 @@ private:
     static BASERESPONSE decodeNOOP(CommandData& commandData);
     static BASERESPONSE decodeLOGOUT(CommandData& commandData);
     static BASERESPONSE decodeDefault(CommandData& commandData);
-    static BASERESPONSE decodeResponse(const std::string& commandLine, const std::string& commandResponse);
+    static BASERESPONSE decodeResponse(const std::string& commandLineStr, const std::string& commandResponseStr);
 
     // =================
     // PRIVATE VARIABLES
     // =================
 
-    std::string userName = ""; // Email account user name
-    std::string userPassword = ""; // Email account user name password
-    std::string serverURL = ""; // IMAP server URL
+    bool bConnected=false;      // == true then connected to server
+    
+    std::string userNameStr = ""; // Email account user name
+    std::string userPasswordStr = ""; // Email account user name password
+    std::string serverURLStr = ""; // IMAP server URL
 
     CURL *curl = nullptr; // curl handle
     CURLcode res = CURLE_OK; // curl status
 
-    std::string commandResponse; // IMAP command response
+    std::string commandResponseStr; // IMAP command response
 
     char rxBuffer[CURL_MAX_WRITE_SIZE]; // IMAP rx buffer
     char errMsgBuffer[CURL_ERROR_SIZE]; // IMAP error string buffer
     
     uint64_t tagCount=1;        // Current command tag count
-    std::string currentTag;     // Current command tag
+    std::string currentTagStr;     // Current command tag
     
     //
     // IMAP command to decode response function mapping table
