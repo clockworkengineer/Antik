@@ -16,15 +16,9 @@
 // C++ STL definitions
 //
 
-#include <cstring>
 #include <string>
 #include <vector>
-#include <memory>
-#include <ctime>
-#include <fstream>
-#include <stdexcept>
 #include <unordered_map>
-#include <sstream>
 #include <deque>
 
 //

@@ -24,6 +24,7 @@
 
 #include <stdexcept>
 #include <fstream>
+#include <thread>
 
 // CFileApprise class definitions
 

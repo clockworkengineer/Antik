@@ -15,6 +15,8 @@
 // Description: Class to perform trace output. All methods are designed to
 // perform output in a thread safe manor and each is guarded buy a single 
 // mutex.
+//
+// Dependencies: C11++ - Language standard features used.    
 // 
 
 // =================
@@ -26,6 +28,15 @@
 // ====================
 // CLASS IMPLEMENTATION
 // ====================
+
+//
+// C++ STL definitions
+//
+
+#include <iostream>
+#include <initializer_list>
+#include <thread>
+#include <ctime>
 
 // ===========================
 // PRIVATE TYPES AND CONSTANTS

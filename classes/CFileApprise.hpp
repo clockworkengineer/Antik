@@ -17,14 +17,9 @@
 //
 
 #include <unordered_map>
-#include <thread>
 #include <queue>
 #include <condition_variable>
-#include <mutex>
 #include <atomic>
-#include <system_error>
-#include <cassert>
-#include <algorithm>
 #include <set>
 
 //

@@ -20,7 +20,9 @@
 // watches to be added/removed respectively. The current implementation is for 
 // POSIX only or any platform that has inotify or a third party equivalent.
 //
-// Dependencies: C11++, Classes (CLogger), inotify
+// Dependencies: C11++               - Language standard features used.    
+//               Classes (CLogger)   - Logging functionality. 
+//               inotify/Linux       - Linux file system events.
 //
 
 // =================
@@ -32,6 +34,16 @@
 // ====================
 // CLASS IMPLEMENTATION
 // ====================
+
+//
+// C++ STL definitions
+//
+
+#include <thread>
+#include <mutex>
+#include <system_error>
+#include <cassert>
+#include <algorithm>
 
 // ===========================
 // PRIVATE TYPES AND CONSTANTS

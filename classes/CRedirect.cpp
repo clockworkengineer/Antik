@@ -16,7 +16,9 @@
 // a wrapper for pretty generic code that saves away an output streams 
 // read buffer, creates a file stream and redirects the output stream to it. 
 // The code to restore the original output streams is called from the objects 
-// destructor thus providing convenient for restoring the original stream. 
+// destructor thus providing convenient for restoring the original stream.
+//
+// Dependencies: C11++ - Language standard features used. 
 //
 
 // =================

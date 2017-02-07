@@ -19,7 +19,10 @@
 // checking an internal table created from /etc/mime.types. If no 
 // mapping is present it uses the pass in value as default.
 //
-// Dependencies: C11++, libcurl, Linux.
+// Dependencies:   C11++     - Language standard features used.
+//                 libcurl   - Used to talk to SMTP server.
+//                 Linux     - /etc/mime.types used to create MIME file 
+//                             extension mapping.
 //
 
 // =================
@@ -31,6 +34,17 @@
 // ====================
 // CLASS IMPLEMENTATION
 // ====================
+
+//
+// C++ STL definitions
+//
+
+#include <cstring>
+#include <memory>
+#include <ctime>
+#include <fstream>
+#include <stdexcept>
+#include <sstream>
 
 // ===========================
 // PRIVATE TYPES AND CONSTANTS

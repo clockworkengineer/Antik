@@ -16,13 +16,9 @@
 // C++ STL definitions
 //
 
-#include <iostream>
 #include <functional>
 #include <mutex>
-#include <initializer_list>
 #include <sstream>
-#include <thread>
-#include <ctime>
 
 // ================
 // CLASS DEFINITION

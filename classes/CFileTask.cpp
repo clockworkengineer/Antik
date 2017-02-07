@@ -17,7 +17,9 @@
 // on a watch folder and to process each file added with a task action function 
 // provided as a parameter in its constructor.
 // 
-// Dependencies: C11++, Classes (CFileApprise, CLogger).
+// Dependencies: C11++               - Language standard features used.    
+//               Class CLogger       - Logging functionality. 
+//               Class CFileApprise  - File event handling abstraction.
 //
 
 // =================

@@ -16,8 +16,8 @@
 // C++ STL definitions
 //
 
-#include <thread>
 #include <cassert>
+#include <thread>
 
 //
 // CLogger trace output, CFileApprise file event watcher
