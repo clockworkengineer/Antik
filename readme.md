@@ -2,7 +2,7 @@
 
 # Introduction #
 
-This repository contains the master copies of C++ based utility classes that I use in my projects.  Copies of these classes in other repositories while working will not usually be up to date.
+This repository contains the master copies of the C++ based utility classes that I use in my projects.  Copies of these classes in other repositories while working will not usually be up to date.
 
 # [Task Class](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CFileTask.cpp) #
 
@@ -57,7 +57,6 @@ and they are contained within a structure of form
 Notes: 
 
 - Events *addir*/unlinkdir will result in new watch folders being added/removed from the internal watch table maps (depending on the value of watchDepth).
-- The change event is currently unsupported and not required by CFileTask but is penciled in to be added in future.
 
 # [Redirect Class](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CRedirect.cpp) #
 
@@ -70,9 +69,15 @@ Both the CFileTask and CFileApprise classes are designed to run in a separate th
 
 # [CMailSMTP Class](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CMailSMTP.cpp) #
 
+CMailSMTP provides the ability to create an email, add file attachments (encoded either as 7-bit or base64) and then send the created email to a given recipient(s). It provides methods for setting various parameters required to send the email and also attach files and post the resulting email. It is state based so it is quite possible to create an email and send but then just change say the recipients and re-post. Library [libcurl](https://curl.haxx.se/libcurl/) is used to provide the SMTP server connect and message sending transport.
+
 # [CMailIMAP Class](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CMailIMAP.cpp) #
 
+CMailIMAP provides a way to connect to an IMAP server and send commands and receive decoded responses to process. It supports most of [rfc3501](https://tools.ietf.org/html/rfc3501) including the ability the ability to FETCH messages and also APPEND them to a mailbox. The decoded response are fairly simplistic and adding extra processing like encoding attachments or creating emails for append need to be done at a higher code layer; although every peace of data needed to achieve this should be in the return response. Library [libcurl](https://curl.haxx.se/libcurl/) is used to provide the SMTP server connect and command sending transport.
+
 # [CLogger Class](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CLogger.cpp) #
+
+Generic log trace class that will take a list of strings and output them either to cout or cerr with an optional time and date stamp. It also includes a template method for converting an arbitrary value to a string to be placed in the list of strings to be output. This class is very much a work in progress and will probably change until I find a solution that I like for my logging needs.
 
 # To Do #
 

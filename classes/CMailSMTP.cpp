@@ -17,7 +17,7 @@
 // and attached files in either 7bit or base64 encoded format. When
 // adding an attachment it creates its MIME type by first
 // checking an internal table created from /etc/mime.types. If no 
-// mapping is present it uses the pass in value as default.
+// mapping is present it uses the passed in value as default.
 //
 // Dependencies:   C11++     - Language standard features used.
 //                 libcurl   - Used to talk to SMTP server.
@@ -274,7 +274,7 @@ void CMailSMTP::buildAttachments(void) {
 }
 
 //
-// Build email message in a vector of std::strings to be sent.
+// Build email message in a dqeue of std::strings to be sent.
 //
 
 void CMailSMTP::buildMailPayload(void) {
@@ -477,13 +477,17 @@ void CMailSMTP::postMail(void) {
                 errMsg=curl_easy_strerror(res);
             }
             throw CMailSMTP::Exception("curl_easy_perform() failed: "+errMsg);
-        } 
+        }
+        
+        // Clear sent email
+        
+        this->mailPayload.clear();
 
-        /* Free the list of this->recipients */
+        // Free the list of this->recipients
 
         curl_slist_free_all(this->recipients);
 
-        /* Always cleanup */
+        // Always cleanup
 
         curl_easy_cleanup(curl);
 
