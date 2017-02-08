@@ -47,6 +47,17 @@ public:
     // ==========================
 
     //
+    // Class exception
+    //
+    
+    struct Exception : public std::runtime_error {
+
+        Exception(std::string const& message)
+        : std::runtime_error("CFileApprise Failure: "+ message) { }
+        
+    };
+    
+    //
     // CFileApprise options structure (optionally passed to CFileApprise constructor)
     //
 

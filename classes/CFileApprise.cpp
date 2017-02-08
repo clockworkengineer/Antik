@@ -22,7 +22,7 @@
 //
 // Dependencies: C11++               - Language standard features used.    
 //               Classes (CLogger)   - Logging functionality. 
-//               inotify/Linux       - Linux file system events.
+//               inotify/Linux       - Linux file system events
 //
 
 // =================
