@@ -39,6 +39,17 @@ public:
     // PUBLIC TYPES AND CONSTANTS
     // ==========================
     
+    //
+    // Class exception
+    //
+    
+    struct Exception : public std::runtime_error {
+
+        Exception(std::string const& message)
+        : std::runtime_error("CMailSMTP Failure: "+ message) { }
+        
+    };
+    
     // Supported contents encodings
     
     static const std::string kEncoding7Bit;
@@ -129,7 +140,7 @@ private:
     
     // Encode bytes to base64 string
     
-    void encodeToBase64(uint8_t const* bytesToEncode, uint32_t numberOfBytes, std::string& encodedString);
+    void encodeToBase64(std::string bytesToEncode, uint32_t numberOfBytes, std::string& encodedString);
     
     // Encode email attachment
     
@@ -145,7 +156,7 @@ private:
     
     // libcurl read callback for payload
     
-    static size_t payloadSource(void *ptr, size_t size, size_t nmemb, void *userData);
+    static size_t payloadSource(void *ptr, size_t size, size_t nmemb,  std::deque<std::string> *mailPayload);
     
     // Date and time for email
     

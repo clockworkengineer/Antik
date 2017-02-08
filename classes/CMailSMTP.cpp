@@ -15,14 +15,14 @@
 // Description: Class that enables an email to be setup and sent
 // to a specified address using the libcurl library. SSL is supported
 // and attached files in either 7bit or base64 encoded format. When
-// adding an atatchment it creates its MIME type by first
+// adding an attachment it creates its MIME type by first
 // checking an internal table created from /etc/mime.types. If no 
 // mapping is present it uses the pass in value as default.
 //
 // Dependencies:   C11++     - Language standard features used.
 //                 libcurl   - Used to talk to SMTP server.
 //                 Linux     - /etc/mime.types used to create MIME file 
-//                             extension mapping.
+//                             extension mapping and function basename().
 //
 
 // =================
@@ -45,6 +45,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <sstream>
+#include <array>
 
 // ===========================
 // PRIVATE TYPES AND CONSTANTS
@@ -115,13 +116,14 @@ void CMailSMTP::loadMIMETypes (void) {
 
 const std::string CMailSMTP::currentDateAndTime(void) {
     
-   time_t rawtime;
-   struct tm *info;
-   char buffer[80];
+   std::time_t rawtime;
+   struct std::tm *info;
+   std::string buffer(80, ' ');
 
-   time( &rawtime );
-   info = localtime( &rawtime );
-   strftime(buffer,80,"%a, %d %b %Y %H:%M:%S %z", info);
+   std::time( &rawtime );
+   info = std::localtime( &rawtime );
+   std::strftime(&buffer[0],buffer.length(),"%a, %d %b %Y %H:%M:%S %z", info);
+   
    return(std::string(buffer));
 
 }
@@ -130,9 +132,8 @@ const std::string CMailSMTP::currentDateAndTime(void) {
 // Fill libcurl read request buffer.
 //
 
-size_t CMailSMTP::payloadSource(void *ptr, size_t size, size_t nmemb, void *userData) {
+size_t CMailSMTP::payloadSource(void *ptr, size_t size, size_t nmemb, std::deque<std::string> *mailPayload) {
 
-    std::deque<std::string> *mailPayload = static_cast<std::deque<std::string> *> (userData);
     size_t bytesCopied=0;
 
     if ((size == 0) || (nmemb == 0) || ((size * nmemb) < 1)) {
@@ -154,21 +155,21 @@ size_t CMailSMTP::payloadSource(void *ptr, size_t size, size_t nmemb, void *user
 // Encode bytes to base64 string
 //
 
-void CMailSMTP::encodeToBase64(uint8_t const* bytesToEncode, uint32_t numberOfBytes, std::string& encodedString) {
+void CMailSMTP::encodeToBase64(std::string bytesToEncode, uint32_t numberOfBytes, std::string& encodedString) {
 
     static const char cb64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-    int trailing;
+    int trailing, byteIndex=0;
     register uint8_t byte1, byte2, byte3;
 
-    trailing = (numberOfBytes % 3); // Trailing bytes
-    numberOfBytes /= 3; // No of 3 byte values to encode
+    trailing = (numberOfBytes % 3);  // Trailing bytes
+    numberOfBytes /= 3;              // No of 3 byte values to encode
 
     while (numberOfBytes--) {
 
-        byte1 = *(bytesToEncode++);
-        byte2 = *(bytesToEncode++);
-        byte3 = *(bytesToEncode++);
+        byte1 = bytesToEncode[byteIndex++];
+        byte2 = bytesToEncode[byteIndex++];
+        byte3 = bytesToEncode[byteIndex++];
 
         encodedString += cb64[(byte1 & 0xfc) >> 2];
         encodedString += cb64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
@@ -180,7 +181,7 @@ void CMailSMTP::encodeToBase64(uint8_t const* bytesToEncode, uint32_t numberOfBy
     // One trailing byte
 
     if (trailing == 1) {
-        byte1 = *(bytesToEncode++);
+        byte1 = bytesToEncode[byteIndex++];
         encodedString += cb64[(byte1 & 0xfc) >> 2];
         encodedString += cb64[((byte1 & 0x03) << 4)];
         encodedString += '=';
@@ -189,8 +190,8 @@ void CMailSMTP::encodeToBase64(uint8_t const* bytesToEncode, uint32_t numberOfBy
         // Two trailing bytes
 
     } else if (trailing == 2) {
-        byte1 = *(bytesToEncode++);
-        byte2 = *(bytesToEncode++);
+        byte1 = bytesToEncode[byteIndex++];
+        byte2 = bytesToEncode[byteIndex++];
         encodedString += cb64[(byte1 & 0xfc) >> 2];
         encodedString += cb64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
         encodedString += cb64[((byte2 & 0x0f) << 2)];
@@ -226,12 +227,12 @@ void CMailSMTP::encodeAttachment(CMailSMTP::emailAttachment& attachment) {
     } else {
 
         std::ifstream ifs(attachment.fileName, std::ios::binary);
-        std::unique_ptr<std::uint8_t> buffer(new uint8_t [CMailSMTP::kBase64EncodeBufferSize]);
-
+        std::string buffer(CMailSMTP::kBase64EncodeBufferSize, ' ');
+  
         ifs.seekg(0, std::ios::beg);
         while (ifs.good()) {
-            ifs.read((char *)buffer.get(), CMailSMTP::kBase64EncodeBufferSize);
-            this->encodeToBase64(buffer.get(), ifs.gcount(), line);
+            ifs.read(&buffer[0], CMailSMTP::kBase64EncodeBufferSize);
+            this->encodeToBase64(buffer, ifs.gcount(), line);
             attachment.encodedContents.push_back(line + kEOL);
             line.clear();
         }
@@ -336,6 +337,7 @@ void CMailSMTP::buildMailPayload(void) {
 void CMailSMTP::setServer(const std::string& serverURL) {
 
     this->serverURL = serverURL;
+    
 }
 
 //
@@ -474,7 +476,7 @@ void CMailSMTP::postMail(void) {
             } else {
                 errMsg=curl_easy_strerror(res);
             }
-            throw std::runtime_error(std::string("curl_easy_perform() failed: ")+errMsg);
+            throw CMailSMTP::Exception("curl_easy_perform() failed: "+errMsg);
         } 
 
         /* Free the list of this->recipients */
@@ -532,7 +534,7 @@ CMailSMTP::~CMailSMTP() {
 void CMailSMTP::init(void) {
 
     if (curl_global_init(CURL_GLOBAL_ALL)) {
-        throw std::runtime_error(std::string("curl_global_init() : failure to initialize libcurl."));
+        throw CMailSMTP::Exception("curl_global_init() : failure to initialize libcurl.");
     }
     
     loadMIMETypes();
