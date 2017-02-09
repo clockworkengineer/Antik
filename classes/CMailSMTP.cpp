@@ -123,7 +123,7 @@ const std::string CMailSMTP::currentDateAndTime(void) {
 
    std::time( &rawtime );
    info = std::localtime( &rawtime );
-   std::strftime(&buffer[0],buffer.length(),"%a, %d %b %Y %H:%M:%S %z", info);
+   buffer.resize(std::strftime(&buffer[0],buffer.length(),"%a, %d %b %Y %H:%M:%S %z", info));
    return(buffer);
 
 }
