@@ -111,7 +111,8 @@ void CMailSMTP::loadMIMETypes (void) {
 }
 
 //
-// Get string for current date time.
+// Get string for current date time. Note: Resizing buffer effectively removes 
+// the null character added to the end of the string by strftime().
 //
 
 const std::string CMailSMTP::currentDateAndTime(void) {
@@ -123,8 +124,7 @@ const std::string CMailSMTP::currentDateAndTime(void) {
    std::time( &rawtime );
    info = std::localtime( &rawtime );
    std::strftime(&buffer[0],buffer.length(),"%a, %d %b %Y %H:%M:%S %z", info);
-   
-   return(std::string(buffer));
+   return(buffer);
 
 }
 
