@@ -77,6 +77,10 @@ const std::string CMailSMTP::kEncodingBase64("base64");
 
 std::unordered_map<std::string, std::string> CMailSMTP::extToMimeType;
 
+// curl verbosity setting
+
+bool CMailSMTP::bCurlVerbosity=false;
+
 // =======================
 // PUBLIC STATIC VARIABLES
 // =======================
@@ -341,6 +345,17 @@ void CMailSMTP::setServer(const std::string& serverURL) {
 }
 
 //
+// Get STMP server URL
+// 
+
+std::string CMailSMTP::getServer(void) {
+
+    return(this->serverURL);
+    
+}
+
+
+//
 // Set email account details
 //
 
@@ -348,6 +363,16 @@ void CMailSMTP::setUserAndPassword(const std::string& userName, const std::strin
 
     this->userName = userName;
     this->userPassword = userPassword;
+
+}
+
+//
+// Get email account user
+//
+
+std::string CMailSMTP::getUser(void) {
+
+    return(this->userName);
 
 }
 
@@ -361,12 +386,33 @@ void CMailSMTP::setFromAddress(const std::string& addressFrom) {
 }
 
 //
+// Get From address
+//
+
+std::string CMailSMTP::getFromAddress(void) {
+
+    return(this->addressFrom);
+    
+}
+
+//
 // Set To address
 //
 
 void CMailSMTP::setToAddress(const std::string& addressTo) {
 
     this->addressTo = addressTo;
+    
+}
+
+//
+// Get To address
+//
+
+std::string CMailSMTP::getToAddress(void) {
+
+    return(this->addressTo);
+    
 }
 
 //
@@ -378,6 +424,15 @@ void CMailSMTP::setCCAddress(const std::string& addressCC) {
     this->addressCC = addressCC;
 }
 
+//
+// Get CC recipient address
+//
+
+std::string CMailSMTP::getCCAddress(void) {
+
+    return(this->addressCC);
+    
+}
 
 //
 // Set email subject
@@ -390,11 +445,37 @@ void CMailSMTP::setMailSubject(const std::string& mailSubject) {
 }
 
 //
+// Get email subject
+//
+
+std::string CMailSMTP::getMailSubject(void) {
+
+    return(this->mailSubject);
+
+}
+
+//
 // Set body of email message
 //
 
 void CMailSMTP::setMailMessage(const std::vector<std::string>& mailMessage) {
     this->mailMessage = mailMessage;
+}
+
+//
+// Get body of email message
+//
+
+std::string CMailSMTP::getMailMessage(void) {
+    
+   std::string mailMessage;
+    
+    for (auto line : this->mailMessage) {
+        mailMessage.append(line);
+    }
+      
+    return(mailMessage);
+    
 }
 
 //
@@ -424,10 +505,7 @@ void CMailSMTP::addFileAttachment(const std::string& fileName, const std::string
 // Post email
 //
 
-void CMailSMTP::postMail(void) {
-
-    char errMsgBuffer[CURL_ERROR_SIZE];
-    
+void CMailSMTP::postMail(void) {   
     this->curl = curl_easy_init();
 
     if (this->curl) {
@@ -440,7 +518,7 @@ void CMailSMTP::postMail(void) {
 
         curl_easy_setopt(this->curl, CURLOPT_USE_SSL, (long) CURLUSESSL_ALL);
 
-        curl_easy_setopt(this->curl, CURLOPT_ERRORBUFFER, errMsgBuffer);
+        curl_easy_setopt(this->curl, CURLOPT_ERRORBUFFER, this->errMsgBuffer);
         
         if (!this->mailCABundle.empty()) {
             curl_easy_setopt(this->curl, CURLOPT_CAINFO, this->mailCABundle.c_str());
@@ -462,7 +540,7 @@ void CMailSMTP::postMail(void) {
         curl_easy_setopt(this->curl, CURLOPT_READDATA, &this->mailPayload);
         curl_easy_setopt(this->curl, CURLOPT_UPLOAD, 1L);
 
-        curl_easy_setopt(this->curl, CURLOPT_VERBOSE, 0L);
+        curl_easy_setopt(this->curl, CURLOPT_VERBOSE, this->bCurlVerbosity);
         
         errMsgBuffer[0] = 0;
         this->res = curl_easy_perform(this->curl);
@@ -471,8 +549,8 @@ void CMailSMTP::postMail(void) {
 
         if (this->res != CURLE_OK) {
             std::string errMsg;
-            if (std::strlen(errMsgBuffer)!=0) {
-                errMsg = errMsgBuffer;
+            if (std::strlen(this->errMsgBuffer)!=0) {
+                errMsg = this->errMsgBuffer;
             } else {
                 errMsg=curl_easy_strerror(res);
             }
@@ -496,10 +574,10 @@ void CMailSMTP::postMail(void) {
 }
 
 //
-// Get email message body
+// Get whole of email message (including headers and encoded attachments).
 //
 
-std::string CMailSMTP::getMailMessage() {
+std::string CMailSMTP::getMailFull(void) {
  
     std::string mailMessage;
     
@@ -532,15 +610,17 @@ CMailSMTP::~CMailSMTP() {
 }
 
 //
-// CMailSend initialisation. Glocally init curl and load MIME types.
+// CMailSend initialization. Globally init curl and load MIME types.
 //
 
-void CMailSMTP::init(void) {
+void CMailSMTP::init(bool bCurlVerbosity) {
 
     if (curl_global_init(CURL_GLOBAL_ALL)) {
         throw CMailSMTP::Exception("curl_global_init() : failure to initialize libcurl.");
     }
     
+    CMailSMTP::bCurlVerbosity = bCurlVerbosity;
+
     loadMIMETypes();
         
 }

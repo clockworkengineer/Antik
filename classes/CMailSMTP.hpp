@@ -75,22 +75,32 @@ public:
     // PUBLIC METHODS
     // ==============
     
-    // Set email server account details
+    // Set/Get email server account details. Note : No password get.
 
     void setServer(const std::string& serverURL);
-    void setUserAndPassword(const std::string& userName, const std::string& userPassword);
+    void setUserAndPassword(const std::string& userName, const std::string& userPassword);  
     
-    // Set email message header details
+    std::string getServer(void);
+    std::string getUser(void);
+ 
+    // Set/Get email message header details
     
     void setFromAddress(const std::string& addressFrom);
     void setToAddress(const std::string& addressTo);
     void setCCAddress(const std::string& addressCC);
+    
+    std::string  getFromAddress(void);
+    std::string  getToAddress(void);
+    std::string  getCCAddress(void);
     
     // Set email content details
     
     void setMailSubject(const std::string& mailSubject);
     void setMailMessage(const std::vector<std::string>& mailMessage);
     void addFileAttachment(const std::string& fileName, const std::string& contentType, const std::string& contentTransferEncoding);
+ 
+    std::string getMailSubject(void);
+    std::string getMailMessage(void);
     
     // Send email
    
@@ -98,12 +108,12 @@ public:
        
     // Initialization and closedown processing
     
-    static void init();
+    static void init(bool bCurlVerbosity=false);
     static void closedown();
     
-    // Get email message body
+    // Get whole of email message
     
-    std::string getMailMessage();
+    std::string getMailFull(void);
     
     // ================
     // PUBLIC VARIABLES
@@ -172,7 +182,7 @@ private:
     
     std::string userName="";                  // Email account user name
     std::string userPassword="";              // Email account user name password
-    std::string serverURL="";                 // SMTp server URL
+    std::string serverURL="";                 // SMTP server URL
     
     std::string addressFrom="";               // Email Sender
     std::string addressTo="";                 // Main recipients addresses
@@ -186,6 +196,8 @@ private:
     CURL     *curl=nullptr;                   // curl handle
     struct   curl_slist *recipients=nullptr;  // curl email recipients list
     CURLcode res = CURLE_OK;                  // curl status
+    char errMsgBuffer[CURL_ERROR_SIZE];       // curl error string buffer  
+    static bool bCurlVerbosity;               // curl verbosity setting
     
     std::deque<std::string> mailPayload;      // Email payload
     
