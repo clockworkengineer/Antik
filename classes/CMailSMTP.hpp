@@ -117,8 +117,8 @@ public:
     
     // Encode/decode bytes to base64 string
     
-    static void encodeToBase64(std::string decodedString, std::string& encodedString, uint32_t numberOfBytes);
-    static void decodeFromBase64 (std::string const& encodedString, std::string& decodedString, uint32_t numberOfBytes);
+    static void encodeToBase64(const std::string& decodedString, std::string& encodedString, uint32_t numberOfBytes);
+    static void decodeFromBase64 (const std::string& encodedString, std::string& decodedString, uint32_t numberOfBytes);
 
     
     // ================

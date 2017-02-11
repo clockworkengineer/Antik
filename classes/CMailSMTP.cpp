@@ -163,7 +163,7 @@ size_t CMailSMTP::payloadSource(void *ptr, size_t size, size_t nmemb, std::deque
 // Encode string to base64 string.
 //
 
-void CMailSMTP::encodeToBase64(std::string decodedString, std::string& encodedString, uint32_t numberOfBytes) {
+void CMailSMTP::encodeToBase64(const std::string& decodedString, std::string& encodedString, uint32_t numberOfBytes) {
 
     int trailing, byteIndex=0;
     register uint8_t byte1, byte2, byte3;
@@ -231,7 +231,7 @@ void CMailSMTP::encodeToBase64(std::string decodedString, std::string& encodedSt
 // Decode string from base64 encoded string.
 //
  
-void CMailSMTP::decodeFromBase64(std::string const& encodedString, std::string& decodedString, uint32_t numberOfBytes) {
+void CMailSMTP::decodeFromBase64(const std::string& encodedString, std::string& decodedString, uint32_t numberOfBytes) {
 
     int byteIndex = 0;
     register uint8_t byte1, byte2, byte3, byte4;
