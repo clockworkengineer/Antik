@@ -14,15 +14,10 @@
 // 
 // Description: Class that enables an email to be setup and sent
 // to a specified address using the libcurl library. SSL is supported
-// and attached files in either 7bit or base64 encoded format. When
-// adding an attachment it creates its MIME type by first
-// checking an internal table created from /etc/mime.types. If no 
-// mapping is present it uses the passed in value as default.
+// and attached files in either 7bit or base64 encoded format.
 //
 // Dependencies:   C11++     - Language standard features used.
 //                 libcurl   - Used to talk to SMTP server.
-//                 Linux     - /etc/mime.types used to create MIME file 
-//                             extension mapping and function basename().
 //
 
 // =================
@@ -43,9 +38,7 @@
 #include <memory>
 #include <ctime>
 #include <fstream>
-#include <stdexcept>
 #include <sstream>
-#include <array>
 
 // ===========================
 // PRIVATE TYPES AND CONSTANTS
@@ -77,10 +70,6 @@ const std::string CMailSMTP::kEncodingBase64("base64");
 // PRIVATE STATIC VARIABLES
 // ========================
 
-// File extension to MIME type
-
-std::unordered_map<std::string, std::string> CMailSMTP::extToMimeType;
-
 // curl verbosity setting
 
 bool CMailSMTP::bCurlVerbosity=false;
@@ -92,31 +81,6 @@ bool CMailSMTP::bCurlVerbosity=false;
 // ===============
 // PRIVATE METHODS
 // ===============
-
-//
-// Build extension to MIME mapping table from /etc/mimes.types.
-// This is Linux dependent but use until a better solution found.
-//
-
-void CMailSMTP::loadMIMETypes (void) {
-    
-    std::ifstream mimeFile("/etc/mime.types");
-    std::string   extension, mimeType, line;
-
-    while (std::getline(mimeFile, line)) {
-        if (line[0] != '#') {
-            std::istringstream iss(line);
-            iss >> mimeType;
-            while (iss.good()) {
-                iss >> extension;
-                if (!extension.empty()) {
-                    CMailSMTP::extToMimeType.insert({extension, mimeType});
-                }
-            }
-        }
-    }
-      
-}
 
 //
 // Get string for current date time. Note: Resizing buffer effectively removes 
@@ -208,7 +172,7 @@ void CMailSMTP::buildAttachments(void) {
 
     for (auto attachment : this->attachedFiles) {
 
-        std::string baseFileName = basename(attachment.fileName.c_str());
+        std::string baseFileName = attachment.fileName.substr(attachment.fileName.find_last_of("/\\") + 1);
 
         this->encodeAttachment(attachment);
 
@@ -449,25 +413,12 @@ std::string CMailSMTP::getMailMessage(void) {
 }
 
 //
-// Add file attachment. Try to find MIME mapping for file extension from internal table 
-// but if not found then use passed in value as a fallback.
+// Add file attachment.
 // 
 
 void CMailSMTP::addFileAttachment(const std::string& fileName, const std::string& contentType, const std::string& contentTransferEncoding) {
 
-    std::string mimeMapping(contentType);
-    std::string baseFileName = basename(fileName.c_str());
-    std::size_t fullStop = baseFileName.find_last_of('.');
-    
-    if (fullStop != std::string::npos) {
-        baseFileName = baseFileName.substr(fullStop+1);
-        auto foundMapping= CMailSMTP::extToMimeType.find(baseFileName);
-        if (foundMapping != CMailSMTP::extToMimeType.end()) {
-            mimeMapping = foundMapping->second;
-        }
-    }
-
-    this->attachedFiles.push_back({fileName, mimeMapping, contentTransferEncoding});
+    this->attachedFiles.push_back({fileName, contentType, contentTransferEncoding});
 
 }
 
@@ -475,7 +426,8 @@ void CMailSMTP::addFileAttachment(const std::string& fileName, const std::string
 // Post email
 //
 
-void CMailSMTP::postMail(void) {   
+void CMailSMTP::postMail(void) {  
+    
     this->curl = curl_easy_init();
 
     if (this->curl) {
@@ -676,7 +628,7 @@ CMailSMTP::~CMailSMTP() {
 }
 
 //
-// CMailSend initialization. Globally init curl and load MIME types.
+// CMailSend initialization. Globally init curl.
 //
 
 void CMailSMTP::init(bool bCurlVerbosity) {
@@ -686,8 +638,6 @@ void CMailSMTP::init(bool bCurlVerbosity) {
     }
     
     CMailSMTP::bCurlVerbosity = bCurlVerbosity;
-
-    loadMIMETypes();
         
 }
 

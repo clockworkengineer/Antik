@@ -18,6 +18,7 @@
 
 #include <cassert>
 #include <thread>
+#include <stdexcept>
 
 //
 // CLogger trace output, CFileApprise file event watcher

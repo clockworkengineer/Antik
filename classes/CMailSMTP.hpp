@@ -18,7 +18,7 @@
 
 #include <string>
 #include <vector>
-#include <unordered_map>
+#include <stdexcept>
 #include <deque>
 
 //
@@ -210,8 +210,6 @@ private:
     std::deque<std::string> mailPayload;      // Email payload
     
     std::vector<CMailSMTP::emailAttachment> attachedFiles;  // Attached files
-    
-    static std::unordered_map<std::string, std::string> extToMimeType;    // File extension to MIME type
     
 };
 

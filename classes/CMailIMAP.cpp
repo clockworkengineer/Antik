@@ -40,7 +40,6 @@
 #include <iostream>
 #include <cstring>
 #include <string>
-#include <stdexcept>
 #include <sstream>
 #include <iomanip>
 

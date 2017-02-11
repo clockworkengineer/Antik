@@ -21,6 +21,7 @@
 #include <condition_variable>
 #include <atomic>
 #include <set>
+#include <stdexcept>
 
 //
 // CLogger trace output
