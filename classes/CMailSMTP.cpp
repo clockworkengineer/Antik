@@ -160,119 +160,6 @@ size_t CMailSMTP::payloadSource(void *ptr, size_t size, size_t nmemb, std::deque
 }
 
 //
-// Encode string to base64 string.
-//
-
-void CMailSMTP::encodeToBase64(const std::string& decodedString, std::string& encodedString, uint32_t numberOfBytes) {
-
-    int trailing, byteIndex=0;
-    register uint8_t byte1, byte2, byte3;
-
-    if (numberOfBytes == 0) {
-        return;
-    }
-    
-    encodedString.clear();
-    
-    trailing = (numberOfBytes % 3);  // Trailing bytes
-    numberOfBytes /= 3;              // No of 3 byte values to encode
-
-    while (numberOfBytes--) {
-
-        byte1 = decodedString[byteIndex++];
-        byte2 = decodedString[byteIndex++];
-        byte3 = decodedString[byteIndex++];
-
-        encodedString += CMailSMTP::kCB64[(byte1 & 0xfc) >> 2];
-        encodedString += CMailSMTP::kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
-        encodedString += CMailSMTP::kCB64[((byte2 & 0x0f) << 2) + ((byte3 & 0xc0) >> 6)];
-        encodedString += CMailSMTP::kCB64[byte3 & 0x3f];
-
-    }
-
-    // One trailing byte
-
-    if (trailing == 1) {
-        byte1 = decodedString[byteIndex++];
-        encodedString += CMailSMTP::kCB64[(byte1 & 0xfc) >> 2];
-        encodedString += CMailSMTP::kCB64[((byte1 & 0x03) << 4)];
-        encodedString += '=';
-        encodedString += '=';
-
-        // Two trailing bytes
-
-    } else if (trailing == 2) {
-        byte1 = decodedString[byteIndex++];
-        byte2 = decodedString[byteIndex++];
-        encodedString += CMailSMTP::kCB64[(byte1 & 0xfc) >> 2];
-        encodedString += CMailSMTP::kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
-        encodedString += CMailSMTP::kCB64[((byte2 & 0x0f) << 2)];
-        encodedString += '=';
-    }
-
-}
-
-//
-// Decode character to base64 index.
-//
-
- inline int CMailSMTP::decodeChar(char ch) {
-
-    int index=0;
-    do {
-        if (ch == CMailSMTP::kCB64[index]) return (index);
-    } while (CMailSMTP::kCB64[index++]);
-
-    return (0);
-
-}
-
-//
-// Decode string from base64 encoded string.
-//
- 
-void CMailSMTP::decodeFromBase64(const std::string& encodedString, std::string& decodedString, uint32_t numberOfBytes) {
-
-    int byteIndex = 0;
-    register uint8_t byte1, byte2, byte3, byte4;
-
-    if ((numberOfBytes == 0) || (numberOfBytes % 4)) {
-        return;
-    }
-
-    decodedString.clear();
-
-    numberOfBytes = (numberOfBytes / 4);
-    while (numberOfBytes--) {
-
-        byte1 = encodedString[byteIndex++];
-        byte2 = encodedString[byteIndex++];
-        byte3 = encodedString[byteIndex++];
-        byte4 = encodedString[byteIndex++];
-
-        byte1 = decodeChar(byte1);
-        byte2 = decodeChar(byte2);
-
-        if (byte3 == '=') {
-            byte3 = 0;
-            byte4 = 0;
-        } else if (byte4 == '=') {
-            byte3 = decodeChar(byte3);
-            byte4 = 0;
-        } else {
-            byte3 = decodeChar(byte3);
-            byte4 = decodeChar(byte4);
-        }
-
-        decodedString += ((byte1 << 2) + ((byte2 & 0x30) >> 4));
-        decodedString += (((byte2 & 0xf) << 4) + ((byte3 & 0x3c) >> 2));
-        decodedString += (((byte3 & 0x3) << 6) + byte4);
-
-    }
-
-}
-
-//
 // Encode a specified file in either 7bit or base64.
 //
 
@@ -395,6 +282,21 @@ void CMailSMTP::buildMailPayload(void) {
         this->buildAttachments();
         this->mailPayload.push_back("--" + CMailSMTP::kMimeBoundary + "--"+kEOL);
     }
+
+}
+
+//
+// Decode character to base64 index.
+//
+
+ inline int CMailSMTP::decodeChar(char ch) {
+
+    int index=0;
+    do {
+        if (ch == CMailSMTP::kCB64[index]) return (index);
+    } while (CMailSMTP::kCB64[index++]);
+
+    return (0);
 
 }
 
@@ -636,6 +538,102 @@ void CMailSMTP::postMail(void) {
         // Always cleanup
 
         curl_easy_cleanup(curl);
+
+    }
+
+}//
+// Encode string to base64 string.
+//
+
+void CMailSMTP::encodeToBase64(const std::string& decodedString, std::string& encodedString, uint32_t numberOfBytes) {
+
+    int trailing, byteIndex=0;
+    register uint8_t byte1, byte2, byte3;
+
+    if (numberOfBytes == 0) {
+        return;
+    }
+    
+    encodedString.clear();
+    
+    trailing = (numberOfBytes % 3);  // Trailing bytes
+    numberOfBytes /= 3;              // No of 3 byte values to encode
+
+    while (numberOfBytes--) {
+
+        byte1 = decodedString[byteIndex++];
+        byte2 = decodedString[byteIndex++];
+        byte3 = decodedString[byteIndex++];
+
+        encodedString += CMailSMTP::kCB64[(byte1 & 0xfc) >> 2];
+        encodedString += CMailSMTP::kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
+        encodedString += CMailSMTP::kCB64[((byte2 & 0x0f) << 2) + ((byte3 & 0xc0) >> 6)];
+        encodedString += CMailSMTP::kCB64[byte3 & 0x3f];
+
+    }
+
+    // One trailing byte
+
+    if (trailing == 1) {
+        byte1 = decodedString[byteIndex++];
+        encodedString += CMailSMTP::kCB64[(byte1 & 0xfc) >> 2];
+        encodedString += CMailSMTP::kCB64[((byte1 & 0x03) << 4)];
+        encodedString += '=';
+        encodedString += '=';
+
+        // Two trailing bytes
+
+    } else if (trailing == 2) {
+        byte1 = decodedString[byteIndex++];
+        byte2 = decodedString[byteIndex++];
+        encodedString += CMailSMTP::kCB64[(byte1 & 0xfc) >> 2];
+        encodedString += CMailSMTP::kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
+        encodedString += CMailSMTP::kCB64[((byte2 & 0x0f) << 2)];
+        encodedString += '=';
+    }
+
+}
+
+//
+// Decode string from base64 encoded string.
+//
+ 
+void CMailSMTP::decodeFromBase64(const std::string& encodedString, std::string& decodedString, uint32_t numberOfBytes) {
+
+    int byteIndex = 0;
+    register uint8_t byte1, byte2, byte3, byte4;
+
+    if ((numberOfBytes == 0) || (numberOfBytes % 4)) {
+        return;
+    }
+
+    decodedString.clear();
+
+    numberOfBytes = (numberOfBytes / 4);
+    while (numberOfBytes--) {
+
+        byte1 = encodedString[byteIndex++];
+        byte2 = encodedString[byteIndex++];
+        byte3 = encodedString[byteIndex++];
+        byte4 = encodedString[byteIndex++];
+
+        byte1 = decodeChar(byte1);
+        byte2 = decodeChar(byte2);
+
+        if (byte3 == '=') {
+            byte3 = 0;
+            byte4 = 0;
+        } else if (byte4 == '=') {
+            byte3 = decodeChar(byte3);
+            byte4 = 0;
+        } else {
+            byte3 = decodeChar(byte3);
+            byte4 = decodeChar(byte4);
+        }
+
+        decodedString += ((byte1 << 2) + ((byte2 & 0x30) >> 4));
+        decodedString += (((byte2 & 0xf) << 4) + ((byte3 & 0x3c) >> 2));
+        decodedString += (((byte3 & 0x3) << 6) + byte4);
 
     }
 
