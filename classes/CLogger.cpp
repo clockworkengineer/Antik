@@ -71,14 +71,14 @@ bool CLogger::bDateTimeStamped = false;     // ==true then output timetamped
 
 const std::string CLogger::currentDateAndTime(void) {
     
-   time_t rawtime;
-   struct tm *info;
-   char buffer[80];
+   std::time_t rawtime;
+   struct std::tm *info;
+   std::string buffer(80, ' ');
 
-   time( &rawtime );
-   info = localtime( &rawtime );
-   strftime(buffer,80,"%F %T", info);
-   return(std::string(buffer));
+   std::time( &rawtime );
+   info = std::localtime( &rawtime );
+   buffer.resize(std::strftime(&buffer[0],buffer.length(),"%F %T", info));
+   return(buffer);
 
 }
 

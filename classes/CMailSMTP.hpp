@@ -115,6 +115,12 @@ public:
     
     std::string getMailFull(void);
     
+    // Encode/decode bytes to base64 string
+    
+    static void encodeToBase64(std::string decodedString, std::string& encodedString, uint32_t numberOfBytes);
+    static void decodeFromBase64 (std::string const& encodedString, std::string& decodedString, uint32_t numberOfBytes);
+
+    
     // ================
     // PUBLIC VARIABLES
     // ================
@@ -140,6 +146,8 @@ private:
   
     static const std::string kEOL;                  // End of line
     
+    static const char kCB64[];                      // Valid characters for base64 encode/decode.
+    
     // =====================
     // DISABLED CONSTRUCTORS
     // =====================
@@ -147,11 +155,7 @@ private:
     // ===============
     // PRIVATE METHODS
     // ===============
-    
-    // Encode bytes to base64 string
-    
-    void encodeToBase64(std::string bytesToEncode, uint32_t numberOfBytes, std::string& encodedString);
-    
+        
     // Encode email attachment
     
     void encodeAttachment(CMailSMTP::emailAttachment& attachment);
@@ -175,6 +179,10 @@ private:
     // Load file extension to MIME type mapping table
     
     static void loadMIMETypes (void);
+
+    // Decode character to base64 index.
+    
+    static int decodeChar(char ch);
 
     // =================
     // PRIVATE VARIABLES

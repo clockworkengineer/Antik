@@ -124,6 +124,59 @@ TEST_F(CFileSMTPTests, CMailSMTPSetMailMessage) {
     
 }
 
+TEST_F(CFileSMTPTests, CMailSMTPBase64EncodeDecode) {
+    
+    std::string deocdedString;
+    std::string encodedString;
+    std::string redecodedString;
+    
+    deocdedString = "a";
+    CMailSMTP::encodeToBase64(deocdedString,encodedString,deocdedString.length() );
+    ASSERT_STREQ("YQ==",encodedString.c_str());
+ 
+    deocdedString = "ab";
+    CMailSMTP::encodeToBase64(deocdedString,encodedString,deocdedString.length() );
+    ASSERT_STREQ("YWI=",encodedString.c_str());
+  
+    deocdedString = "abc";
+    CMailSMTP::encodeToBase64(deocdedString,encodedString,deocdedString.length() );
+    ASSERT_STREQ("YWJj",encodedString.c_str());
+ 
+    deocdedString = "abcd";
+    CMailSMTP::encodeToBase64(deocdedString,encodedString,deocdedString.length() );
+    ASSERT_STREQ("YWJjZA==",encodedString.c_str());
+    
+    deocdedString = "a";
+    CMailSMTP::encodeToBase64(deocdedString,encodedString,deocdedString.length() );
+    CMailSMTP::decodeFromBase64(encodedString,redecodedString,encodedString.length() );
+    ASSERT_STREQ(deocdedString.c_str(),redecodedString.c_str());
+ 
+    deocdedString = "ab";
+    CMailSMTP::encodeToBase64(deocdedString,encodedString,deocdedString.length() );
+    CMailSMTP::decodeFromBase64(encodedString,redecodedString,encodedString.length() );
+    ASSERT_STREQ(deocdedString.c_str(),redecodedString.c_str());
+  
+    deocdedString = "abc";
+    CMailSMTP::encodeToBase64(deocdedString,encodedString,deocdedString.length() );
+     CMailSMTP::decodeFromBase64(encodedString,redecodedString,encodedString.length() );
+    ASSERT_STREQ(deocdedString.c_str(),redecodedString.c_str());
+ 
+    deocdedString = "abcd";
+    CMailSMTP::encodeToBase64(deocdedString,encodedString,deocdedString.length() );
+    CMailSMTP::decodeFromBase64(encodedString,redecodedString,encodedString.length() );
+    ASSERT_STREQ(deocdedString.c_str(),redecodedString.c_str());
+    
+    deocdedString = "Man is distinguished, not only by his reason, but by this singular passion from other animals,"
+                    " which is a lust of the mind, that by a perseverance of delight in the continued and indefatigable"
+                    " generation of knowledge, exceeds the short vehemence of any carnal pleasure.";
+    
+    CMailSMTP::encodeToBase64(deocdedString,encodedString,deocdedString.length() );
+    CMailSMTP::decodeFromBase64(encodedString,redecodedString,encodedString.length() );
+    ASSERT_STREQ(deocdedString.c_str(),redecodedString.c_str());
+
+ 
+}
+
 // =====================
 // RUN GOOGLE UNIT TESTS
 // =====================
