@@ -21,7 +21,7 @@
 // POSIX only or any platform that has inotify or a third party equivalent.
 //
 // Dependencies: C11++               - Language standard features used.    
-//               Classes (CLogger)   - Logging functionality. 
+//               Class CLogge)       - Logging functionality. 
 //               inotify/Linux       - Linux file system events
 //
 
