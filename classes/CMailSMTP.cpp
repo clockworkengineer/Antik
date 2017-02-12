@@ -493,7 +493,9 @@ void CMailSMTP::postMail(void) {
 
     }
 
-}//
+}
+
+//
 // Encode string to base64 string.
 //
 
