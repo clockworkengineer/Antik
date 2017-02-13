@@ -105,8 +105,8 @@ private:
     // PRIVATE VARIABLES
     // =================
 
-    static std::mutex mOutput; // Stream output mutex
-    static bool bDateTimeStamped; // ==true output date/time stamped
+    static std::mutex mOutput;        // Stream output mutex
+    static bool bDateTimeStamped;     // ==true output date/time stamped
 
 };
 

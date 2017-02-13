@@ -223,13 +223,13 @@ private:
     //
     
     std::string watchFolder;    // Watch Folder
-    int watchDepth;             // Watch depth -1=all,0=just watch folder,1=next level down etc.
+    int watchDepth=-1;          // Watch depth -1=all,0=just watch folder,1=next level down etc.
 
     //
     // Inotify
     //
     
-    int inotifyFd;                                              // file descriptor for read
+    int inotifyFd=0;                                            // file descriptor for read
     uint32_t inotifyWatchMask = CFileApprise::kInofityEvents;   // watch event mask
     std::unique_ptr<std::uint8_t> inotifyBuffer;                // read buffer
     std::unordered_map<int32_t, std::string> watchMap;          // Watch table indexed by watch variable

@@ -21,7 +21,7 @@
 // POSIX only or any platform that has inotify or a third party equivalent.
 //
 // Dependencies: C11++               - Language standard features used.    
-//               Class CLogge)       - Logging functionality. 
+//               Class CLogger       - Logging functionality. 
 //               inotify/Linux       - Linux file system events
 //
 
@@ -282,7 +282,7 @@ void CFileApprise::sendEvent(CFileApprise::EventId id, const std::string& fileNa
 // Main CFileApprise object constructor. 
 //
 
-CFileApprise::CFileApprise(const std::string& watchFolder, int watchDepth, std::shared_ptr<CFileApprise::Options> options) : watchFolder{watchFolder}, watchDepth{watchDepth}
+CFileApprise::CFileApprise(const std::string& watchFolder, int watchDepth, std::shared_ptr<CFileApprise::Options> options) : watchFolder{watchFolder}, watchDepth{watchDepth}, bDoWork {true}
 {
 
     // ASSERT if passed parameters invalid
@@ -329,17 +329,13 @@ CFileApprise::CFileApprise(const std::string& watchFolder, int watchDepth, std::
 
     this->initWatchTable();
 
-    // Watcher up and running
-
-    this->bDoWork = true;
-
 }
 
 //
 // CFileApprise object constructor (watches need to be added/removed). 
 //
 
-CFileApprise::CFileApprise(std::shared_ptr<CFileApprise::Options> options) {
+CFileApprise::CFileApprise(std::shared_ptr<CFileApprise::Options> options) : bDoWork {true} {
 
 
     // If options passed then setup trace functions and event mask
@@ -364,10 +360,6 @@ CFileApprise::CFileApprise(std::shared_ptr<CFileApprise::Options> options) {
     // Create watch table
 
     this->initWatchTable();
-
-    // Watcher up and running
-
-    this->bDoWork = true;
 
 }
 
