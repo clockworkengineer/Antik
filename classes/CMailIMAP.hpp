@@ -363,6 +363,14 @@ private:
     void generateTag(void);
     
     //
+    // Convert string to uppercase and string case-insensitive compare
+    //
+    
+    static std::string stringToUpper(const std::string& lineStr);
+    static bool stringEqual(const std::string& lineStr, const std::string& compareStr);
+    
+    
+    //
     // Command response decode utility methods
     //
     
