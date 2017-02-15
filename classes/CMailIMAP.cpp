@@ -13,8 +13,8 @@
 // Class: CMailIMAP
 // 
 // Description: A class to connect to an IMAP server and send commands
-// and recieve responses to them. The class uses the libcurl 
-// to provide its functionality. 
+// and recieve responses to them. It uses libcurl to provide connection
+// and command/response transport functionality. 
 //
 // Dependencies:   C11++     - Language standard features used.
 //                 libcurl   - Used to talk to IMAP server.
@@ -359,7 +359,7 @@ void CMailIMAP::disconnect() {
 }
 
 //
-// Send single IMAP command and decode/return response.
+// Send single IMAP command and return response including tagged command line.
 //
 
 std::string CMailIMAP::sendCommand(const std::string& commandLineStr) {

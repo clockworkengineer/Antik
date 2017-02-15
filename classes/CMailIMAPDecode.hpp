@@ -214,13 +214,13 @@ public:
     // Main constructor
     //
 
-    CMailIMAPDecode();
+    CMailIMAPDecode() = delete;
 
     // ==========
     // DESTRUCTOR
     // ==========
 
-    virtual ~CMailIMAPDecode();
+    virtual ~CMailIMAPDecode() = delete;
 
     // ==============
     // PUBLIC METHODS
@@ -316,8 +316,8 @@ private:
     // IMAP command string to code mapping table
     //
     
-    static std::unordered_map<std::string, Commands> stringToCodeMap; 
+    static std::unordered_map<std::string, CMailIMAPDecode::Commands> stringToCodeMap; 
 
 };
-#endif /* CMAILIMAP_HPP */
+#endif /* CMAILIMAPDECODE_HPP */
 

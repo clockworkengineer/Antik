@@ -12,10 +12,12 @@
 //
 // Class: CMailIMAPDecode
 // 
-// Description: A class to decode CMailIMAP class command responses.
+// Description: A class to decode CMailIMAP command responses. It has
+// purely static data and functions and cannot be instantiated (ie. it contains 
+// no constructor/destructor.
 //
 // NOTE: IMAP commands sent can be any in combination of case and this 
-// is mirrored back in the response. So perform case-insentive compares 
+// is mirrored back in the response. So perform case-insensitive compares 
 // for any commands in responses.
 //
 // Dependencies:   C11++     - Language standard features used.
@@ -773,6 +775,10 @@ CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeResponse(const std::string 
 
 }
 
+//
+// Return string for IMAP command code
+//
+
 std::string CMailIMAPDecode::commandCodeString(CMailIMAPDecode::Commands commandCode) {
 
     for (auto commandEntry : CMailIMAPDecode::stringToCodeMap) {
@@ -784,21 +790,5 @@ std::string CMailIMAPDecode::commandCodeString(CMailIMAPDecode::Commands command
     CMailIMAPDecode::Exception("commandCodeString() : Invalid command code.");
 
     return (""); // Never reached.
-
-}
-
-//
-// Main CMailIMAPDecode object constructor. 
-//
-
-CMailIMAPDecode::CMailIMAPDecode() {
-
-}
-
-//
-// CMailIMAPDecode Destructor
-//
-
-CMailIMAPDecode::~CMailIMAPDecode() {
 
 }
