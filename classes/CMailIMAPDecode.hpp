@@ -55,34 +55,6 @@ public:
     };
     
     //
-    // FETCH response data
-    //
-    
-    struct FetchRespData {
-       uint64_t index;                                              // EMail Index/UID
-       std::unordered_map<std::string, std::string> responseMap;    // Fetch command response map
-    };
-    
-    //
-    // LIST response data
-    //
-    
-    struct ListRespData {
-        uint8_t     hierDel;       // Hierarchy Delimeter
-        std::string attributes;    // Mailbox attributes
-        std::string name;          // Mailbox name
-    };
-    
-    //
-    // STORE response data
-    //
-    
-    struct StoreRespData {
-        uint64_t index;      // EMail Index/UID
-        std::string flags;   // EMail flags
-    };
-
-    //
     // Enumeration of command codes.
     //
 
@@ -123,6 +95,34 @@ public:
         OK = 0,
         NO,
         BAD
+    };
+
+       //
+    // FETCH response data
+    //
+    
+    struct FetchRespData {
+       uint64_t index;                                              // EMail Index/UID
+       std::unordered_map<std::string, std::string> responseMap;    // Fetch command response map
+    };
+    
+    //
+    // LIST response data
+    //
+    
+    struct ListRespData {
+        uint8_t     hierDel;       // Hierarchy Delimeter
+        std::string attributes;    // Mailbox attributes
+        std::string name;          // Mailbox name
+    };
+    
+    //
+    // STORE response data
+    //
+    
+    struct StoreRespData {
+        uint64_t index;      // EMail Index/UID
+        std::string flags;   // EMail flags
     };
 
     //
@@ -188,39 +188,31 @@ public:
     };
   
     //
-    // Command response structure shared pointer wrapper.
+    // Command response structure unique pointer wrapper.
     //
     
-    typedef  std::shared_ptr<BaseResponse> BASERESPONSE; 
-    typedef  std::shared_ptr<SearchResponse> SEARCHRESPONSE;
-    typedef  std::shared_ptr<SelectResponse> SELECTRESPONSE;
-    typedef  std::shared_ptr<ExamineResponse> EXAMINERESPONSE;
-    typedef  std::shared_ptr<ListResponse> LISTRESPONSE;
-    typedef  std::shared_ptr<LSubResponse> LSUBRESPONSE;
-    typedef  std::shared_ptr<StatusResponse> STATUSRESPONSE;
-    typedef  std::shared_ptr<ExpungeResponse> EXPUNGERESPONSE;
-    typedef  std::shared_ptr<StoreResponse> STORERESPONSE;
-    typedef  std::shared_ptr<CapabilityResponse> CAPABILITYRESPONSE;
-    typedef  std::shared_ptr<FetchResponse> FETCHRESPONSE;
-    typedef  std::shared_ptr<NoOpResponse> NOOPRESPONSE;
-    typedef  std::shared_ptr<LogOutResponse> LOGOUTRESPONSE;
-    typedef  std::shared_ptr<IdleResponse> IDLERESPONSE;
-   
+    typedef  std::unique_ptr<BaseResponse> BASERESPONSE; 
+    typedef  std::unique_ptr<SearchResponse> SEARCHRESPONSE;
+    typedef  std::unique_ptr<SelectResponse> SELECTRESPONSE;
+    typedef  std::unique_ptr<ExamineResponse> EXAMINERESPONSE;
+    typedef  std::unique_ptr<ListResponse> LISTRESPONSE;
+    typedef  std::unique_ptr<LSubResponse> LSUBRESPONSE;
+    typedef  std::unique_ptr<StatusResponse> STATUSRESPONSE;
+    typedef  std::unique_ptr<ExpungeResponse> EXPUNGERESPONSE;
+    typedef  std::unique_ptr<StoreResponse> STORERESPONSE;
+    typedef  std::unique_ptr<CapabilityResponse> CAPABILITYRESPONSE;
+    typedef  std::unique_ptr<FetchResponse> FETCHRESPONSE;
+    typedef  std::unique_ptr<NoOpResponse> NOOPRESPONSE;
+    typedef  std::unique_ptr<LogOutResponse> LOGOUTRESPONSE;
+    typedef  std::unique_ptr<IdleResponse> IDLERESPONSE;
+
     // ============
     // CONSTRUCTORS
     // ============
-
-    //
-    // Main constructor
-    //
-
-    CMailIMAPDecode() = delete;
-
+    
     // ==========
     // DESTRUCTOR
     // ==========
-
-    virtual ~CMailIMAPDecode() = delete;
 
     // ==============
     // PUBLIC METHODS
@@ -230,10 +222,10 @@ public:
     // Get command string representation from internal code.
     //
     
-    static std::string commandCodeString (CMailIMAPDecode::Commands commandCode);
+    static std::string commandCodeString (Commands commandCode);
 
     //
-    // Decode IMAP command response and return decode structure.s
+    // Decode IMAP command response and return decoded response structure.
     //
     
     static BASERESPONSE decodeResponse(const std::string& commandResponseStr);
@@ -257,11 +249,17 @@ private:
     // =====================
     // DISABLED CONSTRUCTORS
     // =====================
-
+    
+    CMailIMAPDecode() = delete;
+    CMailIMAPDecode(const CMailIMAPDecode & orig) = delete;
+    CMailIMAPDecode(const CMailIMAPDecode && orig) = delete;
+    virtual ~CMailIMAPDecode() = delete;
+    CMailIMAPDecode& operator=(CMailIMAPDecode other) = delete;
+    
     // ===============
     // PRIVATE METHODS
     // ===============
-
+     
     //
     // Convert string to uppercase and string case-insensitive compare
     //
@@ -280,7 +278,7 @@ private:
     static std::string extractList(const std::string& lineStr);
     static std::string extractUntaggedNumber(const std::string& lineStr);
     
-    static void decodeStatus(const std::string& tagStr, const std::string& lineStr, BASERESPONSE resp);
+    static BASERESPONSE decodeStatus(const std::string& tagStr, const std::string& lineStr);
     static void decodeOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr, std::istringstream& responseStream);
     static void decodeList(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
     static void decodeString(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
@@ -316,7 +314,7 @@ private:
     // IMAP command string to code mapping table
     //
     
-    static std::unordered_map<std::string, CMailIMAPDecode::Commands> stringToCodeMap; 
+    static std::unordered_map<std::string, Commands> stringToCodeMap; 
 
 };
 #endif /* CMAILIMAPDECODE_HPP */

@@ -58,7 +58,7 @@
 // IMAP command string to decode response mapping table
 //
 
-std::unordered_map<std::string, CMailIMAPDecode::DecodeFunction> CMailIMAPDecode::decodeCommmandMap ={
+std::unordered_map<std::string, CMailIMAPDecode::DecodeFunction> CMailIMAPDecode::decodeCommmandMap = {
 
     {CMailIMAP::kLISTStr, decodeLIST},
     {CMailIMAP::kLSUBStr, decodeLIST},
@@ -122,11 +122,11 @@ std::unordered_map<std::string, CMailIMAPDecode::Commands> CMailIMAPDecode::stri
 //
 
 inline std::string CMailIMAPDecode::stringToUpper(const std::string& lineStr) {
-    
+
     std::string upperCase(lineStr);
-    for (auto  &c: upperCase) c = std::toupper(c);
-    return(upperCase);
-    
+    for (auto &c : upperCase) c = std::toupper(c);
+    return (upperCase);
+
 }
 
 //
@@ -134,12 +134,12 @@ inline std::string CMailIMAPDecode::stringToUpper(const std::string& lineStr) {
 //
 
 inline bool CMailIMAPDecode::stringEqual(const std::string& lineStr, const std::string& compareStr) {
-    
-    int cnt01=0;
+
+    int cnt01 = 0;
     if (lineStr.length() < compareStr.length()) return (false);
-    for (auto  &c: compareStr) if (std::toupper(c) != std::toupper(lineStr[cnt01++])) return (false);
-    return(true);
-    
+    for (auto &c : compareStr) if (std::toupper(c) != std::toupper(lineStr[cnt01++])) return (false);
+    return (true);
+
 }
 
 //
@@ -296,12 +296,14 @@ void CMailIMAPDecode::decodeOctets(const std::string& itemStr, FetchRespData& fe
 }
 
 //
-// Decode command response status. At present an un-tagged BAD/NO gets sent to std::cerr.
-// Note: Any optional string that the server provides with a status is stored away in the
-// response for use by the caller.
+// Decode command response status and return response. At present an un-tagged BAD/NO gets 
+// sent to std::cerr. Note: Any optional string that the server provides with a status is 
+// stored away in the aresponse for use by the caller.
 //
 
-void CMailIMAPDecode::decodeStatus (const std::string& tagStr, const std::string& lineStr, CMailIMAPDecode::BASERESPONSE resp) {
+CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeStatus(const std::string& tagStr, const std::string& lineStr) {
+
+    CMailIMAPDecode::BASERESPONSE resp{ new CMailIMAPDecode::BaseResponse};
 
     if (stringEqual(lineStr, tagStr + " " + CMailIMAP::kOKStr)) {
         resp->status = RespCode::OK;
@@ -327,6 +329,7 @@ void CMailIMAPDecode::decodeStatus (const std::string& tagStr, const std::string
         std::cerr << "UKNOWN RESPONSE LINE = [" << lineStr << "]" << std::endl;
     }
 
+    return (resp);
 
 }
 
@@ -387,14 +390,16 @@ CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeSELECT(CMailIMAPDecode::Com
         } else if ((lineStr.find("] " + resp->mailBoxName) != std::string::npos) ||
                 (lineStr.find("] " + commandData.commandStr + " completed.") != std::string::npos)) {
             resp->mailBoxAccess = extractBetween(lineStr, '[', ']');
-            
+
         } else {
-            decodeStatus(commandData.tagStr, lineStr, resp);
+            CMailIMAPDecode::BASERESPONSE responseStatus = decodeStatus(commandData.tagStr, lineStr);
+            resp->status = responseStatus->status;
+            resp->errorMessage = responseStatus->errorMessage;
         }
 
     }
 
-    return (static_cast<CMailIMAPDecode::BASERESPONSE> (resp));
+    return (static_cast<CMailIMAPDecode::BASERESPONSE> (std::move(resp)));
 
 }
 
@@ -425,12 +430,14 @@ CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeSEARCH(CMailIMAPDecode::Com
             }
 
         } else {
-            decodeStatus(commandData.tagStr, lineStr, resp);
+            CMailIMAPDecode::BASERESPONSE responseStatus = decodeStatus(commandData.tagStr, lineStr);
+            resp->status = responseStatus->status;
+            resp->errorMessage = responseStatus->errorMessage;
         }
 
     }
 
-    return (static_cast<CMailIMAPDecode::BASERESPONSE> (resp));
+    return (static_cast<CMailIMAPDecode::BASERESPONSE> (std::move(resp)));
 
 }
 
@@ -463,13 +470,14 @@ CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeLIST(CMailIMAPDecode::Comma
             resp->mailBoxList.push_back(std::move(mailBoxEntry));
 
         } else {
-            decodeStatus(commandData.tagStr, lineStr, resp);
+            CMailIMAPDecode::BASERESPONSE responseStatus = decodeStatus(commandData.tagStr, lineStr);
+            resp->status = responseStatus->status;
+            resp->errorMessage = responseStatus->errorMessage;
         }
 
     }
 
-    return (static_cast<CMailIMAPDecode::BASERESPONSE> (resp));
-
+    return (static_cast<CMailIMAPDecode::BASERESPONSE> (std::move(resp)));
 
 }
 
@@ -504,12 +512,14 @@ CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeSTATUS(CMailIMAPDecode::Com
             }
 
         } else {
-            decodeStatus(commandData.tagStr, lineStr, resp);
+            CMailIMAPDecode::BASERESPONSE responseStatus = decodeStatus(commandData.tagStr, lineStr);
+            resp->status = responseStatus->status;
+            resp->errorMessage = responseStatus->errorMessage;
         }
 
     }
 
-    return (static_cast<CMailIMAPDecode::BASERESPONSE> (resp));
+    return (static_cast<CMailIMAPDecode::BASERESPONSE> (std::move(resp)));
 
 }
 
@@ -536,12 +546,14 @@ CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeEXPUNGE(CMailIMAPDecode::Co
             resp->expunged.push_back(std::strtoull(lineStr.c_str(), nullptr, 10));
 
         } else {
-            decodeStatus(commandData.tagStr, lineStr, resp);
+            CMailIMAPDecode::BASERESPONSE responseStatus = decodeStatus(commandData.tagStr, lineStr);
+            resp->status = responseStatus->status;
+            resp->errorMessage = responseStatus->errorMessage;
         }
 
     }
 
-    return (static_cast<CMailIMAPDecode::BASERESPONSE> (resp));
+    return (static_cast<CMailIMAPDecode::BASERESPONSE> (std::move(resp)));
 
 }
 
@@ -567,12 +579,14 @@ CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeSTORE(CMailIMAPDecode::Comm
             resp->storeList.push_back(std::move(storeData));
 
         } else {
-            decodeStatus(commandData.tagStr, lineStr, resp);
+            CMailIMAPDecode::BASERESPONSE responseStatus = decodeStatus(commandData.tagStr, lineStr);
+            resp->status = responseStatus->status;
+            resp->errorMessage = responseStatus->errorMessage;
         }
 
     }
 
-    return (static_cast<CMailIMAPDecode::BASERESPONSE> (resp));
+    return (static_cast<CMailIMAPDecode::BASERESPONSE> (std::move(resp)));
 
 }
 
@@ -595,12 +609,14 @@ CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeCAPABILITY(CMailIMAPDecode:
             resp->capabilityList = lineStr.substr(lineStr.find_first_of(' ') + 1);
 
         } else {
-            decodeStatus(commandData.tagStr, lineStr, resp);
+            CMailIMAPDecode::BASERESPONSE responseStatus = decodeStatus(commandData.tagStr, lineStr);
+            resp->status = responseStatus->status;
+            resp->errorMessage = responseStatus->errorMessage;
         }
 
     }
 
-    return (static_cast<CMailIMAPDecode::BASERESPONSE> (resp));
+    return (static_cast<CMailIMAPDecode::BASERESPONSE> (std::move(resp)));
 
 }
 
@@ -621,12 +637,14 @@ CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeNOOP(CMailIMAPDecode::Comma
         if (lineStr.find(CMailIMAP::kUntaggedStr) == 0) {
             resp->rawResponse.push_back(std::move(lineStr));
         } else {
-            decodeStatus(commandData.tagStr, lineStr, resp);
+            CMailIMAPDecode::BASERESPONSE responseStatus = decodeStatus(commandData.tagStr, lineStr);
+            resp->status = responseStatus->status;
+            resp->errorMessage = responseStatus->errorMessage;
         }
 
     }
 
-    return (static_cast<CMailIMAPDecode::BASERESPONSE> (resp));
+    return (static_cast<CMailIMAPDecode::BASERESPONSE> (std::move(resp)));
 
 }
 
@@ -689,13 +707,15 @@ CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeFETCH(CMailIMAPDecode::Comm
             resp->fetchList.push_back(std::move(fetchData));
 
         } else {
-            decodeStatus(commandData.tagStr, lineStr, resp);
+            CMailIMAPDecode::BASERESPONSE responseStatus = decodeStatus(commandData.tagStr, lineStr);
+            resp->status = responseStatus->status;
+            resp->errorMessage = responseStatus->errorMessage;
         }
 
 
     }
 
-    return (static_cast<CMailIMAPDecode::BASERESPONSE> (resp));
+    return (static_cast<CMailIMAPDecode::BASERESPONSE> (std::move(resp)));
 
 }
 
@@ -716,11 +736,13 @@ CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeLOGOUT(CMailIMAPDecode::Com
         if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kBYEStr)) {
             continue;
         } else {
-            decodeStatus(commandData.tagStr, lineStr, resp);
+            CMailIMAPDecode::BASERESPONSE responseStatus = decodeStatus(commandData.tagStr, lineStr);
+            resp->status = responseStatus->status;
+            resp->errorMessage = responseStatus->errorMessage;
         }
     }
 
-    return (static_cast<CMailIMAPDecode::BASERESPONSE> (resp));
+    return (static_cast<CMailIMAPDecode::BASERESPONSE> (std::move(resp)));
 
 }
 
@@ -736,10 +758,12 @@ CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeDefault(CMailIMAPDecode::Co
 
     for (std::string lineStr; std::getline(commandData.commandRespStream, lineStr, '\n');) {
         lineStr.pop_back(); // Remove lineStrfeed
-        decodeStatus(commandData.tagStr, lineStr, resp);
+        CMailIMAPDecode::BASERESPONSE responseStatus = decodeStatus(commandData.tagStr, lineStr);
+        resp->status = responseStatus->status;
+        resp->errorMessage = responseStatus->errorMessage;
     }
 
-    return (static_cast<CMailIMAPDecode::BASERESPONSE> (resp));
+    return (static_cast<CMailIMAPDecode::BASERESPONSE> (std::move(resp)));
 
 }
 
@@ -758,16 +782,16 @@ CMailIMAPDecode::BASERESPONSE CMailIMAPDecode::decodeResponse(const std::string 
 
     std::istringstream responseStream(commandResponseStr);
     std::string commandLineStr;
-    
+
     std::getline(responseStream, commandLineStr, '\n');
     commandLineStr.pop_back();
-    
+
     CMailIMAPDecode::DecodeFunction decodeFn;
     CommandData commandData{ extractTag(commandLineStr), extractCommand(commandLineStr), commandLineStr, responseStream};
 
     decodeFn = CMailIMAPDecode::decodeCommmandMap[commandData.commandStr];
     if (!decodeFn) {
-        CMailIMAPDecode::decodeCommmandMap[commandData.commandStr]=decodeDefault;
+        CMailIMAPDecode::decodeCommmandMap[commandData.commandStr] = decodeDefault;
         decodeFn = decodeDefault;
     }
 
