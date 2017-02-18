@@ -221,6 +221,47 @@ void CMailIMAPBodyStruct::createBodyStructTree(std::unique_ptr<BodyNode>& bodyNo
 // ==============
 
 //
+// If a body structure part contains file attachment details the extract them.
+//
+
+void CMailIMAPBodyStruct::attachmentFn(std::unique_ptr<BodyNode>& bodyNode, BodyPart& bodyPart, std::shared_ptr<void>& attachmentData) {
+
+    AttachmentData *attachments = static_cast<AttachmentData *> (attachmentData.get());
+    std::unordered_map<std::string, std::string> dispositionMap;
+    std::string disposition{bodyPart.parsedPart->disposition};
+
+    if (disposition.compare(CMailIMAPBodyStruct::kNILStr) != 0) {
+        disposition = disposition.substr(1);
+        while (!disposition.empty()) {
+            std::string item, value;
+            parseNext(disposition, item);
+            parseNext(disposition, value);
+            dispositionMap.insert({item, value});
+        }
+        auto findAttachment = dispositionMap.find("ATTACHMENT");
+        if (findAttachment != dispositionMap.end()) {
+            disposition = dispositionMap["ATTACHMENT"];
+            dispositionMap.clear();
+            disposition = disposition.substr(1);
+            while (!disposition.empty()) {
+                std::string item, value;
+                parseNext(disposition, item);
+                parseNext(disposition, value);
+                dispositionMap.insert({item, value});
+            }
+            Attachment fileAttachment;
+            fileAttachment.creationDate = dispositionMap["CREATION-DATE"];
+            fileAttachment.fileName = dispositionMap["FILENAME"];
+            fileAttachment.modifiactionDate = dispositionMap["MODIFICATION-DATE"];
+            fileAttachment.size = dispositionMap["SIZE"];
+            fileAttachment.partNo = bodyPart.partNo;
+            attachments->attachmentsList.push_back(fileAttachment);
+        }
+    }
+
+}
+
+//
 // Construct body structure tree
 //
 
@@ -232,7 +273,7 @@ void CMailIMAPBodyStruct::consructBodyStructTree(std::unique_ptr<BodyNode>& body
 }
 
 //
-// Walk body structure tree calling use supplied function for each body part.
+// Walk body structure tree calling user supplied function for each body part.
 //
 
 void CMailIMAPBodyStruct::walkBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, BodyPartFn walkFn, std::shared_ptr<void>& walkData) {

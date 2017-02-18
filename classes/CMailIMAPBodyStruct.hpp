@@ -84,6 +84,24 @@ public:
         std::unique_ptr<BodyNode>       child;       // Pointer to lower level node in tree
     };
 
+    //
+    // Body attachment details
+    //
+    
+    struct Attachment {
+        std::string index;
+        std::string partNo;
+        std::string creationDate;
+        std::string fileName;
+        std::string modifiactionDate;
+        std::string size;
+    };
+
+    struct AttachmentData {
+        std::vector<Attachment> attachmentsList;
+    };
+
+
     typedef std::function<void (std::unique_ptr<BodyNode>&, BodyPart&, std::shared_ptr<void>&) > BodyPartFn;
 
     //
@@ -109,12 +127,18 @@ public:
     //
     
     static void consructBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart);
-    
+        
     //
     // Walk body structure tree calling use supplied function for each body part.
     //
     
     static void walkBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, BodyPartFn walkFn, std::shared_ptr<void>&  walkData);
+
+    //
+    // Walk function to extract file attachments.
+    //
+    
+    static void attachmentFn(std::unique_ptr<BodyNode>& bodyNode, BodyPart& bodyPart, std::shared_ptr<void>& attachmentData);
 
     // ================
     // PUBLIC VARIABLES
