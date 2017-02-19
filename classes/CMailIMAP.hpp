@@ -150,7 +150,7 @@ public:
 
     // IMAP initialization and closedown processing
 
-    static void init();
+    static void init(bool bCurlVerbosity=false);
     static void closedown();
 
     // ================
@@ -207,9 +207,9 @@ private:
 
     CURL *curl = nullptr;               // curl handle
     CURLcode res = CURLE_OK;            // curl status
-
+    static bool bCurlVerbosity;         // curl verbosity setting 
+ 
     std::string commandResponseStr;     // IMAP command response
-
     char rxBuffer[CURL_MAX_WRITE_SIZE]; // IMAP rx buffer
     char errMsgBuffer[CURL_ERROR_SIZE]; // IMAP error string buffer
     

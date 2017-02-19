@@ -462,7 +462,7 @@ void CMailSMTP::postMail(void) {
         curl_easy_setopt(this->curl, CURLOPT_READDATA, &this->mailPayload);
         curl_easy_setopt(this->curl, CURLOPT_UPLOAD, 1L);
 
-        curl_easy_setopt(this->curl, CURLOPT_VERBOSE, this->bCurlVerbosity);
+        curl_easy_setopt(this->curl, CURLOPT_VERBOSE, CMailSMTP::bCurlVerbosity);
         
         errMsgBuffer[0] = 0;
         this->res = curl_easy_perform(this->curl);

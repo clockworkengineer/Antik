@@ -390,14 +390,13 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSELECT(CMailIMAPParse::Command
         } else if (lineStr.find(CMailIMAP::kRECENTStr) != std::string::npos) {
             resp->responseMap.insert({CMailIMAP::kRECENTStr, extractUntaggedNumber(lineStr)});
 
-        } else if ((lineStr.find("] " + resp->mailBoxName) != std::string::npos) ||
-                (lineStr.find("] " + commandData.commandStr + " completed.") != std::string::npos)) {
-            resp->mailBoxAccess = extractBetween(lineStr, '[', ']');
-
-        } else {
+          } else {
             CMailIMAPParse::BASERESPONSE responseStatus = parseStatus(commandData.tagStr, lineStr);
             resp->status = responseStatus->status;
             resp->errorMessage = responseStatus->errorMessage;
+            if (resp->status == CMailIMAPParse::RespCode::OK) {
+                resp->mailBoxAccess = extractBetween(lineStr, '[', ']');
+            }
         }
 
     }

@@ -116,6 +116,10 @@ const std::string CMailIMAP::kBYEStr("BYE");
 // PRIVATE STATIC VARIABLES
 // ========================
 
+// curl verbosity setting
+
+bool CMailIMAP::bCurlVerbosity=false;
+
 // =======================
 // PUBLIC STATIC VARIABLES
 // =======================
@@ -312,7 +316,7 @@ void CMailIMAP::connect(void) {
         curl_easy_setopt(this->curl, CURLOPT_USERNAME, this->userNameStr.c_str());
         curl_easy_setopt(this->curl, CURLOPT_PASSWORD, this->userPasswordStr.c_str());
 
-        curl_easy_setopt(this->curl, CURLOPT_VERBOSE, 0L);
+        curl_easy_setopt(this->curl, CURLOPT_VERBOSE, CMailIMAP::bCurlVerbosity);
         curl_easy_setopt(this->curl, CURLOPT_URL, this->serverURLStr.c_str());
 
         curl_easy_setopt(this->curl, CURLOPT_USE_SSL, (long) CURLUSESSL_ALL);
@@ -409,15 +413,17 @@ CMailIMAP::~CMailIMAP() {
 // CMailIMAP initialization.
 //
 
-void CMailIMAP::init(void) {
+void CMailIMAP::init(bool bCurlVerbosity) {
 
     //
-    // Initialize curl
+    //  CMailIMAP initialization.. Globally init curl.
     //
 
     if (curl_global_init(CURL_GLOBAL_ALL)) {
         throw CMailIMAP::Exception("curl_global_init() : failure to initialize libcurl.");
     }
+    
+    CMailIMAP::bCurlVerbosity = bCurlVerbosity;
 
 }
 
