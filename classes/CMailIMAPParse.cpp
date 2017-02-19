@@ -230,10 +230,13 @@ inline std::string CMailIMAPParse::extractList(const std::string& lineStr) {
 //
 
 void CMailIMAPParse::parseNumber(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr) {
+    int numberPos=0;
     std::string numberStr;
-    lineStr = lineStr.substr(lineStr.find(itemStr) + itemStr.length());
-    numberStr = extractBetweenDelimeter(lineStr, ' ');
-    lineStr = lineStr.substr(numberStr.length() + 2);
+    lineStr = lineStr.substr(itemStr.length()+1);
+    while(std::isdigit(lineStr[numberPos])) {
+        numberStr.append(1,lineStr[numberPos++]);
+    }
+    lineStr = lineStr.substr(numberStr.length());
     fetchData.responseMap.insert({itemStr, numberStr});
 
 }
@@ -693,6 +696,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::CommandD
                     parseOctets(CMailIMAP::kBODYStr, fetchData, lineStr, commandData.commandRespStream);
                 } else if (stringEqual(lineStr, CMailIMAP::kRFC822Str + " ")) {
                     parseOctets(CMailIMAP::kRFC822Str, fetchData, lineStr, commandData.commandRespStream);
+                } else {
+                    std::cerr << "Error parsing" << std::endl; // throw here ?
                 }
 
                 lineStr = lineStr.substr(lineStr.find_first_not_of(' '));

@@ -111,6 +111,7 @@ public:
     static const std::string kNILStr;
     static const std::string kTEXTStr;
     static const std::string kATTACHMENTStr;
+    static const std::string kINLINEStr;
     static const std::string kCREATIONDATEStr;
     static const std::string kFILENAMEStr;
     static const std::string kMODIFICATIONDATEStr;
@@ -174,7 +175,9 @@ private:
     //
     // Utility methods (duplicates of CMailIMAPParse methods.NEED TO REFACTOR)
     //
-   
+  
+    static bool stringEqual(const std::string& lineStr, const std::string& compareStr);
+    static std::string stringToUpper(const std::string& lineStr);
     static std::string extractList(const std::string& lineStr);
     static std::string extractBetween(const std::string& lineStr, const char first, const char last);
     static std::string extractBetweenDelimeter(const std::string& lineStr, const char delimeter);

@@ -13,7 +13,7 @@
 // Class: CMailIMAP
 // 
 // Description: A class to connect to an IMAP server and send commands
-// and recieve responses to them. It uses libcurl to provide connection
+// and receive responses to them. It uses libcurl to provide connection
 // and command/response transport functionality. 
 //
 // Dependencies:   C11++     - Language standard features used.

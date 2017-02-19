@@ -48,6 +48,7 @@
 const std::string CMailIMAPBodyStruct::kNILStr("NIL");
 const std::string CMailIMAPBodyStruct::kTEXTStr("TEXT");
 const std::string CMailIMAPBodyStruct::kATTACHMENTStr("ATTACHMENT");
+const std::string CMailIMAPBodyStruct::kINLINEStr("INLINE");
 const std::string CMailIMAPBodyStruct::kCREATIONDATEStr("CREATION-DATE");
 const std::string CMailIMAPBodyStruct::kFILENAMEStr("FILENAME");
 const std::string CMailIMAPBodyStruct::kMODIFICATIONDATEStr("MODIFICATION-DATE");
@@ -69,6 +70,31 @@ const std::string CMailIMAPBodyStruct::kSIZEStr("SIZE");
 // ===============
 // PRIVATE METHODS
 // ===============
+
+//
+// Perform case-insensitive string compare (return true strings are equal, false otherwise)
+//
+
+inline bool CMailIMAPBodyStruct::stringEqual(const std::string& lineStr, const std::string& compareStr) {
+
+    int cnt01 = 0;
+    if (lineStr.length() < compareStr.length()) return (false);
+    for (auto &c : compareStr) if (std::toupper(c) != std::toupper(lineStr[cnt01++])) return (false);
+    return (true);
+
+}
+
+//
+// Convert any lowercase characters in string to upper.
+//
+
+inline std::string CMailIMAPBodyStruct::stringToUpper(const std::string& lineStr) {
+
+    std::string upperCase(lineStr);
+    for (auto &c : upperCase) c = std::toupper(c);
+    return (upperCase);
+
+}
 
 //
 // Extract list  from command response line. Note: only check until 
@@ -129,7 +155,7 @@ void CMailIMAPBodyStruct::parseNext(std::string& part, std::string& value) {
     } else if (std::isdigit(part[0])) {
         value = part.substr(0, part.find_first_of(' '));
         part = part.substr(part.find_first_of(' ') + 1);
-    } else if (part.find(kNILStr) == 0) {
+    } else if (stringEqual(part, kNILStr)) {
         value = kNILStr;
         part = part.substr(value.length() + 1);
     } else {
@@ -145,7 +171,7 @@ void CMailIMAPBodyStruct::parseNext(std::string& part, std::string& value) {
 void CMailIMAPBodyStruct::parseBodyPart(BodyPart& bodyPart) {
 
     std::string part{bodyPart.part.substr(1)};
-
+ 
     bodyPart.parsedPart.reset(new BodyPartParsed());
 
     parseNext(part, bodyPart.parsedPart->type);
@@ -156,7 +182,7 @@ void CMailIMAPBodyStruct::parseBodyPart(BodyPart& bodyPart) {
     parseNext(part, bodyPart.parsedPart->encoding);
     parseNext(part, bodyPart.parsedPart->size);
 
-    if (bodyPart.parsedPart->type.compare(kTEXTStr) == 0) {
+    if (stringEqual(bodyPart.parsedPart->type, kTEXTStr)) {
         parseNext(part, bodyPart.parsedPart->textLines);
     }
 
@@ -164,7 +190,6 @@ void CMailIMAPBodyStruct::parseBodyPart(BodyPart& bodyPart) {
     parseNext(part, bodyPart.parsedPart->disposition);
     parseNext(part, bodyPart.parsedPart->language);
     parseNext(part, bodyPart.parsedPart->location);
-
 
 }
 
@@ -236,33 +261,42 @@ void CMailIMAPBodyStruct::attachmentFn(std::unique_ptr<BodyNode>& bodyNode, Body
     AttachmentData *attachments = static_cast<AttachmentData *> (attachmentData.get());
     std::unordered_map<std::string, std::string> dispositionMap;
     std::string disposition{bodyPart.parsedPart->disposition};
-
-    if (disposition.compare(CMailIMAPBodyStruct::kNILStr) != 0) {
+    
+    if (!stringEqual(disposition, kNILStr)) {
         disposition = disposition.substr(1);
         while (!disposition.empty()) {
             std::string item, value;
             parseNext(disposition, item);
             parseNext(disposition, value);
-            dispositionMap.insert({item, value});
+            dispositionMap.insert({stringToUpper(item), value});
         }
+        std::string attachmentLabel;
         auto findAttachment = dispositionMap.find(kATTACHMENTStr);
+        auto findInline = dispositionMap.find(kINLINEStr);
         if (findAttachment != dispositionMap.end()) {
-            disposition = dispositionMap[kATTACHMENTStr];
-            dispositionMap.clear();
-            disposition = disposition.substr(1);
-            while (!disposition.empty()) {
-                std::string item, value;
-                parseNext(disposition, item);
-                parseNext(disposition, value);
-                dispositionMap.insert({item, value});
+            attachmentLabel = kATTACHMENTStr;
+        } else if (findInline != dispositionMap.end()) {
+            attachmentLabel = kINLINEStr;
+        }
+        if (!attachmentLabel.empty()) {
+            disposition = dispositionMap[attachmentLabel];
+            if (!stringEqual(disposition, kNILStr)) {
+                dispositionMap.clear();
+                disposition = disposition.substr(1);
+                while (!disposition.empty()) {
+                    std::string item, value;
+                    parseNext(disposition, item);
+                    parseNext(disposition, value);
+                    dispositionMap.insert({stringToUpper(item), value});
+                }
+                Attachment fileAttachment;
+                fileAttachment.creationDate = dispositionMap[kCREATIONDATEStr];
+                fileAttachment.fileName = dispositionMap[kFILENAMEStr];
+                fileAttachment.modifiactionDate = dispositionMap[kMODIFICATIONDATEStr];
+                fileAttachment.size = dispositionMap[kSIZEStr];
+                fileAttachment.partNo = bodyPart.partNo;
+                attachments->attachmentsList.push_back(fileAttachment);
             }
-            Attachment fileAttachment;
-            fileAttachment.creationDate = dispositionMap[kCREATIONDATEStr];
-            fileAttachment.fileName = dispositionMap[kFILENAMEStr];
-            fileAttachment.modifiactionDate = dispositionMap[kMODIFICATIONDATEStr];
-            fileAttachment.size = dispositionMap[kSIZEStr];
-            fileAttachment.partNo = bodyPart.partNo;
-            attachments->attachmentsList.push_back(fileAttachment);
         }
     }
 
