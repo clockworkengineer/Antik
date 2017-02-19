@@ -12,7 +12,7 @@
 //
 // Class: CMailIMAPBodyStruct
 // 
-// Description:  Class to create a tree representation of a body structure
+// Description:  Class to create a tree representation of an IMAP body structure
 // and allow it to be traversed in-order and calling a user provided function
 // for each body part to do things such as search and store attachment data.
 //
@@ -42,10 +42,17 @@
 // ===========================
 
 //
-// NIL body structure entry
+// BODYSTRUCTURE constants
 //
 
 const std::string CMailIMAPBodyStruct::kNILStr("NIL");
+const std::string CMailIMAPBodyStruct::kTEXTStr("TEXT");
+const std::string CMailIMAPBodyStruct::kATTACHMENTStr("ATTACHMENT");
+const std::string CMailIMAPBodyStruct::kCREATIONDATEStr("CREATION-DATE");
+const std::string CMailIMAPBodyStruct::kFILENAMEStr("FILENAME");
+const std::string CMailIMAPBodyStruct::kMODIFICATIONDATEStr("MODIFICATION-DATE");
+const std::string CMailIMAPBodyStruct::kSIZEStr("SIZE");
+ 
 
 // ==========================
 // PUBLIC TYPES AND CONSTANTS
@@ -106,7 +113,7 @@ inline std::string CMailIMAPBodyStruct::extractBetweenDelimeter(const std::strin
 }
 
 //
-// Parse and extract next element in body structure
+// Parse and extract next element in IMAP body structure
 //
 
 void CMailIMAPBodyStruct::parseNext(std::string& part, std::string& value) {
@@ -126,7 +133,7 @@ void CMailIMAPBodyStruct::parseNext(std::string& part, std::string& value) {
         value = kNILStr;
         part = part.substr(value.length() + 1);
     } else {
-        std::cerr << "[" << part << "] ERROR PARSING BODYSTRUCTURE" << std::endl;
+        throw CMailIMAPBodyStruct::Exception("error while parsing body structure ["+part+"]");
     }
 
 }
@@ -149,7 +156,7 @@ void CMailIMAPBodyStruct::parseBodyPart(BodyPart& bodyPart) {
     parseNext(part, bodyPart.parsedPart->encoding);
     parseNext(part, bodyPart.parsedPart->size);
 
-    if (bodyPart.parsedPart->type.compare("TEXT") == 0) {
+    if (bodyPart.parsedPart->type.compare(kTEXTStr) == 0) {
         parseNext(part, bodyPart.parsedPart->textLines);
     }
 
@@ -221,7 +228,7 @@ void CMailIMAPBodyStruct::createBodyStructTree(std::unique_ptr<BodyNode>& bodyNo
 // ==============
 
 //
-// If a body structure part contains file attachment details the extract them.
+// If a body structure part contains file attachment details then extract them.
 //
 
 void CMailIMAPBodyStruct::attachmentFn(std::unique_ptr<BodyNode>& bodyNode, BodyPart& bodyPart, std::shared_ptr<void>& attachmentData) {
@@ -238,9 +245,9 @@ void CMailIMAPBodyStruct::attachmentFn(std::unique_ptr<BodyNode>& bodyNode, Body
             parseNext(disposition, value);
             dispositionMap.insert({item, value});
         }
-        auto findAttachment = dispositionMap.find("ATTACHMENT");
+        auto findAttachment = dispositionMap.find(kATTACHMENTStr);
         if (findAttachment != dispositionMap.end()) {
-            disposition = dispositionMap["ATTACHMENT"];
+            disposition = dispositionMap[kATTACHMENTStr];
             dispositionMap.clear();
             disposition = disposition.substr(1);
             while (!disposition.empty()) {
@@ -250,10 +257,10 @@ void CMailIMAPBodyStruct::attachmentFn(std::unique_ptr<BodyNode>& bodyNode, Body
                 dispositionMap.insert({item, value});
             }
             Attachment fileAttachment;
-            fileAttachment.creationDate = dispositionMap["CREATION-DATE"];
-            fileAttachment.fileName = dispositionMap["FILENAME"];
-            fileAttachment.modifiactionDate = dispositionMap["MODIFICATION-DATE"];
-            fileAttachment.size = dispositionMap["SIZE"];
+            fileAttachment.creationDate = dispositionMap[kCREATIONDATEStr];
+            fileAttachment.fileName = dispositionMap[kFILENAMEStr];
+            fileAttachment.modifiactionDate = dispositionMap[kMODIFICATIONDATEStr];
+            fileAttachment.size = dispositionMap[kSIZEStr];
             fileAttachment.partNo = bodyPart.partNo;
             attachments->attachmentsList.push_back(fileAttachment);
         }

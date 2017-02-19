@@ -105,10 +105,16 @@ public:
     typedef std::function<void (std::unique_ptr<BodyNode>&, BodyPart&, std::shared_ptr<void>&) > BodyPartFn;
 
     //
-    // NIL body structure entry
+    // BODYSTRUCTURE constants
     //
 
     static const std::string kNILStr;
+    static const std::string kTEXTStr;
+    static const std::string kATTACHMENTStr;
+    static const std::string kCREATIONDATEStr;
+    static const std::string kFILENAMEStr;
+    static const std::string kMODIFICATIONDATEStr;
+    static const std::string kSIZEStr;
     
     // ============
     // CONSTRUCTORS
@@ -151,9 +157,9 @@ private:
     // ===========================
 
 
-    // =====================
-    // DISABLED CONSTRUCTORS
-    // =====================
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
 
     CMailIMAPBodyStruct() = delete;
     CMailIMAPBodyStruct(const CMailIMAPBodyStruct & orig) = delete;

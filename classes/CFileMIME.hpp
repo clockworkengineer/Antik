@@ -81,10 +81,14 @@ private:
     // PRIVATE TYPES AND CONSTANTS
     // ===========================
           
-    // =====================
-    // DISABLED CONSTRUCTORS
-    // =====================
- 
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
+
+    CFileMIME(const CFileMIME & orig) = delete;
+    CFileMIME(const CFileMIME && orig) = delete;
+    CFileMIME& operator=(CFileMIME other) = delete;
+
     // ===============
     // PRIVATE METHODS
     // ===============

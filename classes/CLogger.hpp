@@ -82,12 +82,13 @@ public:
     // PRIVATE TYPES AND CONSTANTS
     // ===========================
 
-    // =====================
-    // DISABLED CONSTRUCTORS
-    // =====================
+   // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
 
-    CLogger(const CLogger& orig) = delete;
-    CLogger(const CLogger&& orig) = delete;
+    CLogger(const CLogger & orig) = delete;
+    CLogger(const CLogger && orig) = delete;
+    CLogger& operator=(CLogger other) = delete;
 
 private:
 

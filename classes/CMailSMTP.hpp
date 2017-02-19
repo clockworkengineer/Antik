@@ -148,10 +148,14 @@ private:
     
     static const char kCB64[];                      // Valid characters for base64 encode/decode.
     
-    // =====================
-    // DISABLED CONSTRUCTORS
-    // =====================
- 
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
+    
+    CMailSMTP(const CMailSMTP & orig) = delete;
+    CMailSMTP(const CMailSMTP && orig) = delete;
+    CMailSMTP& operator=(CMailSMTP other) = delete;
+
     // ===============
     // PRIVATE METHODS
     // ===============

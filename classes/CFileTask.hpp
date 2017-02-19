@@ -114,14 +114,15 @@ private:
     // PRIVATE TYPES AND CONSTANTS
     // ===========================
 
-    // =====================
-    // DISABLED CONSTRUCTORS
-    // =====================
-    
-    CFileTask() = delete;                            // Use only provided constructors
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
+
+    CFileTask() = delete;
     CFileTask(const CFileTask & orig) = delete;
-    CFileTask(const CFileTask && orig )= delete;   
-    
+    CFileTask(const CFileTask && orig) = delete;
+    CFileTask& operator=(CFileTask other) = delete;
+ 
     // ===============
     // PRIVATE METHODS
     // ===============

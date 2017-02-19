@@ -163,9 +163,13 @@ private:
     // PRIVATE TYPES AND CONSTANTS
     // ===========================
    
-    // =====================
-    // DISABLED CONSTRUCTORS
-    // =====================
+   // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
+
+    CMailIMAP(const CMailIMAP & orig) = delete;
+    CMailIMAP(const CMailIMAP && orig) = delete;
+    CMailIMAP& operator=(CMailIMAP other) = delete;
 
     // ===============
     // PRIVATE METHODS

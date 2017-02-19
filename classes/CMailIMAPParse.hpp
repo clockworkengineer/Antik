@@ -246,9 +246,9 @@ private:
     
     typedef std::function<BASERESPONSE  (CommandData& commandData)> ParseFunction;
     
-    // =====================
-    // DISABLED CONSTRUCTORS
-    // =====================
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
     
     CMailIMAPParse() = delete;
     CMailIMAPParse(const CMailIMAPParse & orig) = delete;

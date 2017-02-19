@@ -79,13 +79,14 @@ private:
     // PRIVATE TYPES AND CONSTANTS
     // ===========================
 
-    // =====================
-    // DISABLED CONSTRUCTORS
-    // =====================
+   // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
 
     CRedirect() = delete;
     CRedirect(const CRedirect & orig) = delete;
     CRedirect(const CRedirect && orig) = delete;
+    CRedirect& operator=(CRedirect other) = delete;
 
     // ===============
     // PRIVATE METHODS

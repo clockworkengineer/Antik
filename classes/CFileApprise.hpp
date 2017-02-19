@@ -178,14 +178,15 @@ private:
     static const uint32_t kInotifyEventSize;    // inotify read event size
     static const uint32_t kInotifyEventBuffLen; // inotify read buffer length
 
-    // =====================
-    // DISABLED CONSTRUCTORS
-    // =====================
-    
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
+
     CFileApprise() = delete;
     CFileApprise(const CFileApprise & orig) = delete;
     CFileApprise(const CFileApprise && orig) = delete;
- 
+    CFileApprise& operator=(CFileApprise other) = delete;
+
     // ===============
     // PRIVATE METHODS
     // ===============
