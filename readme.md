@@ -69,16 +69,21 @@ Both the CFileTask and CFileApprise classes are designed to run in a separate th
  
 # [CMailSMTP Class](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CMailSMTP.cpp) #
 
-CMailSMTP provides the ability to create an email, add file attachments (encoded either as 7-bit or base64) and then send the created email to a given recipient(s). It provides methods for setting various parameters required to send the email and also attach files and post the resulting email. It is state based so it is quite possible to create an email and send but then just change say the recipients and re-post. Library [libcurl](https://curl.haxx.se/libcurl/) is used to provide the SMTP server connect and message sending transport.
+CMailSMTP provides the ability to create an email, add file attachments (encoded either as 7-bit or base64) and then send the created email to a given recipient(s). It provides methods for setting various parameters required to send the email, attach files and post the resulting email. It is state based so it is quite possible to create an email and send but then just change say the recipients and re-post. Library [libcurl](https://curl.haxx.se/libcurl/) is used to provide the SMTP server connect and message sending transport.
 
 # [CMailIMAP Class](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CMailIMAP.cpp) #
 
-CMailIMAP provides a way to connect to an IMAP server and send commands and receive decoded responses to process. It supports most of [rfc3501](https://tools.ietf.org/html/rfc3501) including the ability the ability to FETCH messages and also APPEND them to a mailbox. The decoded response are fairly simplistic and adding extra processing like encoding attachments or creating emails for append need to be done at a higher code layer; although every peace of data needed to achieve this should be in the return response. Library [libcurl](https://curl.haxx.se/libcurl/) is used to provide the SMTP server connect and command sending transport.
+CMailIMAP provides a way to connect to an IMAP server, send commands and receive responses. It supports most of [rfc3501](https://tools.ietf.org/html/rfc3501) IMAP standard including the ability the ability to FETCH messages and also APPEND them to a mailbox. Library [libcurl](https://curl.haxx.se/libcurl/) is used to provide the IMAP server connect and command send / receive transport. The string returned responses containing status and other such possible values can either be parsed by third party code or by use of the class CMailIMAPParse.
+
+# [CMailIMAPParse Class](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CMailIMAPParse.cpp) #
+
+CMailIMAPParse is used to take any responses returned from IMAP commands, parse them and a return 
+pointer to a suitable structure representation. This structure includes a return status and also error message field for when an error occurs.  It contains all static methods but no data so has no constructors or a destructor.
+
+# [CMailIMAPBodyStruct Class](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CMailIMAPBodyStruct.cpp) #
+
+CMailIMAPBodyStruct is used to parse any bodystructures returned by CMailIMAPParse and convert them into a tree structure that may then be traversed and a user supplied function called for each body part found. This may be used to extract information or perform searches within the tree for say the finding of any file attachments; this example is provided as an built in for the class.
 
 # [CLogger Class](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CLogger.cpp) #
 
 Generic log trace class that will take a list of strings and output them either to cout or cerr with an optional time and date stamp. It also includes a template method for converting an arbitrary value to a string to be placed in the list of strings to be output. This class is very much a work in progress and will probably change until I find a solution that I like for my logging needs.
-
-# To Do #
-
-1. Finish this document.
