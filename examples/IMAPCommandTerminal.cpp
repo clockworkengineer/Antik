@@ -21,10 +21,12 @@
 // Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
 //               Linux, Boost C++ Libraries.
 //
- 
+
 //
 // C++ STL definitions
 //
+
+#include <iostream>
 
 //
 // Classes
@@ -46,12 +48,12 @@ namespace fs = boost::filesystem;
 // Command line parameter data
 
 struct ParamArgData {
-    std::string userName;       // Email account user name
-    std::string userPassword;   // Email account user name password
-    std::string serverURL;      // SMTP server URL
+    std::string userName; // Email account user name
+    std::string userPassword; // Email account user name password
+    std::string serverURL; // SMTP server URL
     std::string configFileName; // Configuration file name
-    bool bParsed;               // true output parsed
-    bool bBodystruct;           // Parsed output includes bodystructs
+    bool bParsed; // true output parsed
+    bool bBodystruct; // Parsed output includes bodystructs
 };
 
 //
@@ -73,7 +75,7 @@ void exitWithError(std::string errmsg) {
 //
 
 void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
-    
+
     commonOptions.add_options()
             ("server,s", po::value<std::string>(&argData.serverURL)->required(), "IMAP Server URL and port")
             ("user,u", po::value<std::string>(&argData.userName)->required(), "Account username")
@@ -88,25 +90,25 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
 //
 
 void procCmdLine(int argc, char** argv, ParamArgData &argData) {
-    
+
     // Default values
-    
-    argData.bParsed= false;
-    argData.bBodystruct =false;
-    
+
+    argData.bParsed = false;
+    argData.bBodystruct = false;
+
     // Define and parse the program options
 
     po::options_description commandLine("Program Options");
     commandLine.add_options()
             ("help", "Print help messages")
             ("config,c", po::value<std::string>(&argData.configFileName)->required(), "Config File Name");
-  
+
     addCommonOptions(commandLine, argData);
-    
+
     po::options_description configFile("Config Files Options");
 
     addCommonOptions(configFile, argData);
-        
+
     po::variables_map vm;
 
     try {
@@ -119,7 +121,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
         if (vm.count("help")) {
             std::cout << "IMAPCommandTerminal" << std::endl << commandLine << std::endl;
-            exit(EXIT_SUCESS);
+            exit(EXIT_SUCCESS);
         }
 
         if (vm.count("config")) {
@@ -132,34 +134,43 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
                 throw po::error("Specified config file does not exist.");
             }
         }
-        
+
+        // Display parsed output
+
         if (vm.count("parsed")) {
-            argData.bParsed=true;
+            argData.bParsed = true;
         }
 
-       if (vm.count("bodystruct")) {
-            argData.bBodystruct=true;
+        // Display parsed BODYSTRUCT output
+        if (vm.count("bodystruct")) {
+            argData.bBodystruct = true;
         }
 
         po::notify(vm);
 
     } catch (po::error& e) {
-        std::cerr << "Test Harness Error: " << e.what() << std::endl << std::endl;
+        std::cerr << "IMAPCommandTerminal Error: " << e.what() << std::endl << std::endl;
         std::cerr << commandLine << std::endl;
         exit(EXIT_FAILURE);
     }
 
 }
 
+//
+// Walk data
+//
+
 struct WalkData {
     std::uint32_t count;
 };
 
+//
+// Body structure tree walk function  too display body details.
+//
+
 void walkFn(std::unique_ptr<CMailIMAPBodyStruct::BodyNode>& bodyNode, CMailIMAPBodyStruct::BodyPart& bodyPart, std::shared_ptr<void>& walkData) {
 
     WalkData *wlkData = static_cast<WalkData *> (walkData.get());
-
-    wlkData->count++;
 
     std::cout << std::string(120, '#') << std::endl;
 
@@ -198,13 +209,17 @@ void walkFn(std::unique_ptr<CMailIMAPBodyStruct::BodyNode>& bodyNode, CMailIMAPB
 
 }
 
+//
+// Display parsed IMAP command response
+//
+
 void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedResponse) {
 
-    std::cout << std::string(120, '*') <<std::endl;
+    std::cout << std::string(120, '*') << std::endl;
     if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
         std::cout << "COMMAND = {" << CMailIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
         std::cout << "ERROR = {" << parsedResponse->errorMessage << "}" << std::endl;
-        std::cout << std::string(120, '!') <<std::endl;
+        std::cout << std::string(120, '!') << std::endl;
         return;
     }
 
@@ -325,13 +340,13 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
             for (auto fetchEntry : ptr->fetchList) {
                 std::cout << "INDEX = " << fetchEntry.index << std::endl;
                 for (auto resp : fetchEntry.responseMap) {
-                    if (resp.first.compare(CMailIMAP::kBODYSTRUCTUREStr)==0) {
+                    if (resp.first.compare(CMailIMAP::kBODYSTRUCTUREStr) == 0) {
                         std::unique_ptr<CMailIMAPBodyStruct::BodyNode> treeBase{ new CMailIMAPBodyStruct::BodyNode()};
                         std::shared_ptr<void> walkData{ new WalkData()};
 
                         CMailIMAPBodyStruct::consructBodyStructTree(treeBase, resp.second);
                         CMailIMAPBodyStruct::walkBodyStructTree(treeBase, walkFn, walkData);
-                        
+
                     } else {
                         std::cout << resp.first << " = " << resp.second << std::endl;
                     }
@@ -364,7 +379,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
         }
     }
 
-    std::cout << std::string(120, '+') <<std::endl;
+    std::cout << std::string(120, '+') << std::endl;
 
 }
 
@@ -378,7 +393,7 @@ int main(int argc, char** argv) {
 
         ParamArgData argData;
         CMailIMAP imap;
-        std::deque<std::string> startCommands{"SELECT INBOX", "FETCH 1 BODYSTRUCTURE"};
+        std::deque<std::string> startupCommands{"SELECT INBOX", "exit"};
 
         // Read in command line parameters and process
 
@@ -390,27 +405,41 @@ int main(int argc, char** argv) {
 
         std::cout << "SERVER [" << argData.serverURL << "]" << std::endl;
         std::cout << "USER [" << argData.userName << "]" << std::endl;
-        
+
+        // Set mail account user name and password
+
         imap.setServer(argData.serverURL);
         imap.setUserAndPassword(argData.userName, argData.userPassword);
 
         std::string commandLine;
 
+        // Connect
+
         imap.connect();
+
+        // Loop executing commands until exit
 
         do {
 
-            if (!startCommands.empty()) {
-                commandLine = startCommands.front();
-                startCommands.pop_front();
+            // Process any startup commands first
+
+            if (!startupCommands.empty()) {
+                commandLine = startupCommands.front();
+                startupCommands.pop_front();
             }
+
+            // If command line empty them prompt and read in new command
 
             if (commandLine.empty()) {
                 std::cout << "COMMAND>";
                 std::getline(std::cin, commandLine);
             }
 
+            // exit
+
             if (commandLine.compare("exit") == 0) break;
+
+            // Run command
 
             if (!commandLine.empty()) {
 

@@ -290,11 +290,6 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSELECT(CMailIMAPParse::Command
             resp->errorMessage = responseStatus->errorMessage;
             if (resp->status == CMailIMAPParse::RespCode::OK) {
                 resp->mailBoxAccess = stringBetween(lineStr, '[', ']');
-                resp->mailBoxName = lineStr.substr(lineStr.find_first_of(']'));
-                resp->mailBoxName = stringBetweenDelimeter(resp->mailBoxName, ' ');
-                if (resp->mailBoxName.back() == '\"') resp->mailBoxName.pop_back();
-                if (resp->mailBoxName.front() == '\"') resp->mailBoxName = resp->mailBoxName.substr(1);
-
             }
         }
 

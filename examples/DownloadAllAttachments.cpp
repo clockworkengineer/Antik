@@ -228,6 +228,7 @@ int main(int argc, char** argv) {
         CMailIMAP::init();
 
         // Set mail account user name and password
+        
         imap.setServer(argData.serverURL);
         imap.setUserAndPassword(argData.userName, argData.userPassword);
 
