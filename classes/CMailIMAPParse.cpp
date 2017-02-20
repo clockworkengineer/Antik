@@ -118,112 +118,6 @@ std::unordered_map<std::string, CMailIMAPParse::Commands> CMailIMAPParse::string
 // ===============
 
 //
-// Convert any lowercase characters in string to upper.
-//
-
-inline std::string CMailIMAPParse::stringToUpper(const std::string& lineStr) {
-
-    std::string upperCase(lineStr);
-    for (auto &c : upperCase) c = std::toupper(c);
-    return (upperCase);
-
-}
-
-//
-// Perform case-insensitive string compare (return true strings are equal, false otherwise)
-//
-
-inline bool CMailIMAPParse::stringEqual(const std::string& lineStr, const std::string& compareStr) {
-
-    int cnt01 = 0;
-    if (lineStr.length() < compareStr.length()) return (false);
-    for (auto &c : compareStr) if (std::toupper(c) != std::toupper(lineStr[cnt01++])) return (false);
-    return (true);
-
-}
-
-//
-// Extract the contents between two delimeters in command response line.
-//
-
-inline std::string CMailIMAPParse::extractBetween(const std::string& lineStr, const char first, const char last) {
-    int firstDel = lineStr.find_first_of(first);
-    int lastDel = lineStr.find_first_of(last, firstDel);
-    return (lineStr.substr(firstDel + 1, (lastDel - firstDel - 1)));
-}
-
-//
-// Extract string between two occurrences of a delimeter character (ie. number and spaces).
-//
-
-inline std::string CMailIMAPParse::extractBetweenDelimeter(const std::string& lineStr, const char delimeter) {
-
-    int firstDel = lineStr.find_first_of(delimeter) + 1;
-    int lastDel = lineStr.find_first_of(delimeter, firstDel);
-    return (lineStr.substr(firstDel, lastDel - firstDel));
-
-}
-
-//
-// Extract number that may follow an un-tagged command response.
-//
-
-inline std::string CMailIMAPParse::extractUntaggedNumber(const std::string& lineStr) {
-
-    int startNumber = lineStr.find_first_not_of(' ', 1);
-    int endNumber = lineStr.find_first_of(' ', startNumber);
-    return (lineStr.substr(startNumber, endNumber - startNumber));
-
-}
-
-//
-// Extract tag from command response line.
-//
-
-inline std::string CMailIMAPParse::extractTag(const std::string& lineStr) {
-    return (lineStr.substr(0, lineStr.find_first_of(' ')));
-}
-
-//
-// Extract command string from command line. If the command has the UID 
-// prefix then this is skipped over.
-//
-
-inline std::string CMailIMAPParse::extractCommand(const std::string& lineStr) {
-
-    int startOfCommand = lineStr.find_first_of(' ') + 1;
-    int endOfCommand = lineStr.find_first_of(' ', startOfCommand);
-
-    if (stringEqual(lineStr.substr(startOfCommand, endOfCommand - startOfCommand), CMailIMAP::kUIDStr)) {
-        startOfCommand = lineStr.find_first_of(' ', startOfCommand) + 1;
-        endOfCommand = lineStr.find_first_of(' ', startOfCommand);
-    }
-
-    return (stringToUpper(lineStr.substr(startOfCommand, endOfCommand - startOfCommand)));
-
-}
-
-//
-// Extract list  from command response line. Note: only check until 
-// the end of line; the first character in linsStr is the start 
-// of the list ie. a '('.
-//
-
-inline std::string CMailIMAPParse::extractList(const std::string& lineStr) {
-
-    int bracketCount = 0, currentIndex = 0, lineLength = lineStr.length();
-
-    do {
-        if (lineStr[currentIndex] == '(') bracketCount++;
-        if (lineStr[currentIndex] == ')') bracketCount--;
-        currentIndex++;
-    } while (bracketCount && (--lineLength > 0));
-
-    return (lineStr.substr(0, currentIndex));
-
-}
-
-//
 // Parse item/number pair in command response and add to response map. Note the current line is 
 // updated to remove the pair and also this function is only used in FETCH command parse as the 
 // response is processed over multiple lines and not line by line.
@@ -249,7 +143,7 @@ void CMailIMAPParse::parseNumber(const std::string& itemStr, FetchRespData& fetc
 void CMailIMAPParse::parseString(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr) {
     std::string quotedString;
     lineStr = lineStr.substr(lineStr.find(itemStr) + itemStr.length() + 1);
-    quotedString = "\"" + extractBetweenDelimeter(lineStr, '\"') + "\"";
+    quotedString = "\"" + stringBetweenDelimeter(lineStr, '\"') + "\"";
     lineStr = lineStr.substr(quotedString.length());
     fetchData.responseMap.insert({itemStr, quotedString});
 
@@ -266,7 +160,7 @@ void CMailIMAPParse::parseList(const std::string& itemStr, FetchRespData& fetchD
 
     std::string list;
     lineStr = lineStr.substr(lineStr.find(itemStr) + itemStr.length() + 1);
-    list = extractList(lineStr);
+    list = stringList(lineStr);
     lineStr = lineStr.substr(list.length());
     fetchData.responseMap.insert({itemStr, list});
 
@@ -288,7 +182,7 @@ void CMailIMAPParse::parseOctets(const std::string& itemStr, FetchRespData& fetc
     if (commandLabel.back() == '\r') commandLabel.pop_back();
 
     lineStr = lineStr.substr(lineStr.find(itemStr) + itemStr.length());
-    octetStr = extractBetween(lineStr, '{', '}');
+    octetStr = stringBetween(lineStr, '{', '}');
     numberOfOctets = std::strtoull(octetStr.c_str(), nullptr, 10);
     lineStr = lineStr.substr(octetStr.length() + 2);
     octectBuffer.resize(numberOfOctets);
@@ -329,7 +223,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseStatus(const std::string& tagS
         std::cerr << lineStr << std::endl;
 
     } else {
-        std::cerr << "UKNOWN RESPONSE LINE = [" << lineStr << "]" << std::endl;
+        throw CMailIMAPParse::Exception("error while parsing IMAP command ["+lineStr+"]");
     }
 
     return (resp);
@@ -337,7 +231,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseStatus(const std::string& tagS
 }
 
 //
-// Parse SELECT/EXAMINE Response. Note: The mailbox name is extracted from the 
+// Parse SELECT/EXAMINE Response. Note: The mailbox name is stringed from the 
 // command line and used when decoding the response to find the mailbox access 
 // privileges (READ-ONLY or READ-WRITE).
 //
@@ -359,43 +253,48 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSELECT(CMailIMAPParse::Command
         lineStr.pop_back(); // Remove linefeed
 
         if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kOKStr + " [")) {
-            lineStr = extractBetween(lineStr, '[', ']');
+            lineStr = stringBetween(lineStr, '[', ']');
         }
 
         if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kFLAGSStr)) {
-            resp->responseMap.insert({CMailIMAP::kFLAGSStr, extractList(lineStr.substr(lineStr.find_first_of('(')))});
+            resp->responseMap.insert({CMailIMAP::kFLAGSStr, stringList(lineStr)});
 
         } else if (stringEqual(lineStr, CMailIMAP::kPERMANENTFLAGSStr)) {
-            resp->responseMap.insert({CMailIMAP::kPERMANENTFLAGSStr, extractList(lineStr.substr(lineStr.find_first_of('(')))});
+            resp->responseMap.insert({CMailIMAP::kPERMANENTFLAGSStr, stringList(lineStr)});
 
         } else if (stringEqual(lineStr, CMailIMAP::kUIDVALIDITYStr)) {
-            resp->responseMap.insert({CMailIMAP::kUIDVALIDITYStr, lineStr.substr(lineStr.find_first_of(' ') + 1)});
+            resp->responseMap.insert({CMailIMAP::kUIDVALIDITYStr, stringBetween(lineStr, ' ', ']')});
 
         } else if (stringEqual(lineStr, CMailIMAP::kUIDNEXTStr)) {
-            resp->responseMap.insert({CMailIMAP::kUIDNEXTStr, lineStr.substr(lineStr.find_first_of(' ') + 1)});
+            resp->responseMap.insert({CMailIMAP::kUIDNEXTStr, stringBetween(lineStr, ' ', ']')});
 
         } else if (stringEqual(lineStr, CMailIMAP::kHIGHESTMODSEQStr)) {
-            resp->responseMap.insert({CMailIMAP::kHIGHESTMODSEQStr, lineStr.substr(lineStr.find_first_of(' ') + 1)});
+            resp->responseMap.insert({CMailIMAP::kHIGHESTMODSEQStr, stringBetween(lineStr, ' ', ']')});
 
         } else if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kCAPABILITYStr)) {
             lineStr = lineStr.substr((std::string(CMailIMAP::kUntaggedStr + " " + CMailIMAP::kCAPABILITYStr).length()) + 1);
             resp->responseMap.insert({CMailIMAP::kCAPABILITYStr, lineStr});
 
         } else if (lineStr.find(CMailIMAP::kUNSEENStr) == 0) {
-            resp->responseMap.insert({CMailIMAP::kUNSEENStr, lineStr.substr(lineStr.find_first_of(' ') + 1)});
+            resp->responseMap.insert({CMailIMAP::kUNSEENStr, stringBetween(lineStr, ' ', ']')});
 
         } else if (lineStr.find(CMailIMAP::kEXISTSStr) != std::string::npos) {
-            resp->responseMap.insert({CMailIMAP::kEXISTSStr, extractUntaggedNumber(lineStr)});
+            resp->responseMap.insert({CMailIMAP::kEXISTSStr, stringUntaggedNumber(lineStr)});
 
         } else if (lineStr.find(CMailIMAP::kRECENTStr) != std::string::npos) {
-            resp->responseMap.insert({CMailIMAP::kRECENTStr, extractUntaggedNumber(lineStr)});
+            resp->responseMap.insert({CMailIMAP::kRECENTStr, stringUntaggedNumber(lineStr)});
 
           } else {
             CMailIMAPParse::BASERESPONSE responseStatus = parseStatus(commandData.tagStr, lineStr);
             resp->status = responseStatus->status;
             resp->errorMessage = responseStatus->errorMessage;
             if (resp->status == CMailIMAPParse::RespCode::OK) {
-                resp->mailBoxAccess = extractBetween(lineStr, '[', ']');
+                resp->mailBoxAccess = stringBetween(lineStr, '[', ']');
+                resp->mailBoxName = lineStr.substr(lineStr.find_first_of(']'));
+                resp->mailBoxName = stringBetweenDelimeter(resp->mailBoxName, ' ');
+                if (resp->mailBoxName.back() == '\"') resp->mailBoxName.pop_back();
+                if (resp->mailBoxName.front() == '\"') resp->mailBoxName = resp->mailBoxName.substr(1);
+
             }
         }
 
@@ -460,8 +359,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseLIST(CMailIMAPParse::CommandDa
         lineStr.pop_back(); // Remove linefeed
 
         if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + commandData.commandStr)) {
-            mailBoxEntry.attributes = extractList(lineStr.substr(lineStr.find_first_of('(')));
-            mailBoxEntry.hierDel = extractBetween(lineStr, '\"', '\"').front();
+            mailBoxEntry.attributes = stringList(lineStr);
+            mailBoxEntry.hierDel = stringBetween(lineStr, '\"', '\"').front();
             if (lineStr.back() != '\"') {
                 mailBoxEntry.name = lineStr.substr(lineStr.find_last_of(' '));
             } else {
@@ -503,7 +402,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTATUS(CMailIMAPParse::Command
             lineStr = lineStr.substr(lineStr.find_first_of(' ') + 1);
             resp->mailBoxName = lineStr.substr(0, lineStr.find_first_of(' '));
 
-            lineStr = extractBetween(lineStr, '(', ')');
+            lineStr = stringBetween(lineStr, '(', ')');
 
             std::istringstream listStream(lineStr);
             std::string item, value;
@@ -540,11 +439,11 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseEXPUNGE(CMailIMAPParse::Comman
         lineStr.pop_back(); // Remove linefeed
 
         if (lineStr.find(CMailIMAP::kEXISTSStr) != std::string::npos) {
-            lineStr = extractUntaggedNumber(lineStr);
+            lineStr = stringUntaggedNumber(lineStr);
             resp->exists.push_back(std::strtoull(lineStr.c_str(), nullptr, 10));
 
         } else if (lineStr.find(CMailIMAP::kEXPUNGEStr) != std::string::npos) {
-            lineStr = extractUntaggedNumber(lineStr);
+            lineStr = stringUntaggedNumber(lineStr);
             resp->expunged.push_back(std::strtoull(lineStr.c_str(), nullptr, 10));
 
         } else {
@@ -576,8 +475,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTORE(CMailIMAPParse::CommandD
         lineStr.pop_back(); // Remove linefeed
 
         if (lineStr.find(CMailIMAP::kFETCHStr) != std::string::npos) {
-            storeData.flags = "(" + extractBetween(lineStr.substr(lineStr.find_first_of('(') + 1), '(', ')') + ")";
-            storeData.index = std::strtoull(extractUntaggedNumber(lineStr).c_str(), nullptr, 10);
+            storeData.flags = "(" + stringBetween(lineStr.substr(lineStr.find_first_of('(') + 1), '(', ')') + ")";
+            storeData.index = std::strtoull(stringUntaggedNumber(lineStr).c_str(), nullptr, 10);
             resp->storeList.push_back(std::move(storeData));
 
         } else {
@@ -668,7 +567,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::CommandD
 
         if (lineStr.find(CMailIMAP::kFETCHStr + " (") != std::string::npos) {
 
-            fetchData.index = std::strtoull(extractUntaggedNumber(lineStr).c_str(), nullptr, 10);
+            fetchData.index = std::strtoull(stringUntaggedNumber(lineStr).c_str(), nullptr, 10);
             lineStr = lineStr.substr(lineStr.find_first_of('(') + 1);
 
             bool endOfFetch = false;
@@ -696,7 +595,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::CommandD
                 } else if (stringEqual(lineStr, CMailIMAP::kRFC822Str + " ")) {
                     parseOctets(CMailIMAP::kRFC822Str, fetchData, lineStr, commandData.commandRespStream);
                 } else {
-                    std::cerr << "Error parsing" << std::endl; // throw here ?
+                    throw CMailIMAPParse::Exception("error while parsing FETCH command ["+lineStr+"]");
                 }
 
                 lineStr = lineStr.substr(lineStr.find_first_not_of(' '));
@@ -776,6 +675,116 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseDefault(CMailIMAPParse::Comman
 // ==============
 
 //
+// Convert any lowercase characters in string to upper.
+//
+
+inline std::string CMailIMAPParse::stringToUpper(const std::string& lineStr) {
+
+    std::string upperCase(lineStr);
+    for (auto &c : upperCase) c = std::toupper(c);
+    return (upperCase);
+
+}
+
+//
+// Perform case-insensitive string compare (return true strings are equal, false otherwise)
+//
+
+inline bool CMailIMAPParse::stringEqual(const std::string& lineStr, const std::string& compareStr) {
+
+    int cnt01 = 0;
+    if (lineStr.length() < compareStr.length()) return (false);
+    for (auto &c : compareStr) if (std::toupper(c) != std::toupper(lineStr[cnt01++])) return (false);
+    return (true);
+
+}
+
+//
+// Extract the contents between two delimeters in command response line.
+//
+
+inline std::string CMailIMAPParse::stringBetween(const std::string& lineStr, const char first, const char last) {
+    int firstDel = lineStr.find_first_of(first);
+    int lastDel = lineStr.find_first_of(last, firstDel);
+    return (lineStr.substr(firstDel + 1, (lastDel - firstDel - 1)));
+}
+
+//
+// Extract string between two occurrences of a delimeter character (ie. number and spaces).
+//
+
+inline std::string CMailIMAPParse::stringBetweenDelimeter(const std::string& lineStr, const char delimeter) {
+
+    int firstDel = lineStr.find_first_of(delimeter) + 1;
+    int lastDel = lineStr.find_first_of(delimeter, firstDel);
+    return (lineStr.substr(firstDel, lastDel - firstDel));
+
+}
+
+//
+// Extract number that may follow an un-tagged command response.
+//
+
+inline std::string CMailIMAPParse::stringUntaggedNumber(const std::string& lineStr) {
+
+    int startNumber = lineStr.find_first_not_of(' ', 1);
+    int endNumber = lineStr.find_first_of(' ', startNumber);
+    return (lineStr.substr(startNumber, endNumber - startNumber));
+
+}
+
+//
+// Extract tag from command response line.
+//
+
+inline std::string CMailIMAPParse::stringTag(const std::string& lineStr) {
+    return (lineStr.substr(0, lineStr.find_first_of(' ')));
+}
+
+//
+// Extract command string from command line. If the command has the UID 
+// prefix then this is skipped over.
+//
+
+inline std::string CMailIMAPParse::stringCommand(const std::string& lineStr) {
+
+    int startOfCommand = lineStr.find_first_of(' ') + 1;
+    int endOfCommand = lineStr.find_first_of(' ', startOfCommand);
+
+    if (stringEqual(lineStr.substr(startOfCommand, endOfCommand - startOfCommand), CMailIMAP::kUIDStr)) {
+        startOfCommand = lineStr.find_first_of(' ', startOfCommand) + 1;
+        endOfCommand = lineStr.find_first_of(' ', startOfCommand);
+    }
+
+    return (stringToUpper(lineStr.substr(startOfCommand, endOfCommand - startOfCommand)));
+
+}
+
+//
+// Extract list  from command response line. Note: only check until 
+// the end of line; the first character in linsStr is the start 
+// of the list ie. a '('.
+//
+
+inline std::string CMailIMAPParse::stringList(const std::string& lineStr) {
+
+    int bracketCount = 0, startPosition=0, currentIndex = 0, lineLength = lineStr.length();
+    
+    startPosition = lineStr.find_first_of('(');
+    lineLength -= startPosition;
+    
+    currentIndex = startPosition;
+    do {
+        if (lineStr[currentIndex] == '(') bracketCount++;
+        if (lineStr[currentIndex] == ')') bracketCount--;
+        currentIndex++;
+    } while (bracketCount && (--lineLength > 0));
+
+    return (lineStr.substr(startPosition, currentIndex-startPosition));
+
+}
+
+//
 // Parse Command Response. The response string is one long string containing "\r\n"s to
 // signal end of lines. The string is read line by line converting the response to a istringstream 
 // and using getline() and '\n' to signal the end of line character (except FETCH which is dealt 
@@ -791,7 +800,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseResponse(const std::string & c
     commandLineStr.pop_back();
 
     CMailIMAPParse::ParseFunction parseFn;
-    CommandData commandData{ extractTag(commandLineStr), extractCommand(commandLineStr), commandLineStr, responseStream};
+    CommandData commandData{ stringTag(commandLineStr), stringCommand(commandLineStr), commandLineStr, responseStream};
 
     parseFn = CMailIMAPParse::parseCommmandMap[commandData.commandStr];
     if (!parseFn) {

@@ -229,7 +229,21 @@ public:
     //
     
     static BASERESPONSE parseResponse(const std::string& commandResponseStr);
-
+    
+    //
+    // Command response parse string utility methods
+    //
+    
+    static std::string stringToUpper(const std::string& lineStr);
+    static bool stringEqual(const std::string& lineStr, const std::string& compareStr);
+  
+    static std::string stringBetween(const std::string& lineStr, const char first, const char last);
+    static std::string stringBetweenDelimeter(const std::string& lineStr, const char delimeter);
+    static std::string stringTag(const std::string& lineStr);
+    static std::string stringCommand(const std::string& lineStr);
+    static std::string stringList(const std::string& lineStr);
+    static std::string stringUntaggedNumber(const std::string& lineStr);
+  
     // ================
     // PUBLIC VARIABLES
     // ================
@@ -259,25 +273,11 @@ private:
     // ===============
     // PRIVATE METHODS
     // ===============
-     
-    //
-    // Convert string to uppercase and string case-insensitive compare
-    //
-    
-    static std::string stringToUpper(const std::string& lineStr);
-    static bool stringEqual(const std::string& lineStr, const std::string& compareStr);
-    
+      
     //
     // Command response parse utility methods
     //
-    
-    static std::string extractBetween(const std::string& lineStr, const char first, const char last);
-    static std::string extractBetweenDelimeter(const std::string& lineStr, const char delimeter);
-    static std::string extractTag(const std::string& lineStr);
-    static std::string extractCommand(const std::string& lineStr);
-    static std::string extractList(const std::string& lineStr);
-    static std::string extractUntaggedNumber(const std::string& lineStr);
-    
+      
     static BASERESPONSE parseStatus(const std::string& tagStr, const std::string& lineStr);
     static void parseOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr, std::istringstream& responseStream);
     static void parseList(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);

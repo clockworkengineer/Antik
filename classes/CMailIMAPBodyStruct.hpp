@@ -95,6 +95,7 @@ public:
         std::string fileName;
         std::string modifiactionDate;
         std::string size;
+        std::string encoding;
     };
 
     struct AttachmentData {
@@ -171,16 +172,6 @@ private:
     // ===============
     // PRIVATE METHODS
     // ===============
-    
-    //
-    // Utility methods (duplicates of CMailIMAPParse methods.NEED TO REFACTOR)
-    //
-  
-    static bool stringEqual(const std::string& lineStr, const std::string& compareStr);
-    static std::string stringToUpper(const std::string& lineStr);
-    static std::string extractList(const std::string& lineStr);
-    static std::string extractBetween(const std::string& lineStr, const char first, const char last);
-    static std::string extractBetweenDelimeter(const std::string& lineStr, const char delimeter);
     
     //
     // Parse body structure tree filling in body part data

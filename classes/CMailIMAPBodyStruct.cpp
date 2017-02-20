@@ -24,6 +24,7 @@
 // =================
 
 #include "CMailIMAP.hpp"
+#include "CMailIMAPParse.hpp"
 #include "CMailIMAPBodyStruct.hpp"
 
 // ====================
@@ -72,73 +73,6 @@ const std::string CMailIMAPBodyStruct::kSIZEStr("SIZE");
 // ===============
 
 //
-// Perform case-insensitive string compare (return true strings are equal, false otherwise)
-//
-
-inline bool CMailIMAPBodyStruct::stringEqual(const std::string& lineStr, const std::string& compareStr) {
-
-    int cnt01 = 0;
-    if (lineStr.length() < compareStr.length()) return (false);
-    for (auto &c : compareStr) if (std::toupper(c) != std::toupper(lineStr[cnt01++])) return (false);
-    return (true);
-
-}
-
-//
-// Convert any lowercase characters in string to upper.
-//
-
-inline std::string CMailIMAPBodyStruct::stringToUpper(const std::string& lineStr) {
-
-    std::string upperCase(lineStr);
-    for (auto &c : upperCase) c = std::toupper(c);
-    return (upperCase);
-
-}
-
-//
-// Extract list  from command response line. Note: only check until 
-// the end of line; the first character in linsStr is the start 
-// of the list ie. a '('.
-//
-
-inline std::string CMailIMAPBodyStruct::extractList(const std::string& lineStr) {
-
-    int bracketCount = 0, currentIndex = 0, lineLength = lineStr.length();
-
-    do {
-        if (lineStr[currentIndex] == '(') bracketCount++;
-        if (lineStr[currentIndex] == ')') bracketCount--;
-        currentIndex++;
-    } while (bracketCount && (--lineLength > 0));
-
-    return (lineStr.substr(0, currentIndex));
-
-}
-
-//
-// Extract the contents between two delimeters in command response line.
-//
-
-inline std::string CMailIMAPBodyStruct::extractBetween(const std::string& lineStr, const char first, const char last) {
-    int firstDel = lineStr.find_first_of(first);
-    int lastDel = lineStr.find_first_of(last, firstDel);
-    return (lineStr.substr(firstDel + 1, (lastDel - firstDel - 1)));
-}
-
-//
-// Extract string between two occurrences of a delimeter character (ie. number and spaces).
-//
-
-inline std::string CMailIMAPBodyStruct::extractBetweenDelimeter(const std::string& lineStr, const char delimeter) {
-
-    int firstDel = lineStr.find_first_of(delimeter) + 1;
-    int lastDel = lineStr.find_first_of(delimeter, firstDel);
-    return (lineStr.substr(firstDel, lastDel - firstDel));
-
-}
-
-//
 // Parse and extract next element in IMAP body structure
 //
 
@@ -147,15 +81,15 @@ void CMailIMAPBodyStruct::parseNext(std::string& part, std::string& value) {
     if (part.empty()) {
         return;
     } else if (part[0] == '\"') {
-        value = extractBetweenDelimeter(part, '\"');
+        value = CMailIMAPParse::stringBetweenDelimeter(part, '\"');
         part = part.substr(value.length() + 3);
     } else if (part[0] == '(') {
-        value = extractList(part);
+        value = CMailIMAPParse::stringList(part);
         part = part.substr(value.length() + 1);
     } else if (std::isdigit(part[0])) {
         value = part.substr(0, part.find_first_of(' '));
         part = part.substr(part.find_first_of(' ') + 1);
-    } else if (stringEqual(part, kNILStr)) {
+    } else if (CMailIMAPParse::stringEqual(part, kNILStr)) {
         value = kNILStr;
         part = part.substr(value.length() + 1);
     } else {
@@ -182,7 +116,7 @@ void CMailIMAPBodyStruct::parseBodyPart(BodyPart& bodyPart) {
     parseNext(part, bodyPart.parsedPart->encoding);
     parseNext(part, bodyPart.parsedPart->size);
 
-    if (stringEqual(bodyPart.parsedPart->type, kTEXTStr)) {
+    if (CMailIMAPParse::CMailIMAPParse::stringEqual(bodyPart.parsedPart->type, kTEXTStr)) {
         parseNext(part, bodyPart.parsedPart->textLines);
     }
 
@@ -220,7 +154,7 @@ void CMailIMAPBodyStruct::createBodyStructTree(std::unique_ptr<BodyNode>& bodyNo
     std::vector<std::string> bodyParts;
 
     while (bodyStructure[0] == '(') {
-        bodyParts.push_back(extractList(bodyStructure));
+        bodyParts.push_back(CMailIMAPParse::stringList(bodyStructure));
         bodyStructure = bodyStructure.substr(bodyParts.back().length());
     }
     
@@ -262,13 +196,13 @@ void CMailIMAPBodyStruct::attachmentFn(std::unique_ptr<BodyNode>& bodyNode, Body
     std::unordered_map<std::string, std::string> dispositionMap;
     std::string disposition{bodyPart.parsedPart->disposition};
     
-    if (!stringEqual(disposition, kNILStr)) {
+    if (!CMailIMAPParse::stringEqual(disposition, kNILStr)) {
         disposition = disposition.substr(1);
         while (!disposition.empty()) {
             std::string item, value;
             parseNext(disposition, item);
             parseNext(disposition, value);
-            dispositionMap.insert({stringToUpper(item), value});
+            dispositionMap.insert({CMailIMAPParse::stringToUpper(item), value});
         }
         std::string attachmentLabel;
         auto findAttachment = dispositionMap.find(kATTACHMENTStr);
@@ -280,14 +214,14 @@ void CMailIMAPBodyStruct::attachmentFn(std::unique_ptr<BodyNode>& bodyNode, Body
         }
         if (!attachmentLabel.empty()) {
             disposition = dispositionMap[attachmentLabel];
-            if (!stringEqual(disposition, kNILStr)) {
+            if (!CMailIMAPParse::stringEqual(disposition, kNILStr)) {
                 dispositionMap.clear();
                 disposition = disposition.substr(1);
                 while (!disposition.empty()) {
                     std::string item, value;
                     parseNext(disposition, item);
                     parseNext(disposition, value);
-                    dispositionMap.insert({stringToUpper(item), value});
+                    dispositionMap.insert({CMailIMAPParse::stringToUpper(item), value});
                 }
                 Attachment fileAttachment;
                 fileAttachment.creationDate = dispositionMap[kCREATIONDATEStr];
@@ -295,6 +229,7 @@ void CMailIMAPBodyStruct::attachmentFn(std::unique_ptr<BodyNode>& bodyNode, Body
                 fileAttachment.modifiactionDate = dispositionMap[kMODIFICATIONDATEStr];
                 fileAttachment.size = dispositionMap[kSIZEStr];
                 fileAttachment.partNo = bodyPart.partNo;
+                fileAttachment.encoding = bodyPart.parsedPart->encoding;
                 attachments->attachmentsList.push_back(fileAttachment);
             }
         }
