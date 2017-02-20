@@ -81,7 +81,7 @@ void CMailIMAPBodyStruct::parseNext(std::string& part, std::string& value) {
     if (part.empty()) {
         return;
     } else if (part[0] == '\"') {
-        value = CMailIMAPParse::stringBetweenDelimeter(part, '\"');
+        value = CMailIMAPParse::stringBetween(part, '\"', '\"');
         part = part.substr(value.length() + 3);
     } else if (part[0] == '(') {
         value = CMailIMAPParse::stringList(part);

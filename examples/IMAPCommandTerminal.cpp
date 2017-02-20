@@ -393,7 +393,7 @@ int main(int argc, char** argv) {
 
         ParamArgData argData;
         CMailIMAP imap;
-        std::deque<std::string> startupCommands{"SELECT INBOX", "exit"};
+        std::deque<std::string> startupCommands{"SELECT INBOX"};
 
         // Read in command line parameters and process
 

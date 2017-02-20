@@ -238,7 +238,6 @@ public:
     static bool stringEqual(const std::string& lineStr, const std::string& compareStr);
   
     static std::string stringBetween(const std::string& lineStr, const char first, const char last);
-    static std::string stringBetweenDelimeter(const std::string& lineStr, const char delimeter);
     static std::string stringTag(const std::string& lineStr);
     static std::string stringCommand(const std::string& lineStr);
     static std::string stringList(const std::string& lineStr);
