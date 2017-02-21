@@ -154,7 +154,7 @@ void downloadAttachment(CMailIMAP& imap, const std::string& folderPath, CMailIMA
 
     if ((parsedResponse->status == CMailIMAPParse::RespCode::BAD) ||
             (parsedResponse->status == CMailIMAPParse::RespCode::NO)) {
-        throw CMailIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessage);
+        throw CMailIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessageStr);
     }
 
     CMailIMAPParse::FetchResponse *ptr = static_cast<CMailIMAPParse::FetchResponse *> (parsedResponse.get());
@@ -241,7 +241,7 @@ int main(int argc, char** argv) {
         parsedResponseStr=imap.sendCommand("SELECT "+argData.mailBoxName);
         parsedResponse = CMailIMAPParse::parseResponse(parsedResponseStr);
         if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
-            throw CMailIMAP::Exception("IMAP SELECT "+parsedResponse->errorMessage);
+            throw CMailIMAP::Exception("IMAP SELECT "+parsedResponse->errorMessageStr);
         }
 
         // FETCH BODYSTRUCTURE for all mail
@@ -249,7 +249,7 @@ int main(int argc, char** argv) {
         parsedResponseStr=imap.sendCommand("FETCH 1:* BODYSTRUCTURE");
         parsedResponse = CMailIMAPParse::parseResponse(parsedResponseStr);
         if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
-            throw CMailIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessage);
+            throw CMailIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessageStr);
         }
 
         CMailIMAPParse::FetchResponse *ptr = static_cast<CMailIMAPParse::FetchResponse *> (parsedResponse.get());

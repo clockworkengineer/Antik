@@ -345,7 +345,7 @@ void CFileAppriseTests::generateException(std::exception_ptr e) {
 // Watch Folder Name lengh == 0 ASSERT
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseAssertParam1) {
+TEST_F(CFileAppriseTests, AssertParam1) {
 
     //  this->taskName = "Test";
 
@@ -357,7 +357,7 @@ TEST_F(CFileAppriseTests,CFileAppriseAssertParam1) {
 // Watch Depth < -1 ASSERT
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseAssertParam2) {
+TEST_F(CFileAppriseTests,AssertParam2) {
 
     //   this->taskName = "Test";
     this->watchFolder = kWatchFolder;
@@ -371,7 +371,7 @@ TEST_F(CFileAppriseTests,CFileAppriseAssertParam2) {
 // Create 1 file in watcher folder
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseCreateFile1) {
+TEST_F(CFileAppriseTests,CreateFile1) {
 
     this->createRemoveFiles(1);
 
@@ -381,7 +381,7 @@ TEST_F(CFileAppriseTests,CFileAppriseCreateFile1) {
 // Create 10 files in watcher folder
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseCreateFile10) {
+TEST_F(CFileAppriseTests, CreateFile10) {
 
     this->createRemoveFiles(10);
 
@@ -391,7 +391,7 @@ TEST_F(CFileAppriseTests,CFileAppriseCreateFile10) {
 // Create 50 files in watcher folder
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseCreateFile50) {
+TEST_F(CFileAppriseTests, CreateFile50) {
 
     this->createRemoveFiles(50);
 
@@ -401,7 +401,7 @@ TEST_F(CFileAppriseTests,CFileAppriseCreateFile50) {
 // Create 100 files in watcher folder
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseCreateFile100) {
+TEST_F(CFileAppriseTests,CreateFile100) {
 
     this->createRemoveFiles(100);
 
@@ -411,7 +411,7 @@ TEST_F(CFileAppriseTests,CFileAppriseCreateFile100) {
 // Create 250 files in watcher folder
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseCreateFile250) {
+TEST_F(CFileAppriseTests, CreateFile250) {
 
     this->createRemoveFiles(250);
 
@@ -421,7 +421,7 @@ TEST_F(CFileAppriseTests,CFileAppriseCreateFile250) {
 // Create 500 files in watcher folder
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseCreateFile500) {
+TEST_F(CFileAppriseTests, CreateFile500) {
 
     this->createRemoveFiles(500);
 
@@ -431,7 +431,7 @@ TEST_F(CFileAppriseTests,CFileAppriseCreateFile500) {
 // Modify file one time
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseUpdateFile1) {
+TEST_F(CFileAppriseTests, UpdateFile1) {
 
     this->createChanges(1);
 
@@ -441,7 +441,7 @@ TEST_F(CFileAppriseTests,CFileAppriseUpdateFile1) {
 // Modify file 10 times
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseUpdateFile10) {
+TEST_F(CFileAppriseTests, UpdateFile10) {
 
     this->createChanges(10);
 
@@ -451,7 +451,7 @@ TEST_F(CFileAppriseTests,CFileAppriseUpdateFile10) {
 // Modify file 50 times
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseUpdateFile50) {
+TEST_F(CFileAppriseTests, UpdateFile50) {
 
     this->createChanges(50);
 
@@ -461,7 +461,7 @@ TEST_F(CFileAppriseTests,CFileAppriseUpdateFile50) {
 // Modify file 100 times
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseUpdateFile100) {
+TEST_F(CFileAppriseTests, UpdateFile100) {
 
     this->createChanges(100);
 
@@ -471,7 +471,7 @@ TEST_F(CFileAppriseTests,CFileAppriseUpdateFile100) {
 // Modify file 250 times
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseUpdateFile250) {
+TEST_F(CFileAppriseTests, UpdateFile250) {
 
     this->createChanges(250);
 
@@ -481,7 +481,7 @@ TEST_F(CFileAppriseTests,CFileAppriseUpdateFile250) {
 // Modify file 500 times
 //
 
-TEST_F(CFileAppriseTests,CFileAppriseUpdateFile500) {
+TEST_F(CFileAppriseTests, UpdateFile500) {
 
     this->createChanges(500);
 

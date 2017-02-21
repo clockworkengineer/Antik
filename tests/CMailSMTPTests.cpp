@@ -1,12 +1,12 @@
 #include "HOST.hpp"
 /*
- * File:   CFileSMTPTests.cpp
+ * File:   CMailSMTPTests.cpp
  * 
  * Author: Robert Tizzard
  *
  * Created on October 24, 2016, 2:34 PM
  * 
- * Description: Google unit tests for class CFileTask.
+ * Description: Google unit tests for class CMailSMTPs.
  *
  * Copyright 2016.
  *
@@ -32,17 +32,17 @@
 // UNIT TEST FIXTURE CLASS
 // =======================
 
-class CFileSMTPTests : public ::testing::Test {
+class CMailSMTPTests : public ::testing::Test {
 protected:
 
     // Empty constructor
 
-    CFileSMTPTests() {
+    CMailSMTPTests() {
     }
 
     // Empty destructor
 
-    virtual ~CFileSMTPTests() {
+    virtual ~CMailSMTPTests() {
     }
 
     virtual void SetUp() {
@@ -67,7 +67,7 @@ protected:
 // TASK CLASS UNIT TESTS
 // =====================
 
-TEST_F(CFileSMTPTests, CMailSMTPSetServerURL) {
+TEST_F(CMailSMTPTests, SetServerURL) {
 
     std::string serverURL;
     smtp.setServer("smtp://smtp.gmail.com:25");
@@ -75,42 +75,42 @@ TEST_F(CFileSMTPTests, CMailSMTPSetServerURL) {
 
 }
 
-TEST_F(CFileSMTPTests, CMailSMTPSetUser) {
+TEST_F(CMailSMTPTests, SetUser) {
 
     smtp.setUserAndPassword("user01", "password01");
     ASSERT_STREQ("user01", smtp.getUser().c_str());
 
 }
 
-TEST_F(CFileSMTPTests, CMailSMTPSetFromAddress) {
+TEST_F(CMailSMTPTests, SetFromAddress) {
 
     smtp.setFromAddress("<user01@gmail.com>");
     ASSERT_STREQ("<user01@gmail.com>", smtp.getFromAddress().c_str());
 
 }
 
-TEST_F(CFileSMTPTests, CMailSMTPSetToAddress) {
+TEST_F(CMailSMTPTests, SetToAddress) {
 
     smtp.setToAddress("<user02@gmail.com>");
     ASSERT_STREQ("<user02@gmail.com>", smtp.getToAddress().c_str());
 
 }
 
-TEST_F(CFileSMTPTests, CMailSMTPSetCCAddress) {
+TEST_F(CMailSMTPTests, SetCCAddress) {
 
     smtp.setCCAddress("<user03@gmail.com>,<user04@gmail.com>,<user05@gmail.com>,<user06@gmail.com>");
     ASSERT_STREQ("<user03@gmail.com>,<user04@gmail.com>,<user05@gmail.com>,<user06@gmail.com>", smtp.getCCAddress().c_str());
 
 }
 
-TEST_F(CFileSMTPTests, CMailSMTPSetMailSubject) {
+TEST_F(CMailSMTPTests, SetMailSubject) {
 
     smtp.setMailSubject("Message From The Grave");
     ASSERT_STREQ("Message From The Grave", smtp.getMailSubject().c_str());
 
 }
 
-TEST_F(CFileSMTPTests, CMailSMTPSetMailMessage) {
+TEST_F(CMailSMTPTests, SetMailMessage) {
 
     smtp.setMailMessage({"Man is distinguished, not only by his reason, but by this singular passion from ",
         "other animals, which is a lust of the mind, that by a perseverance of delight ",
@@ -123,7 +123,7 @@ TEST_F(CFileSMTPTests, CMailSMTPSetMailMessage) {
 
 }
 
-TEST_F(CFileSMTPTests, CMailSMTPBase64EncodeDecode) {
+TEST_F(CMailSMTPTests, Base64EncodeDecode) {
 
     std::string deocdedString;
     std::string encodedString;
@@ -176,7 +176,7 @@ TEST_F(CFileSMTPTests, CMailSMTPBase64EncodeDecode) {
 
 }
 
-TEST_F(CFileSMTPTests, CMailSMTPCheckForNulls) {
+TEST_F(CMailSMTPTests, CheckForNulls) {
 
     CMailSMTP smtp;
     std::string mailMessage;

@@ -71,7 +71,8 @@ std::unordered_map<std::string, CMailIMAPParse::ParseFunction> CMailIMAPParse::p
     {CMailIMAP::kCAPABILITYStr, parseCAPABILITY},
     {CMailIMAP::kFETCHStr, parseFETCH},
     {CMailIMAP::kNOOPStr, parseNOOP},
-    {CMailIMAP::kIDLEStr, parseNOOP}
+    {CMailIMAP::kIDLEStr, parseNOOP},
+    {CMailIMAP::kLOGOUTStr, parseLOGOUT}
 
 };
 
@@ -204,19 +205,19 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseStatus(const std::string& tagS
 
     if (stringEqual(lineStr, tagStr + " " + CMailIMAP::kOKStr)) {
         resp->status = RespCode::OK;
-        resp->errorMessage = "";
+        resp->errorMessageStr = "";
 
     } else if (stringEqual(lineStr, tagStr + " " + CMailIMAP::kNOStr)) {
         resp->status = RespCode::NO;
-        resp->errorMessage = lineStr;
+        resp->errorMessageStr = lineStr;
 
     } else if (stringEqual(lineStr, tagStr + " " + CMailIMAP::kBADStr)) {
         resp->status = RespCode::BAD;
-        resp->errorMessage = lineStr;
+        resp->errorMessageStr = lineStr;
 
     } else if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kBYEStr)) {
         resp->status = RespCode::BAD;
-        resp->errorMessage = lineStr;
+        resp->errorMessageStr = lineStr;
 
     } else if ((stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kNOStr))
             || (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kBADStr))) {
@@ -244,9 +245,9 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSELECT(CMailIMAPParse::Command
 
     // Extract mailbox name from command (stripping any quotes).
 
-    resp->mailBoxName = commandData.commandLineStr.substr(commandData.commandLineStr.find_last_of(' ') + 1);
-    if (resp->mailBoxName.back() == '\"') resp->mailBoxName.pop_back();
-    if (resp->mailBoxName.front() == '\"') resp->mailBoxName = resp->mailBoxName.substr(1);
+    resp->mailBoxNameStr = commandData.commandLineStr.substr(commandData.commandLineStr.find_last_of(' ') + 1);
+    if (resp->mailBoxNameStr.back() == '\"') resp->mailBoxNameStr.pop_back();
+    if (resp->mailBoxNameStr.front() == '\"') resp->mailBoxNameStr = resp->mailBoxNameStr.substr(1);
 
     for (std::string lineStr; std::getline(commandData.commandRespStream, lineStr, '\n');) {
 
@@ -287,9 +288,9 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSELECT(CMailIMAPParse::Command
           } else {
             CMailIMAPParse::BASERESPONSE responseStatus = parseStatus(commandData.tagStr, lineStr);
             resp->status = responseStatus->status;
-            resp->errorMessage = responseStatus->errorMessage;
+            resp->errorMessageStr = responseStatus->errorMessageStr;
             if (resp->status == CMailIMAPParse::RespCode::OK) {
-                resp->mailBoxAccess = stringBetween(lineStr, '[', ']');
+                resp->mailBoxAccessStr = stringBetween(lineStr, '[', ']');
             }
         }
 
@@ -327,7 +328,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSEARCH(CMailIMAPParse::Command
         } else {
             CMailIMAPParse::BASERESPONSE responseStatus = parseStatus(commandData.tagStr, lineStr);
             resp->status = responseStatus->status;
-            resp->errorMessage = responseStatus->errorMessage;
+            resp->errorMessageStr = responseStatus->errorMessageStr;
         }
 
     }
@@ -353,21 +354,21 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseLIST(CMailIMAPParse::CommandDa
         lineStr.pop_back(); // Remove linefeed
 
         if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + commandData.commandStr)) {
-            mailBoxEntry.attributes = stringList(lineStr);
+            mailBoxEntry.attributesStr = stringList(lineStr);
             mailBoxEntry.hierDel = stringBetween(lineStr, '\"', '\"').front();
             if (lineStr.back() != '\"') {
-                mailBoxEntry.name = lineStr.substr(lineStr.find_last_of(' '));
+                mailBoxEntry.mailBoxNameStr = lineStr.substr(lineStr.find_last_of(' '));
             } else {
                 lineStr.pop_back();
-                mailBoxEntry.name = lineStr.substr(lineStr.find_last_of('\"'));
-                mailBoxEntry.name += '\"';
+                mailBoxEntry.mailBoxNameStr = lineStr.substr(lineStr.find_last_of('\"'));
+                mailBoxEntry.mailBoxNameStr += '\"';
             }
             resp->mailBoxList.push_back(std::move(mailBoxEntry));
 
         } else {
             CMailIMAPParse::BASERESPONSE responseStatus = parseStatus(commandData.tagStr, lineStr);
             resp->status = responseStatus->status;
-            resp->errorMessage = responseStatus->errorMessage;
+            resp->errorMessageStr = responseStatus->errorMessageStr;
         }
 
     }
@@ -394,7 +395,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTATUS(CMailIMAPParse::Command
             
             lineStr = lineStr.substr(std::string(CMailIMAP::kUntaggedStr + " " + commandData.commandStr).length()+1);
 
-            resp->mailBoxName = lineStr.substr(0, lineStr.find_first_of(' '));
+            resp->mailBoxNameStr = lineStr.substr(0, lineStr.find_first_of(' '));
 
             lineStr = stringBetween(lineStr, '(', ')');
 
@@ -409,7 +410,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTATUS(CMailIMAPParse::Command
         } else {
             CMailIMAPParse::BASERESPONSE responseStatus = parseStatus(commandData.tagStr, lineStr);
             resp->status = responseStatus->status;
-            resp->errorMessage = responseStatus->errorMessage;
+            resp->errorMessageStr = responseStatus->errorMessageStr;
         }
 
     }
@@ -443,7 +444,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseEXPUNGE(CMailIMAPParse::Comman
         } else {
             CMailIMAPParse::BASERESPONSE responseStatus = parseStatus(commandData.tagStr, lineStr);
             resp->status = responseStatus->status;
-            resp->errorMessage = responseStatus->errorMessage;
+            resp->errorMessageStr = responseStatus->errorMessageStr;
         }
 
     }
@@ -470,13 +471,13 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTORE(CMailIMAPParse::CommandD
 
         if (lineStr.find(CMailIMAP::kFETCHStr) != std::string::npos) {
             storeData.index = std::strtoull(stringUntaggedNumber(lineStr).c_str(), nullptr, 10);
-            storeData.flags = stringList(stringList(lineStr).substr(1));
+            storeData.flagsListStr = stringList(stringList(lineStr).substr(1));
             resp->storeList.push_back(std::move(storeData));
 
         } else {
             CMailIMAPParse::BASERESPONSE responseStatus = parseStatus(commandData.tagStr, lineStr);
             resp->status = responseStatus->status;
-            resp->errorMessage = responseStatus->errorMessage;
+            resp->errorMessageStr = responseStatus->errorMessageStr;
         }
 
     }
@@ -500,12 +501,12 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseCAPABILITY(CMailIMAPParse::Com
         lineStr.pop_back(); // Remove linefeed
 
         if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kCAPABILITYStr)) {        
-            resp->capabilityList = lineStr.substr(std::string(CMailIMAP::kUntaggedStr + " " + CMailIMAP::kCAPABILITYStr).length() + 1);
+            resp->capabilitiesStr = lineStr.substr(std::string(CMailIMAP::kUntaggedStr + " " + CMailIMAP::kCAPABILITYStr).length() + 1);
 
         } else {
             CMailIMAPParse::BASERESPONSE responseStatus = parseStatus(commandData.tagStr, lineStr);
             resp->status = responseStatus->status;
-            resp->errorMessage = responseStatus->errorMessage;
+            resp->errorMessageStr = responseStatus->errorMessageStr;
         }
 
     }
@@ -533,7 +534,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseNOOP(CMailIMAPParse::CommandDa
         } else {
             CMailIMAPParse::BASERESPONSE responseStatus = parseStatus(commandData.tagStr, lineStr);
             resp->status = responseStatus->status;
-            resp->errorMessage = responseStatus->errorMessage;
+            resp->errorMessageStr = responseStatus->errorMessageStr;
         }
 
     }
@@ -605,9 +606,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::CommandD
         } else {
             CMailIMAPParse::BASERESPONSE responseStatus = parseStatus(commandData.tagStr, lineStr);
             resp->status = responseStatus->status;
-            resp->errorMessage = responseStatus->errorMessage;
+            resp->errorMessageStr = responseStatus->errorMessageStr;
         }
-
 
     }
 
@@ -630,11 +630,12 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseLOGOUT(CMailIMAPParse::Command
         lineStr.pop_back(); // Remove linefeed
 
         if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kBYEStr)) {
+            resp->rawResponse.push_back(std::move(lineStr));
             continue;
         } else {
             CMailIMAPParse::BASERESPONSE responseStatus = parseStatus(commandData.tagStr, lineStr);
             resp->status = responseStatus->status;
-            resp->errorMessage = responseStatus->errorMessage;
+            resp->errorMessageStr = responseStatus->errorMessageStr;
         }
     }
 
@@ -656,7 +657,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseDefault(CMailIMAPParse::Comman
         lineStr.pop_back(); // Remove lineStrfeed
         CMailIMAPParse::BASERESPONSE responseStatus = parseStatus(commandData.tagStr, lineStr);
         resp->status = responseStatus->status;
-        resp->errorMessage = responseStatus->errorMessage;
+        resp->errorMessageStr = responseStatus->errorMessageStr;
     }
 
     return (static_cast<CMailIMAPParse::BASERESPONSE> (std::move(resp)));

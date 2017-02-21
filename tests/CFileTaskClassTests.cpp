@@ -228,7 +228,7 @@ void CFileTaskTests::generateException(std::exception_ptr e) {
 // Task Name lengh == 0 ASSERT
 //
 
-TEST_F(CFileTaskTests, CFileTaskAssertParam1) {
+TEST_F(CFileTaskTests, AssertParam1) {
 
     EXPECT_DEATH(CFileTask task(this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth), CFileTaskTests::kParamAssertion1);
 
@@ -238,7 +238,7 @@ TEST_F(CFileTaskTests, CFileTaskAssertParam1) {
 // Watch Folder Name lengh == 0 ASSERT
 //
 
-TEST_F(CFileTaskTests, CFileTaskAssertParam2) {
+TEST_F(CFileTaskTests, AssertParam2) {
 
     this->taskName = "Test";
 
@@ -250,7 +250,7 @@ TEST_F(CFileTaskTests, CFileTaskAssertParam2) {
 // Action Function Pointer == NULL ASSERT
 //
 
-TEST_F(CFileTaskTests, CFileTaskAssertParam3) {
+TEST_F(CFileTaskTests, AssertParam3) {
 
     this->taskName = "Test";
     this->watchFolder = kWatchFolder;
@@ -264,7 +264,7 @@ TEST_F(CFileTaskTests, CFileTaskAssertParam3) {
 // Action Function Data Pointer == NULL ASSERT
 //
 
-TEST_F(CFileTaskTests, CFileTaskAssertParam4) {
+TEST_F(CFileTaskTests, AssertParam4) {
 
     this->taskName = "Test";
     this->watchFolder = kWatchFolder;
@@ -278,7 +278,7 @@ TEST_F(CFileTaskTests, CFileTaskAssertParam4) {
 // Watch Depth < -1 ASSERT
 //
 
-TEST_F(CFileTaskTests, CFileTaskAssertParam5) {
+TEST_F(CFileTaskTests, AssertParam5) {
 
     this->taskName = "Test";
     this->watchFolder = kWatchFolder;
@@ -292,7 +292,7 @@ TEST_F(CFileTaskTests, CFileTaskAssertParam5) {
 // Create 1 file in watcher folder
 //
 
-TEST_F(CFileTaskTests, CFileTaskCreateFile1) {
+TEST_F(CFileTaskTests, CreateFile1) {
 
     this->createFiles(1);
 
@@ -302,7 +302,7 @@ TEST_F(CFileTaskTests, CFileTaskCreateFile1) {
 // Create 10 files in watcher folder
 //
 
-TEST_F(CFileTaskTests, CFileTaskCreateFile10) {
+TEST_F(CFileTaskTests, CreateFile10) {
 
     this->createFiles(10);
 
@@ -312,7 +312,7 @@ TEST_F(CFileTaskTests, CFileTaskCreateFile10) {
 // Create 50 files in watcher folder
 //
 
-TEST_F(CFileTaskTests, CFileTaskCreateFile50) {
+TEST_F(CFileTaskTests, CreateFile50) {
 
     this->createFiles(50);
 
@@ -322,7 +322,7 @@ TEST_F(CFileTaskTests, CFileTaskCreateFile50) {
 // Create 100 files in watcher folder
 //
 
-TEST_F(CFileTaskTests, CFileTaskCreateFile100) {
+TEST_F(CFileTaskTests, CreateFile100) {
 
     this->createFiles(100);
 
@@ -332,7 +332,7 @@ TEST_F(CFileTaskTests, CFileTaskCreateFile100) {
 // Create 250 files in watcher folder
 //
 
-TEST_F(CFileTaskTests, CFileTaskCreateFile250) {
+TEST_F(CFileTaskTests, CreateFile250) {
 
     this->createFiles(250);
 
@@ -342,7 +342,7 @@ TEST_F(CFileTaskTests, CFileTaskCreateFile250) {
 // Create 500 files in watcher folder
 //
 
-TEST_F(CFileTaskTests, CFileTaskCreateFile500) {
+TEST_F(CFileTaskTests, CreateFile500) {
 
     this->createFiles(500);
 
@@ -352,7 +352,7 @@ TEST_F(CFileTaskTests, CFileTaskCreateFile500) {
 // Watch folder does not exist exception.
 //
 
-TEST_F(CFileTaskTests, CFileTaskNoWatchFolder) {
+TEST_F(CFileTaskTests, NoWatchFolder) {
 
     this->taskName = "Test";
     this->watchFolder = "/tmp/tnothere";
@@ -375,7 +375,7 @@ TEST_F(CFileTaskTests, CFileTaskNoWatchFolder) {
 // Task action throw exception capture.
 //
 
-TEST_F(CFileTaskTests, CFileTaskTaskActionFunctionException) {
+TEST_F(CFileTaskTests, ActionFunctionException) {
 
     this->taskName = "Test";
     this->watchFolder = kWatchFolder;
