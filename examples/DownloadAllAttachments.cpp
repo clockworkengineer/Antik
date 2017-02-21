@@ -51,24 +51,24 @@ namespace fs = boost::filesystem;
 //
 
 struct ParamArgData {
-    std::string userName;            // Email account user name
-    std::string userPassword;        // Email account user name password
-    std::string serverURL;           // SMTP server URL
-    std::string mailBoxName;         // Mailbox name
-    std::string destinationFolder;   // Destination folder for attachments
-    std::string configFileName;      // Configuration file name
+    std::string userNameStr;            // Email account user name
+    std::string userPasswordStr;        // Email account user name password
+    std::string serverURLStr;           // SMTP server URL
+    std::string mailBoxNameStr;         // Mailbox name
+    std::string destinationFolderStr;   // Destination folder for attachments
+    std::string configFileNameStr;      // Configuration file name
 };
 
 //
 // Exit with error message/status
 //
 
-void exitWithError(std::string errmsg) {
+void exitWithError(std::string errMsgStr) {
 
     // Closedown email, display error and exit.
 
     CMailIMAP::closedown();
-    std::cerr << errmsg << std::endl;
+    std::cerr << errMsgStr << std::endl;
     exit(EXIT_FAILURE);
 
 }
@@ -80,11 +80,11 @@ void exitWithError(std::string errmsg) {
 void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
     
     commonOptions.add_options()
-            ("server,s", po::value<std::string>(&argData.serverURL)->required(), "IMAP Server URL and port")
-            ("user,u", po::value<std::string>(&argData.userName)->required(), "Account username")
-            ("password,p", po::value<std::string>(&argData.userPassword)->required(), "User password")
-            ("mailbox,m", po::value<std::string>(&argData.mailBoxName)->required(), "Mailbox name")
-            ("destination,d", po::value<std::string>(&argData.destinationFolder)->required(), "Destination for attachments");
+            ("server,s", po::value<std::string>(&argData.serverURLStr)->required(), "IMAP Server URL and port")
+            ("user,u", po::value<std::string>(&argData.userNameStr)->required(), "Account username")
+            ("password,p", po::value<std::string>(&argData.userPasswordStr)->required(), "User password")
+            ("mailbox,m", po::value<std::string>(&argData.mailBoxNameStr)->required(), "Mailbox name")
+            ("destination,d", po::value<std::string>(&argData.destinationFolderStr)->required(), "Destination for attachments");
 
 }
 //
@@ -98,7 +98,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
     po::options_description commandLine("Program Options");
     commandLine.add_options()
             ("help", "Print help messages")
-            ("config,c", po::value<std::string>(&argData.configFileName)->required(), "Config File Name");
+            ("config,c", po::value<std::string>(&argData.configFileNameStr)->required(), "Config File Name");
 
     addCommonOptions(commandLine, argData);
     
@@ -146,10 +146,10 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Download an attachment, decode it and write to local folder.
 //
 
-void downloadAttachment(CMailIMAP& imap, const std::string& folderPath, CMailIMAPBodyStruct::Attachment &attachment) {
+void downloadAttachment(CMailIMAP& imap, const std::string& folderPathStr, CMailIMAPBodyStruct::Attachment &attachment) {
 
-    std::string commandLine("FETCH " + attachment.indexStr + " BODY[" + attachment.partNoStr + "]");
-    std::string parsedResponseStr(imap.sendCommand(commandLine));
+    std::string commandLineStr("FETCH " + attachment.indexStr + " BODY[" + attachment.partNoStr + "]");
+    std::string parsedResponseStr(imap.sendCommand(commandLineStr));
     CMailIMAPParse::BASERESPONSE parsedResponse(CMailIMAPParse::parseResponse(parsedResponseStr));
 
     if ((parsedResponse->status == CMailIMAPParse::RespCode::BAD) ||
@@ -162,14 +162,14 @@ void downloadAttachment(CMailIMAP& imap, const std::string& folderPath, CMailIMA
     for (auto fetchEntry : ptr->fetchList) {
         for (auto resp : fetchEntry.responseMap) {
             if (resp.first.find("BODY[" + attachment.partNoStr + "]") == 0) {
-                std::string decodedString;
+                std::string decodedStringStr;
                 std::istringstream responseStream(resp.second);
-                std::ofstream ofs(folderPath+attachment.fileNameStr, std::ios::binary);
-                std::cout << "Creating [" << folderPath+attachment.fileNameStr << "]" << std::endl;
+                std::ofstream ofs(folderPathStr+attachment.fileNameStr, std::ios::binary);
+                std::cout << "Creating [" << folderPathStr+attachment.fileNameStr << "]" << std::endl;
                 for (std::string lineStr; std::getline(responseStream, lineStr, '\n');) {
                     lineStr.pop_back();
-                    CMailSMTP::decodeFromBase64(lineStr, decodedString, lineStr.length());
-                    ofs.write(&decodedString[0], decodedString.length());
+                    CMailSMTP::decodeFromBase64(lineStr, decodedStringStr, lineStr.length());
+                    ofs.write(&decodedStringStr[0], decodedStringStr.length());
                 }
             }
         }
@@ -180,12 +180,12 @@ void downloadAttachment(CMailIMAP& imap, const std::string& folderPath, CMailIMA
 // For a passed in BODTSTRUCTURE parse and download any base64 encoded attachments.
 //
 
-void getBodyStructAttachments(CMailIMAP& imap, std::uint64_t index, const std::string& folderPath, const std::string& bodyStructure) {
+void getBodyStructAttachments(CMailIMAP& imap, std::uint64_t index, const std::string& folderPathStr, const std::string& bodyStructureStr) {
 
     std::unique_ptr<CMailIMAPBodyStruct::BodyNode> treeBase{ new CMailIMAPBodyStruct::BodyNode()};
     std::shared_ptr<void> attachmentData{ new CMailIMAPBodyStruct::AttachmentData()};
 
-    CMailIMAPBodyStruct::consructBodyStructTree(treeBase, bodyStructure);
+    CMailIMAPBodyStruct::consructBodyStructTree(treeBase, bodyStructureStr);
     CMailIMAPBodyStruct::walkBodyStructTree(treeBase, CMailIMAPBodyStruct::attachmentFn, attachmentData);
 
     auto attachments = static_cast<CMailIMAPBodyStruct::AttachmentData *> (attachmentData.get());
@@ -194,7 +194,7 @@ void getBodyStructAttachments(CMailIMAP& imap, std::uint64_t index, const std::s
         for (auto attachment : attachments->attachmentsList) {
             if (CMailIMAPParse::stringEqual(attachment.encodingStr, CMailSMTP::kEncodingBase64)) {
                 attachment.indexStr = std::to_string(index);
-                downloadAttachment(imap, folderPath, attachment);
+                downloadAttachment(imap, folderPathStr, attachment);
             } else {
                 std::cout << "Attachment not base64 encoded but " << attachment.encodingStr << "]" << std::endl;
             }
@@ -229,8 +229,8 @@ int main(int argc, char** argv) {
 
         // Set mail account user name and password
         
-        imap.setServer(argData.serverURL);
-        imap.setUserAndPassword(argData.userName, argData.userPassword);
+        imap.setServer(argData.serverURLStr);
+        imap.setUserAndPassword(argData.userNameStr, argData.userPasswordStr);
 
         // Connect
         
@@ -238,7 +238,7 @@ int main(int argc, char** argv) {
 
         // SELECT mailbox
         
-        parsedResponseStr=imap.sendCommand("SELECT "+argData.mailBoxName);
+        parsedResponseStr=imap.sendCommand("SELECT "+argData.mailBoxNameStr);
         parsedResponse = CMailIMAPParse::parseResponse(parsedResponseStr);
         if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
             throw CMailIMAP::Exception("IMAP SELECT "+parsedResponse->errorMessageStr);
@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
             std::cout << "EMAIL INDEX [" << fetchEntry.index << "]" << std::endl;
             for (auto resp : fetchEntry.responseMap) {
                 if (resp.first.compare(CMailIMAP::kBODYSTRUCTUREStr) == 0) {
-                    getBodyStructAttachments(imap, fetchEntry.index, argData.destinationFolder,resp.second);
+                    getBodyStructAttachments(imap, fetchEntry.index, argData.destinationFolderStr,resp.second);
                 } else {
                     std::cout << resp.first << " = " << resp.second << std::endl;
                 }
