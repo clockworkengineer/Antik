@@ -44,28 +44,27 @@
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
-
 // Command line parameter data
 
 struct ParamArgData {
-    std::string userName; // Email account user name
-    std::string userPassword; // Email account user name password
-    std::string serverURL; // SMTP server URL
-    std::string configFileName; // Configuration file name
-    bool bParsed; // true output parsed
-    bool bBodystruct; // Parsed output includes bodystructs
+    std::string userNameStr;        // Email account user name
+    std::string userPasswordStr;    // Email account user name password
+    std::string serverURLStr;       // SMTP server URL
+    std::string configFileNameStr;  // Configuration file name
+    bool bParsed;                   // true output parsed
+    bool bBodystruct;               // Parsed output includes BODYSTRUCTS
 };
 
 //
 // Exit with error message/status
 //
 
-void exitWithError(std::string errmsg) {
+void exitWithError(std::string errMsgStr) {
 
     // Closedown email, display error and exit.
 
     CMailIMAP::closedown();
-    std::cerr << errmsg << std::endl;
+    std::cerr << errMsgStr << std::endl;
     exit(EXIT_FAILURE);
 
 }
@@ -77,9 +76,9 @@ void exitWithError(std::string errmsg) {
 void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
 
     commonOptions.add_options()
-            ("server,s", po::value<std::string>(&argData.serverURL)->required(), "IMAP Server URL and port")
-            ("user,u", po::value<std::string>(&argData.userName)->required(), "Account username")
-            ("password,p", po::value<std::string>(&argData.userPassword)->required(), "User password")
+            ("server,s", po::value<std::string>(&argData.serverURLStr)->required(), "IMAP Server URL and port")
+            ("user,u", po::value<std::string>(&argData.userNameStr)->required(), "Account username")
+            ("password,p", po::value<std::string>(&argData.userPasswordStr)->required(), "User password")
             ("parsed", "Response parsed")
             ("bodystruct", "Parsed output includes bodystructs");
 
@@ -101,7 +100,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
     po::options_description commandLine("Program Options");
     commandLine.add_options()
             ("help", "Print help messages")
-            ("config,c", po::value<std::string>(&argData.configFileName)->required(), "Config File Name");
+            ("config,c", po::value<std::string>(&argData.configFileNameStr)->required(), "Config File Name");
 
     addCommonOptions(commandLine, argData);
 
@@ -393,7 +392,7 @@ int main(int argc, char** argv) {
 
         ParamArgData argData;
         CMailIMAP imap;
-        std::deque<std::string> startupCommands{"SELECT INBOX"};
+        std::deque<std::string> startupCommandsStr{"SELECT INBOX"};
 
         // Read in command line parameters and process
 
@@ -403,15 +402,15 @@ int main(int argc, char** argv) {
 
         CMailIMAP::init();
 
-        std::cout << "SERVER [" << argData.serverURL << "]" << std::endl;
-        std::cout << "USER [" << argData.userName << "]" << std::endl;
+        std::cout << "SERVER [" << argData.serverURLStr << "]" << std::endl;
+        std::cout << "USER [" << argData.userNameStr << "]" << std::endl;
 
         // Set mail account user name and password
 
-        imap.setServer(argData.serverURL);
-        imap.setUserAndPassword(argData.userName, argData.userPassword);
+        imap.setServer(argData.serverURLStr);
+        imap.setUserAndPassword(argData.userNameStr, argData.userPasswordStr);
 
-        std::string commandLine;
+        std::string commandLineStr;
 
         // Connect
 
@@ -423,27 +422,27 @@ int main(int argc, char** argv) {
 
             // Process any startup commands first
 
-            if (!startupCommands.empty()) {
-                commandLine = startupCommands.front();
-                startupCommands.pop_front();
+            if (!startupCommandsStr.empty()) {
+                commandLineStr = startupCommandsStr.front();
+                startupCommandsStr.pop_front();
             }
 
             // If command line empty them prompt and read in new command
 
-            if (commandLine.empty()) {
+            if (commandLineStr.empty()) {
                 std::cout << "COMMAND>";
-                std::getline(std::cin, commandLine);
+                std::getline(std::cin, commandLineStr);
             }
 
             // exit
 
-            if (commandLine.compare("exit") == 0) break;
+            if (commandLineStr.compare("exit") == 0) break;
 
             // Run command
 
-            if (!commandLine.empty()) {
+            if (!commandLineStr.empty()) {
 
-                std::string commandResponseStr(imap.sendCommand(commandLine));
+                std::string commandResponseStr(imap.sendCommand(commandLineStr));
 
                 if (argData.bParsed) {
                     CMailIMAPParse::BASERESPONSE commandResponse(CMailIMAPParse::parseResponse(commandResponseStr));
@@ -452,7 +451,7 @@ int main(int argc, char** argv) {
                     std::cout << commandResponseStr << std::endl;
                 }
 
-                commandLine.clear();
+                commandLineStr.clear();
 
             }
 
