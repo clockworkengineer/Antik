@@ -148,7 +148,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
 void downloadAttachment(CMailIMAP& imap, const std::string& folderPath, CMailIMAPBodyStruct::Attachment &attachment) {
 
-    std::string commandLine("FETCH " + attachment.index + " BODY[" + attachment.partNo + "]");
+    std::string commandLine("FETCH " + attachment.indexStr + " BODY[" + attachment.partNoStr + "]");
     std::string parsedResponseStr(imap.sendCommand(commandLine));
     CMailIMAPParse::BASERESPONSE parsedResponse(CMailIMAPParse::parseResponse(parsedResponseStr));
 
@@ -161,11 +161,11 @@ void downloadAttachment(CMailIMAP& imap, const std::string& folderPath, CMailIMA
 
     for (auto fetchEntry : ptr->fetchList) {
         for (auto resp : fetchEntry.responseMap) {
-            if (resp.first.find("BODY[" + attachment.partNo + "]") == 0) {
+            if (resp.first.find("BODY[" + attachment.partNoStr + "]") == 0) {
                 std::string decodedString;
                 std::istringstream responseStream(resp.second);
-                std::ofstream ofs(folderPath+attachment.fileName, std::ios::binary);
-                std::cout << "Creating [" << folderPath+attachment.fileName << "]" << std::endl;
+                std::ofstream ofs(folderPath+attachment.fileNameStr, std::ios::binary);
+                std::cout << "Creating [" << folderPath+attachment.fileNameStr << "]" << std::endl;
                 for (std::string lineStr; std::getline(responseStream, lineStr, '\n');) {
                     lineStr.pop_back();
                     CMailSMTP::decodeFromBase64(lineStr, decodedString, lineStr.length());
@@ -192,11 +192,11 @@ void getBodyStructAttachments(CMailIMAP& imap, std::uint64_t index, const std::s
 
     if (!attachments->attachmentsList.empty()) {
         for (auto attachment : attachments->attachmentsList) {
-            if (CMailIMAPParse::stringEqual(attachment.encoding, CMailSMTP::kEncodingBase64)) {
-                attachment.index = std::to_string(index);
+            if (CMailIMAPParse::stringEqual(attachment.encodingStr, CMailSMTP::kEncodingBase64)) {
+                attachment.indexStr = std::to_string(index);
                 downloadAttachment(imap, folderPath, attachment);
             } else {
-                std::cout << "Attachment not base64 encoded but " << attachment.encoding << "]" << std::endl;
+                std::cout << "Attachment not base64 encoded but " << attachment.encodingStr << "]" << std::endl;
             }
         }
     } else {

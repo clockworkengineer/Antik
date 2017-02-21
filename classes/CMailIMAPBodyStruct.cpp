@@ -76,24 +76,24 @@ const std::string CMailIMAPBodyStruct::kSIZEStr("SIZE");
 // Parse and extract next element in IMAP body structure
 //
 
-void CMailIMAPBodyStruct::parseNext(std::string& part, std::string& value) {
+void CMailIMAPBodyStruct::parseNext(std::string& partStr, std::string& valueStr) {
 
-    if (part.empty()) {
+    if (partStr.empty()) {
         return;
-    } else if (part[0] == '\"') {
-        value = CMailIMAPParse::stringBetween(part, '\"', '\"');
-        part = part.substr(value.length() + 3);
-    } else if (part[0] == '(') {
-        value = CMailIMAPParse::stringList(part);
-        part = part.substr(value.length() + 1);
-    } else if (std::isdigit(part[0])) {
-        value = part.substr(0, part.find_first_of(' '));
-        part = part.substr(part.find_first_of(' ') + 1);
-    } else if (CMailIMAPParse::stringEqual(part, kNILStr)) {
-        value = kNILStr;
-        part = part.substr(value.length() + 1);
+    } else if (partStr[0] == '\"') {
+        valueStr = CMailIMAPParse::stringBetween(partStr, '\"', '\"');
+        partStr = partStr.substr(valueStr.length() + 3);
+    } else if (partStr[0] == '(') {
+        valueStr = CMailIMAPParse::stringList(partStr);
+        partStr = partStr.substr(valueStr.length() + 1);
+    } else if (std::isdigit(partStr[0])) {
+        valueStr = partStr.substr(0, partStr.find_first_of(' '));
+        partStr = partStr.substr(partStr.find_first_of(' ') + 1);
+    } else if (CMailIMAPParse::stringEqual(partStr, kNILStr)) {
+        valueStr = kNILStr;
+        partStr = partStr.substr(valueStr.length() + 1);
     } else {
-        throw CMailIMAPBodyStruct::Exception("error while parsing body structure ["+part+"]");
+        throw CMailIMAPBodyStruct::Exception("error while parsing body structure ["+partStr+"]");
     }
 
 }
@@ -104,26 +104,26 @@ void CMailIMAPBodyStruct::parseNext(std::string& part, std::string& value) {
 
 void CMailIMAPBodyStruct::parseBodyPart(BodyPart& bodyPart) {
 
-    std::string part{bodyPart.part.substr(1)};
+    std::string partStr{bodyPart.partStr.substr(1)};
  
     bodyPart.parsedPart.reset(new BodyPartParsed());
 
-    parseNext(part, bodyPart.parsedPart->type);
-    parseNext(part, bodyPart.parsedPart->subtype);
-    parseNext(part, bodyPart.parsedPart->parameterList);
-    parseNext(part, bodyPart.parsedPart->id);
-    parseNext(part, bodyPart.parsedPart->description);
-    parseNext(part, bodyPart.parsedPart->encoding);
-    parseNext(part, bodyPart.parsedPart->size);
+    parseNext(partStr, bodyPart.parsedPart->typeStr);
+    parseNext(partStr, bodyPart.parsedPart->subtypeStr);
+    parseNext(partStr, bodyPart.parsedPart->parameterListStr);
+    parseNext(partStr, bodyPart.parsedPart->idStr);
+    parseNext(partStr, bodyPart.parsedPart->descriptionStr);
+    parseNext(partStr, bodyPart.parsedPart->encodingStr);
+    parseNext(partStr, bodyPart.parsedPart->sizeStr);
 
-    if (CMailIMAPParse::CMailIMAPParse::stringEqual(bodyPart.parsedPart->type, kTEXTStr)) {
-        parseNext(part, bodyPart.parsedPart->textLines);
+    if (CMailIMAPParse::CMailIMAPParse::stringEqual(bodyPart.parsedPart->typeStr, kTEXTStr)) {
+        parseNext(partStr, bodyPart.parsedPart->textLinesStr);
     }
 
-    parseNext(part, bodyPart.parsedPart->md5);
-    parseNext(part, bodyPart.parsedPart->disposition);
-    parseNext(part, bodyPart.parsedPart->language);
-    parseNext(part, bodyPart.parsedPart->location);
+    parseNext(partStr, bodyPart.parsedPart->md5Str);
+    parseNext(partStr, bodyPart.parsedPart->dispositionStr);
+    parseNext(partStr, bodyPart.parsedPart->languageStr);
+    parseNext(partStr, bodyPart.parsedPart->locationStr);
 
 }
 
@@ -147,35 +147,35 @@ void CMailIMAPBodyStruct::parseBodyStructTree(std::unique_ptr<BodyNode>& bodyNod
 // Create body structure tree from body part list
 //
  
-void CMailIMAPBodyStruct::createBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart) {
+void CMailIMAPBodyStruct::createBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPartStr) {
 
     uint32_t partNo = 1;
-    std::string bodyStructure(bodyPart.substr(1));
+    std::string bodyStructureStr(bodyPartStr.substr(1));
     std::vector<std::string> bodyParts;
 
-    while (bodyStructure[0] == '(') {
-        bodyParts.push_back(CMailIMAPParse::stringList(bodyStructure));
-        bodyStructure = bodyStructure.substr(bodyParts.back().length());
+    while (bodyStructureStr[0] == '(') {
+        bodyParts.push_back(CMailIMAPParse::stringList(bodyStructureStr));
+        bodyStructureStr = bodyStructureStr.substr(bodyParts.back().length());
     }
     
-    bodyStructure.pop_back();
-    bodyStructure = bodyStructure.substr(1);
-    bodyParts.push_back(bodyStructure);
+    bodyStructureStr.pop_back();
+    bodyStructureStr = bodyStructureStr.substr(1);
+    bodyParts.push_back(bodyStructureStr);
 
-    for (auto part : bodyParts) {
-        if (part[1] == '\"') {
-            if (!bodyNode->partLevel.empty()) {
-                bodyNode->bodyParts.push_back({bodyNode->partLevel + "." + std::to_string(partNo), part, nullptr, nullptr});
+    for (auto partStr : bodyParts) {
+        if (partStr[1] == '\"') {
+            if (!bodyNode->partLevelStr.empty()) {
+                bodyNode->bodyParts.push_back({bodyNode->partLevelStr + "." + std::to_string(partNo), partStr, nullptr, nullptr});
             } else {
-                bodyNode->bodyParts.push_back({bodyNode->partLevel + std::to_string(partNo), part, nullptr, nullptr});
+                bodyNode->bodyParts.push_back({bodyNode->partLevelStr + std::to_string(partNo), partStr, nullptr, nullptr});
             }
-        } else if (part[1] == '(') {
+        } else if (partStr[1] == '(') {
             bodyNode->bodyParts.push_back({"", "", nullptr});
             bodyNode->bodyParts.back().child.reset(new BodyNode());
-            bodyNode->bodyParts.back().child->partLevel = bodyNode->partLevel + std::to_string(partNo);
-            createBodyStructTree(bodyNode->bodyParts.back().child, part);
+            bodyNode->bodyParts.back().child->partLevelStr = bodyNode->partLevelStr + std::to_string(partNo);
+            createBodyStructTree(bodyNode->bodyParts.back().child, partStr);
         } else {
-            bodyNode->extended = part;
+            bodyNode->extendedStr = partStr;
         }
         partNo++;
     }
@@ -194,42 +194,42 @@ void CMailIMAPBodyStruct::attachmentFn(std::unique_ptr<BodyNode>& bodyNode, Body
 
     AttachmentData *attachments = static_cast<AttachmentData *> (attachmentData.get());
     std::unordered_map<std::string, std::string> dispositionMap;
-    std::string disposition{bodyPart.parsedPart->disposition};
+    std::string dispositionStr{bodyPart.parsedPart->dispositionStr};
     
-    if (!CMailIMAPParse::stringEqual(disposition, kNILStr)) {
-        disposition = disposition.substr(1);
-        while (!disposition.empty()) {
-            std::string item, value;
-            parseNext(disposition, item);
-            parseNext(disposition, value);
-            dispositionMap.insert({CMailIMAPParse::stringToUpper(item), value});
+    if (!CMailIMAPParse::stringEqual(dispositionStr, kNILStr)) {
+        dispositionStr = dispositionStr.substr(1);
+        while (!dispositionStr.empty()) {
+            std::string itemStr, valueStr;
+            parseNext(dispositionStr, itemStr);
+            parseNext(dispositionStr, valueStr);
+            dispositionMap.insert({CMailIMAPParse::stringToUpper(itemStr), valueStr});
         }
-        std::string attachmentLabel;
+        std::string attachmentLabelStr;
         auto findAttachment = dispositionMap.find(kATTACHMENTStr);
         auto findInline = dispositionMap.find(kINLINEStr);
         if (findAttachment != dispositionMap.end()) {
-            attachmentLabel = kATTACHMENTStr;
+            attachmentLabelStr = kATTACHMENTStr;
         } else if (findInline != dispositionMap.end()) {
-            attachmentLabel = kINLINEStr;
+            attachmentLabelStr = kINLINEStr;
         }
-        if (!attachmentLabel.empty()) {
-            disposition = dispositionMap[attachmentLabel];
-            if (!CMailIMAPParse::stringEqual(disposition, kNILStr)) {
+        if (!attachmentLabelStr.empty()) {
+            dispositionStr = dispositionMap[attachmentLabelStr];
+            if (!CMailIMAPParse::stringEqual(dispositionStr, kNILStr)) {
                 dispositionMap.clear();
-                disposition = disposition.substr(1);
-                while (!disposition.empty()) {
-                    std::string item, value;
-                    parseNext(disposition, item);
-                    parseNext(disposition, value);
-                    dispositionMap.insert({CMailIMAPParse::stringToUpper(item), value});
+                dispositionStr = dispositionStr.substr(1);
+                while (!dispositionStr.empty()) {
+                    std::string itemStr, valueStr;
+                    parseNext(dispositionStr, itemStr);
+                    parseNext(dispositionStr, valueStr);
+                    dispositionMap.insert({CMailIMAPParse::stringToUpper(itemStr), valueStr});
                 }
                 Attachment fileAttachment;
-                fileAttachment.creationDate = dispositionMap[kCREATIONDATEStr];
-                fileAttachment.fileName = dispositionMap[kFILENAMEStr];
-                fileAttachment.modifiactionDate = dispositionMap[kMODIFICATIONDATEStr];
-                fileAttachment.size = dispositionMap[kSIZEStr];
-                fileAttachment.partNo = bodyPart.partNo;
-                fileAttachment.encoding = bodyPart.parsedPart->encoding;
+                fileAttachment.creationDateStr = dispositionMap[kCREATIONDATEStr];
+                fileAttachment.fileNameStr = dispositionMap[kFILENAMEStr];
+                fileAttachment.modifiactionDateStr = dispositionMap[kMODIFICATIONDATEStr];
+                fileAttachment.sizeStr = dispositionMap[kSIZEStr];
+                fileAttachment.partNoStr = bodyPart.partNoStr;
+                fileAttachment.encodingStr = bodyPart.parsedPart->encodingStr;
                 attachments->attachmentsList.push_back(fileAttachment);
             }
         }
@@ -241,9 +241,9 @@ void CMailIMAPBodyStruct::attachmentFn(std::unique_ptr<BodyNode>& bodyNode, Body
 // Construct body structure tree
 //
 
-void CMailIMAPBodyStruct::consructBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart) {
+void CMailIMAPBodyStruct::consructBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPartStr) {
 
-    createBodyStructTree(bodyNode, bodyPart);
+    createBodyStructTree(bodyNode, bodyPartStr);
     parseBodyStructTree(bodyNode);
 
 }

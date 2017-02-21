@@ -38,8 +38,8 @@ public:
 
     struct Exception : public std::runtime_error {
 
-        Exception(std::string const& message)
-        : std::runtime_error("CMailIMAPBodyStruct Failure: " + message) {
+        Exception(std::string const& messageStr)
+        : std::runtime_error("CMailIMAPBodyStruct Failure: " + messageStr) {
         }
 
     };
@@ -49,19 +49,19 @@ public:
     //
     
     struct BodyPartParsed {
-        std::string type;           // Body type
-        std::string subtype;        // Body subtype
-        std::string parameterList;  // Body parameter list
-        std::string id;             // Body id
-        std::string description;    // Body Description
-        std::string encoding;       // Body encoding
-        std::string size;           // Body size
-        std::string textLines;      // Body ("TEXT") extended no of text lines
-        std::string md5;            // Body MD5 value
-        std::string disposition;    // Body disposition list
-        std::string language;       // Body language
-        std::string location;       // Body location
-        std::string extended;       // Body extended data (should be empty)
+        std::string typeStr;           // Body type
+        std::string subtypeStr;        // Body subtype
+        std::string parameterListStr;  // Body parameter list
+        std::string idStr;             // Body id
+        std::string descriptionStr;    // Body Description
+        std::string encodingStr;       // Body encoding
+        std::string sizeStr;           // Body size
+        std::string textLinesStr;      // Body ("TEXT") extended no of text lines
+        std::string md5Str;            // Body MD5 value
+        std::string dispositionStr;    // Body disposition list
+        std::string languageStr;       // Body language
+        std::string locationStr;       // Body location
+        std::string extendedStr;       // Body extended data (should be empty)
 
     };
 
@@ -72,14 +72,14 @@ public:
     struct BodyPart;
     
     struct BodyNode {
-        std::string             partLevel;      // Body part level
+        std::string             partLevelStr;   // Body part level
         std::vector<BodyPart>   bodyParts;      // Vector of body parts and child nodes
-        std::string             extended;       // Multi-part extended data for level
+        std::string             extendedStr;    // Multi-part extended data for level
     };
 
     struct BodyPart {
-        std::string                     partNo;      // Body part no (ie. 1 or 1.2..)                 
-        std::string                     part;        // Body part contents
+        std::string                     partNoStr;   // Body part no (ie. 1 or 1.2..)                 
+        std::string                     partStr;     // Body part contents
         std::unique_ptr<BodyPartParsed> parsedPart;  // Parsed body part data
         std::unique_ptr<BodyNode>       child;       // Pointer to lower level node in tree
     };
@@ -89,13 +89,13 @@ public:
     //
     
     struct Attachment {
-        std::string index;
-        std::string partNo;
-        std::string creationDate;
-        std::string fileName;
-        std::string modifiactionDate;
-        std::string size;
-        std::string encoding;
+        std::string indexStr;
+        std::string partNoStr;
+        std::string creationDateStr;
+        std::string fileNameStr;
+        std::string modifiactionDateStr;
+        std::string sizeStr;
+        std::string encodingStr;
     };
 
     struct AttachmentData {
@@ -134,7 +134,7 @@ public:
     // Construct body structure tree
     //
     
-    static void consructBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart);
+    static void consructBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPartStr);
         
     //
     // Walk body structure tree calling use supplied function for each body part.
@@ -177,7 +177,7 @@ private:
     // Parse body structure tree filling in body part data
     //
     
-    static void parseNext(std::string& part, std::string& value);
+    static void parseNext(std::string& partStr, std::string& valueStr);
     static void parseBodyPart(BodyPart& bodyPart);
     static void parseBodyStructTree(std::unique_ptr<BodyNode>& bodyNode);
     
@@ -185,7 +185,7 @@ private:
     // Create body structure tree from body part list
     //
     
-    static void createBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart);
+    static void createBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPartStr);
 
     // =================
     // PRIVATE VARIABLES

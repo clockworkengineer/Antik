@@ -144,13 +144,13 @@ void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
         if (this->res == CURLE_AGAIN) {
             continue;
         } else if (this->res != CURLE_OK) {
-            std::string errMsg;
+            std::string errMsgStr;
             if (std::strlen(this->errMsgBuffer) != 0) {
-                errMsg = this->errMsgBuffer;
+                errMsgStr = this->errMsgBuffer;
             } else {
-                errMsg = curl_easy_strerror(res);
+                errMsgStr = curl_easy_strerror(res);
             }
-            throw CMailIMAP::Exception("curl_easy_send() failed: " + errMsg);
+            throw CMailIMAP::Exception("curl_easy_send() failed: " + errMsgStr);
         }
         bytesCopied += len;
     } while ((bytesCopied < commandStr.length()));
@@ -164,9 +164,9 @@ void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
 // closed by server then CURLE_UNSUPPORTED_PROTOCOL returned so append current response and return.
 //
 
-void CMailIMAP::waitForIMAPCommandResponse(const std::string& commandTag, std::string& commandResponseStr) {
+void CMailIMAP::waitForIMAPCommandResponse(const std::string& commandTagStr, std::string& commandResponseStr) {
 
-    std::string searchTag{ commandTag + " "};
+    std::string searchTagStr{ commandTagStr + " "};
     size_t len = 0;
     size_t currPos = 0;
     char *tagptr;
@@ -181,7 +181,7 @@ void CMailIMAP::waitForIMAPCommandResponse(const std::string& commandTag, std::s
         if (this->res == CURLE_OK) {
 
             this->rxBuffer[currPos + len] = '\0';
-            if ((tagptr = strstr(this->rxBuffer, searchTag.c_str())) != nullptr) {
+            if ((tagptr = strstr(this->rxBuffer, searchTagStr.c_str())) != nullptr) {
                 if ((this->rxBuffer[currPos + len - 2] == '\r') &&
                         (this->rxBuffer[currPos + len - 1] == '\n')) {
                     commandResponseStr.append(this->rxBuffer);
@@ -202,14 +202,14 @@ void CMailIMAP::waitForIMAPCommandResponse(const std::string& commandTag, std::s
             break;
 
         } else if (this->res != CURLE_AGAIN) {
-            std::string errMsg;
+            std::string errMsgStr;
 
             if (std::strlen(this->errMsgBuffer) != 0) {
-                errMsg = this->errMsgBuffer;
+                errMsgStr = this->errMsgBuffer;
             } else {
-                errMsg = curl_easy_strerror(this->res);
+                errMsgStr = curl_easy_strerror(this->res);
             }
-            throw CMailIMAP::Exception("curl_easy_recv() failed: " + errMsg);
+            throw CMailIMAP::Exception("curl_easy_recv() failed: " + errMsgStr);
         }
 
         if (((sizeof (this->rxBuffer) - currPos)) == 0) {
@@ -328,13 +328,13 @@ void CMailIMAP::connect(void) {
         this->errMsgBuffer[0] = 0;
         this->res = curl_easy_perform(this->curl);
         if (this->res != CURLE_OK) {
-            std::string errMsg;
+            std::string errMsgStr;
             if (std::strlen(this->errMsgBuffer) != 0) {
-                errMsg = this->errMsgBuffer;
+                errMsgStr = this->errMsgBuffer;
             } else {
-                errMsg = curl_easy_strerror(this->res);
+                errMsgStr = curl_easy_strerror(this->res);
             }
-            throw CMailIMAP::Exception("curl_easy_perform() failed: " + errMsg);
+            throw CMailIMAP::Exception("curl_easy_perform() failed: " + errMsgStr);
         }
 
         this->bConnected = true;

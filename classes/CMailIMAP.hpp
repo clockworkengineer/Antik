@@ -43,8 +43,8 @@ public:
     
     struct Exception : public std::runtime_error {
 
-        Exception(std::string const& message)
-        : std::runtime_error("CMailIMAP Failure: "+ message) { }
+        Exception(std::string const& messageStr)
+        : std::runtime_error("CMailIMAP Failure: "+ messageStr) { }
         
     };
 

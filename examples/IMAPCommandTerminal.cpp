@@ -173,38 +173,38 @@ void walkFn(std::unique_ptr<CMailIMAPBodyStruct::BodyNode>& bodyNode, CMailIMAPB
 
     std::cout << std::string(120, '#') << std::endl;
 
-    std::cout << "PART NO = [" << bodyPart.partNo << "]" << std::endl;
-    std::cout << "TYPE= [" << bodyPart.parsedPart->type << "]" << std::endl;
-    std::cout << "SUBTYPE= [" << bodyPart.parsedPart->subtype << "]" << std::endl;
-    std::cout << "PARAMETER LIST = [" << bodyPart.parsedPart->parameterList << "]" << std::endl;
-    std::cout << "ID = [" << bodyPart.parsedPart->id << "]" << std::endl;
-    std::cout << "DESCRIPTION = [" << bodyPart.parsedPart->description << "]" << std::endl;
-    std::cout << "ENCODING = [" << bodyPart.parsedPart->encoding << "]" << std::endl;
-    std::cout << "SIZE = [" << bodyPart.parsedPart->size << "]" << std::endl;
+    std::cout << "PART NO = [" << bodyPart.partNoStr << "]" << std::endl;
+    std::cout << "TYPE= [" << bodyPart.parsedPart->typeStr << "]" << std::endl;
+    std::cout << "SUBTYPE= [" << bodyPart.parsedPart->subtypeStr << "]" << std::endl;
+    std::cout << "PARAMETER LIST = [" << bodyPart.parsedPart->parameterListStr << "]" << std::endl;
+    std::cout << "ID = [" << bodyPart.parsedPart->idStr << "]" << std::endl;
+    std::cout << "DESCRIPTION = [" << bodyPart.parsedPart->descriptionStr << "]" << std::endl;
+    std::cout << "ENCODING = [" << bodyPart.parsedPart->encodingStr << "]" << std::endl;
+    std::cout << "SIZE = [" << bodyPart.parsedPart->sizeStr << "]" << std::endl;
 
-    if (!bodyPart.parsedPart->textLines.empty()) {
-        std::cout << "TEXTLINES = [" << bodyPart.parsedPart->textLines << "]" << std::endl;
+    if (!bodyPart.parsedPart->textLinesStr.empty()) {
+        std::cout << "TEXTLINES = [" << bodyPart.parsedPart->textLinesStr << "]" << std::endl;
     }
 
-    if (!bodyPart.parsedPart->md5.empty()) {
-        std::cout << "MD5 = [" << bodyPart.parsedPart->md5 << "]" << std::endl;
+    if (!bodyPart.parsedPart->md5Str.empty()) {
+        std::cout << "MD5 = [" << bodyPart.parsedPart->md5Str << "]" << std::endl;
     }
 
-    if (!bodyPart.parsedPart->disposition.empty()) {
-        std::cout << "DISPOSITION = [" << bodyPart.parsedPart->disposition << "]" << std::endl;
+    if (!bodyPart.parsedPart->dispositionStr.empty()) {
+        std::cout << "DISPOSITION = [" << bodyPart.parsedPart->dispositionStr << "]" << std::endl;
     }
 
-    if (!bodyPart.parsedPart->language.empty()) {
-        std::cout << "LANGUAGE = [" << bodyPart.parsedPart->language << "]" << std::endl;
+    if (!bodyPart.parsedPart->languageStr.empty()) {
+        std::cout << "LANGUAGE = [" << bodyPart.parsedPart->languageStr << "]" << std::endl;
     }
 
-    if (!bodyPart.parsedPart->location.empty()) {
-        std::cout << "LOCATION = [" << bodyPart.parsedPart->location << "]" << std::endl;
+    if (!bodyPart.parsedPart->locationStr.empty()) {
+        std::cout << "LOCATION = [" << bodyPart.parsedPart->locationStr << "]" << std::endl;
     }
 
-    std::cout << "EXTENDED = [" << bodyPart.parsedPart->extended << "]" << std::endl;
+    std::cout << "EXTENDED = [" << bodyPart.parsedPart->extendedStr << "]" << std::endl;
 
-    std::cout << "MULTI-EXTENDED = [" << bodyNode->extended << "]" << std::endl;
+    std::cout << "MULTI-EXTENDED = [" << bodyNode->extendedStr << "]" << std::endl;
 
 }
 
@@ -392,7 +392,7 @@ int main(int argc, char** argv) {
 
         ParamArgData argData;
         CMailIMAP imap;
-        std::deque<std::string> startupCommandsStr{"SELECT INBOX"};
+        std::deque<std::string> startupCommandsStr{"SELECT INBOX", "FETCH 1:* (UID BODYSTRUCTURE)"};
 
         // Read in command line parameters and process
 

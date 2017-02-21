@@ -159,11 +159,11 @@ void CMailIMAPParse::parseString(const std::string& itemStr, FetchRespData& fetc
 
 void CMailIMAPParse::parseList(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr) {
 
-    std::string list;
+    std::string listStr;
     lineStr = lineStr.substr(lineStr.find(itemStr) + itemStr.length() + 1);
-    list = stringList(lineStr);
-    lineStr = lineStr.substr(list.length());
-    fetchData.responseMap.insert({itemStr, list});
+    listStr = stringList(lineStr);
+    lineStr = lineStr.substr(listStr.length());
+    fetchData.responseMap.insert({itemStr, listStr});
 
 }
 
@@ -177,7 +177,7 @@ void CMailIMAPParse::parseList(const std::string& itemStr, FetchRespData& fetchD
 
 void CMailIMAPParse::parseOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr, std::istringstream& responseStream) {
 
-    std::string octetStr, octectBuffer, commandLabel{ lineStr};
+    std::string octetStr, octectBuffer, commandLabel {lineStr};
     int numberOfOctets;
 
     if (commandLabel.back() == '\r') commandLabel.pop_back();
@@ -400,11 +400,11 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTATUS(CMailIMAPParse::Command
             lineStr = stringBetween(lineStr, '(', ')');
 
             std::istringstream listStream(lineStr);
-            std::string item, value;
+            std::string itemStr, valueStr;
 
             while (listStream.good()) {
-                listStream >> item >> value;
-                resp->responseMap.insert({item, value});
+                listStream >> itemStr >> valueStr;
+                resp->responseMap.insert({itemStr, valueStr});
             }
 
         } else {
@@ -674,9 +674,9 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseDefault(CMailIMAPParse::Comman
 
 inline std::string CMailIMAPParse::stringToUpper(const std::string& lineStr) {
 
-    std::string upperCase(lineStr);
-    for (auto &c : upperCase) c = std::toupper(c);
-    return (upperCase);
+    std::string upperCaseStr(lineStr);
+    for (auto &c : upperCaseStr) c = std::toupper(c);
+    return (upperCaseStr);
 
 }
 
@@ -699,7 +699,7 @@ inline bool CMailIMAPParse::stringEqual(const std::string& lineStr, const std::s
 
 inline std::string CMailIMAPParse::stringBetween(const std::string& lineStr, const char first, const char last) {
     int firstDel = lineStr.find_first_of(first);
-    int lastDel = lineStr.find_first_of(last, firstDel);
+    int lastDel = lineStr.find_first_of(last, firstDel+1);
     return (lineStr.substr(firstDel + 1, (lastDel - firstDel - 1)));
 }
 
