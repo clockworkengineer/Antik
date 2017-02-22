@@ -392,7 +392,7 @@ int main(int argc, char** argv) {
 
         ParamArgData argData;
         CMailIMAP imap;
-        std::deque<std::string> startupCommandsStr{"SELECT INBOX", "FETCH 1:* (UID BODYSTRUCTURE)"};
+        std::deque<std::string> startupCommandsStr;
 
         // Read in command line parameters and process
 

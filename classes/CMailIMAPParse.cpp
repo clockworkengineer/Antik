@@ -14,7 +14,10 @@
 // 
 // Description: A class to parse CMailIMAP command responses. It has
 // purely static data and functions and cannot be instantiated (ie. 
-// it contains no constructor/destructor.
+// it contains no constructor/destructor. It is designed to expect
+// syntactically correct commands from any server and not report any
+// specific errors; but if any occur to report so through an exception
+// and exit processing gracefully.
 //
 // NOTE: IMAP commands sent can be any in combination of case and this 
 // is mirrored back in the response. So perform case-insensitive compares 
@@ -589,15 +592,22 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::CommandD
                 } else if (stringEqual(lineStr, CMailIMAP::kRFC822Str + " ")) {
                     parseOctets(CMailIMAP::kRFC822Str, fetchData, lineStr, commandData.commandRespStream);
                 } else {
-                    throw CMailIMAPParse::Exception("error while parsing FETCH command ["+lineStr+"]");
+                    lineStr.clear();  // Failure so force exception.
                 }
 
-                lineStr = lineStr.substr(lineStr.find_first_not_of(' '));
-                if (lineStr[0] == ')') {
-                    endOfFetch = true;
-                } else if (lineStr.length() == CMailIMAP::kEOLStr.length() - 1) {
-                    std::getline(commandData.commandRespStream, lineStr, '\n');
+                // Still data to process
+                
+                if (lineStr.length() != 0) {
+                    lineStr = lineStr.substr(lineStr.find_first_not_of(' '));   // Next non space.
+                    if (lineStr[0] == ')') { // End of FETCH List
+                        endOfFetch = true;
+                    } else if (lineStr.length() == CMailIMAP::kEOLStr.length() - 1) { // No data left on line
+                        std::getline(commandData.commandRespStream, lineStr, '\n');   // Move to next
+                    }
+                } else {
+                    throw CMailIMAPParse::Exception("error while parsing FETCH command ["+lineStr+"]");
                 }
+          
 
             } while (!endOfFetch);
 

@@ -579,7 +579,6 @@ TEST_F(CMailIMAPParseTests, NOOPValid) {
     if (ptr->rawResponse.size() == 1) {
         ASSERT_STREQ("* 8 EXISTS",ptr->rawResponse[0].c_str());
     }
-    
 }
 TEST_F(CMailIMAPParseTests, IDLEValid) {
 
