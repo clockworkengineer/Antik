@@ -52,6 +52,9 @@ protected:
 
     virtual void TearDown() {
     }
+    
+    static void checkListRespData(CMailIMAPParse::ListRespData &respData, uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr);
+
 
 };
 
@@ -62,6 +65,14 @@ protected:
 // ===============
 // FIXTURE METHODS
 // ===============
+
+void CMailIMAPParseTests::checkListRespData(CMailIMAPParse::ListRespData &respData, uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr) {
+
+    EXPECT_EQ(hierDel, respData.hierDel);
+    ASSERT_STREQ(attributesStr.c_str(), respData.attributesStr.c_str());
+    ASSERT_STREQ(mailBoxNameStr.c_str(), respData.mailBoxNameStr.c_str());
+
+}
 
 // =====================
 // TASK CLASS UNIT TESTS
@@ -90,6 +101,7 @@ TEST_F(CMailIMAPParseTests, SELECTValid) {
     CMailIMAPParse::SelectResponse *ptr = static_cast<CMailIMAPParse::SelectResponse *> (parsedResponse.get());
   
     EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_EQ(6, ptr->responseMap.size());
     EXPECT_TRUE(ptr->responseMap.find("EXISTS")!=ptr->responseMap.end());
     EXPECT_TRUE(ptr->responseMap.find("RECENT")!=ptr->responseMap.end());
     EXPECT_TRUE(ptr->responseMap.find("FLAGS")!=ptr->responseMap.end());
@@ -152,11 +164,14 @@ TEST_F(CMailIMAPParseTests, EXAMINEValid) {
     CMailIMAPParse::BASERESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
     CMailIMAPParse::ExamineResponse *ptr = static_cast<CMailIMAPParse::ExamineResponse *> (parsedResponse.get());
   
+       
     EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_EQ(7, ptr->responseMap.size());
     EXPECT_TRUE(ptr->responseMap.find("EXISTS")!=ptr->responseMap.end());
     EXPECT_TRUE(ptr->responseMap.find("RECENT")!=ptr->responseMap.end());
     EXPECT_TRUE(ptr->responseMap.find("FLAGS")!=ptr->responseMap.end());
     EXPECT_TRUE(ptr->responseMap.find("PERMANENTFLAGS")!=ptr->responseMap.end());
+    EXPECT_TRUE(ptr->responseMap.find("UNSEEN")!=ptr->responseMap.end());
     EXPECT_TRUE(ptr->responseMap.find("UIDVALIDITY")!=ptr->responseMap.end());
     EXPECT_TRUE(ptr->responseMap.find("UIDNEXT")!=ptr->responseMap.end());
 
@@ -166,6 +181,7 @@ TEST_F(CMailIMAPParseTests, EXAMINEValid) {
     ASSERT_STREQ("0", ptr->responseMap["RECENT"].c_str());    
     ASSERT_STREQ("(\\Seen \\Answered \\Flagged \\Deleted \\Draft $MDNSent)", ptr->responseMap["FLAGS"].c_str());
     ASSERT_STREQ( "()", ptr->responseMap["PERMANENTFLAGS"].c_str());
+    ASSERT_STREQ("1", ptr->responseMap["UNSEEN"].c_str());
     ASSERT_STREQ("18", ptr->responseMap["UIDVALIDITY"].c_str());    
     ASSERT_STREQ("4584", ptr->responseMap["UIDNEXT"].c_str());    
 
@@ -210,6 +226,7 @@ TEST_F(CMailIMAPParseTests, STATUSValid) {
     CMailIMAPParse::StatusResponse *ptr = static_cast<CMailIMAPParse::StatusResponse *> (parsedResponse.get());
 
     EXPECT_TRUE(ptr->status == CMailIMAPParse::RespCode::OK);
+    EXPECT_EQ(5, ptr->responseMap.size());
     EXPECT_TRUE(ptr->responseMap.find("UIDNEXT") != ptr->responseMap.end());
     EXPECT_TRUE(ptr->responseMap.find("MESSAGES") != ptr->responseMap.end());
     EXPECT_TRUE(ptr->responseMap.find("RECENT") != ptr->responseMap.end());
@@ -281,7 +298,29 @@ TEST_F(CMailIMAPParseTests, LISTValid) {
     CMailIMAPParse::ListResponse *ptr = static_cast<CMailIMAPParse::ListResponse *> (parsedResponse.get());
     
     EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_EQ(18, ptr->mailBoxList.size());
 
+    if (ptr->mailBoxList.size() == 18) {
+        checkListRespData(ptr->mailBoxList[0], '/', "(\\HasNoChildren)", "\"DDNS\"");
+        checkListRespData(ptr->mailBoxList[1], '/', "(\\HasNoChildren)", "\"EDO\"");
+        checkListRespData(ptr->mailBoxList[2], '/', "(\\HasNoChildren)", "\"INBOX\"");
+        checkListRespData(ptr->mailBoxList[3], '/', "(\\HasNoChildren)", "\"Microsoft\"");
+        checkListRespData(ptr->mailBoxList[4], '/', "(\\HasNoChildren)", "\"Personal\"");
+        checkListRespData(ptr->mailBoxList[5], '/', "(\\HasNoChildren)", "\"Receipts\"");
+        checkListRespData(ptr->mailBoxList[6], '/', "(\\HasNoChildren)", "\"Sent\"");
+        checkListRespData(ptr->mailBoxList[7], '/', "(\\HasNoChildren)", "\"Trash\"");
+        checkListRespData(ptr->mailBoxList[8], '/', "(\\HasNoChildren)", "\"Travel\"");
+        checkListRespData(ptr->mailBoxList[9], '/', "(\\HasNoChildren)", "\"Work\"");
+        checkListRespData(ptr->mailBoxList[10], '/', "(\\HasChildren \\Noselect)", "\"[Google Mail]\"");
+        checkListRespData(ptr->mailBoxList[11], '/', "(\\All \\HasNoChildren)", "\"[Google Mail]/All Mail\"");
+        checkListRespData(ptr->mailBoxList[12], '/', "(\\Drafts \\HasNoChildren)", "\"[Google Mail]/Drafts\"");
+        checkListRespData(ptr->mailBoxList[13], '/', "(\\HasNoChildren \\Important)", "\"[Google Mail]/Important\"");
+        checkListRespData(ptr->mailBoxList[14], '/', "(\\HasNoChildren \\Sent)", "\"[Google Mail]/Sent Mail\"");
+        checkListRespData(ptr->mailBoxList[15], '/', "(\\HasNoChildren \\Junk)", "\"[Google Mail]/Spam\"");
+        checkListRespData(ptr->mailBoxList[16], '/', "(\\Flagged \\HasNoChildren)", "\"[Google Mail]/Starred\"");
+        checkListRespData(ptr->mailBoxList[17], '/', "(\\HasNoChildren \\Trash)", "\"[Google Mail]/Trash\"");
+    }
+    
 }
 
 TEST_F(CMailIMAPParseTests, SEARCHValid) {
@@ -302,18 +341,21 @@ TEST_F(CMailIMAPParseTests, SEARCHValid) {
     CMailIMAPParse::SearchResponse *ptr = static_cast<CMailIMAPParse::SearchResponse *> (parsedResponse.get());
     
     EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_EQ (10, ptr->indexes.size());
 
-    EXPECT_EQ(1, ptr->indexes[0]);
-    EXPECT_EQ(2, ptr->indexes[1]);
-    EXPECT_EQ(3, ptr->indexes[2]);
-    EXPECT_EQ(4, ptr->indexes[3]);
-    EXPECT_EQ(5, ptr->indexes[4]);
-    EXPECT_EQ(6, ptr->indexes[5]);
-    EXPECT_EQ(7, ptr->indexes[6]);
-    EXPECT_EQ(8, ptr->indexes[7]);
-    EXPECT_EQ(9, ptr->indexes[8]);
-    EXPECT_EQ(10, ptr->indexes[9]);
-
+    if (ptr->indexes.size() == 10) {
+        EXPECT_EQ(1, ptr->indexes[0]);
+        EXPECT_EQ(2, ptr->indexes[1]);
+        EXPECT_EQ(3, ptr->indexes[2]);
+        EXPECT_EQ(4, ptr->indexes[3]);
+        EXPECT_EQ(5, ptr->indexes[4]);
+        EXPECT_EQ(6, ptr->indexes[5]);
+        EXPECT_EQ(7, ptr->indexes[6]);
+        EXPECT_EQ(8, ptr->indexes[7]);
+        EXPECT_EQ(9, ptr->indexes[8]);
+        EXPECT_EQ(10, ptr->indexes[9]);
+    }
+    
 }
 
 TEST_F(CMailIMAPParseTests, UIDSEARCHValid) {
@@ -332,20 +374,22 @@ TEST_F(CMailIMAPParseTests, UIDSEARCHValid) {
     
     CMailIMAPParse::BASERESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
     CMailIMAPParse::SearchResponse *ptr = static_cast<CMailIMAPParse::SearchResponse *> (parsedResponse.get());
-    
-    EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::OK);
-    
-    EXPECT_EQ(998, ptr->indexes[0]);
-    EXPECT_EQ(999, ptr->indexes[1]);
-    EXPECT_EQ(1000, ptr->indexes[2]);
-    EXPECT_EQ(1003, ptr->indexes[3]);
-    EXPECT_EQ(1009, ptr->indexes[4]);
-    EXPECT_EQ(1010, ptr->indexes[5]);
-    EXPECT_EQ(1011, ptr->indexes[6]);
-    EXPECT_EQ(1012, ptr->indexes[7]);
-    EXPECT_EQ(1013, ptr->indexes[8]);
-    EXPECT_EQ(1014, ptr->indexes[9]);
 
+    EXPECT_TRUE(ptr->status == CMailIMAPParse::RespCode::OK);
+    EXPECT_EQ(10, ptr->indexes.size());
+
+    if (ptr->indexes.size() == 10) {
+        EXPECT_EQ(998, ptr->indexes[0]);
+        EXPECT_EQ(999, ptr->indexes[1]);
+        EXPECT_EQ(1000, ptr->indexes[2]);
+        EXPECT_EQ(1003, ptr->indexes[3]);
+        EXPECT_EQ(1009, ptr->indexes[4]);
+        EXPECT_EQ(1010, ptr->indexes[5]);
+        EXPECT_EQ(1011, ptr->indexes[6]);
+        EXPECT_EQ(1012, ptr->indexes[7]);
+        EXPECT_EQ(1013, ptr->indexes[8]);
+        EXPECT_EQ(1014, ptr->indexes[9]);
+    }
 
 }
 
@@ -384,7 +428,28 @@ TEST_F(CMailIMAPParseTests, LSUBValid) {
     CMailIMAPParse::LSubResponse *ptr = static_cast<CMailIMAPParse::LSubResponse *> (parsedResponse.get());
     
     EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_EQ(18, ptr->mailBoxList.size());
 
+    if (ptr->mailBoxList.size() == 18) {
+        checkListRespData(ptr->mailBoxList[0], '/', "(\\HasNoChildren)", "\"DDNS\"");
+        checkListRespData(ptr->mailBoxList[1], '/', "(\\HasNoChildren)", "\"EDO\"");
+        checkListRespData(ptr->mailBoxList[2], '/', "(\\HasNoChildren)", "\"INBOX\"");
+        checkListRespData(ptr->mailBoxList[3], '/', "(\\HasNoChildren)", "\"Microsoft\"");
+        checkListRespData(ptr->mailBoxList[4], '/', "(\\HasNoChildren)", "\"Personal\"");
+        checkListRespData(ptr->mailBoxList[5], '/', "(\\HasNoChildren)", "\"Receipts\"");
+        checkListRespData(ptr->mailBoxList[6], '/', "(\\HasNoChildren)", "\"Sent\"");
+        checkListRespData(ptr->mailBoxList[7], '/', "(\\HasNoChildren)", "\"Trash\"");
+        checkListRespData(ptr->mailBoxList[8], '/', "(\\HasNoChildren)", "\"Travel\"");
+        checkListRespData(ptr->mailBoxList[9], '/', "(\\HasNoChildren)", "\"Work\"");
+        checkListRespData(ptr->mailBoxList[10], '/', "(\\HasChildren \\Noselect)", "\"[Google Mail]\"");
+        checkListRespData(ptr->mailBoxList[11], '/', "(\\All \\HasNoChildren)", "\"[Google Mail]/All Mail\"");
+        checkListRespData(ptr->mailBoxList[12], '/', "(\\Drafts \\HasNoChildren)", "\"[Google Mail]/Drafts\"");
+        checkListRespData(ptr->mailBoxList[13], '/', "(\\HasNoChildren \\Important)", "\"[Google Mail]/Important\"");
+        checkListRespData(ptr->mailBoxList[14], '/', "(\\HasNoChildren \\Sent)", "\"[Google Mail]/Sent Mail\"");
+        checkListRespData(ptr->mailBoxList[15], '/', "(\\HasNoChildren \\Junk)", "\"[Google Mail]/Spam\"");
+        checkListRespData(ptr->mailBoxList[16], '/', "(\\Flagged \\HasNoChildren)", "\"[Google Mail]/Starred\"");
+        checkListRespData(ptr->mailBoxList[17], '/', "(\\HasNoChildren \\Trash)", "\"[Google Mail]/Trash\"");
+    }
 }
 
 TEST_F(CMailIMAPParseTests, EXPUNGEValid) {
@@ -435,29 +500,33 @@ TEST_F(CMailIMAPParseTests, STOREValid) {
     CMailIMAPParse::StoreResponse *ptr = static_cast<CMailIMAPParse::StoreResponse *> (parsedResponse.get());
     
     EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_EQ(10, ptr->storeList.size());
+    
+    if (ptr->storeList.size() == 10) {
 
-    EXPECT_EQ(1, ptr->storeList[0].index);
-    EXPECT_EQ(2, ptr->storeList[1].index);
-    EXPECT_EQ(3, ptr->storeList[2].index);
-    EXPECT_EQ(4, ptr->storeList[3].index);
-    EXPECT_EQ(5, ptr->storeList[4].index);
-    EXPECT_EQ(6, ptr->storeList[5].index);
-    EXPECT_EQ(7, ptr->storeList[6].index);
-    EXPECT_EQ(8, ptr->storeList[7].index);
-    EXPECT_EQ(9, ptr->storeList[8].index);
-    EXPECT_EQ(10, ptr->storeList[9].index);
+        EXPECT_EQ(1, ptr->storeList[0].index);
+        EXPECT_EQ(2, ptr->storeList[1].index);
+        EXPECT_EQ(3, ptr->storeList[2].index);
+        EXPECT_EQ(4, ptr->storeList[3].index);
+        EXPECT_EQ(5, ptr->storeList[4].index);
+        EXPECT_EQ(6, ptr->storeList[5].index);
+        EXPECT_EQ(7, ptr->storeList[6].index);
+        EXPECT_EQ(8, ptr->storeList[7].index);
+        EXPECT_EQ(9, ptr->storeList[8].index);
+        EXPECT_EQ(10, ptr->storeList[9].index);
 
-    ASSERT_STREQ("(\\Seen \\Deleted)", ptr->storeList[0].flagsListStr.c_str());
-    ASSERT_STREQ("(\\Seen \\Deleted)", ptr->storeList[1].flagsListStr.c_str());
-    ASSERT_STREQ("(\\Seen \\Deleted)", ptr->storeList[2].flagsListStr.c_str());
-    ASSERT_STREQ("(\\Seen \\Deleted)", ptr->storeList[3].flagsListStr.c_str());
-    ASSERT_STREQ("(\\Deleted)", ptr->storeList[4].flagsListStr.c_str());
-    ASSERT_STREQ("(\\Deleted)", ptr->storeList[5].flagsListStr.c_str());
-    ASSERT_STREQ("(\\Deleted)", ptr->storeList[6].flagsListStr.c_str());
-    ASSERT_STREQ("(\\Deleted)", ptr->storeList[7].flagsListStr.c_str());
-    ASSERT_STREQ("(\\Deleted)", ptr->storeList[8].flagsListStr.c_str());
-    ASSERT_STREQ("(\\Deleted)", ptr->storeList[9].flagsListStr.c_str());
+        ASSERT_STREQ("(\\Seen \\Deleted)", ptr->storeList[0].flagsListStr.c_str());
+        ASSERT_STREQ("(\\Seen \\Deleted)", ptr->storeList[1].flagsListStr.c_str());
+        ASSERT_STREQ("(\\Seen \\Deleted)", ptr->storeList[2].flagsListStr.c_str());
+        ASSERT_STREQ("(\\Seen \\Deleted)", ptr->storeList[3].flagsListStr.c_str());
+        ASSERT_STREQ("(\\Deleted)", ptr->storeList[4].flagsListStr.c_str());
+        ASSERT_STREQ("(\\Deleted)", ptr->storeList[5].flagsListStr.c_str());
+        ASSERT_STREQ("(\\Deleted)", ptr->storeList[6].flagsListStr.c_str());
+        ASSERT_STREQ("(\\Deleted)", ptr->storeList[7].flagsListStr.c_str());
+        ASSERT_STREQ("(\\Deleted)", ptr->storeList[8].flagsListStr.c_str());
+        ASSERT_STREQ("(\\Deleted)", ptr->storeList[9].flagsListStr.c_str());
 
+    }
 
 }
 
@@ -505,12 +574,12 @@ TEST_F(CMailIMAPParseTests, NOOPValid) {
     CMailIMAPParse::NoOpResponse *ptr = static_cast<CMailIMAPParse::NoOpResponse *> (parsedResponse.get());
     
     EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::OK);
-    
     EXPECT_EQ(1, ptr->rawResponse.size());
 
     if (ptr->rawResponse.size() == 1) {
         ASSERT_STREQ("* 8 EXISTS",ptr->rawResponse[0].c_str());
     }
+    
 }
 TEST_F(CMailIMAPParseTests, IDLEValid) {
 
@@ -530,7 +599,6 @@ TEST_F(CMailIMAPParseTests, IDLEValid) {
     CMailIMAPParse::IdleResponse *ptr = static_cast<CMailIMAPParse::IdleResponse *> (parsedResponse.get());
     
     EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::OK);
-
     EXPECT_EQ(1, ptr->rawResponse.size());
 
     if (ptr->rawResponse.size() == 1) {
@@ -557,7 +625,6 @@ TEST_F(CMailIMAPParseTests, LOGOUTValid) {
     CMailIMAPParse::LogOutResponse *ptr = static_cast<CMailIMAPParse::LogOutResponse *> (parsedResponse.get());
 
     EXPECT_TRUE(ptr->status == CMailIMAPParse::RespCode::OK);
-
     EXPECT_EQ(1, ptr->rawResponse.size());
 
     if (ptr->rawResponse.size() == 1) {
@@ -570,7 +637,10 @@ TEST_F(CMailIMAPParseTests, FETCHValid) {
 
     std::vector<std::string> fetchResponseStr = { 
        { "A000004 FETCH 1 (BODYSTRUCTURE FLAGS UID)" },
-       { "* 1 FETCH (UID 1015 FLAGS () BODYSTRUCTURE ((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"iso-8859-1\") NIL NIL \"QUOTED-PRINTABLE\" 355 20 NIL NIL NIL)(\"TEXT\" \"HTML\" (\"CHARSET\" \"iso-8859-1\") NIL NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" \"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL))"},
+       { "* 1 FETCH (UID 1015 FLAGS () BODYSTRUCTURE ((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"iso-8859-1\") NIL "
+         "NIL \"QUOTED-PRINTABLE\" 355 20 NIL NIL NIL)(\"TEXT\" \"HTML\" (\"CHARSET\" \"iso-8859-1\") NIL "
+         "NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" "
+         "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL))"},
        { "A000004 OK Success" }
     };
 
@@ -589,13 +659,17 @@ TEST_F(CMailIMAPParseTests, FETCHValid) {
 
     if (ptr->fetchList.size() == 1) {
         EXPECT_EQ(1, ptr->fetchList[0].index);
+        EXPECT_EQ(3, ptr->fetchList[0].responseMap.size());
         EXPECT_TRUE(ptr->fetchList[0].responseMap.find("UID") != ptr->fetchList[0].responseMap.end());
         EXPECT_TRUE(ptr->fetchList[0].responseMap.find("FLAGS") != ptr->fetchList[0].responseMap.end());
         EXPECT_TRUE(ptr->fetchList[0].responseMap.find("BODYSTRUCTURE") != ptr->fetchList[0].responseMap.end());
 
         ASSERT_STREQ("1015", ptr->fetchList[0].responseMap["UID"].c_str());
         ASSERT_STREQ("()", ptr->fetchList[0].responseMap["FLAGS"].c_str());
-        ASSERT_STREQ("((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"iso-8859-1\") NIL NIL \"QUOTED-PRINTABLE\" 355 20 NIL NIL NIL)(\"TEXT\" \"HTML\" (\"CHARSET\" \"iso-8859-1\") NIL NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" \"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL)", ptr->fetchList[0].responseMap["BODYSTRUCTURE"].c_str());
+        ASSERT_STREQ("((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"iso-8859-1\") NIL "
+                    "NIL \"QUOTED-PRINTABLE\" 355 20 NIL NIL NIL)(\"TEXT\" \"HTML\" (\"CHARSET\" \"iso-8859-1\") NIL "
+                    "NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" "
+                    "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL)", ptr->fetchList[0].responseMap["BODYSTRUCTURE"].c_str());
     }
     
 }
