@@ -62,7 +62,7 @@ struct ParamArgData {
 };
 
 //
-// Maximum subject lien to take in file name
+// Maximum subject line to take in file name
 //
 
 const int kMaxSubjectLine = 80;
