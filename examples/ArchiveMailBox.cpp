@@ -17,6 +17,9 @@
 // mailbox and create an .eml file for them  in a specified destination folder. Note: 
 // The .eml files are created within a sub-folder with the mailbox name and with 
 // filenames consisting of the mail UID prefix and then subject line.
+//
+// Note: At present MIME encoded-words in the subject are not decoded and can result in
+// a weird file name. At a later date it is intended to deal with this correctly.
 // 
 // Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
 //               Linux, Boost C++ Libraries.
