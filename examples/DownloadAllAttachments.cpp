@@ -16,7 +16,6 @@
 // Description: Log on to a given IMAP server and download attachments found
 // in all mail in a specific mailbox to a given local folder.
 // 
-/// 
 // Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
 //               Linux, Boost C++ Libraries.
 //

@@ -53,13 +53,19 @@ namespace fs = boost::filesystem;
 //
 
 struct ParamArgData {
-    std::string userNameStr; // Email account user name
-    std::string userPasswordStr; // Email account user name password
-    std::string serverURLStr; // SMTP server URL
-    std::string mailBoxNameStr; // Mailbox name
-    std::string destinationFolderStr; // Destination folder for attachments
-    std::string configFileNameStr; // Configuration file name
+    std::string userNameStr;            // Email account user name
+    std::string userPasswordStr;        // Email account user name password
+    std::string serverURLStr;           // SMTP server URL
+    std::string mailBoxNameStr;         // Mailbox name
+    std::string destinationFolderStr;   // Destination folder for attachments
+    std::string configFileNameStr;      // Configuration file name
 };
+
+//
+// Maximum subject lien to take in file name
+//
+
+const int kMaxSubjectLine = 80;
 
 //
 // Exit with error message/status
@@ -166,7 +172,9 @@ void fetchEmailAndArchive(CMailIMAP& imap, const std::string& destinationFolderS
             if (resp.first.find("BODY[]") == 0) {
                 emailBody = resp.second;
             } else if (resp.first.find("BODY[HEADER.FIELDS (SUBJECT)]") == 0) {
-                // Create subject line removing prefix,any non printable and trailing spaces.
+                // Modify subject line removing prefix, any non printable and trailing spaces.
+                // Also limit size as this will cause issues with filename lengths if excessively
+                // long.
                 subject = resp.second.substr(9); 
                 for (auto &ch : subject) {
                     if (!std::isprint(ch)) {
@@ -175,7 +183,10 @@ void fetchEmailAndArchive(CMailIMAP& imap, const std::string& destinationFolderS
                 }
                 while(!subject.empty() && (subject.back()==' ')) {
                     subject.pop_back();
-                } 
+                }
+                if (subject.length()>kMaxSubjectLine) {
+                    subject = subject.substr(0, kMaxSubjectLine);
+                }
              } 
         }
     }
