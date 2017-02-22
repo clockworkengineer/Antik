@@ -166,12 +166,16 @@ void fetchEmailAndArchive(CMailIMAP& imap, const std::string& destinationFolderS
             if (resp.first.find("BODY[]") == 0) {
                 emailBody = resp.second;
             } else if (resp.first.find("BODY[HEADER.FIELDS (SUBJECT)]") == 0) {
-                // Create subject line removing prefix and EOLs
+                // Create subject line removing prefix,any non printable and trailing spaces.
                 subject = resp.second.substr(9); 
-                while (!subject.empty()) {
-                    if ((subject.back() != '\n') && (subject.back() != '\r')) break;
-                    subject.pop_back();
+                for (auto &ch : subject) {
+                    if (!std::isprint(ch)) {
+                        ch = ' ';
+                    }
                 }
+                while(!subject.empty() && (subject.back()==' ')) {
+                    subject.pop_back();
+                } 
              } 
         }
     }

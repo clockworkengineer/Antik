@@ -342,10 +342,8 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
                     if (resp.first.compare(CMailIMAP::kBODYSTRUCTUREStr) == 0) {
                         std::unique_ptr<CMailIMAPBodyStruct::BodyNode> treeBase{ new CMailIMAPBodyStruct::BodyNode()};
                         std::shared_ptr<void> walkData{ new WalkData()};
-
                         CMailIMAPBodyStruct::consructBodyStructTree(treeBase, resp.second);
                         CMailIMAPBodyStruct::walkBodyStructTree(treeBase, walkFn, walkData);
-
                     } else {
                         std::cout << resp.first << " = " << resp.second << std::endl;
                     }
