@@ -169,7 +169,7 @@ struct WalkData {
 
 void walkFn(std::unique_ptr<CMailIMAPBodyStruct::BodyNode>& bodyNode, CMailIMAPBodyStruct::BodyPart& bodyPart, std::shared_ptr<void>& walkData) {
 
-    WalkData *wlkData = static_cast<WalkData *> (walkData.get());
+    auto wlkData = static_cast<WalkData *> (walkData.get());
 
     std::cout << std::string(120, '#') << std::endl;
 
@@ -226,7 +226,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
 
         case CMailIMAPParse::Commands::SEARCH:
         {
-            CMailIMAPParse::SearchResponse *ptr = static_cast<CMailIMAPParse::SearchResponse *> (parsedResponse.get());
+            auto ptr = static_cast<CMailIMAPParse::SearchResponse *> (parsedResponse.get());
             std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(ptr->command) << std::endl;
             std::cout << "INDEXES = ";
             for (auto index : ptr->indexes) {
@@ -238,7 +238,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
 
         case CMailIMAPParse::Commands::SELECT:
         {
-            CMailIMAPParse::SelectResponse *ptr = static_cast<CMailIMAPParse::SelectResponse *> (parsedResponse.get());
+            auto ptr = static_cast<CMailIMAPParse::SelectResponse *> (parsedResponse.get());
             std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(ptr->command) << std::endl;
             std::cout << "MAILBOX = " << ptr->mailBoxNameStr << std::endl;
             std::cout << "ACCESS = " << ptr->mailBoxAccessStr << std::endl;
@@ -250,7 +250,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
 
         case CMailIMAPParse::Commands::EXAMINE:
         {
-            CMailIMAPParse::ExamineResponse *ptr = static_cast<CMailIMAPParse::ExamineResponse *> (parsedResponse.get());
+            auto ptr = static_cast<CMailIMAPParse::ExamineResponse *> (parsedResponse.get());
             std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(ptr->command) << std::endl;
             std::cout << "MAILBOX = " << ptr->mailBoxNameStr << std::endl;
             std::cout << "ACCESS = " << ptr->mailBoxAccessStr << std::endl;
@@ -262,7 +262,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
 
         case CMailIMAPParse::Commands::LIST:
         {
-            CMailIMAPParse::ListResponse *ptr = static_cast<CMailIMAPParse::ListResponse *> (parsedResponse.get());
+            auto ptr = static_cast<CMailIMAPParse::ListResponse *> (parsedResponse.get());
             std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(ptr->command) << std::endl;
             for (auto mailboxEntry : ptr->mailBoxList) {
                 std::cout << "NAME = " << mailboxEntry.mailBoxNameStr << std::endl;
@@ -274,7 +274,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
 
         case CMailIMAPParse::Commands::LSUB:
         {
-            CMailIMAPParse::LSubResponse *ptr = static_cast<CMailIMAPParse::LSubResponse *> (parsedResponse.get());
+            auto ptr = static_cast<CMailIMAPParse::LSubResponse *> (parsedResponse.get());
             std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(ptr->command) << std::endl;
             for (auto mailboxEntry : ptr->mailBoxList) {
                 std::cout << "NAME = " << mailboxEntry.mailBoxNameStr << std::endl;
@@ -286,7 +286,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
 
         case CMailIMAPParse::Commands::STATUS:
         {
-            CMailIMAPParse::StatusResponse *ptr = static_cast<CMailIMAPParse::StatusResponse *> (parsedResponse.get());
+            auto ptr = static_cast<CMailIMAPParse::StatusResponse *> (parsedResponse.get());
             std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(ptr->command) << std::endl;
             std::cout << "MAILBOX = " << ptr->mailBoxNameStr << std::endl;
             for (auto resp : ptr->responseMap) {
@@ -297,7 +297,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
 
         case CMailIMAPParse::Commands::EXPUNGE:
         {
-            CMailIMAPParse::ExpungeResponse *ptr = static_cast<CMailIMAPParse::ExpungeResponse *> (parsedResponse.get());
+            auto ptr = static_cast<CMailIMAPParse::ExpungeResponse *> (parsedResponse.get());
             std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(ptr->command) << std::endl;
             std::cout << "EXISTS = ";
             for (auto index : ptr->exists) {
@@ -314,7 +314,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
 
         case CMailIMAPParse::Commands::STORE:
         {
-            CMailIMAPParse::StoreResponse *ptr = static_cast<CMailIMAPParse::StoreResponse *> (parsedResponse.get());
+            auto ptr = static_cast<CMailIMAPParse::StoreResponse *> (parsedResponse.get());
             std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(ptr->command) << std::endl;
             for (auto storeEntry : ptr->storeList) {
                 std::cout << "INDEX = " << storeEntry.index << std::endl;
@@ -325,7 +325,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
 
         case CMailIMAPParse::Commands::CAPABILITY:
         {
-            CMailIMAPParse::CapabilityResponse *ptr = static_cast<CMailIMAPParse::CapabilityResponse *> (parsedResponse.get());
+            auto ptr = static_cast<CMailIMAPParse::CapabilityResponse *> (parsedResponse.get());
             std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(ptr->command) << std::endl;
             std::cout << "CAPABILITIES = " << ptr->capabilitiesStr << std::endl;
             break;
@@ -333,7 +333,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
 
         case CMailIMAPParse::Commands::FETCH:
         {
-            CMailIMAPParse::FetchResponse *ptr = static_cast<CMailIMAPParse::FetchResponse *> (parsedResponse.get());
+            auto ptr = static_cast<CMailIMAPParse::FetchResponse *> (parsedResponse.get());
             std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(ptr->command) << std::endl;
 
             for (auto fetchEntry : ptr->fetchList) {
@@ -358,7 +358,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
         case CMailIMAPParse::Commands::NOOP:
         case CMailIMAPParse::Commands::IDLE:
         {
-            CMailIMAPParse::NoOpResponse *ptr = static_cast<CMailIMAPParse::NoOpResponse *> (parsedResponse.get());
+            auto ptr = static_cast<CMailIMAPParse::NoOpResponse *> (parsedResponse.get());
             std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(ptr->command) << std::endl;
             if (!ptr->rawResponse.empty()) {
                 for (auto str : ptr->rawResponse) {
@@ -372,7 +372,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::BASERESPONSE& parsedRe
 
         default:
         {
-            CMailIMAPParse::BaseResponse *ptr = static_cast<CMailIMAPParse::BaseResponse *> (parsedResponse.get());
+            auto ptr = static_cast<CMailIMAPParse::BaseResponse *> (parsedResponse.get());
             std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(ptr->command) << std::endl;
             break;
         }
