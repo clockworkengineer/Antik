@@ -19,7 +19,7 @@
 // filenames consisting of the mail UID prefix and then subject line.
 //
 // Note: At present MIME encoded-words in the subject are not decoded and can result in
-// a weird file name. At a later date it is intended to deal with this correctly.
+// an weird file name. At a later date it is intended to deal with this correctly.
 // 
 // Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
 //               Linux, Boost C++ Libraries.
@@ -60,7 +60,7 @@ struct ParamArgData {
     std::string userPasswordStr;        // Email account user name password
     std::string serverURLStr;           // SMTP server URL
     std::string mailBoxNameStr;         // Mailbox name
-    std::string destinationFolderStr;   // Destination folder for attachments
+    fs::path    destinationFolder;      // Destination folder for attachments
     std::string configFileNameStr;      // Configuration file name
 };
 
@@ -95,7 +95,7 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
             ("user,u", po::value<std::string>(&argData.userNameStr)->required(), "Account username")
             ("password,p", po::value<std::string>(&argData.userPasswordStr)->required(), "User password")
             ("mailbox,m", po::value<std::string>(&argData.mailBoxNameStr)->required(), "Mailbox name")
-            ("destination,d", po::value<std::string>(&argData.destinationFolderStr)->required(), "Destination for attachments");
+            ("destination,d", po::value<fs::path>(&argData.destinationFolder)->required(), "Destination for attachments");
 
 }
 //
@@ -157,7 +157,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Fetch a given emails body and subject line and create an .eml file for it.
 //
 
-void fetchEmailAndArchive(CMailIMAP& imap, const std::string& destinationFolderStr, std::uint64_t index) {
+void fetchEmailAndArchive(CMailIMAP& imap, fs::path& destinationFolder, std::uint64_t index) {
 
     std::string parsedResponseStr, subject, emailBody;
     CMailIMAPParse::BASERESPONSE parsedResponse;
@@ -195,14 +195,18 @@ void fetchEmailAndArchive(CMailIMAP& imap, const std::string& destinationFolderS
     }
 
     // Have email body so create .eml file for it.
-    
+
     if (!emailBody.empty()) {
-        std::istringstream emailBodyStream(emailBody);
-        std::ofstream ofs(destinationFolderStr + "(" + std::to_string(index) + ") " + subject + ".eml", std::ios::binary);
-        std::cout << "Creating [" << destinationFolderStr + "(" + std::to_string(index) + ") " + subject + ".eml" << "]" << std::endl;
-        for (std::string lineStr; std::getline(emailBodyStream, lineStr, '\n');) {
-            lineStr.push_back('\n');
-            ofs.write(&lineStr[0], lineStr.length());
+        fs::path fullFilePath = destinationFolder;
+        fullFilePath /= "(" + std::to_string(index) + ") " + subject + ".eml";
+        if (!fs::exists(fullFilePath)) {
+            std::istringstream emailBodyStream(emailBody);
+            std::ofstream ofs(fullFilePath.string(), std::ios::binary);
+            std::cout << "Creating [" << fullFilePath << "]" << std::endl;
+            for (std::string lineStr; std::getline(emailBodyStream, lineStr, '\n');) {
+                lineStr.push_back('\n');
+                ofs.write(&lineStr[0], lineStr.length());
+            }
         }
     }
 
@@ -236,10 +240,9 @@ int main(int argc, char** argv) {
         
         // Create destination folder
 
-        if (argData.destinationFolderStr.back() != '/') argData.destinationFolderStr.push_back('/');
-        argData.destinationFolderStr += argData.mailBoxNameStr + "/";
-        if (!argData.destinationFolderStr.empty() && !fs::exists(argData.destinationFolderStr)) {
-            fs::create_directory(argData.destinationFolderStr);
+        argData.destinationFolder /= argData.mailBoxNameStr;
+        if (!argData.destinationFolder.string().empty() && !fs::exists(argData.destinationFolder)) {
+            fs::create_directory(argData.destinationFolder);
         }
 
         // Connect
@@ -265,9 +268,8 @@ int main(int argc, char** argv) {
             auto *ptr = static_cast<CMailIMAPParse::SearchResponse *> (parsedResponse.get());
             std::cout << "Messages found = " << ptr->indexes.size() << std::endl;
             for (auto index : ptr->indexes) {
-                fetchEmailAndArchive(imap, argData.destinationFolderStr, index);
+                fetchEmailAndArchive(imap, argData.destinationFolder, index);
             }
-            std::cout << std::endl;
         }
 
         imap.disconnect();
