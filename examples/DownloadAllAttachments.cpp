@@ -14,7 +14,8 @@
 // Program: DownloadAllAttachments
 //
 // Description: Log on to a given IMAP server and download attachments found
-// in any e-mail in a specific mailbox to a given local folder.
+// in any e-mail in a specific mailbox to a given local folder. The destination
+// folder is a base name with the mailbox name attached.
 // 
 // Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
 //               Linux, Boost C++ Libraries.
@@ -170,8 +171,9 @@ void downloadAttachment(CMailIMAP& imap, fs::path& destinationFolder, CMailIMAPB
                     std::istringstream responseStream(resp.second);
                     std::ofstream ofs(fullFilePath.string(), std::ios::binary);
                     std::cout << "Creating [" << fullFilePath << "]" << std::endl;
+                    // Encoded lines have terminating '\r\n' the getline removes '\n'
                     for (std::string lineStr; std::getline(responseStream, lineStr, '\n');) {
-                        lineStr.pop_back();
+                        lineStr.pop_back(); // Remove '\r'
                         CMailSMTP::decodeFromBase64(lineStr, decodedStringStr, lineStr.length());
                         ofs.write(&decodedStringStr[0], decodedStringStr.length());
                     }

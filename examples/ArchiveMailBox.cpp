@@ -13,17 +13,17 @@
 //
 // Program: ArchiveMailBox
 //
-// Description: Log on to a given IMAP server and download all emails for a specified
+// Description: Log on to a given IMAP server and download all e-mails for a given
 // mailbox and create an .eml file for them  in a specified destination folder. The
 // .eml files are created within a sub-folder with the mailbox name and with filenames 
-// consisting of the mail UID prefix and then subject line. If parameter --updates is set 
+// consisting of the mail UID prefix and the subject line. If parameter --updates is set 
 // then the date of the newest .eml in the destination folder is used as the basis of
 // the IMAP search (ie. only download new e-mails). 
 //
 // Note: MIME encoded words in the email subject line are decoded to the best ASCII fit
 // available.
 // 
-// Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
+// Dependencies: C11++, Classes (CFileMIME, CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
 //               Linux, Boost C++ Libraries.
 //
 

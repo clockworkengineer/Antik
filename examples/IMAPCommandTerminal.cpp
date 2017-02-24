@@ -13,11 +13,10 @@
 //
 // Program: IMAPCommandTerminal
 //
-// Description: Log on to a given IMAP server and execute commands typed in. The
-// raw command responses are echoed back as default but parsed responses are displayed
-// if specified in program options.
+// Description: A Simple IMAP command console/terminal that logs on to a given IMAP server
+// and executes commands typed in. The raw command responses are echoed back as default but 
+// parsed responses are displayed if specified in program options.
 // 
-/// 
 // Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
 //               Linux, Boost C++ Libraries.
 //
@@ -141,6 +140,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         }
 
         // Display parsed BODYSTRUCT output
+        
         if (vm.count("bodystruct")) {
             argData.bBodystruct = true;
         }

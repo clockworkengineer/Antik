@@ -657,24 +657,16 @@ std::vector<CFileMIME::ParsedMIMEString> CFileMIME::parseMIMEString(const std::s
 
             if (lineStr.find("=?") == 0) {
 
-                lineStr = lineStr.substr(std::string("=?").length());            
-                parsedEntry.encoding = lineStr.substr(0, lineStr.find("?"));           
+                lineStr = lineStr.substr(std::string("=?").length());
+                parsedEntry.encoding = lineStr.substr(0, lineStr.find("?"));
                 lineStr = lineStr.substr(lineStr.find("?") + 1);
-                
-                if (lineStr[0] == 'Q') {
-                    lineStr = lineStr.substr(2);
-                    parsedEntry.type = 'Q';
-                    parsedEntry.contents = lineStr.substr(0, lineStr.find("?="));
-                    lineStr = lineStr.substr(lineStr.find("?=")+2);
-   
-                } else if (lineStr[0] == 'B') {
-                    lineStr = lineStr.substr(2);
-                    parsedEntry.type = 'B';
-                    parsedEntry.contents = lineStr.substr(0, lineStr.find("?="));
-                    lineStr = lineStr.substr(lineStr.find("?=")+2);
-                } 
 
-            } else {
+                parsedEntry.type = lineStr[0];
+                lineStr = lineStr.substr(2);
+                parsedEntry.contents = lineStr.substr(0, lineStr.find("?="));
+                lineStr = lineStr.substr(lineStr.find("?=") + 2);
+
+               } else {
                     if (lineStr.find("=?") == std::string::npos) {
                         parsedEntry.contents = lineStr;
                         lineStr="";
@@ -683,10 +675,12 @@ std::vector<CFileMIME::ParsedMIMEString> CFileMIME::parseMIMEString(const std::s
                         lineStr = lineStr.substr(lineStr.find("=?"));
                     }
                 }
+            
             parsedString.push_back(parsedEntry);
+            
         }
     }
- 
+
     return(parsedString);
     
 }
