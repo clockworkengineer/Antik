@@ -19,12 +19,20 @@
 #include <string>
 #include <stdexcept>
 #include <unordered_map>
+#include <sstream>
+#include <vector>
+
+//
+// SMTP class
+//
+
+#include <CMailSMTP.hpp>
 
 //
 // libcurl definitions
 //
 
-#include <curl/curl.h>
+//#include <curl/curl.h>
 
 // ================
 // CLASS DEFINITION
@@ -48,6 +56,16 @@ public:
         : std::runtime_error("CFileMIME Failure: "+ message) { }
         
     };
+
+    //
+    // Parsed MIME string entry
+    //
+    
+    struct ParsedMIMEString {
+        unsigned char type;     // Type Q (Quoted Printable), B (base64), ' ' None.
+        std::string encoding;   // Encoding used
+        std::string contents;   // Contents
+    };
   
     // ============
     // CONSTRUCTORS
@@ -70,6 +88,7 @@ public:
     // ==============
     
     static std::string getFileMIMEType(const std::string& fileName);
+    static std::string convertMIMEStringToASCII(const std::string& mimeString);
     
     // ================
     // PUBLIC VARIABLES
@@ -93,10 +112,8 @@ private:
     // PRIVATE METHODS
     // ===============
         
-    // Load file extension to MIME type mapping table
+    static std::vector<ParsedMIMEString> parseMIMEString(const std::string& mimeStr);
     
-    static void loadMIMETypes (void);
-
     // =================
     // PRIVATE VARIABLES
     // =================

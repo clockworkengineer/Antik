@@ -18,10 +18,10 @@
 // .eml files are created within a sub-folder with the mailbox name and with filenames 
 // consisting of the mail UID prefix and then subject line. If parameter --updates is set 
 // then the date of the newest .eml in the destination folder is used as the basis of
-// the IMAP search (ie. only download new e-mails).
+// the IMAP search (ie. only download new e-mails). 
 //
-// Note: At present MIME encoded-words in the subject are not decoded and can result in
-// an weird file name. At a later date it is intended to deal with this correctly.
+// Note: MIME encoded words in the email subject line are decoded to the best ASCII fit
+// available.
 // 
 // Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
 //               Linux, Boost C++ Libraries.
@@ -42,6 +42,7 @@
 #include "CMailIMAPParse.hpp"
 #include "CMailIMAPBodyStruct.hpp"
 #include "CMailSMTP.hpp"
+#include "CFileMIME.hpp"
 
 //
 // Boost program options  & file system library definitions
@@ -72,7 +73,7 @@ struct ParamArgData {
 // Maximum subject line to take in file name
 //
 
-const int kMaxSubjectLine = 80;
+const int kMaxSubjectLine = 100;
 
 //
 // .eml file exstention
@@ -194,18 +195,8 @@ void fetchEmailAndArchive(CMailIMAP& imap, fs::path& destinationFolder, std::uin
             if (resp.first.find("BODY[]") == 0) {
                 emailBody = resp.second;
             } else if (resp.first.find("BODY[HEADER.FIELDS (SUBJECT)]") == 0) {
-                // Modify subject line removing prefix, any non printable and trailing spaces.
-                // Also limit size as this will cause issues with filename lengths if excessively
-                // long. Also remove possible hierarchy delimeters.
-                subject = resp.second.substr(9);
-                for (auto &ch : subject) {
-                    if (!std::isprint(ch) || (ch == '/') || (ch == '\\')) {
-                        ch = ' ';
-                    }
-                }
-                while (!subject.empty() && (subject.back() == ' ')) {
-                    subject.pop_back();
-                }
+                subject = resp.second.substr(8);
+                subject = CFileMIME::convertMIMEStringToASCII(subject);
                 if (subject.length() > kMaxSubjectLine) {
                     subject = subject.substr(0, kMaxSubjectLine);
                 }
@@ -238,7 +229,7 @@ void fetchEmailAndArchive(CMailIMAP& imap, fs::path& destinationFolder, std::uin
 std::string getSearchDate(fs::path destinationFolder) {
 
     std::string dateBuffer(32, ' ');
-                
+
     if (fs::exists(destinationFolder) && fs::is_directory(destinationFolder)) {
 
         std::time_t lastModified;
@@ -294,7 +285,7 @@ int main(int argc, char** argv) {
 
         // Initialise CMailIMAP internals
 
-        CMailIMAP::init();
+        CMailIMAP::init(true);
 
         // Set mail account user name and password
 

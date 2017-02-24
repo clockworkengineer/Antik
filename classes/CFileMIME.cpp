@@ -634,6 +634,104 @@ std::string CFileMIME::getFileMIMEType(const std::string& fileName) {
 }
 
 //
+// Parse MIME string into normal ASCII and MIME word encoded pieces.
+//
+
+std::vector<CFileMIME::ParsedMIMEString> CFileMIME::parseMIMEString(const std::string& mimeStr) {
+    
+    std::istringstream subjectStream(mimeStr);
+    std::string newSubject, convertedMIMEStr, decodedSubject;
+    ParsedMIMEString parsedEntry;
+    std::vector<ParsedMIMEString> parsedString;
+
+    for (std::string lineStr; std::getline(subjectStream, lineStr, '\n');) {
+
+        lineStr.pop_back();
+        if (lineStr.find_first_not_of(' ') != std::string::npos) {
+            lineStr = lineStr.substr(lineStr.find_first_not_of(' '));
+        }
+        while (!lineStr.empty()) {
+
+            parsedEntry.type = ' ';
+            parsedEntry.encoding = "ASCII";
+
+            if (lineStr.find("=?") == 0) {
+
+                lineStr = lineStr.substr(std::string("=?").length());            
+                parsedEntry.encoding = lineStr.substr(0, lineStr.find("?"));           
+                lineStr = lineStr.substr(lineStr.find("?") + 1);
+                
+                if (lineStr[0] == 'Q') {
+                    lineStr = lineStr.substr(2);
+                    parsedEntry.type = 'Q';
+                    parsedEntry.contents = lineStr.substr(0, lineStr.find("?="));
+                    lineStr = lineStr.substr(lineStr.find("?=")+2);
+   
+                } else if (lineStr[0] == 'B') {
+                    lineStr = lineStr.substr(2);
+                    parsedEntry.type = 'B';
+                    parsedEntry.contents = lineStr.substr(0, lineStr.find("?="));
+                    lineStr = lineStr.substr(lineStr.find("?=")+2);
+                } 
+
+            } else {
+                    if (lineStr.find("=?") == std::string::npos) {
+                        parsedEntry.contents = lineStr;
+                        lineStr="";
+                    } else {
+                        parsedEntry.contents = lineStr.substr(0,lineStr.find("=?"));
+                        lineStr = lineStr.substr(lineStr.find("=?"));
+                    }
+                }
+            parsedString.push_back(parsedEntry);
+        }
+    }
+ 
+    return(parsedString);
+    
+}
+
+//
+// Parse MIME string passed in and convert it to ASCII as best can.
+//
+
+std::string CFileMIME::convertMIMEStringToASCII(const std::string& mimeStr) {
+
+    std::vector<ParsedMIMEString> parsedString=parseMIMEString(mimeStr);
+    std::string convertedMIMEStr;
+    
+    for (auto& parsedEntry : parsedString) {
+        if (parsedEntry.type== ' ') {
+            convertedMIMEStr += parsedEntry.contents;
+        } else if (parsedEntry.type== 'Q') {
+            int cnt01=0;
+            while (cnt01 < parsedEntry.contents.length()) {
+                if (parsedEntry.contents[cnt01] != '=') {
+                    convertedMIMEStr.append(1, parsedEntry.contents[cnt01++]);
+                } else {
+                    std::string hexStr;
+                    unsigned char ch;
+                    cnt01++;
+                    hexStr.append(1, parsedEntry.contents[cnt01++]);
+                    hexStr.append(1, parsedEntry.contents[cnt01++]);
+                    ch = std::strtoull(hexStr.c_str(), nullptr, 16);
+                    convertedMIMEStr.append(1, ch);
+                }
+            }
+            
+        } else if (parsedEntry.type== 'B') {
+            std::string decodedStr;
+            CMailSMTP::decodeFromBase64(parsedEntry.contents, decodedStr, parsedEntry.contents.length());
+            convertedMIMEStr += decodedStr;
+        }
+        
+    }
+    
+    return(convertedMIMEStr);
+    
+}
+
+//
 // Main CFileMIME object constructor. 
 //
 
