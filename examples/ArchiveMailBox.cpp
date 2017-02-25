@@ -197,8 +197,11 @@ void fetchEmailAndArchive(CMailIMAP& imap, fs::path& destinationFolder, std::uin
             } else if (resp.first.find("BODY[HEADER.FIELDS (SUBJECT)]") == 0) {
                 subject = resp.second.substr(8);
                 subject = CFileMIME::convertMIMEStringToASCII(subject);
-                if (subject.length() > kMaxSubjectLine) {
+                if (subject.length() > kMaxSubjectLine) {   // Truncate for file name
                     subject = subject.substr(0, kMaxSubjectLine);
+                }
+                for (auto &ch : subject) { // Remove any possible folder hierarchy delimeter
+                    if ((ch == '\\')|| (ch=='/')) ch = ' ';
                 }
             }
         }
@@ -285,7 +288,7 @@ int main(int argc, char** argv) {
 
         // Initialise CMailIMAP internals
 
-        CMailIMAP::init(true);
+        CMailIMAP::init();
 
         // Set mail account user name and password
 

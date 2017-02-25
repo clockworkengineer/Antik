@@ -713,7 +713,6 @@ std::string CFileMIME::convertMIMEStringToASCII(const std::string& mimeStr) {
     std::string convertedMIMEStr;
     
     for (auto& parsedEntry : parsedString) {
-        
         if (parsedEntry.type== kEncodedWordTypeNone) {
             convertedMIMEStr += parsedEntry.contents;
         } else if (parsedEntry.type== kEncodedWordTypeQuoted) {
@@ -722,13 +721,13 @@ std::string CFileMIME::convertMIMEStringToASCII(const std::string& mimeStr) {
                 if (parsedEntry.contents[cnt01] != kQuotedPrintPrefix) {
                     convertedMIMEStr.append(1, parsedEntry.contents[cnt01++]);
                 } else {
-                    std::string hexStr;
-                    unsigned char ch;
+                    unsigned char byte1, byte2;
                     cnt01++;
-                    hexStr.append(1, parsedEntry.contents[cnt01++]);
-                    hexStr.append(1, parsedEntry.contents[cnt01++]);
-                    ch = std::strtoull(hexStr.c_str(), nullptr, 16);
-                    convertedMIMEStr.append(1, ch);
+                    byte2 = parsedEntry.contents[cnt01++];
+                    byte1 = ((byte2 <= '9') ? (byte2 -'0') : ((byte2-'A')+10)) << 4;
+                    byte2 = parsedEntry.contents[cnt01++];
+                    byte1 |= ((byte2 <= '9') ? (byte2 -'0') : ((byte2-'A')+10));
+                    convertedMIMEStr.append(1, byte1);
                 }
             }
             
