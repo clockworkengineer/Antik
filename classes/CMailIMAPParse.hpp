@@ -141,6 +141,7 @@ public:
         Commands command;               // Command enum code
         RespCode status;                // Command enum status
         std::string errorMessageStr;    // Command error string
+        bool bBYESent;                  // ==true then BYE sent as part of response
     };
 
     // SEARCH
@@ -303,7 +304,7 @@ private:
     // Command response parse utility methods
     //
       
-    static BASERESPONSE parseStatus(const std::string& tagStr, const std::string& lineStr);
+    static void parseStatus(const std::string& tagStr, const std::string& lineStr, BaseResponse &statusResponse);
     static void parseOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr, std::istringstream& responseStream);
     static void parseList(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
     static void parseString(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);

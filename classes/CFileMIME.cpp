@@ -12,9 +12,11 @@
 //
 // Class: CFileMIME
 // 
-// Description: Class to provide file extension to MIME type mapping.
+// Description: Class to provide file extension to MIME type mapping, amongst
+// other MIME processing functionality.
 //
 // Dependencies:   C11++     - Language standard features used.
+//                 CMailSMTP - Base64 decoding.
 //
 
 // =================
@@ -30,6 +32,20 @@
 // ===========================
 // PRIVATE TYPES AND CONSTANTS
 // ===========================
+
+//
+// MIME encoded word constants
+//
+
+const std::string CFileMIME::kEncodedWordPrefix("=?");
+const std::string CFileMIME::kEncodedWordPostfix("?=");
+const std::string CFileMIME::kEncodedWordSeparator("?");
+const std::string CFileMIME::kEncodedWordASCII("ASCII");
+const char CFileMIME::kEncodedWordTypeBase64='B';
+const char CFileMIME::kEncodedWordTypeQuoted='Q';
+const char CFileMIME::kEncodedWordTypeNone=' ';
+const char CFileMIME::kQuotedPrintPrefix='=';
+
 
 // ==========================
 // PUBLIC TYPES AND CONSTANTS
@@ -640,7 +656,6 @@ std::string CFileMIME::getFileMIMEType(const std::string& fileName) {
 std::vector<CFileMIME::ParsedMIMEString> CFileMIME::parseMIMEString(const std::string& mimeStr) {
     
     std::istringstream subjectStream(mimeStr);
-    std::string newSubject, convertedMIMEStr, decodedSubject;
     ParsedMIMEString parsedEntry;
     std::vector<ParsedMIMEString> parsedString;
 
@@ -650,31 +665,34 @@ std::vector<CFileMIME::ParsedMIMEString> CFileMIME::parseMIMEString(const std::s
         if (lineStr.find_first_not_of(' ') != std::string::npos) {
             lineStr = lineStr.substr(lineStr.find_first_not_of(' '));
         }
+        
         while (!lineStr.empty()) {
 
-            parsedEntry.type = ' ';
-            parsedEntry.encoding = "ASCII";
+            parsedEntry.type = kEncodedWordTypeNone;
+            parsedEntry.encoding = kEncodedWordASCII;
 
-            if (lineStr.find("=?") == 0) {
+            if (lineStr.find(kEncodedWordPrefix) == 0) {
 
-                lineStr = lineStr.substr(std::string("=?").length());
-                parsedEntry.encoding = lineStr.substr(0, lineStr.find("?"));
-                lineStr = lineStr.substr(lineStr.find("?") + 1);
+                lineStr = lineStr.substr(kEncodedWordPrefix.length());
+                parsedEntry.encoding = lineStr.substr(0, lineStr.find(kEncodedWordSeparator));
+                lineStr = lineStr.substr(lineStr.find(kEncodedWordSeparator) + 1);
 
                 parsedEntry.type = lineStr[0];
-                lineStr = lineStr.substr(2);
-                parsedEntry.contents = lineStr.substr(0, lineStr.find("?="));
-                lineStr = lineStr.substr(lineStr.find("?=") + 2);
+                lineStr = lineStr.substr(kEncodedWordPrefix.length());
+                parsedEntry.contents = lineStr.substr(0, lineStr.find(kEncodedWordPostfix));
+                lineStr = lineStr.substr(lineStr.find(kEncodedWordPostfix) + 2);
 
-               } else {
-                    if (lineStr.find("=?") == std::string::npos) {
-                        parsedEntry.contents = lineStr;
-                        lineStr="";
-                    } else {
-                        parsedEntry.contents = lineStr.substr(0,lineStr.find("=?"));
-                        lineStr = lineStr.substr(lineStr.find("=?"));
-                    }
+            } else {
+                
+                if (lineStr.find(kEncodedWordPostfix) == std::string::npos) {
+                    parsedEntry.contents = lineStr;
+                    lineStr = "";
+                } else {
+                    parsedEntry.contents = lineStr.substr(0, lineStr.find(kEncodedWordPrefix));
+                    lineStr = lineStr.substr(lineStr.find(kEncodedWordPrefix));
                 }
+                
+            }
             
             parsedString.push_back(parsedEntry);
             
@@ -695,12 +713,13 @@ std::string CFileMIME::convertMIMEStringToASCII(const std::string& mimeStr) {
     std::string convertedMIMEStr;
     
     for (auto& parsedEntry : parsedString) {
-        if (parsedEntry.type== ' ') {
+        
+        if (parsedEntry.type== kEncodedWordTypeNone) {
             convertedMIMEStr += parsedEntry.contents;
-        } else if (parsedEntry.type== 'Q') {
+        } else if (parsedEntry.type== kEncodedWordTypeQuoted) {
             int cnt01=0;
             while (cnt01 < parsedEntry.contents.length()) {
-                if (parsedEntry.contents[cnt01] != '=') {
+                if (parsedEntry.contents[cnt01] != kQuotedPrintPrefix) {
                     convertedMIMEStr.append(1, parsedEntry.contents[cnt01++]);
                 } else {
                     std::string hexStr;
@@ -713,7 +732,7 @@ std::string CFileMIME::convertMIMEStringToASCII(const std::string& mimeStr) {
                 }
             }
             
-        } else if (parsedEntry.type== 'B') {
+        } else if (parsedEntry.type== kEncodedWordTypeBase64) {
             std::string decodedStr;
             CMailSMTP::decodeFromBase64(parsedEntry.contents, decodedStr, parsedEntry.contents.length());
             convertedMIMEStr += decodedStr;

@@ -118,6 +118,8 @@ TEST_F(CMailIMAPParseTests, SELECTValid) {
     ASSERT_STREQ("14", ptr->responseMap["UIDVALIDITY"].c_str());    
     ASSERT_STREQ("4554", ptr->responseMap["UIDNEXT"].c_str());    
 
+    EXPECT_FALSE(ptr->bBYESent);
+    
 }
 
 TEST_F(CMailIMAPParseTests, SELECTInvalidMailBox) {
@@ -139,6 +141,8 @@ TEST_F(CMailIMAPParseTests, SELECTInvalidMailBox) {
     EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::NO);
     ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", ptr->errorMessageStr.c_str());
 
+    EXPECT_FALSE(ptr->bBYESent);
+    
 }
 
 TEST_F(CMailIMAPParseTests, EXAMINEValid) {
@@ -185,6 +189,8 @@ TEST_F(CMailIMAPParseTests, EXAMINEValid) {
     ASSERT_STREQ("18", ptr->responseMap["UIDVALIDITY"].c_str());    
     ASSERT_STREQ("4584", ptr->responseMap["UIDNEXT"].c_str());    
 
+    EXPECT_FALSE(ptr->bBYESent);
+       
 }
 
 TEST_F(CMailIMAPParseTests, EXAMINEInvalidMailBox) {
@@ -206,6 +212,8 @@ TEST_F(CMailIMAPParseTests, EXAMINEInvalidMailBox) {
     EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::NO);
     ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", ptr->errorMessageStr.c_str());
 
+    EXPECT_FALSE(ptr->bBYESent);
+       
 }
 
 TEST_F(CMailIMAPParseTests, STATUSValid) {
@@ -240,6 +248,8 @@ TEST_F(CMailIMAPParseTests, STATUSValid) {
     ASSERT_STREQ("14", ptr->responseMap["UIDVALIDITY"].c_str());
     ASSERT_STREQ("2", ptr->responseMap["UNSEEN"].c_str());
 
+    EXPECT_FALSE(ptr->bBYESent);
+
 }
 
 TEST_F(CMailIMAPParseTests, STATUSInvalidMailBox) {
@@ -261,6 +271,8 @@ TEST_F(CMailIMAPParseTests, STATUSInvalidMailBox) {
     EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::NO);
     ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", ptr->errorMessageStr.c_str());
 
+    EXPECT_FALSE(ptr->bBYESent);
+       
 }
 
 TEST_F(CMailIMAPParseTests, LISTValid) {
@@ -321,6 +333,8 @@ TEST_F(CMailIMAPParseTests, LISTValid) {
         checkListRespData(ptr->mailBoxList[17], '/', "(\\HasNoChildren \\Trash)", "\"[Google Mail]/Trash\"");
     }
     
+    EXPECT_FALSE(ptr->bBYESent);
+       
 }
 
 TEST_F(CMailIMAPParseTests, SEARCHValid) {
@@ -356,6 +370,8 @@ TEST_F(CMailIMAPParseTests, SEARCHValid) {
         EXPECT_EQ(10, ptr->indexes[9]);
     }
     
+    EXPECT_FALSE(ptr->bBYESent);
+       
 }
 
 TEST_F(CMailIMAPParseTests, UIDSEARCHValid) {
@@ -391,6 +407,8 @@ TEST_F(CMailIMAPParseTests, UIDSEARCHValid) {
         EXPECT_EQ(1014, ptr->indexes[9]);
     }
 
+    EXPECT_FALSE(ptr->bBYESent);
+       
 }
 
 TEST_F(CMailIMAPParseTests, LSUBValid) {
@@ -450,6 +468,9 @@ TEST_F(CMailIMAPParseTests, LSUBValid) {
         checkListRespData(ptr->mailBoxList[16], '/', "(\\Flagged \\HasNoChildren)", "\"[Google Mail]/Starred\"");
         checkListRespData(ptr->mailBoxList[17], '/', "(\\HasNoChildren \\Trash)", "\"[Google Mail]/Trash\"");
     }
+    
+    EXPECT_FALSE(ptr->bBYESent);
+       
 }
 
 TEST_F(CMailIMAPParseTests, EXPUNGEValid) {
@@ -470,6 +491,8 @@ TEST_F(CMailIMAPParseTests, EXPUNGEValid) {
     CMailIMAPParse::ExpungeResponse *ptr = static_cast<CMailIMAPParse::ExpungeResponse *> (parsedResponse.get());
     
     EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::OK);
+    
+    EXPECT_FALSE(ptr->bBYESent);
 
 }
 
@@ -528,6 +551,8 @@ TEST_F(CMailIMAPParseTests, STOREValid) {
 
     }
 
+    EXPECT_FALSE(ptr->bBYESent);
+       
 }
 
 TEST_F(CMailIMAPParseTests, CAPABILITYValid) {
@@ -553,6 +578,8 @@ TEST_F(CMailIMAPParseTests, CAPABILITYValid) {
     ASSERT_STREQ("IMAP4rev1 UNSELECT IDLE NAMESPACE QUOTA ID XLIST CHILDREN X-GM-EXT-1 "
          "UIDPLUS COMPRESS=DEFLATE ENABLE MOVE CONDSTORE ESEARCH UTF8=ACCEPT LIST-EXTENDED "
          "LIST-STATUS LITERAL- APPENDLIMIT=35651584 SPECIAL-USE", ptr->capabilitiesStr.c_str());
+    
+    EXPECT_FALSE(ptr->bBYESent);
 
 }
 
@@ -579,6 +606,9 @@ TEST_F(CMailIMAPParseTests, NOOPValid) {
     if (ptr->rawResponse.size() == 1) {
         ASSERT_STREQ("* 8 EXISTS",ptr->rawResponse[0].c_str());
     }
+    
+    EXPECT_FALSE(ptr->bBYESent);
+    
 }
 TEST_F(CMailIMAPParseTests, IDLEValid) {
 
@@ -603,6 +633,8 @@ TEST_F(CMailIMAPParseTests, IDLEValid) {
     if (ptr->rawResponse.size() == 1) {
         ASSERT_STREQ("* 1 EXISTS", ptr->rawResponse[0].c_str());
     }
+    
+    EXPECT_FALSE(ptr->bBYESent);
     
 }
 
@@ -629,6 +661,8 @@ TEST_F(CMailIMAPParseTests, LOGOUTValid) {
     if (ptr->rawResponse.size() == 1) {
         ASSERT_STREQ("* BYE LOGOUT Requested", ptr->rawResponse[0].c_str());
     }
+    
+    EXPECT_TRUE(ptr->bBYESent);
     
 }
 
@@ -670,6 +704,52 @@ TEST_F(CMailIMAPParseTests, FETCHValid) {
                     "NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" "
                     "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL)", ptr->fetchList[0].responseMap["BODYSTRUCTURE"].c_str());
     }
+    
+    EXPECT_FALSE(ptr->bBYESent);
+
+}
+
+TEST_F(CMailIMAPParseTests, FETCHValidWithBYE) {
+
+    std::vector<std::string> fetchResponseStr = { 
+       { "A000004 FETCH 1 (BODYSTRUCTURE FLAGS UID)" },
+       { "* 1 FETCH (UID 1015 FLAGS () BODYSTRUCTURE ((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"iso-8859-1\") NIL "
+         "NIL \"QUOTED-PRINTABLE\" 355 20 NIL NIL NIL)(\"TEXT\" \"HTML\" (\"CHARSET\" \"iso-8859-1\") NIL "
+         "NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" "
+         "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL))"},
+       { "* BYE Close down." },
+       { "A000004 OK Success" }
+    };
+
+    std::string commandResponseStr;
+ 
+    for (auto str : fetchResponseStr) {
+        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+    }
+    
+    CMailIMAPParse::BASERESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CMailIMAPParse::FetchResponse *ptr = static_cast<CMailIMAPParse::FetchResponse *> (parsedResponse.get());
+    
+    EXPECT_TRUE(ptr->status==CMailIMAPParse::RespCode::OK);
+
+    EXPECT_EQ(1, ptr->fetchList.size());
+
+    if (ptr->fetchList.size() == 1) {
+        EXPECT_EQ(1, ptr->fetchList[0].index);
+        EXPECT_EQ(3, ptr->fetchList[0].responseMap.size());
+        EXPECT_TRUE(ptr->fetchList[0].responseMap.find("UID") != ptr->fetchList[0].responseMap.end());
+        EXPECT_TRUE(ptr->fetchList[0].responseMap.find("FLAGS") != ptr->fetchList[0].responseMap.end());
+        EXPECT_TRUE(ptr->fetchList[0].responseMap.find("BODYSTRUCTURE") != ptr->fetchList[0].responseMap.end());
+
+        ASSERT_STREQ("1015", ptr->fetchList[0].responseMap["UID"].c_str());
+        ASSERT_STREQ("()", ptr->fetchList[0].responseMap["FLAGS"].c_str());
+        ASSERT_STREQ("((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"iso-8859-1\") NIL "
+                    "NIL \"QUOTED-PRINTABLE\" 355 20 NIL NIL NIL)(\"TEXT\" \"HTML\" (\"CHARSET\" \"iso-8859-1\") NIL "
+                    "NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" "
+                    "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL)", ptr->fetchList[0].responseMap["BODYSTRUCTURE"].c_str());
+    }
+    
+    EXPECT_TRUE(ptr->bBYESent);
     
 }
 

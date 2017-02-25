@@ -99,7 +99,22 @@ private:
     // ===========================
     // PRIVATE TYPES AND CONSTANTS
     // ===========================
-          
+
+    //
+    // MIME encoded word
+    //
+
+    static const std::string kEncodedWordPrefix;
+    static const std::string kEncodedWordPostfix;
+    static const std::string kEncodedWordSeparator;
+    static const std::string kEncodedWordASCII;
+    
+    static const char kEncodedWordTypeBase64;
+    static const char kEncodedWordTypeQuoted;
+    static const char kEncodedWordTypeNone;
+    static const char kQuotedPrintPrefix;
+
+    
     // ===========================================
     // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
     // ===========================================
