@@ -108,7 +108,7 @@ public:
     //
     
     struct FetchRespData {
-       uint64_t index;                // EMail Index/UID
+       uint64_t index=0;              // EMail Index/UID
        CommandRespMap responseMap;    // Fetch command response map
     };
     
@@ -117,7 +117,7 @@ public:
     //
     
     struct ListRespData {
-        uint8_t     hierDel;          // Hierarchy Delimeter
+        uint8_t     hierDel=' ';      // Hierarchy Delimeter
         std::string attributesStr;    // Mailbox attributes
         std::string mailBoxNameStr;   // Mailbox name
     };
@@ -127,7 +127,7 @@ public:
     //
     
     struct StoreRespData {
-        uint64_t index;             // EMail Index/UID
+        uint64_t index=0;             // EMail Index/UID
         std::string flagsListStr;   // EMail flags list
     };
 
@@ -138,80 +138,134 @@ public:
     // BASE
     
     struct BaseResponse {
+
+        BaseResponse(Commands command) : command {command} {}
+        
+        BaseResponse(Commands command, RespCode status, std::string  errorMessageStr, bool  bBYESent) 
+        : command {command}, status {status}, errorMessageStr { errorMessageStr}, bBYESent {bBYESent} {}
+        
         Commands command;               // Command enum code
-        RespCode status;                // Command enum status
+        RespCode status=RespCode::OK;   // Command enum status
         std::string errorMessageStr;    // Command error string
-        bool bBYESent;                  // ==true then BYE sent as part of response
+        bool bBYESent=false;            // ==true then BYE sent as part of response
+
     };
 
     // SEARCH
     
     struct SearchResponse : public BaseResponse {
+    
+        SearchResponse(Commands command) : BaseResponse(command) {} 
+        
         std::vector<uint64_t> indexes;  // Email index(s)/UID(s) returned
+        
     };
 
     // SELECT / EXAMINE
     
     struct SelectResponse : public BaseResponse {
+      
+        SelectResponse(Commands command) : BaseResponse(command) {} 
+  
         std::string mailBoxNameStr;    // Mailbox name
-        std::string mailBoxAccessStr;  // Mailbox acess permissions
+        std::string mailBoxAccessStr;  // Mailbox access permissions
         CommandRespMap responseMap;    // Command response map 
-    };
 
-    struct ExamineResponse : public SelectResponse { // SELECT
+    };
+    
+    struct ExamineResponse : public SelectResponse {
+
+        ExamineResponse(Commands command) : SelectResponse(command) {}
+
     };
  
     // LIST / LSUB
     
     struct ListResponse : public BaseResponse {
+    
+        ListResponse(Commands command) : BaseResponse(command) {}
+          
         std::vector<ListRespData> mailBoxList;  // Vector of mailbox list response data
+        
     };
     
-    struct LSubResponse : public ListResponse { // LIST
+    struct LSubResponse : public ListResponse {
+        
+        LSubResponse(Commands command) : ListResponse(command) {}
+    
     };
     
     // STATUS
     
     struct StatusResponse : public BaseResponse {
+    
+       StatusResponse(Commands command) : BaseResponse(command) {}
+ 
        std::string mailBoxNameStr;     // Mailbox name
        CommandRespMap responseMap;     // Command response map
+       
     };
     
     // EXPUNGE
     
     struct ExpungeResponse : public BaseResponse {
+        
+        ExpungeResponse(Commands command) : BaseResponse(command) {}
+ 
         std::vector<uint64_t> exists;       // Vector of exists responses
         std::vector<uint64_t> expunged;     // Vector of expunged responses
+    
     };
    
     // STORE
     
     struct StoreResponse : public BaseResponse {
+        
+        StoreResponse(Commands command) : BaseResponse(command) {}
+
         std::vector<StoreRespData> storeList;   // Vector of STORE response data
     };
     
     // CAPABILITY
     
     struct CapabilityResponse : public BaseResponse {
+        
+        CapabilityResponse(Commands command) : BaseResponse(command) {}
+
         std::string capabilitiesStr;    // Capabilities
+    
     };
     
     // FETCH
     
     struct FetchResponse : public BaseResponse {
+        
+        FetchResponse(Commands command) : BaseResponse(command) {}
+    
         std::vector<FetchRespData> fetchList;   // Vector of FETCH response data
+    
     };
     
     // NOOP / LOGOUT / IDLE
     
     struct NoOpResponse : public BaseResponse {
+        
+        NoOpResponse(Commands command) : BaseResponse(command) {}
+              
         std::vector<std::string> rawResponse;   // Raw IDLE response data
+    
     };
     
     struct LogOutResponse : public NoOpResponse {
+    
+        LogOutResponse(Commands command) : NoOpResponse(command) {}
+              
     };
     
     struct IdleResponse : NoOpResponse {
+    
+        IdleResponse(Commands command) : NoOpResponse(command) {}
+              
     };
   
     //

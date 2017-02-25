@@ -186,6 +186,8 @@ void fetchEmailAndArchive(CMailIMAP& imap, fs::path& destinationFolder, std::uin
     parsedResponse = CMailIMAPParse::parseResponse(parsedResponseStr);
     if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
         throw CMailIMAP::Exception("IMAP FETCH " + parsedResponse->errorMessageStr);
+    } else if (parsedResponse->bBYESent) {
+        throw CMailIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
     }
 
     auto *ptr = static_cast<CMailIMAPParse::FetchResponse *> (parsedResponse.get());
@@ -288,7 +290,7 @@ int main(int argc, char** argv) {
 
         // Initialise CMailIMAP internals
 
-        CMailIMAP::init();
+        CMailIMAP::init(true);
 
         // Set mail account user name and password
 
@@ -319,6 +321,8 @@ int main(int argc, char** argv) {
         parsedResponse = CMailIMAPParse::parseResponse(parsedResponseStr);
         if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
             throw CMailIMAP::Exception("IMAP SELECT " + parsedResponse->errorMessageStr);
+        } else if (parsedResponse->bBYESent) {
+            throw CMailIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
         }
 
         // SEARCH for all present email and then create an archive for them.
@@ -333,7 +337,8 @@ int main(int argc, char** argv) {
         parsedResponse = CMailIMAPParse::parseResponse(parsedResponseStr);
         if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
             throw CMailIMAP::Exception("IMAP SEARCH " + parsedResponse->errorMessageStr);
-
+        } else if (parsedResponse->bBYESent) {
+            throw CMailIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
         } else {
             auto *ptr = static_cast<CMailIMAPParse::SearchResponse *> (parsedResponse.get());
             std::cout << "Messages found = " << ptr->indexes.size() << std::endl;

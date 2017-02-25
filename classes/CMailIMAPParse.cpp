@@ -239,10 +239,8 @@ void CMailIMAPParse::parseStatus(const std::string& tagStr, const std::string& l
 
 CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSELECT(CMailIMAPParse::CommandData& commandData) {
 
-    SELECTRESPONSE resp { new SelectResponse };
-
-    resp->command = stringToCodeMap[commandData.commandStr];
-
+    SELECTRESPONSE resp { new SelectResponse { stringToCodeMap[commandData.commandStr]  } };
+    
     // Extract mailbox name from command (stripping any quotes).
 
     resp->mailBoxNameStr = commandData.commandLineStr.substr(commandData.commandLineStr.find_last_of(' ') + 1);
@@ -308,9 +306,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSELECT(CMailIMAPParse::Command
 
 CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSEARCH(CMailIMAPParse::CommandData& commandData) {
 
-    SEARCHRESPONSE resp { new SearchResponse };
-
-    resp->command = stringToCodeMap[commandData.commandStr];
+    SEARCHRESPONSE resp { new SearchResponse { stringToCodeMap[commandData.commandStr]  } };
 
     for (std::string lineStr; std::getline(commandData.commandRespStream, lineStr, '\n');) {
 
@@ -347,10 +343,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSEARCH(CMailIMAPParse::Command
 
 CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseLIST(CMailIMAPParse::CommandData& commandData) {
 
-    LISTRESPONSE resp { new ListResponse };
-
-    resp->command = stringToCodeMap[commandData.commandStr];
-
+    LISTRESPONSE resp { new ListResponse { stringToCodeMap[commandData.commandStr]  } };
+    
     for (std::string lineStr; std::getline(commandData.commandRespStream, lineStr, '\n');) {
 
         ListRespData mailBoxEntry;
@@ -389,10 +383,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseLIST(CMailIMAPParse::CommandDa
 
 CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTATUS(CMailIMAPParse::CommandData& commandData) {
 
-    STATUSRESPONSE resp { new StatusResponse };
-
-    resp->command = stringToCodeMap[commandData.commandStr];
-
+    STATUSRESPONSE resp { new StatusResponse { stringToCodeMap[commandData.commandStr]  } };
+    
     for (std::string lineStr; std::getline(commandData.commandRespStream, lineStr, '\n');) {
 
         lineStr.pop_back(); // Remove linefeed
@@ -433,10 +425,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTATUS(CMailIMAPParse::Command
 
 CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseEXPUNGE(CMailIMAPParse::CommandData& commandData) {
 
-    EXPUNGERESPONSE resp { new ExpungeResponse };
-
-    resp->command = stringToCodeMap[commandData.commandStr];
-
+    EXPUNGERESPONSE resp { new ExpungeResponse { stringToCodeMap[commandData.commandStr] } };
+    
     for (std::string lineStr; std::getline(commandData.commandRespStream, lineStr, '\n');) {
 
         lineStr.pop_back(); // Remove linefeed
@@ -469,10 +459,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseEXPUNGE(CMailIMAPParse::Comman
 
 CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTORE(CMailIMAPParse::CommandData& commandData) {
 
-    STORERESPONSE resp { new StoreResponse };
-
-    resp->command = stringToCodeMap[commandData.commandStr];
-
+    STORERESPONSE resp { new StoreResponse { stringToCodeMap[commandData.commandStr] } };
+    
     for (std::string lineStr; std::getline(commandData.commandRespStream, lineStr, '\n');) {
 
         StoreRespData storeData;
@@ -504,10 +492,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTORE(CMailIMAPParse::CommandD
 
 CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseCAPABILITY(CMailIMAPParse::CommandData& commandData) {
 
-    CAPABILITYRESPONSE resp { new CapabilityResponse };
-
-    resp->command = stringToCodeMap[commandData.commandStr];
-
+    CAPABILITYRESPONSE resp { new CapabilityResponse { stringToCodeMap[commandData.commandStr] } };
+    
     for (std::string lineStr; std::getline(commandData.commandRespStream, lineStr, '\n');) {
 
         lineStr.pop_back(); // Remove linefeed
@@ -535,10 +521,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseCAPABILITY(CMailIMAPParse::Com
 
 CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseNOOP(CMailIMAPParse::CommandData& commandData) {
 
-    NOOPRESPONSE resp { new NoOpResponse };
-
-    resp->command = stringToCodeMap[commandData.commandStr];
-
+    NOOPRESPONSE resp { new NoOpResponse { stringToCodeMap[commandData.commandStr] } };
+    
     for (std::string lineStr; std::getline(commandData.commandRespStream, lineStr, '\n');) {
 
         lineStr.pop_back(); // Remove linefeed
@@ -565,10 +549,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseNOOP(CMailIMAPParse::CommandDa
 
 CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::CommandData& commandData) {
 
-    FETCHRESPONSE resp { new FetchResponse };
-
-    resp->command = stringToCodeMap[commandData.commandStr];
-
+    FETCHRESPONSE resp { new FetchResponse { stringToCodeMap[commandData.commandStr] } };
+    
     for (std::string lineStr; std::getline(commandData.commandRespStream, lineStr, '\n');) {
 
         FetchRespData fetchData;
@@ -620,7 +602,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::CommandD
                         std::getline(commandData.commandRespStream, lineStr, '\n');   // Move to next
                     }
                 } else {
-                    commandData.commandRespStream.seekg(-lineLength, std::ios_base::end);
+                    commandData.commandRespStream.seekg(-lineLength, std::ios_base::end); // Rewind read to get line
                     std::getline(commandData.commandRespStream, lineStr, '\n');
                     throw Exception("error while parsing FETCH command ["+lineStr+"]");
                 }
@@ -650,10 +632,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::CommandD
 
 CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseLOGOUT(CMailIMAPParse::CommandData& commandData) {
 
-    LOGOUTRESPONSE resp { new LogOutResponse };
-
-    resp->command = stringToCodeMap[commandData.commandStr];
-
+    LOGOUTRESPONSE resp { new LogOutResponse { stringToCodeMap[commandData.commandStr] } };
+    
     for (std::string lineStr; std::getline(commandData.commandRespStream, lineStr, '\n');) {
 
         lineStr.pop_back(); // Remove linefeed
@@ -681,13 +661,11 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseLOGOUT(CMailIMAPParse::Command
 
 CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseDefault(CMailIMAPParse::CommandData& commandData) {
 
-    BASERESPONSE resp { new BaseResponse };
-
-    resp->command = stringToCodeMap[commandData.commandStr];
-
+    BASERESPONSE resp { new BaseResponse { stringToCodeMap[commandData.commandStr] } };
+    
     for (std::string lineStr; std::getline(commandData.commandRespStream, lineStr, '\n');) {
         
-        lineStr.pop_back(); // Remove lineStrfeed
+        lineStr.pop_back(); // Remove linefeed
         
         BaseResponse statusResponse { resp->command, resp->status, resp->errorMessageStr, resp->bBYESent};    
         parseStatus(commandData.tagStr, lineStr, statusResponse);    
