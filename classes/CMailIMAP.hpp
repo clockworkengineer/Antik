@@ -3,7 +3,7 @@
  * 
  * Author: Robert Tizzard
  * 
- * Created on Januray 24, 2017, 2:33 PM
+ * Created on January 24, 2017, 2:33 PM
  *
  * Copyright 2016.
  
@@ -134,12 +134,14 @@ public:
     // ==============
 
     //
-    // Set email server account details
+    // Set/Get email server account details
     //
 
     void setServer(const std::string& serverURLStr);
     void setUserAndPassword(const std::string& userNameStr, const std::string& userPasswordStr);
-
+    std::string getServer(void);
+    std::string getUser(void);
+    
     //
     // IMAP connect, send command and disconnect
     //
@@ -147,11 +149,12 @@ public:
     void connect(void);
     std::string sendCommand(const std::string& commandLineStr);
     void disconnect(void);
-
+    bool getConnectedStatus(void);
+    
     // IMAP initialization and closedown processing
 
     static void init(bool bCurlVerbosity=false);
-    static void closedown();
+    static void closedown(void);
 
     // ================
     // PUBLIC VARIABLES

@@ -110,6 +110,7 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
             ("updates,u", "Search since last file archived.");
 
 }
+
 //
 // Read in and process command line arguments using boost.
 //
@@ -290,7 +291,7 @@ int main(int argc, char** argv) {
 
         // Initialise CMailIMAP internals
 
-        CMailIMAP::init(true);
+        CMailIMAP::init();
 
         // Set mail account user name and password
 
@@ -301,9 +302,9 @@ int main(int argc, char** argv) {
 
         argData.destinationFolder /= argData.mailBoxNameStr;
         if (!argData.destinationFolder.string().empty() && !fs::exists(argData.destinationFolder)) {
+            std::cout << "Creating destination folder = [" << argData.destinationFolder << "]" << std::endl;
             fs::create_directory(argData.destinationFolder);
         }
-
 
         // Get newest file creation date for search
 
@@ -313,6 +314,8 @@ int main(int argc, char** argv) {
 
         // Connect
 
+        std::cout << "Connecting to server [" << argData.serverURLStr << "]" << std::endl;
+        
         imap.connect();
 
         // SELECT mailbox
@@ -347,6 +350,8 @@ int main(int argc, char** argv) {
             }
         }
 
+        std::cout << "Disconnecting from server [" << argData.serverURLStr << "]" << std::endl;
+      
         imap.disconnect();
 
         //

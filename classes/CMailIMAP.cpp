@@ -130,8 +130,9 @@ bool CMailIMAP::bCurlVerbosity=false;
 
 //
 // Send IMAP command to server. The maximum buffer size is CURL_MAX_WRITE_SIZE
-// so split up message into chunks before sending.
-//
+// so split up message into chunks before sending. This currently uses libcurls
+// curl_easy_send to transmit the data and this may return CURLE_AGAIN if the
+// underlying transport module is not ready to send the data.
 
 void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
 
@@ -139,8 +140,12 @@ void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
     int bytesCopied = 0;
 
     do {
+        
         this->errMsgBuffer[0] = 0;
-        this->res = curl_easy_send(this->curl, &commandStr[bytesCopied], std::min((static_cast<int> (commandStr.length()) - bytesCopied), CURL_MAX_WRITE_SIZE), &len);
+        this->res = curl_easy_send(this->curl, &commandStr[bytesCopied],
+                std::min((static_cast<int> (commandStr.length()) - bytesCopied),
+                CURL_MAX_WRITE_SIZE), &len);
+        
         if (this->res == CURLE_AGAIN) {
             continue;
         } else if (this->res != CURLE_OK) {
@@ -152,7 +157,9 @@ void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
             }
             throw CMailIMAP::Exception("curl_easy_send() failed: " + errMsgStr);
         }
+        
         bytesCopied += len;
+    
     } while ((bytesCopied < commandStr.length()));
 
 }
@@ -238,7 +245,7 @@ inline void CMailIMAP::generateTag() {
 // Send IDLE command (requires a special handler). When IDLE is sent it then waits
 // for a '+' from the server. Here it knows to wait for an un-tagged response where
 // upon it sends "DONE" and waits for the final tagged IDLE response. Note: The
-// un-tagged response before "DONE" sent is saved and tagged onto the front of
+// un-tagged response before "DONE" sent is saved and placed onto the front of
 // the final IDLE response.
 //
 
@@ -288,6 +295,17 @@ void CMailIMAP::sendCommandAPPEND(const std::string& commandLineStr) {
 void CMailIMAP::setServer(const std::string& serverURLStr) {
 
     this->serverURLStr = serverURLStr;
+
+}
+
+//
+// Get IMAP server URL
+// 
+
+std::string CMailIMAP::getServer(void) {
+
+    return(this->serverURLStr);
+
 }
 
 //
@@ -300,7 +318,28 @@ void CMailIMAP::setUserAndPassword(const std::string& userNameStr, const std::st
     this->userPasswordStr = userPasswordStr;
 
 }
+    
+//
+// Get email account user details
+//
 
+std::string CMailIMAP::getUser(void) {
+
+    this->userNameStr = userNameStr;
+    this->userPasswordStr = userPasswordStr;
+
+}
+
+//
+// Get current connection status with server
+//
+
+bool CMailIMAP::getConnectedStatus(void) {
+
+    return(this->bConnected);
+    
+}
+   
 //
 // Setup connection to server
 //
@@ -347,7 +386,7 @@ void CMailIMAP::connect(void) {
 // Disconnect from server
 //
 
-void CMailIMAP::disconnect() {
+void CMailIMAP::disconnect(void) {
 
     if (!this->bConnected) {
         throw CMailIMAP::Exception("Not connected to server.");
