@@ -6,7 +6,7 @@
  * Created on January 24, 2017, 2:33 PM
  *
  * Copyright 2016.
- 
+ *
  */
 
 #ifndef CMAILIMAPBODYSTRUCT_HPP
