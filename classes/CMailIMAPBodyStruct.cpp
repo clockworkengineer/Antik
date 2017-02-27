@@ -1,3 +1,4 @@
+#include "HOST.hpp"
 /*
  * File:   CMailIMAPBodyStruct.cpp
  * 
@@ -261,5 +262,21 @@ void CMailIMAPBodyStruct::walkBodyStructTree(std::unique_ptr<BodyNode>& bodyNode
             walkFn(bodyNode, bodyPart, walkData);
         }
     }
+
+}
+
+//
+// Main CMailIMAPBodyStruct object constructor. 
+//
+
+CMailIMAPBodyStruct::CMailIMAPBodyStruct() {
+
+}
+
+//
+// CMailIMAPBodyStruct Destructor
+//
+
+CMailIMAPBodyStruct::~CMailIMAPBodyStruct() {
 
 }

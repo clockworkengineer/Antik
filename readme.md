@@ -77,7 +77,7 @@ CMailIMAP provides a way to connect to an IMAP server, send commands and receive
 # [CMailIMAPParse](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CMailIMAPParse.cpp) #
 
 CMailIMAPParse is used to take any responses returned from IMAP commands, parse them and a return 
-pointer to a suitable structure representation. This structure includes a return status and also error message field for when an error occurs.  It contains all static methods but no data so has no constructors or a destructor.
+pointer to a suitable structure representation. This structure includes a return status and also error message field for when an error occurs.
 
 # [CMailIMAPBodyStruct](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CMailIMAPBodyStruct.cpp) #
 

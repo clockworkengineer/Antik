@@ -244,7 +244,7 @@ int main(int argc, char** argv) {
 
         argData.destinationFolder /= argData.mailBoxNameStr;
         if (!argData.destinationFolder.string().empty() && !fs::exists(argData.destinationFolder)) {
-            fs::create_directory(argData.destinationFolder);
+            fs::create_directories(argData.destinationFolder);
         }
 
         // Connect

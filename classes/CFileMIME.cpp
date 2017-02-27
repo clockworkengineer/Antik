@@ -1,3 +1,4 @@
+#include "HOST.hpp"
 /*
  * File:   CFileMIME.cpp
  * 
@@ -57,7 +58,8 @@ const char CFileMIME::kQuotedPrintPrefix='=';
 
 // File extension to MIME type mapping table
 
-std::unordered_map<std::string, std::string> CFileMIME::extToMimeType = {
+std::unordered_map<std::string, std::string> CFileMIME::extToMimeType
+{
     
     { "ez", "application/andrew-inset"},
     { "anx", "application/annodex"},

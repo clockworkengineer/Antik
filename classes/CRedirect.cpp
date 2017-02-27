@@ -1,3 +1,4 @@
+#include "HOST.hpp"
 /*
  * File:   CRedirect.cpp
  * 

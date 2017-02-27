@@ -1,3 +1,4 @@
+#include "HOST.hpp"
 /*
  * File:   CMailIMAPParse.cpp
  * 
@@ -12,12 +13,10 @@
 //
 // Class: CMailIMAPParse
 // 
-// Description: A class to parse CMailIMAP command responses. It has
-// purely static data and functions and cannot be instantiated (ie. 
-// it contains no constructor/destructor. It is designed to expect
-// syntactically correct commands from any server and not report any
-// specific errors; but if any occur to report so through an exception
-// and exit processing gracefully.
+// Description: A class to parse CMailIMAP command responses. It is designed 
+// to expect syntactically correct commands from any server and not report any
+// specific errors; but if any occur to report so through an exception exit 
+// processing gracefully.
 //
 // NOTE: IMAP commands sent can be any in combination of case and this 
 // is mirrored back in the response. So perform case-insensitive compares 
@@ -61,8 +60,8 @@
 // IMAP command string to parse response mapping table
 //
 
-std::unordered_map<std::string, CMailIMAPParse::ParseFunction> CMailIMAPParse::parseCommmandMap = {
-
+std::unordered_map<std::string, CMailIMAPParse::ParseFunction> CMailIMAPParse::parseCommmandMap
+{
     {CMailIMAP::kLISTStr, parseLIST},
     {CMailIMAP::kLSUBStr, parseLIST},
     {CMailIMAP::kSEARCHStr, parseSEARCH},
@@ -83,7 +82,8 @@ std::unordered_map<std::string, CMailIMAPParse::ParseFunction> CMailIMAPParse::p
 // IMAP command string to internal enum code map table
 //
 
-std::unordered_map<std::string, CMailIMAPParse::Commands> CMailIMAPParse::stringToCodeMap = {
+std::unordered_map<std::string, CMailIMAPParse::Commands> CMailIMAPParse::stringToCodeMap 
+{
     { CMailIMAP::kSTARTTLSStr, Commands::STARTTLS},
     { CMailIMAP::kAUTHENTICATEStr, Commands::AUTHENTICATE},
     { CMailIMAP::kLOGINStr, Commands::LOGIN},
@@ -792,7 +792,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseResponse(const std::string & c
 
     std::istringstream responseStream(commandResponseStr);
     std::string commandLineStr;
-
+ 
     std::getline(responseStream, commandLineStr, '\n');
     commandLineStr.pop_back();
 
@@ -814,7 +814,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseResponse(const std::string & c
 //
 
 std::string CMailIMAPParse::commandCodeString(CMailIMAPParse::Commands commandCode) {
-
+    
     for (auto commandEntry : stringToCodeMap) {
         if (commandEntry.second == commandCode) {
             return (commandEntry.first);
@@ -824,5 +824,21 @@ std::string CMailIMAPParse::commandCodeString(CMailIMAPParse::Commands commandCo
     Exception("commandCodeString() : Invalid command code.");
 
     return (""); // Never reached.
+
+}
+
+//
+// Main CMailIMAPParse object constructor. 
+//
+
+CMailIMAPParse::CMailIMAPParse() {
+
+}
+
+//
+// CMailIMAPParse Destructor
+//
+
+CMailIMAPParse::~CMailIMAPParse() {
 
 }

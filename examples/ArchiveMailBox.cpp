@@ -276,7 +276,7 @@ std::string getSearchDate(fs::path destinationFolder) {
 // ============================
 
 int main(int argc, char** argv) {
-
+    
     try {
 
         ParamArgData argData;
@@ -303,7 +303,7 @@ int main(int argc, char** argv) {
         argData.destinationFolder /= argData.mailBoxNameStr;
         if (!argData.destinationFolder.string().empty() && !fs::exists(argData.destinationFolder)) {
             std::cout << "Creating destination folder = [" << argData.destinationFolder << "]" << std::endl;
-            fs::create_directory(argData.destinationFolder);
+            fs::create_directories(argData.destinationFolder);
         }
 
         // Get newest file creation date for search
@@ -370,4 +370,6 @@ int main(int argc, char** argv) {
 
     exit(EXIT_SUCCESS);
 
+
 }
+

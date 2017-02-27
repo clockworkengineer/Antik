@@ -121,10 +121,14 @@ public:
     // ============
     // CONSTRUCTORS
     // ============
+    
+    CMailIMAPBodyStruct();
 
     // ==========
     // DESTRUCTOR
     // ==========
+    
+    virtual ~CMailIMAPBodyStruct();
 
     // ==============
     // PUBLIC METHODS
@@ -163,10 +167,8 @@ private:
     // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
     // ===========================================
 
-    CMailIMAPBodyStruct() = delete;
     CMailIMAPBodyStruct(const CMailIMAPBodyStruct & orig) = delete;
     CMailIMAPBodyStruct(const CMailIMAPBodyStruct && orig) = delete;
-    virtual ~CMailIMAPBodyStruct() = delete;
     CMailIMAPBodyStruct& operator=(CMailIMAPBodyStruct other) = delete;
 
     // ===============

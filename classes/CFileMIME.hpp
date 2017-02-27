@@ -70,11 +70,7 @@ public:
     // ============
     // CONSTRUCTORS
     // ============
-    
-    //
-    // Main constructor
-    //
-    
+      
     CFileMIME();
     
     // ==========

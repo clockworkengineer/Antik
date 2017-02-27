@@ -287,15 +287,19 @@ public:
     typedef  std::unique_ptr<LogOutResponse> LOGOUTRESPONSE;
     typedef  std::unique_ptr<IdleResponse> IDLERESPONSE;
 
-    // ============
+     // ============
     // CONSTRUCTORS
     // ============
     
+    CMailIMAPParse();
+
     // ==========
     // DESTRUCTOR
     // ==========
-
-    // ==============
+    
+    virtual ~CMailIMAPParse();
+    
+  // ==============
     // PUBLIC METHODS
     // ==============
     
@@ -344,10 +348,8 @@ private:
     // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
     // ===========================================
     
-    CMailIMAPParse() = delete;
     CMailIMAPParse(const CMailIMAPParse & orig) = delete;
     CMailIMAPParse(const CMailIMAPParse && orig) = delete;
-    virtual ~CMailIMAPParse() = delete;
     CMailIMAPParse& operator=(CMailIMAPParse other) = delete;
     
     // ===============
