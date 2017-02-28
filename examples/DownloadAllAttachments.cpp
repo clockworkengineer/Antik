@@ -289,10 +289,10 @@ int main(int argc, char** argv) {
                 }
             }
         }
-       
-        imap.disconnect();
-
+         
         std::cout << "Disconnecting from server [" << argData.serverURLStr << "]" << std::endl;
+
+        imap.disconnect();
 
 
     //
