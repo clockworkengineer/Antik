@@ -300,12 +300,12 @@ int main(int argc, char** argv) {
 
         // Create destination folder
 
-        argData.destinationFolder /= argData.mailBoxNameStr;
+        argData.destinationFolder += argData.mailBoxNameStr;
         if (!argData.destinationFolder.string().empty() && !fs::exists(argData.destinationFolder)) {
-            std::cout << "Creating destination folder = [" << argData.destinationFolder << "]" << std::endl;
+            std::cout << "Creating destination folder = [" << argData.destinationFolder.native() << "]" << std::endl;
             fs::create_directories(argData.destinationFolder);
         }
-
+        
         // Get newest file creation date for search
 
         if (argData.bOnlyUpdates) {

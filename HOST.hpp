@@ -18,7 +18,11 @@
 #if defined(_POSIX_VERSION)
 	/* POSIX compliant */
 #else
+#ifdef __CYGWIN__
+#include <sys/select.h>
+#else
 static_assert(false, "TRYING TO BUILD FOR NON-POSIX UNIX PLATFORM.");
+#endif
 #endif
 #else
 static_assert(false, "TRYING TO BUILD FOR NON-UNIX PLATFORM.");
