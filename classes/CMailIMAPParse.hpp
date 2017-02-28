@@ -42,18 +42,7 @@ public:
         : std::runtime_error("CMailIMAPParse Failure: "+ messageStr) { }
         
     };
-    
-    //
-    // Command data structure
-    //
-    
-    struct CommandData {
-        std::string tagStr;                      // Command tag
-        std::string commandStr;                  // Command string
-        std::string commandLineStr;              // Full command line
-        std::istringstream& commandRespStream;   // Command response stream (Note reference)
-    };
-    
+        
     //
     // Enumeration of command codes.
     //
@@ -85,6 +74,17 @@ public:
         NOOP,           // Supported
         LOGOUT,         // Supported
         IDLE            // Supported
+    };
+
+    //
+    // Command data structure
+    //
+    
+    struct CommandData {
+        std::string tagStr;                      // Command tag
+        Commands    commandCode;                 // Command code
+        std::string commandLineStr;              // Full command line
+        std::istringstream& commandRespStream;   // Command response stream (Note reference)
     };
 
     //
@@ -387,10 +387,10 @@ private:
     // =================
 
     //
-    // IMAP command to parse response function mapping table
+    // IMAP command code to parse response function mapping table
     //
     
-    static std::unordered_map<std::string, ParseFunction> parseCommmandMap;
+    static std::unordered_map<int, ParseFunction> parseCommmandMap;
     
     //
     // IMAP command string to code mapping table

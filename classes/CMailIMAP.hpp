@@ -52,66 +52,66 @@ public:
     // End of line
     //
     
-    static const std::string kEOLStr;
+    const static  std::string kEOLStr;
  
     //
     // Command string constants
     //
     
-    static const std::string kSTARTTLSStr;
-    static const std::string kAUTHENTICATEStr;
-    static const std::string kSEARCHStr;
-    static const std::string kSELECTStr;
-    static const std::string kEXAMINEStr;
-    static const std::string kCREATEStr;
-    static const std::string kDELETEStr;
-    static const std::string kRENAMEStr;
-    static const std::string kLOGINStr;
-    static const std::string kSUBSCRIBEStr;
-    static const std::string kUNSUBSCRIBEStr;
-    static const std::string kLISTStr;
-    static const std::string kLSUBStr;
-    static const std::string kSTATUSStr;
-    static const std::string kAPPENDStr;
-    static const std::string kCHECKStr;
-    static const std::string kCLOSEStr;
-    static const std::string kEXPUNGEStr;
-    static const std::string kFETCHStr;
-    static const std::string kSTOREStr;
-    static const std::string kCOPYStr;
-    static const std::string kNOOPStr;
-    static const std::string kLOGOUTStr;
-    static const std::string kIDLEStr;
-    static const std::string kCAPABILITYStr;
-    static const std::string kUIDStr;
+    const static  std::string kSTARTTLSStr;
+    const static  std::string kAUTHENTICATEStr;
+    const static  std::string kSEARCHStr;
+    const static  std::string kSELECTStr;
+    const static  std::string kEXAMINEStr;
+    const static  std::string kCREATEStr;
+    const static  std::string kDELETEStr;
+    const static  std::string kRENAMEStr;
+    const static  std::string kLOGINStr;
+    const static  std::string kSUBSCRIBEStr;
+    const static  std::string kUNSUBSCRIBEStr;
+    const static  std::string kLISTStr;
+    const static  std::string kLSUBStr;
+    const static  std::string kSTATUSStr;
+    const static  std::string kAPPENDStr;
+    const static  std::string kCHECKStr;
+    const static  std::string kCLOSEStr;
+    const static  std::string kEXPUNGEStr;
+    const static  std::string kFETCHStr;
+    const static  std::string kSTOREStr;
+    const static  std::string kCOPYStr;
+    const static  std::string kNOOPStr;
+    const static  std::string kLOGOUTStr;
+    const static  std::string kIDLEStr;
+    const static  std::string kCAPABILITYStr;
+    const static  std::string kUIDStr;
     
     //
     // Response strings
     //
     
-    static const std::string kUntaggedStr;
-    static const std::string kOKStr;
-    static const std::string kBADStr;
-    static const std::string kNOStr;
-    static const std::string kFLAGSStr;
-    static const std::string kPERMANENTFLAGSStr;
-    static const std::string kUIDVALIDITYStr;
-    static const std::string kUIDNEXTStr;
-    static const std::string kHIGHESTMODSEQStr;
-    static const std::string kUNSEENStr;
-    static const std::string kEXISTSStr;
-    static const std::string kRECENTStr;
-    static const std::string kDONEStr;
-    static const std::string kContinuationStr;
-    static const std::string kENVELOPEStr;
-    static const std::string kBODYSTRUCTUREStr;
-    static const std::string kBODYStr;
-    static const std::string kRFC822Str;
-    static const std::string kINTERNALDATEStr;
-    static const std::string kRFC822HEADERStr;
-    static const std::string kRFC822SIZEStr;
-    static const std::string kRFC822TEXTStr;
-    static const std::string kBYEStr;
+    const static  std::string kUntaggedStr;
+    const static  std::string kOKStr;
+    const static  std::string kBADStr;
+    const static  std::string kNOStr;
+    const static  std::string kFLAGSStr;
+    const static  std::string kPERMANENTFLAGSStr;
+    const static  std::string kUIDVALIDITYStr;
+    const static  std::string kUIDNEXTStr;
+    const static  std::string kHIGHESTMODSEQStr;
+    const static  std::string kUNSEENStr;
+    const static  std::string kEXISTSStr;
+    const static  std::string kRECENTStr;
+    const static  std::string kDONEStr;
+    const static  std::string kContinuationStr;
+    const static  std::string kENVELOPEStr;
+    const static  std::string kBODYSTRUCTUREStr;
+    const static  std::string kBODYStr;
+    const static  std::string kRFC822Str;
+    const static  std::string kINTERNALDATEStr;
+    const static  std::string kRFC822HEADERStr;
+    const static  std::string kRFC822SIZEStr;
+    const static  std::string kRFC822TEXTStr;
+    const static  std::string kBYEStr;
 
     // ============
     // CONSTRUCTORS
