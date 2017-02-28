@@ -170,7 +170,7 @@ void downloadAttachment(CMailIMAP& imap, fs::path& destinationFolder, CMailIMAPB
                     std::string decodedStringStr;
                     std::istringstream responseStream(resp.second);
                     std::ofstream ofs(fullFilePath.string(), std::ios::binary);
-                    std::cout << "Creating [" << fullFilePath << "]" << std::endl;
+                    std::cout << "Creating [" << fullFilePath.native() << "]" << std::endl;
                     // Encoded lines have terminating '\r\n' the getline removes '\n'
                     for (std::string lineStr; std::getline(responseStream, lineStr, '\n');) {
                         lineStr.pop_back(); // Remove '\r'
@@ -240,15 +240,18 @@ int main(int argc, char** argv) {
         imap.setServer(argData.serverURLStr);
         imap.setUserAndPassword(argData.userNameStr, argData.userPasswordStr);
 
-        // Create destination folder
+       // Create destination folder
 
-        argData.destinationFolder /= argData.mailBoxNameStr;
+        argData.destinationFolder += argData.mailBoxNameStr;
         if (!argData.destinationFolder.string().empty() && !fs::exists(argData.destinationFolder)) {
+            std::cout << "Creating destination folder = [" << argData.destinationFolder.native() << "]" << std::endl;
             fs::create_directories(argData.destinationFolder);
         }
-
-        // Connect
         
+        // Connect
+ 
+        std::cout << "Connecting to server [" << argData.serverURLStr << "]" << std::endl;
+               
         imap.connect();
 
         // SELECT mailbox
@@ -257,6 +260,8 @@ int main(int argc, char** argv) {
         parsedResponse = CMailIMAPParse::parseResponse(parsedResponseStr);
         if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
             throw CMailIMAP::Exception("IMAP SELECT "+parsedResponse->errorMessageStr);
+        } else if (parsedResponse->bBYESent) {
+            throw CMailIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
         }
 
         // FETCH BODYSTRUCTURE for all mail
@@ -265,6 +270,8 @@ int main(int argc, char** argv) {
         parsedResponse = CMailIMAPParse::parseResponse(parsedResponseStr);
         if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
             throw CMailIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessageStr);
+        }  else if (parsedResponse->bBYESent) {
+            throw CMailIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
         }
 
         CMailIMAPParse::FetchResponse *ptr = static_cast<CMailIMAPParse::FetchResponse *> (parsedResponse.get());
@@ -282,6 +289,11 @@ int main(int argc, char** argv) {
                 }
             }
         }
+       
+        imap.disconnect();
+
+        std::cout << "Disconnecting from server [" << argData.serverURLStr << "]" << std::endl;
+
 
     //
     // Catch any errors

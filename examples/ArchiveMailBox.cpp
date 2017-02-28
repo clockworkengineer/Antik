@@ -218,7 +218,7 @@ void fetchEmailAndArchive(CMailIMAP& imap, fs::path& destinationFolder, std::uin
         if (!fs::exists(fullFilePath)) {
             std::istringstream emailBodyStream(emailBody);
             std::ofstream ofs(fullFilePath.string(), std::ios::binary);
-            std::cout << "Creating [" << fullFilePath << "]" << std::endl;
+            std::cout << "Creating [" << fullFilePath.native() << "]" << std::endl;
             for (std::string lineStr; std::getline(emailBodyStream, lineStr, '\n');) {
                 lineStr.push_back('\n');
                 ofs.write(&lineStr[0], lineStr.length());
