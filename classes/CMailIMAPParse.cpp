@@ -80,7 +80,7 @@ std::unordered_map<int, CMailIMAPParse::ParseFunction> CMailIMAPParse::parseComm
 
 //
 // IMAP command string to internal enum code map table. Populated at runtime
-// because command string constant objects need to be avaiable.
+// because command string constant objects need to be available.
 //
 
 std::unordered_map<std::string, CMailIMAPParse::Commands> CMailIMAPParse::stringToCodeMap;
@@ -287,12 +287,14 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSEARCH(CMailIMAPParse::Command
         if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kSEARCHStr)) {
             
             lineStr = lineStr.substr(std::string(CMailIMAP::kUntaggedStr + " " + CMailIMAP::kSEARCHStr).length());
-            
-            std::istringstream listStream(lineStr); // Read indexes/UIDs
-            while (listStream.good()) {
-                uint64_t index;
-                listStream >> index;
-                resp->indexes.push_back(index);
+
+            if (!lineStr.empty()) {
+                std::istringstream listStream(lineStr); // Read indexes/UIDs
+                while (listStream.good()) {
+                    uint64_t index = 0;
+                    listStream >> index;
+                    resp->indexes.push_back(index);
+                }
             }
 
         } else {
@@ -370,12 +372,13 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTATUS(CMailIMAPParse::Command
 
             lineStr = stringBetween(lineStr, '(', ')');
 
-            std::istringstream listStream(lineStr);
-            std::string itemStr, valueStr;
-
-            while (listStream.good()) {
-                listStream >> itemStr >> valueStr;
-                resp->responseMap.insert({itemStr, valueStr});
+            if (!lineStr.empty()) {
+                std::istringstream listStream(lineStr);
+                while (listStream.good()) {
+                    std::string itemStr, valueStr;
+                    listStream >> itemStr >> valueStr;
+                    resp->responseMap.insert({itemStr, valueStr});
+                }
             }
 
         } else {
