@@ -381,7 +381,13 @@ private:
     static BASERESPONSE parseNOOP(CommandData& commandData);
     static BASERESPONSE parseLOGOUT(CommandData& commandData);
     static BASERESPONSE parseDefault(CommandData& commandData);
-
+    
+    //
+    // Load IMAP command string to internal enum code map table
+    //
+   
+    static std::unordered_map<std::string, Commands> loadStringToCodeMap();
+    
     // =================
     // PRIVATE VARIABLES
     // =================

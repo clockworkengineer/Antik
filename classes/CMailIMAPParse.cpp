@@ -79,39 +79,11 @@ std::unordered_map<int, CMailIMAPParse::ParseFunction> CMailIMAPParse::parseComm
 };
 
 //
-// IMAP command string to internal enum code map table
+// IMAP command string to internal enum code map table. Populated at runtime
+// because command string constant objects need to be avaiable.
 //
 
-std::unordered_map<std::string, CMailIMAPParse::Commands> CMailIMAPParse::stringToCodeMap 
-{
-    { CMailIMAP::kSTARTTLSStr, Commands::STARTTLS},
-    { CMailIMAP::kAUTHENTICATEStr, Commands::AUTHENTICATE},
-    { CMailIMAP::kLOGINStr, Commands::LOGIN},
-    { CMailIMAP::kCAPABILITYStr, Commands::CAPABILITY},
-    { CMailIMAP::kSELECTStr, Commands::SELECT},
-    { CMailIMAP::kEXAMINEStr, Commands::EXAMINE},
-    { CMailIMAP::kCREATEStr, Commands::CREATE},
-    { CMailIMAP::kDELETEStr, Commands::DELETE},
-    { CMailIMAP::kRENAMEStr, Commands::RENAME},
-    { CMailIMAP::kSUBSCRIBEStr, Commands::SUBSCRIBE},
-    { CMailIMAP::kUNSUBSCRIBEStr, Commands::UNSUBSCRIBE},
-    { CMailIMAP::kLISTStr, Commands::LIST},
-    { CMailIMAP::kLSUBStr, Commands::LSUB},
-    { CMailIMAP::kSTATUSStr, Commands::STATUS},
-    { CMailIMAP::kAPPENDStr, Commands::APPEND},
-    { CMailIMAP::kCHECKStr, Commands::CHECK},
-    { CMailIMAP::kCLOSEStr, Commands::CLOSE},
-    { CMailIMAP::kEXPUNGEStr, Commands::EXPUNGE},
-    { CMailIMAP::kSEARCHStr, Commands::SEARCH},
-    { CMailIMAP::kFETCHStr, Commands::FETCH},
-    { CMailIMAP::kSTOREStr, Commands::STORE},
-    { CMailIMAP::kCOPYStr, Commands::COPY},
-    { CMailIMAP::kUIDStr, Commands::UID},
-    { CMailIMAP::kNOOPStr, Commands::NOOP},
-    { CMailIMAP::kLOGOUTStr, Commands::LOGOUT},
-    { CMailIMAP::kIDLEStr, Commands::IDLE}
-
-};
+std::unordered_map<std::string, CMailIMAPParse::Commands> CMailIMAPParse::stringToCodeMap;
 
 // =======================
 // PUBLIC STATIC VARIABLES
@@ -794,6 +766,10 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseResponse(const std::string & c
     std::istringstream responseStream(commandResponseStr);
     std::string commandLineStr;
  
+    if (stringToCodeMap.empty()) {
+        stringToCodeMap=loadStringToCodeMap();
+    }
+
     std::getline(responseStream, commandLineStr, '\n');
     commandLineStr.pop_back();
 
@@ -816,6 +792,10 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseResponse(const std::string & c
 
 std::string CMailIMAPParse::commandCodeString(CMailIMAPParse::Commands commandCode) {
     
+    if (stringToCodeMap.empty()) {
+        stringToCodeMap=loadStringToCodeMap();
+    }
+    
     for (auto commandEntry : stringToCodeMap) {
         if (commandEntry.second == commandCode) {
             return (commandEntry.first);
@@ -825,6 +805,47 @@ std::string CMailIMAPParse::commandCodeString(CMailIMAPParse::Commands commandCo
     Exception("commandCodeString() : Invalid command code.");
 
     return (""); // Never reached.
+
+}
+
+//
+// Load IMAP command string to internal enum code map table
+//
+
+std::unordered_map<std::string, CMailIMAPParse::Commands> CMailIMAPParse::loadStringToCodeMap() {
+
+    std::unordered_map<std::string, CMailIMAPParse::Commands> map 
+    {
+        { CMailIMAP::kSTARTTLSStr, Commands::STARTTLS},
+        { CMailIMAP::kAUTHENTICATEStr, Commands::AUTHENTICATE},
+        { CMailIMAP::kLOGINStr, Commands::LOGIN},
+        { CMailIMAP::kCAPABILITYStr, Commands::CAPABILITY},
+        { CMailIMAP::kSELECTStr, Commands::SELECT},
+        { CMailIMAP::kEXAMINEStr, Commands::EXAMINE},
+        { CMailIMAP::kCREATEStr, Commands::CREATE},
+        { CMailIMAP::kDELETEStr, Commands::DELETE},
+        { CMailIMAP::kRENAMEStr, Commands::RENAME},
+        { CMailIMAP::kSUBSCRIBEStr, Commands::SUBSCRIBE},
+        { CMailIMAP::kUNSUBSCRIBEStr, Commands::UNSUBSCRIBE},
+        { CMailIMAP::kLISTStr, Commands::LIST},
+        { CMailIMAP::kLSUBStr, Commands::LSUB},
+        { CMailIMAP::kSTATUSStr, Commands::STATUS},
+        { CMailIMAP::kAPPENDStr, Commands::APPEND},
+        { CMailIMAP::kCHECKStr, Commands::CHECK},
+        { CMailIMAP::kCLOSEStr, Commands::CLOSE},
+        { CMailIMAP::kEXPUNGEStr, Commands::EXPUNGE},
+        { CMailIMAP::kSEARCHStr, Commands::SEARCH},
+        { CMailIMAP::kFETCHStr, Commands::FETCH},
+        { CMailIMAP::kSTOREStr, Commands::STORE},
+        { CMailIMAP::kCOPYStr, Commands::COPY},
+        { CMailIMAP::kUIDStr, Commands::UID},
+        { CMailIMAP::kNOOPStr, Commands::NOOP},
+        { CMailIMAP::kLOGOUTStr, Commands::LOGOUT},
+        { CMailIMAP::kIDLEStr, Commands::IDLE}
+    
+    };
+
+    return (map);
 
 }
 
