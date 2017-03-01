@@ -130,6 +130,21 @@ bool CMailIMAP::bCurlVerbosity=false;
 // ===============
 
 //
+// Generate curl error message and throw exception
+//
+
+void CMailIMAP::throwCurlError(std::string baseMessageStr) {
+    
+    std::string errMsgStr;
+    if (std::strlen(this->errMsgBuffer) != 0) {
+        errMsgStr = this->errMsgBuffer;
+    } else {
+        errMsgStr = curl_easy_strerror(this->res);
+    }
+    throw CMailIMAP::Exception(baseMessageStr + errMsgStr);
+}
+
+//
 // Wait on send/recv curl socket event or timeout/error.
 //
 
@@ -183,13 +198,7 @@ void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
             continue;
             
         } else if (this->res != CURLE_OK) {
-            std::string errMsgStr;
-            if (std::strlen(this->errMsgBuffer) != 0) {
-                errMsgStr = this->errMsgBuffer;
-            } else {
-                errMsgStr = curl_easy_strerror(res);
-            }
-            throw CMailIMAP::Exception("curl_easy_send(): " + errMsgStr);
+            throwCurlError("curl_easy_send(): ");
         }
         
         bytesCopied += len;
@@ -216,7 +225,7 @@ void CMailIMAP::waitForIMAPCommandResponse(const std::string& commandTagStr, std
     commandResponseStr.clear();
 
     do {
-
+        
         this->errMsgBuffer[0] = 0;
         this->res = curl_easy_recv(this->curl, &this->rxBuffer[currPos], sizeof (this->rxBuffer) - currPos, &len);
 
@@ -239,13 +248,7 @@ void CMailIMAP::waitForIMAPCommandResponse(const std::string& commandTagStr, std
             currPos += len;
 
         } else if (this->res != CURLE_AGAIN) {
-            std::string errMsgStr;
-            if (std::strlen(this->errMsgBuffer) != 0) {
-                errMsgStr = this->errMsgBuffer;
-            } else {
-                errMsgStr = curl_easy_strerror(this->res);
-            }
-            throw CMailIMAP::Exception("curl_easy_recv(): " + errMsgStr);
+            throwCurlError("curl_easy_recv(): ");
         } else {
             waitOnSocket(true, kWaitOnSocketTimeOut);
         }
@@ -400,13 +403,7 @@ void CMailIMAP::connect(void) {
         this->errMsgBuffer[0] = 0;
         this->res = curl_easy_perform(this->curl);
         if (this->res != CURLE_OK) {
-            std::string errMsgStr;
-            if (std::strlen(this->errMsgBuffer) != 0) {
-                errMsgStr = this->errMsgBuffer;
-            } else {
-                errMsgStr = curl_easy_strerror(this->res);
-            }
-            throw CMailIMAP::Exception("curl_easy_perform(): " + errMsgStr);
+            throwCurlError("curl_easy_perform(): ");
         }
 
         // Get curl socket using CURLINFO_ACTIVESOCKET first then depreciated CURLINFO_LASTSOCKET
@@ -418,13 +415,7 @@ void CMailIMAP::connect(void) {
             this->res = curl_easy_getinfo(this->curl, CURLINFO_LASTSOCKET, &this->socketfd);
         }
         if (this->res != CURLE_OK) {
-            std::string errMsgStr;
-            if (std::strlen(this->errMsgBuffer) != 0) {
-                errMsgStr = this->errMsgBuffer;
-            } else {
-                errMsgStr = curl_easy_strerror(this->res);
-            }
-            throw CMailIMAP::Exception("Could not get curl socket.");
+            throwCurlError("Could not get curl socket.");
         }
         
         this->bConnected = true;

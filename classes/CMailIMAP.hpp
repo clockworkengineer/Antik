@@ -183,6 +183,11 @@ private:
     // ===============
 
     //
+    // Generate curl error message and throw exception
+    //
+    void throwCurlError(std::string baseMessageStr);
+    
+    //
     // Send IDLE/APPEND command (requires a special handler).
     //
     
