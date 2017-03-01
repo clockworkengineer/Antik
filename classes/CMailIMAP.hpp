@@ -165,8 +165,12 @@ private:
     // ===========================
     // PRIVATE TYPES AND CONSTANTS
     // ===========================
-   
-   // ===========================================
+    
+    // Wait on socket timeout in milliseconds
+    
+    static const long kWaitOnSocketTimeOut = 60000;
+    
+    // ===========================================
     // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
     // ===========================================
 
@@ -191,7 +195,7 @@ private:
 
     void sendIMAPCommand(const std::string& commandLineStr);
     void waitForIMAPCommandResponse(const std::string& commandTag, std::string& commandResponseStr);
-
+    int waitOnSocket(bool bRecv, long timeoutMS);
     //
     // Generate next command tag
     //
@@ -210,6 +214,7 @@ private:
 
     CURL *curl = nullptr;               // curl handle
     CURLcode res = CURLE_OK;            // curl status
+    curl_socket_t socketfd;             // curl socket
     static bool bCurlVerbosity;         // curl verbosity setting 
  
     std::string commandResponseStr;     // IMAP command response

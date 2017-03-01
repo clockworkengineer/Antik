@@ -130,10 +130,41 @@ bool CMailIMAP::bCurlVerbosity=false;
 // ===============
 
 //
+// Wait on send/recv curl socket event or timeout/error.
+//
+
+int CMailIMAP::waitOnSocket(bool bRecv, long timeoutMS) {
+
+    struct timeval timeoutValue;
+    fd_set recvfd, sendfd, errorfd;
+    int res;
+
+    timeoutValue.tv_sec = timeoutMS / 1000;
+    timeoutValue.tv_usec = (timeoutMS % 1000) * 1000;
+
+    FD_ZERO(&recvfd);
+    FD_ZERO(&sendfd);
+    FD_ZERO(&errorfd);
+
+    FD_SET(this->socketfd, &errorfd);
+
+    if (bRecv) {
+        FD_SET(this->socketfd, &recvfd);
+    } else {
+        FD_SET(this->socketfd, &sendfd);
+    }
+
+    res = select(this->socketfd + 1, &recvfd, &sendfd, &errorfd, &timeoutValue);
+
+    return res;
+
+}
+
+//
 // Send IMAP command to server. The maximum buffer size is CURL_MAX_WRITE_SIZE
 // so split up message into chunks before sending. This currently uses libcurls
 // curl_easy_send to transmit the data and this may return CURLE_AGAIN if the
-// underlying transport module is not ready to send the data.
+// underlying transport module is not ready to send the data; if so wait on socket.
 
 void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
 
@@ -148,7 +179,9 @@ void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
                 CURL_MAX_WRITE_SIZE), &len);
         
         if (this->res == CURLE_AGAIN) {
+            waitOnSocket(false, kWaitOnSocketTimeOut);
             continue;
+            
         } else if (this->res != CURLE_OK) {
             std::string errMsgStr;
             if (std::strlen(this->errMsgBuffer) != 0) {
@@ -156,7 +189,7 @@ void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
             } else {
                 errMsgStr = curl_easy_strerror(res);
             }
-            throw CMailIMAP::Exception("curl_easy_send() failed: " + errMsgStr);
+            throw CMailIMAP::Exception("curl_easy_send(): " + errMsgStr);
         }
         
         bytesCopied += len;
@@ -168,8 +201,9 @@ void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
 //
 // Wait for reply from sent IMAP command. Keep filling buffer until the commandTag is found and
 // we have a full line. Also if we run out of buffer space then append current buffer to response
-// and start at front of rxBuffer. Note: Any old response left over is cleared. Also if connection
-// closed by server then CURLE_UNSUPPORTED_PROTOCOL returned so append current response and return.
+// and start at front of rxBuffer. Note: Any old response left over is cleared. If connection
+// closed by server then len = 0 on CURLE_OK returned so append current response and return. If
+// no data to read (CURLE_AGAIN) then wait on socket.
 //
 
 void CMailIMAP::waitForIMAPCommandResponse(const std::string& commandTagStr, std::string& commandResponseStr) {
@@ -189,35 +223,31 @@ void CMailIMAP::waitForIMAPCommandResponse(const std::string& commandTagStr, std
         if (this->res == CURLE_OK) {
 
             this->rxBuffer[currPos + len] = '\0';
-            if ((tagptr = strstr(this->rxBuffer, searchTagStr.c_str())) != nullptr) {
+            
+            if (len == 0) {
+                commandResponseStr.append(this->rxBuffer);
+                break;
+              
+            } else if ((tagptr = strstr(this->rxBuffer, searchTagStr.c_str())) != nullptr) {
                 if ((this->rxBuffer[currPos + len - 2] == '\r') &&
                         (this->rxBuffer[currPos + len - 1] == '\n')) {
                     commandResponseStr.append(this->rxBuffer);
                     break;
                 }
-            // !!! This should be the proper exit for connection closed by server !!!.
-            } else if (len == 0) {
-                commandResponseStr.append(this->rxBuffer);
-                break;
-
-            }
+            } 
 
             currPos += len;
-        
-        // !!! Connection closed by server !!!.          
-        } else if (this->res == CURLE_UNSUPPORTED_PROTOCOL) {
-            commandResponseStr.append(this->rxBuffer);
-            break;
 
         } else if (this->res != CURLE_AGAIN) {
             std::string errMsgStr;
-
             if (std::strlen(this->errMsgBuffer) != 0) {
                 errMsgStr = this->errMsgBuffer;
             } else {
                 errMsgStr = curl_easy_strerror(this->res);
             }
-            throw CMailIMAP::Exception("curl_easy_recv() failed: " + errMsgStr);
+            throw CMailIMAP::Exception("curl_easy_recv(): " + errMsgStr);
+        } else {
+            waitOnSocket(true, kWaitOnSocketTimeOut);
         }
 
         if (((sizeof (this->rxBuffer) - currPos)) == 0) {
@@ -256,13 +286,15 @@ void CMailIMAP::sendCommandIDLE(const std::string& commandLineStr) {
 
     this->sendIMAPCommand(commandLineStr);
     this->waitForIMAPCommandResponse(kContinuationStr, this->commandResponseStr);
-
     this->waitForIMAPCommandResponse(kUntaggedStr, responseStr);
-
-    this->sendIMAPCommand(kDONEStr + kEOLStr);
-
-    this->waitForIMAPCommandResponse(this->currentTagStr, this->commandResponseStr);
-
+        
+    if (!responseStr.empty()) {
+        this->sendIMAPCommand(kDONEStr + kEOLStr);
+        this->waitForIMAPCommandResponse(this->currentTagStr, this->commandResponseStr);
+    } else {
+        throw CMailIMAP::Exception("Server Disconnect without BYE.");
+    }
+    
     responseStr += this->commandResponseStr;
     this->commandResponseStr = responseStr;
 
@@ -374,9 +406,27 @@ void CMailIMAP::connect(void) {
             } else {
                 errMsgStr = curl_easy_strerror(this->res);
             }
-            throw CMailIMAP::Exception("curl_easy_perform() failed: " + errMsgStr);
+            throw CMailIMAP::Exception("curl_easy_perform(): " + errMsgStr);
         }
 
+        // Get curl socket using CURLINFO_ACTIVESOCKET first then depreciated CURLINFO_LASTSOCKET
+        
+        this->errMsgBuffer[0] = 0;
+        this->res = curl_easy_getinfo(this->curl, CURLINFO_ACTIVESOCKET, &this->socketfd);
+        if (this->res == CURLE_BAD_FUNCTION_ARGUMENT) {
+            this->errMsgBuffer[0] = 0;
+            this->res = curl_easy_getinfo(this->curl, CURLINFO_LASTSOCKET, &this->socketfd);
+        }
+        if (this->res != CURLE_OK) {
+            std::string errMsgStr;
+            if (std::strlen(this->errMsgBuffer) != 0) {
+                errMsgStr = this->errMsgBuffer;
+            } else {
+                errMsgStr = curl_easy_strerror(this->res);
+            }
+            throw CMailIMAP::Exception("Could not get curl socket.");
+        }
+        
         this->bConnected = true;
 
     }
@@ -460,7 +510,7 @@ void CMailIMAP::init(bool bCurlVerbosity) {
     //
 
     if (curl_global_init(CURL_GLOBAL_ALL)) {
-        throw CMailIMAP::Exception("curl_global_init() : failure to initialize libcurl.");
+        throw CMailIMAP::Exception("curl_global_init() : could not initialize libcurl.");
     }
     
     CMailIMAP::bCurlVerbosity = bCurlVerbosity;
