@@ -197,6 +197,9 @@ void CMailIMAPParse::parseStatus(const std::string& tagStr, const std::string& l
             || (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kBADStr))) {
         std::cerr << lineStr << std::endl;
 
+    } else if (stringEqual(lineStr, CMailIMAP::kUntaggedStr)) {
+        // Absorb any non command related untagged and not BAD or NO
+
     } else {
         throw Exception("error while parsing IMAP command ["+lineStr+"]");
     }
@@ -578,7 +581,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::CommandD
                         std::getline(commandData.commandRespStream, lineStr, '\n');   // Move to next
                     }
                 } else {
-                    commandData.commandRespStream.seekg(-lineLength, std::ios_base::end); // Rewind read to get line
+                    commandData.commandRespStream.seekg(-lineLength, std::ios_base::cur); // Rewind read to get line
                     std::getline(commandData.commandRespStream, lineStr, '\n');
                     throw Exception("error while parsing FETCH command ["+lineStr+"]");
                 }

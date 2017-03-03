@@ -18,7 +18,8 @@
 // .eml files are created within a sub-folder with the mailbox name and with filenames 
 // consisting of the mail UID prefix and the subject line. If parameter --updates is set 
 // then the date of the newest .eml in the destination folder is used as the basis of
-// the IMAP search (ie. only download new e-mails). 
+// the IMAP search (ie. only download new e-mails).  If parameter --all is set then the
+// server is interrogated for a complete mailbox list and these are downloaded.
 //
 // Note: MIME encoded words in the email subject line are decoded to the best ASCII fit
 // available.
@@ -61,13 +62,15 @@ namespace fs = boost::filesystem;
 //
 
 struct ParamArgData {
-    std::string userNameStr; // Email account user name
-    std::string userPasswordStr; // Email account user name password
-    std::string serverURLStr; // SMTP server URL
-    std::string mailBoxNameStr; // Mailbox name
-    fs::path destinationFolder; // Destination folder for attachments
-    std::string configFileNameStr; // Configuration file name
-    bool bOnlyUpdates; // =true search date since last .eml archived
+    std::string userNameStr;        // Email account user name
+    std::string userPasswordStr;    // Email account user name password
+    std::string serverURLStr;       // SMTP server URL
+    std::string mailBoxNameStr;     // Mailbox name
+    fs::path destinationFolder;     // Destination folder for attachments
+    std::string configFileNameStr;  // Configuration file name
+    bool bOnlyUpdates;              // = true search date since last .eml archived
+    bool bAllMailBoxes;             // = true archive all mailboxes
+
 };
 
 //
@@ -77,7 +80,7 @@ struct ParamArgData {
 const int kMaxSubjectLine = 100;
 
 //
-// .eml file exstention
+// .eml file extention
 //
 
 const std::string kEMLFileExt(".eml");
@@ -108,7 +111,8 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
             ("password,p", po::value<std::string>(&argData.userPasswordStr)->required(), "User password")
             ("mailbox,m", po::value<std::string>(&argData.mailBoxNameStr)->required(), "Mailbox name")
             ("destination,d", po::value<fs::path>(&argData.destinationFolder)->required(), "Destination for attachments")
-            ("updates,u", "Search since last file archived.");
+            ("updates,u", "Search since last file archived.")
+            ("all,a", "Search since last file archived.");
 
 }
 
@@ -121,6 +125,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
     // Default values
 
     argData.bOnlyUpdates = false;
+    argData.bAllMailBoxes = false;
 
     // Define and parse the program options
 
@@ -165,6 +170,10 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
             argData.bOnlyUpdates = true;
         }
 
+        if (vm.count("all")) {
+            argData.bAllMailBoxes = true;
+        }
+
         po::notify(vm);
 
     } catch (po::error& e) {
@@ -176,36 +185,53 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 }
 
 //
+// Parse command response and return pointer to parsed data.
+//
+
+CMailIMAPParse::BASERESPONSE parseCommandResponse(std::string commandStr, std::string commandResponseStr) {
+
+    CMailIMAPParse::BASERESPONSE parsedResponse;
+
+    parsedResponse = CMailIMAPParse::parseResponse(commandResponseStr);
+    if (parsedResponse->bBYESent) {
+        throw CMailIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
+    } else if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
+        throw CMailIMAP::Exception(commandStr + ": " + parsedResponse->errorMessageStr);
+    } 
+
+    return (parsedResponse);
+
+}
+
+//
 // Fetch a given emails body and subject line and create an .eml file for it.
 //
 
 void fetchEmailAndArchive(CMailIMAP& imap, fs::path& destinationFolder, std::uint64_t index) {
 
-    std::string parsedResponseStr, subject, emailBody;
+    std::string commandStr, commandResponseStr, subject, emailBody;
     CMailIMAPParse::BASERESPONSE parsedResponse;
 
-    parsedResponseStr = imap.sendCommand("UID FETCH " + std::to_string(index) + " (BODY[] BODY[HEADER.FIELDS (SUBJECT)])");
-    parsedResponse = CMailIMAPParse::parseResponse(parsedResponseStr);
-    if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
-        throw CMailIMAP::Exception("IMAP FETCH " + parsedResponse->errorMessageStr);
-    } else if (parsedResponse->bBYESent) {
-        throw CMailIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
-    }
+    commandStr = "UID FETCH " + std::to_string(index) + " (BODY[] BODY[HEADER.FIELDS (SUBJECT)])";
+    commandResponseStr = imap.sendCommand(commandStr);
+    parsedResponse = parseCommandResponse(commandStr, commandResponseStr);
 
     auto *ptr = static_cast<CMailIMAPParse::FetchResponse *> (parsedResponse.get());
     for (auto fetchEntry : ptr->fetchList) {
-        std::cout << "EMAIL INDEX [" << fetchEntry.index << "]" << std::endl;
+        std::cout << "EMAIL MESSAGE NO. [" << fetchEntry.index << "]" << std::endl;
         for (auto resp : fetchEntry.responseMap) {
             if (resp.first.find("BODY[]") == 0) {
                 emailBody = resp.second;
             } else if (resp.first.find("BODY[HEADER.FIELDS (SUBJECT)]") == 0) {
-                subject = resp.second.substr(8);
-                subject = CFileMIME::convertMIMEStringToASCII(subject);
-                if (subject.length() > kMaxSubjectLine) {   // Truncate for file name
-                    subject = subject.substr(0, kMaxSubjectLine);
-                }
-                for (auto &ch : subject) { // Remove any possible folder hierarchy delimeter
-                    if ((ch == '\\')|| (ch=='/')) ch = ' ';
+                if (resp.second.length() > 8) {      // Contains "Subject:"
+                    subject = resp.second.substr(8);
+                    subject = CFileMIME::convertMIMEStringToASCII(subject);
+                    if (subject.length() > kMaxSubjectLine) { // Truncate for file name
+                        subject = subject.substr(0, kMaxSubjectLine);
+                    }
+                    for (auto &ch : subject) { // Remove any possible folder hierarchy delimeter
+                        if ((ch == '\\') || (ch == '/')) ch = ' ';
+                    }
                 }
             }
         }
@@ -218,11 +244,15 @@ void fetchEmailAndArchive(CMailIMAP& imap, fs::path& destinationFolder, std::uin
         fullFilePath /= "(" + std::to_string(index) + ") " + subject + kEMLFileExt;
         if (!fs::exists(fullFilePath)) {
             std::istringstream emailBodyStream(emailBody);
-            std::ofstream ofs(fullFilePath.string(), std::ios::binary);
-            std::cout << "Creating [" << fullFilePath.native() << "]" << std::endl;
-            for (std::string lineStr; std::getline(emailBodyStream, lineStr, '\n');) {
-                lineStr.push_back('\n');
-                ofs.write(&lineStr[0], lineStr.length());
+            std::ofstream emlFileStream(fullFilePath.string(), std::ios::binary);
+            if (emlFileStream) {
+                std::cout << "Creating [" << fullFilePath.native() << "]" << std::endl;
+                for (std::string lineStr; std::getline(emailBodyStream, lineStr, '\n');) {
+                    lineStr.push_back('\n');
+                    emlFileStream.write(&lineStr[0], lineStr.length());
+                }
+            } else {
+                std::cerr << "Failed to create file [" << fullFilePath << "]" << std::endl;
             }
         }
     }
@@ -262,9 +292,8 @@ std::string getSearchDate(fs::path destinationFolder) {
             dateBuffer.resize(std::strftime(&dateBuffer[0], dateBuffer.length(), "%d-%b-%Y", ptm));
 
         } else {
-            dateBuffer="";
+            dateBuffer = "";
         }
-
 
     }
 
@@ -273,19 +302,37 @@ std::string getSearchDate(fs::path destinationFolder) {
 }
 
 //
-// Convert list of comma separated mailbox names into a vector of names
+// Convert list of comma separated mailbox names / list all mailboxes and place into vector or mailbox name strings.
 //
 
-void createMailBoxList(std::string mailBoxStr, std::vector<std::string>& mailBoxList) {
-    
-    std::istringstream mailBoxStream(mailBoxStr);
+void createMailBoxList(CMailIMAP& imap, ParamArgData& argData, std::vector<std::string>& mailBoxList) {
 
-    for (std::string mailBoxStr; std::getline(mailBoxStream, mailBoxStr, ',');) {
-        mailBoxStr = mailBoxStr.substr(mailBoxStr.find_first_not_of(' '));
-        mailBoxStr = mailBoxStr.substr(0, mailBoxStr.find_last_not_of(' ')+1);
-        mailBoxList.push_back(mailBoxStr);
+    if (argData.bAllMailBoxes) {
+        std::string commandStr, commandResponseStr;
+        CMailIMAPParse::BASERESPONSE parsedResponse;
+
+        commandStr = "LIST \"\" *";
+        commandResponseStr = imap.sendCommand(commandStr);
+        parsedResponse = parseCommandResponse(commandStr, commandResponseStr);
+
+        if (parsedResponse) {
+            
+            auto ptr = static_cast<CMailIMAPParse::ListResponse *> (parsedResponse.get());
+
+            for (auto mailboxEntry : ptr->mailBoxList) {;
+                if (mailboxEntry.mailBoxNameStr.front() == ' ') mailboxEntry.mailBoxNameStr = mailboxEntry.mailBoxNameStr.substr(1);
+                mailBoxList.push_back(mailboxEntry.mailBoxNameStr);
+            }
+
+        }
+    } else {
+        std::istringstream mailBoxStream(argData.mailBoxNameStr);
+        for (std::string mailBoxStr; std::getline(mailBoxStream, mailBoxStr, ',');) {
+            mailBoxStr = mailBoxStr.substr(mailBoxStr.find_first_not_of(' '));
+            mailBoxStr = mailBoxStr.substr(0, mailBoxStr.find_last_not_of(' ') + 1);
+            mailBoxList.push_back(mailBoxStr);
+        }
     }
-    
 }
 
 // ============================
@@ -293,23 +340,17 @@ void createMailBoxList(std::string mailBoxStr, std::vector<std::string>& mailBox
 // ============================
 
 int main(int argc, char** argv) {
-    
+
     try {
 
         ParamArgData argData;
         CMailIMAP imap;
-        std::string parsedResponseStr, searchDate;
-        CMailIMAPParse::BASERESPONSE parsedResponse;
         std::vector<std::string> mailBoxList;
 
         // Read in command line parameters and process
 
         procCmdLine(argc, argv, argData);
 
-        // Create mailbox list
-        
-        createMailBoxList(argData.mailBoxNameStr,  mailBoxList);
-        
         // Initialise CMailIMAP internals
 
         CMailIMAP::init();
@@ -318,75 +359,73 @@ int main(int argc, char** argv) {
 
         imap.setServer(argData.serverURLStr);
         imap.setUserAndPassword(argData.userNameStr, argData.userPasswordStr);
-          
+
         // Connect
 
         std::cout << "Connecting to server [" << argData.serverURLStr << "]" << std::endl;
-        
+
         imap.connect();
 
+        // Create mailbox list
+
+        createMailBoxList(imap, argData, mailBoxList);
+
         for (std::string mailBoxStr : mailBoxList) {
-            
+
+            CMailIMAPParse::BASERESPONSE parsedResponse;
+            fs::path mailboxPath;
+            std::string commandStr, commandResponseStr, searchDate;
+
             std::cout << "MAIL BOX [" << mailBoxStr << "]" << std::endl;
 
             // SELECT mailbox
 
-            parsedResponseStr = imap.sendCommand("SELECT " + mailBoxStr);
-            parsedResponse = CMailIMAPParse::parseResponse(parsedResponseStr);
-            if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
-                throw CMailIMAP::Exception("IMAP SELECT " + parsedResponse->errorMessageStr);
-            } else if (parsedResponse->bBYESent) {
-                throw CMailIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
-            }
+            commandStr = "SELECT " + mailBoxStr;
+            commandResponseStr = imap.sendCommand(commandStr);
+            parsedResponse = parseCommandResponse(commandStr, commandResponseStr);
 
             // Clear any quotes from mailbox name for folder name
-            
+
             if (mailBoxStr.front() == '\"') mailBoxStr = mailBoxStr.substr(1);
             if (mailBoxStr.back() == '\"') mailBoxStr.pop_back();
 
             // Create destination folder
 
-            argData.destinationFolder /= mailBoxStr;
-            if (!argData.destinationFolder.string().empty() && !fs::exists(argData.destinationFolder)) {
-                std::cout << "Creating destination folder = [" << argData.destinationFolder.native() << "]" << std::endl;
-                fs::create_directories(argData.destinationFolder);
+            mailboxPath = argData.destinationFolder / mailBoxStr;
+            if (!argData.destinationFolder.string().empty() && !fs::exists(mailboxPath)) {
+                std::cout << "Creating destination folder = [" << mailboxPath.native() << "]" << std::endl;
+                fs::create_directories(mailboxPath);
             }
 
             // Get newest file creation date for search
 
             if (argData.bOnlyUpdates) {
-                searchDate = getSearchDate(argData.destinationFolder);
+                searchDate = getSearchDate(mailboxPath);
             }
- 
+
             // SEARCH for all present email and then create an archive for them.
 
             if (!searchDate.empty()) {
                 std::cout << "Searching from [" << searchDate << "]" << std::endl;
-                parsedResponseStr = imap.sendCommand("UID SEARCH SENTSINCE " + searchDate);
+                commandStr = "UID SEARCH SENTSINCE " + searchDate;
             } else {
-                parsedResponseStr = imap.sendCommand("UID SEARCH 1:*");
+                commandStr = "UID SEARCH 1:*";
             }
 
-            parsedResponse = CMailIMAPParse::parseResponse(parsedResponseStr);
-            if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
-                throw CMailIMAP::Exception("IMAP SEARCH " + parsedResponse->errorMessageStr);
-            } else if (parsedResponse->bBYESent) {
-                throw CMailIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
-            } else {
+            commandResponseStr = imap.sendCommand(commandStr);
+            parsedResponse = parseCommandResponse(commandStr, commandResponseStr);
+            if (parsedResponse) {
                 auto *ptr = static_cast<CMailIMAPParse::SearchResponse *> (parsedResponse.get());
                 std::cout << "Messages found = " << ptr->indexes.size() << std::endl;
                 for (auto index : ptr->indexes) {
-                    fetchEmailAndArchive(imap, argData.destinationFolder, index);
+                    fetchEmailAndArchive(imap, mailboxPath, index);
                 }
-
             }
 
-            argData.destinationFolder.remove_filename();
-            
         }
 
         std::cout << "Disconnecting from server [" << argData.serverURLStr << "]" << std::endl;
-      
+
         imap.disconnect();
 
         //

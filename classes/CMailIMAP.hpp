@@ -217,15 +217,15 @@ private:
     std::string userPasswordStr = "";   // Email account user name password
     std::string serverURLStr = "";      // IMAP server URL
 
-    CURL *curl = nullptr;               // curl handle
-    CURLcode res = CURLE_OK;            // curl status
-    curl_socket_t socketfd;             // curl socket
-    static bool bCurlVerbosity;         // curl verbosity setting 
- 
+    CURL *curlHandle = nullptr;              // curl handle
+    CURLcode curlResult = CURLE_OK;          // curl status
+    curl_socket_t curlSockettFD;             // curl socket
+    static bool bCurlVerbosity;              // curl verbosity setting 
+    char curlRxBuffer[CURL_MAX_WRITE_SIZE];  // curl rx buffer
+    char curlErrMsgBuffer[CURL_ERROR_SIZE];  // curl error string buffer
+  
     std::string commandResponseStr;     // IMAP command response
-    char rxBuffer[CURL_MAX_WRITE_SIZE]; // IMAP rx buffer
-    char errMsgBuffer[CURL_ERROR_SIZE]; // IMAP error string buffer
-    
+   
     uint64_t tagCount=1;                // Current command tag count
     std::string currentTagStr;          // Current command tag
 
