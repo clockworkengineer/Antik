@@ -355,7 +355,13 @@ private:
     // ===============
     // PRIVATE METHODS
     // ===============
-      
+    
+    //
+    // Get next line from response
+    //
+    
+    static bool parseGetNextLine(std::istringstream& responseStream, std::string& lineStr);
+    
     //
     // Command response parse utility methods
     //

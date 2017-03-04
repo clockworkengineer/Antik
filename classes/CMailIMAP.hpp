@@ -201,6 +201,7 @@ private:
     void sendIMAPCommand(const std::string& commandLineStr);
     void waitForIMAPCommandResponse(const std::string& commandTag, std::string& commandResponseStr);
     int waitOnSocket(bool bRecv, long timeoutMS);
+    
     //
     // Generate next command tag
     //
@@ -211,11 +212,10 @@ private:
     // PRIVATE VARIABLES
     // =================
 
-    bool bConnected=false;              // == true then connected to server
-    
-    std::string userNameStr = "";       // Email account user name
-    std::string userPasswordStr = "";   // Email account user name password
-    std::string serverURLStr = "";      // IMAP server URL
+    bool bConnected=false;                   // == true then connected to server
+    std::string userNameStr = "";            // Email account user name
+    std::string userPasswordStr = "";        // Email account user name password
+    std::string serverURLStr = "";           // IMAP server URL
 
     CURL *curlHandle = nullptr;              // curl handle
     CURLcode curlResult = CURLE_OK;          // curl status

@@ -184,7 +184,7 @@ int CMailIMAP::waitOnSocket(bool bRecv, long timeoutMS) {
 
 void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
 
-    size_t len = 0;
+    size_t bytesSent = 0;
     int bytesCopied = 0;
 
     do {
@@ -192,7 +192,7 @@ void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
         this->curlErrMsgBuffer[0] = 0;
         this->curlResult = curl_easy_send(this->curlHandle, &commandStr[bytesCopied],
                 std::min((static_cast<int> (commandStr.length()) - bytesCopied),
-                CURL_MAX_WRITE_SIZE), &len);
+                CURL_MAX_WRITE_SIZE), &bytesSent);
 
         if (this->curlResult == CURLE_AGAIN) {
             waitOnSocket(false, kWaitOnSocketTimeOut);
@@ -202,7 +202,7 @@ void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
             throwCurlError("curl_easy_send(): ");
         }
 
-        bytesCopied += len;
+        bytesCopied += bytesSent;
 
     } while ((bytesCopied < commandStr.length()));
 
@@ -250,15 +250,13 @@ void CMailIMAP::waitForIMAPCommandResponse(const std::string& commandTagStr, std
                 }
             }
 
-        } else if (this->curlResult == CURLE_AGAIN){
+        } else if (this->curlResult == CURLE_AGAIN) {
             waitOnSocket(true, kWaitOnSocketTimeOut);
-            
-        } else {
-            std::cerr << "{" << commandResponseStr << "}" << std::endl;
-            throwCurlError("curl_easy_recv(): ");
 
-        } 
-        
+        } else {
+            throwCurlError("curl_easy_recv(): ");
+        }
+
     } while (true);
 
 }
@@ -422,6 +420,7 @@ void CMailIMAP::connect(void) {
 
     }
 
+
 }
 
 //
@@ -517,4 +516,3 @@ void CMailIMAP::closedown(void) {
     curl_global_cleanup();
 
 }
-
