@@ -333,7 +333,9 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSEARCH(CMailIMAPParse::Command
                 while (listStream.good()) {
                     uint64_t index = 0;
                     listStream >> index;
-                    resp->indexes.push_back(index);
+                    if (!listStream.fail()) {
+                        resp->indexes.push_back(index);
+                    }
                 }
             }
 
@@ -415,7 +417,9 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTATUS(CMailIMAPParse::Command
                 while (listStream.good()) {
                     std::string itemStr, valueStr;
                     listStream >> itemStr >> valueStr;
-                    resp->responseMap.insert({itemStr, valueStr});
+                    if(!listStream.fail()) {
+                        resp->responseMap.insert({itemStr, valueStr});
+                    }
                 }
             }
 

@@ -216,7 +216,7 @@ CMailIMAPParse::BASERESPONSE parseCommandResponse(std::string commandStr, std::s
 std::string sendCommand(CMailIMAP& imap, const std::string& mailBoxNameStr, std::string& commandStr) {
 
     std::string commandResponseStr;
-    
+
     try {
         commandResponseStr = imap.sendCommand(commandStr);
     } catch (CMailIMAP::Exception &e) {
@@ -285,7 +285,7 @@ void fetchEmailAndArchive(CMailIMAP& imap, std::string mailBoxNameStr, fs::path&
         }
 
     }
-    
+
 }
 
 //
@@ -468,7 +468,7 @@ int main(int argc, char** argv) {
     } catch (CMailIMAPParse::Exception &e) {
         exitWithError(e.what());
     } catch (const fs::filesystem_error & e) {
-        exitWithError(std::string("BOOST file system exception occured: [")+e.what()+"]");
+        exitWithError(std::string("BOOST file system exception occured: [") + e.what() + "]");
     } catch (std::exception & e) {
         exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
     }
