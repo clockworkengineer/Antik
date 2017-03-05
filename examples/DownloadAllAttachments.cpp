@@ -200,7 +200,7 @@ void getBodyStructAttachments(CMailIMAP& imap, std::uint64_t index, fs::path & d
 
     if (!attachments->attachmentsList.empty()) {
         for (auto attachment : attachments->attachmentsList) {
-            if (CMailIMAPParse::stringEqual(attachment.encodingStr, CMailSMTP::kEncodingBase64)) {
+            if (CMailIMAPParse::stringEqual(attachment.encodingStr, CMailSMTP::kEncodingBase64Str)) {
                 attachment.indexStr = std::to_string(index);
                 downloadAttachment(imap, destinationFolder, attachment);
             } else {

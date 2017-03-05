@@ -48,11 +48,11 @@
 
 // MIME multi-part text boundary string 
 
-const std::string CMailSMTP::kMimeBoundary("xxxxCMailSMTPBoundaryText");
+const char *CMailSMTP::kMimeBoundaryStr = "xxxxCMailSMTPBoundaryText";
 
 // Line terminator
 
-const std::string CMailSMTP::kEOL("\r\n");
+const char *CMailSMTP::kEOLStr = "\r\n";
 
 // Valid characters for base64 encode/decode.
 
@@ -64,8 +64,8 @@ const char CMailSMTP::kCB64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstu
 
 // Supported encoding methods
 
-const std::string CMailSMTP::kEncoding7Bit("7Bit");
-const std::string CMailSMTP::kEncodingBase64("base64");
+const char *CMailSMTP::kEncoding7BitStr = "7Bit";
+const char *CMailSMTP::kEncodingBase64Str = "base64";
 
 // ========================
 // PRIVATE STATIC VARIABLES
@@ -134,7 +134,7 @@ void CMailSMTP::encodeAttachment(CMailSMTP::emailAttachment& attachment) {
 
     // 7bit just copy
 
-    if ((attachment.contentTransferEncoding.compare(CMailSMTP::kEncodingBase64) != 0)) {
+    if ((attachment.contentTransferEncoding.compare(CMailSMTP::kEncodingBase64Str) != 0)) {
 
         std::ifstream attachmentFile(attachment.fileName);
 
@@ -143,7 +143,7 @@ void CMailSMTP::encodeAttachment(CMailSMTP::emailAttachment& attachment) {
         while (std::getline(attachmentFile, line)) {
             if (line.back()=='\n') line.pop_back();
             if (line.back()=='\r') line.pop_back();
-            attachment.encodedContents.push_back(line + kEOL);
+            attachment.encodedContents.push_back(line + kEOLStr);
         }
 
     // Base64
@@ -157,7 +157,7 @@ void CMailSMTP::encodeAttachment(CMailSMTP::emailAttachment& attachment) {
         while (ifs.good()) {
             ifs.read(&buffer[0], CMailSMTP::kBase64EncodeBufferSize);
             this->encodeToBase64(buffer, line, ifs.gcount());
-            attachment.encodedContents.push_back(line + kEOL);
+            attachment.encodedContents.push_back(line + kEOLStr);
             line.clear();
         }
 
@@ -177,12 +177,12 @@ void CMailSMTP::buildAttachments(void) {
 
         this->encodeAttachment(attachment);
 
-        this->mailPayload.push_back("--" + CMailSMTP::kMimeBoundary + kEOL);
-        this->mailPayload.push_back("Content-Type: " + attachment.contentTypes + ";"+kEOL);
-        this->mailPayload.push_back("Content-transfer-encoding: " + attachment.contentTransferEncoding + kEOL);
-        this->mailPayload.push_back("Content-Disposition: attachment;"+kEOL);
-        this->mailPayload.push_back("     filename=\"" + baseFileName + "\""+kEOL);
-        this->mailPayload.push_back(kEOL);
+        this->mailPayload.push_back(std::string("--") + CMailSMTP::kMimeBoundaryStr + kEOLStr);
+        this->mailPayload.push_back("Content-Type: " + attachment.contentTypes + ";"+kEOLStr);
+        this->mailPayload.push_back("Content-transfer-encoding: " + attachment.contentTransferEncoding + kEOLStr);
+        this->mailPayload.push_back(std::string("Content-Disposition: attachment;")+kEOLStr);
+        this->mailPayload.push_back("     filename=\"" + baseFileName + "\""+kEOLStr);
+        this->mailPayload.push_back(kEOLStr);
 
         // Encoded file
 
@@ -190,7 +190,7 @@ void CMailSMTP::buildAttachments(void) {
             this->mailPayload.push_back(str);
         }
 
-        this->mailPayload.push_back(kEOL); // EMPTY LINE 
+        this->mailPayload.push_back(kEOLStr); // EMPTY LINE 
 
     }
 
@@ -207,45 +207,45 @@ void CMailSMTP::buildMailPayload(void) {
 
     // Email header.
 
-    this->mailPayload.push_back("Date: " + CMailSMTP::currentDateAndTime() + kEOL);
-    this->mailPayload.push_back("To: " + this->addressTo + kEOL);
-    this->mailPayload.push_back("From: " + this->addressFrom + kEOL);
+    this->mailPayload.push_back("Date: " + CMailSMTP::currentDateAndTime() + kEOLStr);
+    this->mailPayload.push_back("To: " + this->addressTo + kEOLStr);
+    this->mailPayload.push_back("From: " + this->addressFrom + kEOLStr);
 
     if (!this->addressCC.empty()) {
-        this->mailPayload.push_back("cc: " + this->addressCC + kEOL);
+        this->mailPayload.push_back("cc: " + this->addressCC + kEOLStr);
     }
 
-    this->mailPayload.push_back("Subject: " + this->mailSubject + kEOL);
-    this->mailPayload.push_back("MIME-Version: 1.0"+kEOL);
+    this->mailPayload.push_back("Subject: " + this->mailSubject + kEOLStr);
+    this->mailPayload.push_back(std::string("MIME-Version: 1.0")+kEOLStr);
 
     if (!bAttachments) {
-        this->mailPayload.push_back("Content-Type: text/plain; charset=UTF-8"+kEOL);
-        this->mailPayload.push_back("Content-Transfer-Encoding: 7bit"+kEOL);
+        this->mailPayload.push_back(std::string("Content-Type: text/plain; charset=UTF-8")+kEOLStr);
+        this->mailPayload.push_back(std::string("Content-Transfer-Encoding: 7bit")+kEOLStr);
     } else {
-        this->mailPayload.push_back("Content-Type: multipart/mixed;"+kEOL);
-        this->mailPayload.push_back("     boundary=\"" + CMailSMTP::kMimeBoundary + "\""+kEOL);
+        this->mailPayload.push_back(std::string("Content-Type: multipart/mixed;")+kEOLStr);
+        this->mailPayload.push_back(std::string("     boundary=\"") + CMailSMTP::kMimeBoundaryStr + "\""+kEOLStr);
     }
 
-    this->mailPayload.push_back(kEOL); // EMPTY LINE 
+    this->mailPayload.push_back(kEOLStr); // EMPTY LINE 
 
     if (bAttachments) {
-        this->mailPayload.push_back("--" + CMailSMTP::kMimeBoundary + kEOL);
-        this->mailPayload.push_back("Content-Type: text/plain"+kEOL);
-        this->mailPayload.push_back("Content-Transfer-Encoding: 7bit"+kEOL);
-        this->mailPayload.push_back(kEOL); // EMPTY LINE 
+        this->mailPayload.push_back(std::string("--") + CMailSMTP::kMimeBoundaryStr + kEOLStr);
+        this->mailPayload.push_back(std::string("Content-Type: text/plain")+kEOLStr);
+        this->mailPayload.push_back(std::string("Content-Transfer-Encoding: 7bit")+kEOLStr);
+        this->mailPayload.push_back(kEOLStr); // EMPTY LINE 
     }
 
     // Message body
 
     for (auto str : this->mailMessage) {
-        this->mailPayload.push_back(str + kEOL);
+        this->mailPayload.push_back(str + kEOLStr);
     }
 
  
     if (bAttachments) {
-        this->mailPayload.push_back(kEOL); // EMPTY LINE 
+        this->mailPayload.push_back(kEOLStr); // EMPTY LINE 
         this->buildAttachments();
-        this->mailPayload.push_back("--" + CMailSMTP::kMimeBoundary + "--"+kEOL);
+        this->mailPayload.push_back(std::string("--") + CMailSMTP::kMimeBoundaryStr + "--"+kEOLStr);
     }
 
 }

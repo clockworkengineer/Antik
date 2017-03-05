@@ -47,14 +47,14 @@
 // BODYSTRUCTURE constants
 //
 
-const std::string CMailIMAPBodyStruct::kNILStr("NIL");
-const std::string CMailIMAPBodyStruct::kTEXTStr("TEXT");
-const std::string CMailIMAPBodyStruct::kATTACHMENTStr("ATTACHMENT");
-const std::string CMailIMAPBodyStruct::kINLINEStr("INLINE");
-const std::string CMailIMAPBodyStruct::kCREATIONDATEStr("CREATION-DATE");
-const std::string CMailIMAPBodyStruct::kFILENAMEStr("FILENAME");
-const std::string CMailIMAPBodyStruct::kMODIFICATIONDATEStr("MODIFICATION-DATE");
-const std::string CMailIMAPBodyStruct::kSIZEStr("SIZE");
+const char *CMailIMAPBodyStruct::kNILStr = "NIL";
+const char *CMailIMAPBodyStruct::kTEXTStr = "TEXT";
+const char *CMailIMAPBodyStruct::kATTACHMENTStr = "ATTACHMENT";
+const char *CMailIMAPBodyStruct::kINLINEStr = "INLINE";
+const char *CMailIMAPBodyStruct::kCREATIONDATEStr = "CREATION-DATE";
+const char *CMailIMAPBodyStruct::kFILENAMEStr = "FILENAME";
+const char *CMailIMAPBodyStruct::kMODIFICATIONDATEStr = "MODIFICATION-DATE";
+const char *CMailIMAPBodyStruct::kSIZEStr = "SIZE";
  
 
 // ==========================

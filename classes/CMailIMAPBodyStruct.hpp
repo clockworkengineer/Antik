@@ -109,14 +109,14 @@ public:
     // BODYSTRUCTURE constants
     //
 
-    static const std::string kNILStr;
-    static const std::string kTEXTStr;
-    static const std::string kATTACHMENTStr;
-    static const std::string kINLINEStr;
-    static const std::string kCREATIONDATEStr;
-    static const std::string kFILENAMEStr;
-    static const std::string kMODIFICATIONDATEStr;
-    static const std::string kSIZEStr;
+    static const char *kNILStr;
+    static const char *kTEXTStr;
+    static const char *kATTACHMENTStr;
+    static const char *kINLINEStr;
+    static const char *kCREATIONDATEStr;
+    static const char *kFILENAMEStr;
+    static const char *kMODIFICATIONDATEStr;
+    static const char *kSIZEStr;
     
     // ============
     // CONSTRUCTORS

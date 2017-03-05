@@ -52,8 +52,8 @@ public:
     
     // Supported contents encodings
     
-    static const std::string kEncoding7Bit;
-    static const std::string kEncodingBase64;
+    static const char *kEncoding7BitStr;
+    static const char *kEncodingBase64Str;
  
     // ============
     // CONSTRUCTORS
@@ -140,11 +140,11 @@ private:
         std::vector<std::string> encodedContents;   // Attached file encoded contents
     };
     
-    static const std::string kMimeBoundary;         // Text string used for MIME boundary
+    static const char *kMimeBoundaryStr;               // Text string used for MIME boundary
     
     static const int kBase64EncodeBufferSize=54;    // Optimum encode buffer size (since encoded max 76 bytes)
   
-    static const std::string kEOL;                  // End of line
+    static const char *kEOLStr;                        // End of line
     
     static const char kCB64[];                      // Valid characters for base64 encode/decode.
     

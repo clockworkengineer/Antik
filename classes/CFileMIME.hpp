@@ -100,10 +100,10 @@ private:
     // MIME encoded word
     //
 
-    static const std::string kEncodedWordPrefix;
-    static const std::string kEncodedWordPostfix;
-    static const std::string kEncodedWordSeparator;
-    static const std::string kEncodedWordASCII;
+    static const char *kEncodedWordPrefixStr;
+    static const char *kEncodedWordPostfixStr;
+    static const char *kEncodedWordSeparatorStr;
+    static const char *kEncodedWordASCIIStr;
     
     static const char kEncodedWordTypeBase64;
     static const char kEncodedWordTypeQuoted;

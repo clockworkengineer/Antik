@@ -52,67 +52,66 @@
 // End Of Line terminator
 //
 
-const std::string CMailIMAP::kEOLStr("\r\n");
+const char *CMailIMAP::kEOLStr = "\r\n";
 
 //
 // IMAP Command strings
 //
 
-const std::string CMailIMAP::kSTARTTLSStr("STARTTLS");
-const std::string CMailIMAP::kAUTHENTICATEStr{"AUTHENTICATE"};
-const std::string CMailIMAP::kSEARCHStr("SEARCH");
-const std::string CMailIMAP::kSELECTStr("SELECT");
-const std::string CMailIMAP::kEXAMINEStr("EXAMINE");
-const std::string CMailIMAP::kCREATEStr("CREATE");
-const std::string CMailIMAP::kDELETEStr("DELETE");
-const std::string CMailIMAP::kRENAMEStr("RENAME");
-const std::string CMailIMAP::kLOGINStr("LOGIN");
-const std::string CMailIMAP::kSUBSCRIBEStr("SUBSCRIBE");
-const std::string CMailIMAP::kUNSUBSCRIBEStr("UNSUBSCRIBE");
-const std::string CMailIMAP::kLISTStr("LIST");
-const std::string CMailIMAP::kLSUBStr("LSUB");
-const std::string CMailIMAP::kSTATUSStr("STATUS");
-const std::string CMailIMAP::kAPPENDStr("APPEND");
-const std::string CMailIMAP::kCHECKStr("CHECK");
-const std::string CMailIMAP::kCLOSEStr("CLOSE");
-const std::string CMailIMAP::kEXPUNGEStr("EXPUNGE");
-const std::string CMailIMAP::kFETCHStr("FETCH");
-const std::string CMailIMAP::kSTOREStr("STORE");
-const std::string CMailIMAP::kCOPYStr("COPY");
-const std::string CMailIMAP::kNOOPStr("NOOP");
-const std::string CMailIMAP::kLOGOUTStr("LOGOUT");
-const std::string CMailIMAP::kIDLEStr("IDLE");
-const std::string CMailIMAP::kCAPABILITYStr("CAPABILITY");
-const std::string CMailIMAP::kUIDStr("UID");
+const char *CMailIMAP::kSTARTTLSStr = "STARTTLS";
+const char *CMailIMAP::kAUTHENTICATEStr{"AUTHENTICATE"};
+const char *CMailIMAP::kSEARCHStr = "SEARCH";
+const char *CMailIMAP::kSELECTStr = "SELECT";
+const char *CMailIMAP::kEXAMINEStr = "EXAMINE";
+const char *CMailIMAP::kCREATEStr = "CREATE";
+const char *CMailIMAP::kDELETEStr = "DELETE";
+const char *CMailIMAP::kRENAMEStr = "RENAME";
+const char *CMailIMAP::kLOGINStr = "LOGIN";
+const char *CMailIMAP::kSUBSCRIBEStr = "SUBSCRIBE";
+const char *CMailIMAP::kUNSUBSCRIBEStr = "UNSUBSCRIBE";
+const char *CMailIMAP::kLISTStr = "LIST";
+const char *CMailIMAP::kLSUBStr = "LSUB";
+const char *CMailIMAP::kSTATUSStr = "STATUS";
+const char *CMailIMAP::kAPPENDStr = "APPEND";
+const char *CMailIMAP::kCHECKStr = "CHECK";
+const char *CMailIMAP::kCLOSEStr = "CLOSE";
+const char *CMailIMAP::kEXPUNGEStr = "EXPUNGE";
+const char *CMailIMAP::kFETCHStr = "FETCH";
+const char *CMailIMAP::kSTOREStr = "STORE";
+const char *CMailIMAP::kCOPYStr = "COPY";
+const char *CMailIMAP::kNOOPStr = "NOOP";
+const char *CMailIMAP::kLOGOUTStr = "LOGOUT";
+const char *CMailIMAP::kIDLEStr = "IDLE";
+const char *CMailIMAP::kCAPABILITYStr = "CAPABILITY";
+const char *CMailIMAP::kUIDStr = "UID";
 
 //
 // IMAP Response strings
 //
 
-const std::string CMailIMAP::kUntaggedStr("*");
-const std::string CMailIMAP::kOKStr("OK");
-const std::string CMailIMAP::kBADStr("BAD");
-const std::string CMailIMAP::kNOStr("NO");
-const std::string CMailIMAP::kFLAGSStr("FLAGS");
-const std::string CMailIMAP::kPERMANENTFLAGSStr("PERMANENTFLAGS");
-const std::string CMailIMAP::kUIDVALIDITYStr("UIDVALIDITY");
-const std::string CMailIMAP::kUIDNEXTStr("UIDNEXT");
-const std::string CMailIMAP::kHIGHESTMODSEQStr("HIGHESTMODSEQ");
-const std::string CMailIMAP::kUNSEENStr("UNSEEN");
-const std::string CMailIMAP::kEXISTSStr("EXISTS");
-const std::string CMailIMAP::kRECENTStr("RECENT");
-const std::string CMailIMAP::kDONEStr("DONE");
-const std::string CMailIMAP::kContinuationStr("+");
-const std::string CMailIMAP::kENVELOPEStr("ENVELOPE");
-const std::string CMailIMAP::kBODYSTRUCTUREStr("BODYSTRUCTURE");
-const std::string CMailIMAP::kBODYStr("BODY");
-const std::string CMailIMAP::kRFC822Str("RFC822");
-const std::string CMailIMAP::kINTERNALDATEStr("INTERNALDATE");
-const std::string CMailIMAP::kRFC822HEADERStr("RFC822.HEADER");
-const std::string CMailIMAP::kRFC822SIZEStr("RFC822.SIZE");
-const std::string CMailIMAP::kRFC822TEXTStr("RFC822.TEXT");
-const std::string CMailIMAP::kBYEStr("BYE");
-
+const char *CMailIMAP::kUntaggedStr = "*";
+const char *CMailIMAP::kOKStr = "OK";
+const char *CMailIMAP::kBADStr = "BAD";
+const char *CMailIMAP::kNOStr = "NO";
+const char *CMailIMAP::kFLAGSStr = "FLAGS";
+const char *CMailIMAP::kPERMANENTFLAGSStr = "PERMANENTFLAGS";
+const char *CMailIMAP::kUIDVALIDITYStr = "UIDVALIDITY";
+const char *CMailIMAP::kUIDNEXTStr = "UIDNEXT";
+const char *CMailIMAP::kHIGHESTMODSEQStr = "HIGHESTMODSEQ";
+const char *CMailIMAP::kUNSEENStr = "UNSEEN";
+const char *CMailIMAP::kEXISTSStr = "EXISTS";
+const char *CMailIMAP::kRECENTStr = "RECENT";
+const char *CMailIMAP::kDONEStr = "DONE";
+const char *CMailIMAP::kContinuationStr = "+";
+const char *CMailIMAP::kENVELOPEStr = "ENVELOPE";
+const char *CMailIMAP::kBODYSTRUCTUREStr = "BODYSTRUCTURE";
+const char *CMailIMAP::kBODYStr = "BODY";
+const char *CMailIMAP::kRFC822Str = "RFC822";
+const char *CMailIMAP::kINTERNALDATEStr = "INTERNALDATE";
+const char *CMailIMAP::kRFC822HEADERStr = "RFC822.HEADER";
+const char *CMailIMAP::kRFC822SIZEStr = "RFC822.SIZE";
+const char *CMailIMAP::kRFC822TEXTStr = "RFC822.TEXT";
+const char *CMailIMAP::kBYEStr = "BYE";
 
 // ========================
 // PRIVATE STATIC VARIABLES
@@ -290,7 +289,7 @@ void CMailIMAP::sendCommandIDLE(const std::string& commandLineStr) {
     this->waitForIMAPCommandResponse(kUntaggedStr, responseStr);
 
     if (!responseStr.empty()) {
-        this->sendIMAPCommand(kDONEStr + kEOLStr);
+        this->sendIMAPCommand(std::string(kDONEStr) + kEOLStr);
         this->waitForIMAPCommandResponse(this->currentTagStr, this->commandResponseStr);
     } else {
         throw CMailIMAP::Exception("Server Disconnect without BYE.");

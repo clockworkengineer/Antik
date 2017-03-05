@@ -30,6 +30,12 @@
 // CLASS IMPLEMENTATION
 // ====================
 
+//
+// C++ STL definitions
+//
+
+#include <cstring>
+
 // ===========================
 // PRIVATE TYPES AND CONSTANTS
 // ===========================
@@ -38,10 +44,10 @@
 // MIME encoded word constants
 //
 
-const std::string CFileMIME::kEncodedWordPrefix("=?");
-const std::string CFileMIME::kEncodedWordPostfix("?=");
-const std::string CFileMIME::kEncodedWordSeparator("?");
-const std::string CFileMIME::kEncodedWordASCII("ASCII");
+const char *CFileMIME::kEncodedWordPrefixStr = "=?";
+const char *CFileMIME::kEncodedWordPostfixStr = "?=";
+const char *CFileMIME::kEncodedWordSeparatorStr = "?";
+const char *CFileMIME::kEncodedWordASCIIStr = "ASCII";
 const char CFileMIME::kEncodedWordTypeBase64='B';
 const char CFileMIME::kEncodedWordTypeQuoted='Q';
 const char CFileMIME::kEncodedWordTypeNone=' ';
@@ -671,27 +677,27 @@ std::vector<CFileMIME::ParsedMIMEString> CFileMIME::parseMIMEString(const std::s
         while (!lineStr.empty()) {
 
             parsedEntry.type = kEncodedWordTypeNone;
-            parsedEntry.encoding = kEncodedWordASCII;
+            parsedEntry.encoding = kEncodedWordASCIIStr;
 
-            if (lineStr.find(kEncodedWordPrefix) == 0) {
+            if (lineStr.find(kEncodedWordPrefixStr) == 0) {
 
-                lineStr = lineStr.substr(kEncodedWordPrefix.length());
-                parsedEntry.encoding = lineStr.substr(0, lineStr.find(kEncodedWordSeparator));
-                lineStr = lineStr.substr(lineStr.find(kEncodedWordSeparator) + 1);
+                lineStr = lineStr.substr(std::strlen(kEncodedWordPrefixStr));
+                parsedEntry.encoding = lineStr.substr(0, lineStr.find(kEncodedWordSeparatorStr));
+                lineStr = lineStr.substr(lineStr.find(kEncodedWordSeparatorStr) + 1);
 
                 parsedEntry.type = lineStr[0];
-                lineStr = lineStr.substr(kEncodedWordPrefix.length());
-                parsedEntry.contents = lineStr.substr(0, lineStr.find(kEncodedWordPostfix));
-                lineStr = lineStr.substr(lineStr.find(kEncodedWordPostfix) + 2);
+                lineStr = lineStr.substr(std::strlen(kEncodedWordPrefixStr));
+                parsedEntry.contents = lineStr.substr(0, lineStr.find(kEncodedWordPostfixStr));
+                lineStr = lineStr.substr(lineStr.find(kEncodedWordPostfixStr) + 2);
 
             } else {
                 
-                if (lineStr.find(kEncodedWordPostfix) == std::string::npos) {
+                if (lineStr.find(kEncodedWordPostfixStr) == std::string::npos) {
                     parsedEntry.contents = lineStr;
                     lineStr = "";
                 } else {
-                    parsedEntry.contents = lineStr.substr(0, lineStr.find(kEncodedWordPrefix));
-                    lineStr = lineStr.substr(lineStr.find(kEncodedWordPrefix));
+                    parsedEntry.contents = lineStr.substr(0, lineStr.find(kEncodedWordPrefixStr));
+                    lineStr = lineStr.substr(lineStr.find(kEncodedWordPrefixStr));
                 }
                 
             }

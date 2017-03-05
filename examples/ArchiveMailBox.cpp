@@ -89,7 +89,7 @@ const std::string kEMLFileExt(".eml");
 // Exit with error message/status
 //
 
-void exitWithError(std::string errMsgStr) {
+void exitWithError(const std::string errMsgStr) {
 
     // Closedown email, display error and exit.
 
@@ -188,7 +188,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Parse command response and return pointer to parsed data.
 //
 
-CMailIMAPParse::BASERESPONSE parseCommandResponse(std::string commandStr, std::string commandResponseStr) {
+CMailIMAPParse::BASERESPONSE parseCommandResponse(const std::string& commandStr, const std::string& commandResponseStr) {
 
     CMailIMAPParse::BASERESPONSE parsedResponse;
 
@@ -213,7 +213,7 @@ CMailIMAPParse::BASERESPONSE parseCommandResponse(std::string commandStr, std::s
 // Send command to IMAP server. At present it checks for any errors and just exits.
 //
 
-std::string sendCommand(CMailIMAP& imap, const std::string& mailBoxNameStr, std::string& commandStr) {
+std::string sendCommand(CMailIMAP& imap, const std::string& mailBoxNameStr, const std::string& commandStr) {
 
     std::string commandResponseStr;
 
@@ -232,7 +232,7 @@ std::string sendCommand(CMailIMAP& imap, const std::string& mailBoxNameStr, std:
 // Fetch a given emails body and subject line and create an .eml file for it.
 //
 
-void fetchEmailAndArchive(CMailIMAP& imap, std::string mailBoxNameStr, fs::path& destinationFolder, std::uint64_t index) {
+void fetchEmailAndArchive(CMailIMAP& imap, const std::string& mailBoxNameStr, const fs::path& destinationFolder, std::uint64_t index) {
 
     std::string commandStr, commandResponseStr, subject, emailBody;
     CMailIMAPParse::BASERESPONSE parsedResponse;
@@ -292,7 +292,7 @@ void fetchEmailAndArchive(CMailIMAP& imap, std::string mailBoxNameStr, fs::path&
 // Find the date on the last modified .eml file and use for SEARCH
 //
 
-std::string getSearchDate(fs::path destinationFolder) {
+std::string getSearchDate(const fs::path& destinationFolder) {
 
     std::string dateBuffer(32, ' ');
 
@@ -334,7 +334,7 @@ std::string getSearchDate(fs::path destinationFolder) {
 // Convert list of comma separated mailbox names / list all mailboxes and place into vector or mailbox name strings.
 //
 
-void createMailBoxList(CMailIMAP& imap, ParamArgData& argData, std::vector<std::string>& mailBoxList) {
+void createMailBoxList(CMailIMAP& imap, const ParamArgData& argData, std::vector<std::string>& mailBoxList) {
 
     if (argData.bAllMailBoxes) {
         std::string commandStr, commandResponseStr;

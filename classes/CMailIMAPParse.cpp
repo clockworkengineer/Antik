@@ -43,6 +43,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <cstring>
 
 // ===========================
 // PRIVATE TYPES AND CONSTANTS
@@ -62,45 +63,19 @@
 
 std::unordered_map<int, CMailIMAPParse::ParseFunction> CMailIMAPParse::parseCommmandMap
 {
-    {
-        static_cast<int> (Commands::LIST), parseLIST
-    },
-    {
-        static_cast<int> (Commands::LSUB), parseLIST
-    },
-    {
-        static_cast<int> (Commands::SEARCH), parseSEARCH
-    },
-    {
-        static_cast<int> (Commands::SELECT), parseSELECT
-    },
-    {
-        static_cast<int> (Commands::EXAMINE), parseSELECT
-    },
-    {
-        static_cast<int> (Commands::STATUS), parseSTATUS
-    },
-    {
-        static_cast<int> (Commands::EXPUNGE), parseEXPUNGE
-    },
-    {
-        static_cast<int> (Commands::STORE), parseSTORE
-    },
-    {
-        static_cast<int> (Commands::CAPABILITY), parseCAPABILITY
-    },
-    {
-        static_cast<int> (Commands::FETCH), parseFETCH
-    },
-    {
-        static_cast<int> (Commands::NOOP), parseNOOP
-    },
-    {
-        static_cast<int> (Commands::IDLE), parseNOOP
-    },
-    {
-        static_cast<int> (Commands::LOGOUT), parseLOGOUT
-    }
+    { static_cast<int> (Commands::LIST), parseLIST },
+    { static_cast<int> (Commands::LSUB), parseLIST },
+    { static_cast<int> (Commands::SEARCH), parseSEARCH },
+    { static_cast<int> (Commands::SELECT), parseSELECT },
+    { static_cast<int> (Commands::EXAMINE), parseSELECT },
+    { static_cast<int> (Commands::STATUS), parseSTATUS },
+    { static_cast<int> (Commands::EXPUNGE), parseEXPUNGE },
+    { static_cast<int> (Commands::STORE), parseSTORE },
+    { static_cast<int> (Commands::CAPABILITY), parseCAPABILITY },
+    { static_cast<int> (Commands::FETCH), parseFETCH },
+    { static_cast<int> (Commands::NOOP), parseNOOP },
+    { static_cast<int> (Commands::IDLE), parseNOOP },
+    { static_cast<int> (Commands::LOGOUT), parseLOGOUT }
 
 };
 
@@ -226,14 +201,14 @@ void CMailIMAPParse::parseStatus(const std::string& tagStr, const std::string& l
         statusResponse.status = RespCode::BAD;
         statusResponse.errorMessageStr = lineStr;
 
-    } else if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kBYEStr)) {
+    } else if (stringEqual(lineStr, std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kBYEStr)) {
         if (!statusResponse.bBYESent) {
             statusResponse.bBYESent = true;
         }
         statusResponse.errorMessageStr = lineStr;
 
-    } else if ((stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kNOStr))
-            || (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kBADStr))) {
+    } else if ((stringEqual(lineStr, std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kNOStr))
+            || (stringEqual(lineStr, std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kBADStr))) {
         std::cerr << lineStr << std::endl;
 
     } else if (stringEqual(lineStr, CMailIMAP::kUntaggedStr)) {
@@ -264,11 +239,11 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSELECT(CMailIMAPParse::Command
 
     for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
 
-        if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kOKStr + " [")) {
+        if (stringEqual(lineStr, std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kOKStr + " [")) {
             lineStr = stringBetween(lineStr, '[', ']');
         }
 
-        if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kFLAGSStr)) {
+        if (stringEqual(lineStr, std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kFLAGSStr)) {
             resp->responseMap.insert({CMailIMAP::kFLAGSStr, stringList(lineStr)});
 
         } else if (stringEqual(lineStr, CMailIMAP::kPERMANENTFLAGSStr)) {
@@ -283,8 +258,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSELECT(CMailIMAPParse::Command
         } else if (stringEqual(lineStr, CMailIMAP::kHIGHESTMODSEQStr)) {
             resp->responseMap.insert({CMailIMAP::kHIGHESTMODSEQStr, stringBetween(lineStr, ' ', ']')});
 
-        } else if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kCAPABILITYStr)) {
-            lineStr = lineStr.substr((std::string(CMailIMAP::kUntaggedStr + " " + CMailIMAP::kCAPABILITYStr).length()) + 1);
+        } else if (stringEqual(lineStr, std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kCAPABILITYStr)) {
+            lineStr = lineStr.substr((std::string(std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kCAPABILITYStr).length()) + 1);
             resp->responseMap.insert({CMailIMAP::kCAPABILITYStr, lineStr});
 
         } else if (lineStr.find(CMailIMAP::kUNSEENStr) == 0) {
@@ -324,9 +299,9 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSEARCH(CMailIMAPParse::Command
 
     for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
 
-        if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kSEARCHStr)) {
+        if (stringEqual(lineStr, std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kSEARCHStr)) {
 
-            lineStr = lineStr.substr(std::string(CMailIMAP::kUntaggedStr + " " + CMailIMAP::kSEARCHStr).length());
+            lineStr = lineStr.substr(std::string(std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kSEARCHStr).length());
 
             if (!lineStr.empty()) {
                 std::istringstream listStream(lineStr); // Read indexes/UIDs
@@ -366,8 +341,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseLIST(CMailIMAPParse::CommandDa
 
         ListRespData mailBoxEntry;
 
-        if ((stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kLISTStr)) ||
-                (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kLSUBStr))) {
+        if ((stringEqual(lineStr, std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kLISTStr)) ||
+                (stringEqual(lineStr, std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kLSUBStr))) {
             mailBoxEntry.attributesStr = stringList(lineStr);
             mailBoxEntry.hierDel = stringBetween(lineStr, '\"', '\"').front();
             if (lineStr.back() != '\"') {
@@ -404,9 +379,9 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTATUS(CMailIMAPParse::Command
 
     for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
 
-        if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kSTATUSStr)) {
+        if (stringEqual(lineStr, std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kSTATUSStr)) {
 
-            lineStr = lineStr.substr(std::string(CMailIMAP::kUntaggedStr + " " + CMailIMAP::kSTATUSStr).length() + 1);
+            lineStr = lineStr.substr((std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kSTATUSStr).length() + 1);
 
             resp->mailBoxNameStr = lineStr.substr(0, lineStr.find_first_of(' '));
 
@@ -417,7 +392,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseSTATUS(CMailIMAPParse::Command
                 while (listStream.good()) {
                     std::string itemStr, valueStr;
                     listStream >> itemStr >> valueStr;
-                    if(!listStream.fail()) {
+                    if (!listStream.fail()) {
                         resp->responseMap.insert({itemStr, valueStr});
                     }
                 }
@@ -513,8 +488,8 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseCAPABILITY(CMailIMAPParse::Com
 
     for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
 
-        if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kCAPABILITYStr)) {
-            resp->capabilitiesStr = lineStr.substr(std::string(CMailIMAP::kUntaggedStr + " " + CMailIMAP::kCAPABILITYStr).length() + 1);
+        if (stringEqual(lineStr, std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kCAPABILITYStr)) {
+            resp->capabilitiesStr = lineStr.substr((std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kCAPABILITYStr).length() + 1);
 
         } else {
             BaseResponse statusResponse{ resp->command, resp->status, resp->errorMessageStr, resp->bBYESent};
@@ -570,9 +545,9 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::CommandD
 
         FetchRespData fetchData;
 
-        int lineLength = lineStr.length() + CMailIMAP::kEOLStr.length();
+        int lineLength = lineStr.length() + std::strlen(CMailIMAP::kEOLStr);
 
-        if (lineStr.find(CMailIMAP::kFETCHStr + " (") != std::string::npos) {
+        if (lineStr.find(std::string(CMailIMAP::kFETCHStr) + " (") != std::string::npos) {
 
             fetchData.index = std::strtoull(stringUntaggedNumber(lineStr).c_str(), nullptr, 10);
             lineStr = lineStr.substr(lineStr.find_first_of('(') + 1);
@@ -581,25 +556,25 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::CommandD
 
             do {
 
-                if (stringEqual(lineStr, CMailIMAP::kBODYSTRUCTUREStr + " ")) {
+                if (stringEqual(lineStr, std::string(CMailIMAP::kBODYSTRUCTUREStr) + " ")) {
                     parseList(CMailIMAP::kBODYSTRUCTUREStr, fetchData, lineStr);
-                } else if (stringEqual(lineStr, CMailIMAP::kENVELOPEStr + " ")) {
+                } else if (stringEqual(lineStr, std::string(CMailIMAP::kENVELOPEStr) + " ")) {
                     parseList(CMailIMAP::kENVELOPEStr, fetchData, lineStr);
-                } else if (stringEqual(lineStr, CMailIMAP::kFLAGSStr + " ")) {
+                } else if (stringEqual(lineStr, std::string(CMailIMAP::kFLAGSStr) + " ")) {
                     parseList(CMailIMAP::kFLAGSStr, fetchData, lineStr);
-                } else if (stringEqual(lineStr, CMailIMAP::kBODYStr + " ")) {
+                } else if (stringEqual(lineStr, std::string(CMailIMAP::kBODYStr) + " ")) {
                     parseList(CMailIMAP::kBODYStr, fetchData, lineStr);
-                } else if (stringEqual(lineStr, CMailIMAP::kINTERNALDATEStr + " ")) {
+                } else if (stringEqual(lineStr, std::string(CMailIMAP::kINTERNALDATEStr) + " ")) {
                     parseString(CMailIMAP::kINTERNALDATEStr, fetchData, lineStr);
-                } else if (stringEqual(lineStr, CMailIMAP::kRFC822SIZEStr + " ")) {
+                } else if (stringEqual(lineStr, std::string(CMailIMAP::kRFC822SIZEStr) + " ")) {
                     parseNumber(CMailIMAP::kRFC822SIZEStr, fetchData, lineStr);
-                } else if (stringEqual(lineStr, CMailIMAP::kUIDStr + " ")) {
+                } else if (stringEqual(lineStr, std::string(CMailIMAP::kUIDStr) + " ")) {
                     parseNumber(CMailIMAP::kUIDStr, fetchData, lineStr);
-                } else if (stringEqual(lineStr, CMailIMAP::kRFC822HEADERStr + " ")) {
+                } else if (stringEqual(lineStr, std::string(CMailIMAP::kRFC822HEADERStr) + " ")) {
                     parseOctets(CMailIMAP::kRFC822HEADERStr, fetchData, lineStr, commandData.commandRespStream);
-                } else if (stringEqual(lineStr, CMailIMAP::kBODYStr + "[")) {
+                } else if (stringEqual(lineStr, std::string(CMailIMAP::kBODYStr) + "[")) {
                     parseOctets(CMailIMAP::kBODYStr, fetchData, lineStr, commandData.commandRespStream);
-                } else if (stringEqual(lineStr, CMailIMAP::kRFC822Str + " ")) {
+                } else if (stringEqual(lineStr, std::string(CMailIMAP::kRFC822Str) + " ")) {
                     parseOctets(CMailIMAP::kRFC822Str, fetchData, lineStr, commandData.commandRespStream);
                 } else {
                     throw Exception("error while parsing FETCH command [" + lineStr + "]");
@@ -611,7 +586,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::CommandD
                     lineStr = lineStr.substr(lineStr.find_first_not_of(' ')); // Next non space.
                     if (lineStr[0] == ')') { // End of FETCH List
                         endOfFetch = true;
-                    } else if (lineStr.length() == CMailIMAP::kEOLStr.length() - 1) { // No data left on line
+                    } else if (lineStr.length() == std::strlen(CMailIMAP::kEOLStr) - 1) { // No data left on line
                         parseGetNextLine(commandData.commandRespStream, lineStr); // Move to next
                     }
                 } else {
@@ -650,7 +625,7 @@ CMailIMAPParse::BASERESPONSE CMailIMAPParse::parseLOGOUT(CMailIMAPParse::Command
 
     for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
 
-        if (stringEqual(lineStr, CMailIMAP::kUntaggedStr + " " + CMailIMAP::kBYEStr)) {
+        if (stringEqual(lineStr, std::string(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kBYEStr)) {
             resp->rawResponse.push_back(std::move(lineStr));
             resp->bBYESent = true;
             continue;
