@@ -219,7 +219,7 @@ private:
 
     CURL *curlHandle = nullptr;              // curl handle
     CURLcode curlResult = CURLE_OK;          // curl status
-    curl_socket_t curlSockettFD;             // curl socket
+    curl_socket_t curlSocketFD;             // curl socket
     static bool bCurlVerbosity;              // curl verbosity setting 
     char curlRxBuffer[CURL_MAX_WRITE_SIZE];  // curl rx buffer
     char curlErrMsgBuffer[CURL_ERROR_SIZE];  // curl error string buffer

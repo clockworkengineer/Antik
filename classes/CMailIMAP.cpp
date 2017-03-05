@@ -161,15 +161,15 @@ int CMailIMAP::waitOnSocket(bool bRecv, long timeoutMS) {
     FD_ZERO(&sendfd);
     FD_ZERO(&errorfd);
 
-    FD_SET(this->curlSockettFD, &errorfd);
+    FD_SET(this->curlSocketFD, &errorfd);
 
     if (bRecv) {
-        FD_SET(this->curlSockettFD, &recvfd);
+        FD_SET(this->curlSocketFD, &recvfd);
     } else {
-        FD_SET(this->curlSockettFD, &sendfd);
+        FD_SET(this->curlSocketFD, &sendfd);
     }
 
-    res = select(this->curlSockettFD + 1, &recvfd, &sendfd, &errorfd, &timeoutValue);
+    res = select(this->curlSocketFD + 1, &recvfd, &sendfd, &errorfd, &timeoutValue);
 
     return res;
 
@@ -406,10 +406,10 @@ void CMailIMAP::connect(void) {
         // Get curl socket using CURLINFO_ACTIVESOCKET first then depreciated CURLINFO_LASTSOCKET
 
         this->curlErrMsgBuffer[0] = 0;
-        this->curlResult = curl_easy_getinfo(this->curlHandle, CURLINFO_ACTIVESOCKET, &this->curlSockettFD);
+        this->curlResult = curl_easy_getinfo(this->curlHandle, CURLINFO_ACTIVESOCKET, &this->curlSocketFD);
         if (this->curlResult == CURLE_BAD_FUNCTION_ARGUMENT) {
             this->curlErrMsgBuffer[0] = 0;
-            this->curlResult = curl_easy_getinfo(this->curlHandle, CURLINFO_LASTSOCKET, &this->curlSockettFD);
+            this->curlResult = curl_easy_getinfo(this->curlHandle, CURLINFO_LASTSOCKET, &this->curlSocketFD);
         }
         if (this->curlResult != CURLE_OK) {
             throwCurlError("Could not get curl socket.");

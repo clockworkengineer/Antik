@@ -365,8 +365,8 @@ private:
     //
     // Command response parse utility methods
     //
-      
-    static void parseStatus(const std::string& tagStr, const std::string& lineStr, BaseResponse &statusResponse);
+   
+    static void parseStatus(const std::string& tagStr, const std::string& lineStr, BaseResponse* statusResponse);
     static void parseOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr, std::istringstream& responseStream);
     static void parseList(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
     static void parseString(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
@@ -387,12 +387,6 @@ private:
     static BASERESPONSE parseNOOP(CommandData& commandData);
     static BASERESPONSE parseLOGOUT(CommandData& commandData);
     static BASERESPONSE parseDefault(CommandData& commandData);
-    
-    //
-    // Load IMAP command string to internal enum code map table
-    //
-   
-    static std::unordered_map<std::string, Commands> loadStringToCodeMap();
     
     // =================
     // PRIVATE VARIABLES
