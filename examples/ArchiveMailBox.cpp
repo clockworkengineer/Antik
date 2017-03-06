@@ -252,7 +252,7 @@ void fetchEmailAndArchive(CMailIMAP& imap, const std::string& mailBoxNameStr,
                 if (resp.first.find("BODY[]") == 0) {
                     emailBody = resp.second;
                 } else if (resp.first.find("BODY[HEADER.FIELDS (SUBJECT)]") == 0) {
-                    if (resp.second.length() > 8) { // Contains "Subject:"
+                    if (resp.second.find("Subject:") != std::string::npos) { // Contains "Subject:"
                         subject = resp.second.substr(8);
                         subject = CFileMIME::convertMIMEStringToASCII(subject);
                         if (subject.length() > kMaxSubjectLine) { // Truncate for file name

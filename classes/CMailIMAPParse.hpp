@@ -77,17 +77,7 @@ public:
         IDLE            // Supported
     };
 
-    //
-    // Command data structure
-    //
-    
-    struct CommandData {
-        std::string tagStr;                      // Command tag
-        Commands    commandCode;                 // Command code
-        std::string commandLineStr;              // Full command line
-        std::istringstream& commandRespStream;   // Command response stream (Note reference)
-    };
-
+ 
     //
     // Command response code enumeration.
     //
@@ -110,8 +100,8 @@ public:
     //
     
     struct FetchRespData {
-       uint64_t index=0;              // EMail Index/UID
-       CommandResponseMap responseMap;    // Fetch command response map
+       uint64_t index=0;                // EMail Index/UID
+       CommandResponseMap responseMap;  // Fetch command response map
     };
     
     //
@@ -155,6 +145,18 @@ public:
     };
     
     typedef  std::unique_ptr<CommandResponse> COMMANDRESPONSE; 
+
+    //
+    // Command data structure
+    //
+    
+    struct CommandData {
+        std::string tagStr;                      // Command tag
+        Commands    commandCode;                 // Command code
+        std::string commandLineStr;              // Full command line
+        std::istringstream& commandRespStream;   // Command response stream (Note reference)
+        COMMANDRESPONSE resp;                    // Parsed command response structure
+    };
 
     // ============
     // CONSTRUCTORS
@@ -207,7 +209,7 @@ private:
     // Parse function pointer
     //
     
-    typedef std::function<COMMANDRESPONSE  (CommandData& commandData)> ParseFunction;
+    typedef std::function<void  (CommandData& commandData)> ParseFunction;
     
     // ===========================================
     // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
@@ -243,17 +245,17 @@ private:
     // Command response parse methods
     //
     
-    static COMMANDRESPONSE parseFETCH(CommandData& commandData);
-    static COMMANDRESPONSE parseLIST(CommandData& commandData);
-    static COMMANDRESPONSE parseSEARCH(CommandData& commandData);
-    static COMMANDRESPONSE parseSELECT(CommandData& commandData);
-    static COMMANDRESPONSE parseSTATUS(CommandData& commandData);
-    static COMMANDRESPONSE parseEXPUNGE(CommandData& commandData);
-    static COMMANDRESPONSE parseSTORE(CommandData& commandData);
-    static COMMANDRESPONSE parseCAPABILITY(CommandData& commandData);
-    static COMMANDRESPONSE parseNOOP(CommandData& commandData);
-    static COMMANDRESPONSE parseLOGOUT(CommandData& commandData);
-    static COMMANDRESPONSE parseDefault(CommandData& commandData);
+    static void parseFETCH(CommandData& commandData);
+    static void parseLIST(CommandData& commandData);
+    static void parseSEARCH(CommandData& commandData);
+    static void parseSELECT(CommandData& commandData);
+    static void parseSTATUS(CommandData& commandData);
+    static void parseEXPUNGE(CommandData& commandData);
+    static void parseSTORE(CommandData& commandData);
+    static void parseCAPABILITY(CommandData& commandData);
+    static void parseNOOP(CommandData& commandData);
+    static void parseLOGOUT(CommandData& commandData);
+    static void parseDefault(CommandData& commandData);
     
     // =================
     // PRIVATE VARIABLES

@@ -297,7 +297,7 @@ void CMailIMAP::sendCommandIDLE(const std::string& commandLineStr) {
     this->waitForIMAPCommandResponse(kUntaggedStr, responseStr);
 
     if (!responseStr.empty()) {
-        this->sendIMAPCommand(std::string(kDONEStr) + kEOLStr);
+        this->sendIMAPCommand(static_cast<std::string>(kDONEStr) + kEOLStr);
         this->waitForIMAPCommandResponse(this->currentTagStr, this->commandResponseStr);
     } else {
         throw CMailIMAP::Exception("Server Disconnect without BYE.");

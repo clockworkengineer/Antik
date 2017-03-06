@@ -158,25 +158,29 @@ void downloadAttachment(CMailIMAP& imap, fs::path& destinationFolder, CMailIMAPB
     }
 
     for (auto fetchEntry : parsedResponse->fetchList) {
-        
+
         for (auto resp : fetchEntry.responseMap) {
-            
+
             if (resp.first.find("BODY[" + attachment.partNoStr + "]") == 0) {
                 fs::path fullFilePath = destinationFolder / attachment.fileNameStr;
-                
+
                 if (!fs::exists(fullFilePath)) {
                     std::string decodedStringStr;
                     std::istringstream responseStream(resp.second);
-                    std::ofstream ofs(fullFilePath.string(), std::ios::binary);
-                    std::cout << "Creating [" << fullFilePath.native() << "]" << std::endl;
-                    // Encoded lines have terminating '\r\n' the getline removes '\n'
-                    for (std::string lineStr; std::getline(responseStream, lineStr, '\n');) {
-                        lineStr.pop_back(); // Remove '\r'
-                        CMailSMTP::decodeFromBase64(lineStr, decodedStringStr, lineStr.length());
-                        ofs.write(&decodedStringStr[0], decodedStringStr.length());
+                    std::ofstream attachmentFileStream(fullFilePath.string(), std::ios::binary);
+                    if (attachmentFileStream) {
+                        std::cout << "Creating [" << fullFilePath.native() << "]" << std::endl;
+                        // Encoded lines have terminating '\r\n' the getline removes '\n'
+                        for (std::string lineStr; std::getline(responseStream, lineStr, '\n');) {
+                            lineStr.pop_back(); // Remove '\r'
+                            CMailSMTP::decodeFromBase64(lineStr, decodedStringStr, lineStr.length());
+                            attachmentFileStream.write(&decodedStringStr[0], decodedStringStr.length());
+                        }
+                    } else {
+                        std::cout << "Failed to create file [" << fullFilePath.native() << "]" << std::endl;
                     }
                 }
-                
+
             }
         }
     }
