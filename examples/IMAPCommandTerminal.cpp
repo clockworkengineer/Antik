@@ -277,16 +277,8 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::COMMANDRESPONSE& parse
         case CMailIMAPParse::Commands::EXPUNGE:
         {
             std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
-            std::cout << "EXISTS = ";
-            for (auto index : parsedResponse->exists) {
-                std::cout << index << " ";
-            }
-            std::cout << std::endl;
-            std::cout << "EXPUNGED = ";
-            for (auto index : parsedResponse->expunged) {
-                std::cout << index << " ";
-            }
-            std::cout << std::endl;
+            std::cout << "EXISTS = " << parsedResponse->responseMap[CMailIMAP::kEXISTSStr] << std::endl;
+            std::cout << "EXPUNGED = "<< parsedResponse->responseMap[CMailIMAP::kEXPUNGEStr] << std::endl;
             break;
         }
 
@@ -363,7 +355,7 @@ int main(int argc, char** argv) {
 
         ParamArgData argData;
         CMailIMAP imap;
-        std::deque<std::string> startupCommandsStr;
+        std::deque<std::string> startupCommandsStr { "SELECT INBOX", "EXPUNGE", "exit" };
 
         // Read in command line parameters and process
 

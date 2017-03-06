@@ -471,6 +471,10 @@ TEST_F(CMailIMAPParseTests, EXPUNGEValid) {
 
     std::vector<std::string> ExpungeResponseStr = { 
         { "A000002 EXPUNGE" },
+        { "* 3 EXPUNGE" },
+        { "* 3 EXPUNGE" },
+        { "* 3 EXPUNGE" },
+        { "* 8 EXPUNGE" },
         { "A000002 OK Success" }
    
     };
@@ -485,6 +489,8 @@ TEST_F(CMailIMAPParseTests, EXPUNGEValid) {
     
     EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
     
+    ASSERT_STREQ("3 3 3 8", parsedResponse->responseMap["EXPUNGE"].c_str());
+            
     EXPECT_FALSE(parsedResponse->bBYESent);
 
 }

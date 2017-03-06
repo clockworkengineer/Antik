@@ -102,7 +102,7 @@ public:
     // Command response map (item/value string pairs)
     //
     
-    typedef std::unordered_map<std::string, std::string> CommandRespMap;
+    typedef std::unordered_map<std::string, std::string> CommandResponseMap;
     
     //
     // FETCH response data
@@ -110,7 +110,7 @@ public:
     
     struct FetchRespData {
        uint64_t index=0;              // EMail Index/UID
-       CommandRespMap responseMap;    // Fetch command response map
+       CommandResponseMap responseMap;    // Fetch command response map
     };
     
     //
@@ -133,7 +133,7 @@ public:
     };
 
     //
-    // Parsed command structure.
+    // Parsed command response structure.
     // 
       
     struct CommandResponse {
@@ -144,13 +144,11 @@ public:
         RespCode status=RespCode::OK;    // Command enum status
         std::string errorMessageStr;     // Command error string
         bool bBYESent=false;             // ==true then BYE sent as part of response
-        CommandRespMap responseMap;      // Command response map 
+        CommandResponseMap responseMap;  // Command response map 
 
         std::vector<uint64_t> indexes;          // Vector of SEARCH index(s)/UID(s)
         std::vector<ListRespData> mailBoxList;  // Vector of LIST response data
         std::vector<StoreRespData> storeList;   // Vector of STORE response data
-        std::vector<uint64_t> exists;           // Vector of EXISTS responses
-        std::vector<uint64_t> expunged;         // Vector of EXPUNGED responses
         std::vector<FetchRespData> fetchList;   // Vector of FETCH response data
         std::vector<std::string> rawResponse;   // Vector of IDLE raw response data
         
@@ -158,19 +156,15 @@ public:
     
     typedef  std::unique_ptr<CommandResponse> COMMANDRESPONSE; 
 
-     // ============
+    // ============
     // CONSTRUCTORS
     // ============
-    
-    CMailIMAPParse();
-
+ 
     // ==========
     // DESTRUCTOR
     // ==========
     
-    virtual ~CMailIMAPParse();
-    
-  // ==============
+    // ==============
     // PUBLIC METHODS
     // ==============
     
@@ -219,6 +213,8 @@ private:
     // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
     // ===========================================
     
+    CMailIMAPParse() = delete;
+    virtual ~CMailIMAPParse() = delete;
     CMailIMAPParse(const CMailIMAPParse & orig) = delete;
     CMailIMAPParse(const CMailIMAPParse && orig) = delete;
     CMailIMAPParse& operator=(CMailIMAPParse other) = delete;
