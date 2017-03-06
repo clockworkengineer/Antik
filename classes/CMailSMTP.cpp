@@ -105,7 +105,8 @@ const std::string CMailSMTP::currentDateAndTime(void) {
 // Fill libcurl read request buffer.
 //
 
-size_t CMailSMTP::payloadSource(void *ptr, size_t size, size_t nmemb, std::deque<std::string> *mailPayload) {
+size_t CMailSMTP::payloadSource(void *ptr, size_t size, size_t nmemb, 
+                              std::deque<std::string> *mailPayload) {
 
     size_t bytesCopied=0;
 
@@ -283,7 +284,7 @@ void CMailSMTP::setServer(const std::string& serverURL) {
 // Get STMP server URL
 // 
 
-std::string CMailSMTP::getServer(void) {
+std::string CMailSMTP::getServer(void) const {
 
     return(this->serverURL);
     
@@ -294,7 +295,8 @@ std::string CMailSMTP::getServer(void) {
 // Set email account details
 //
 
-void CMailSMTP::setUserAndPassword(const std::string& userName, const std::string& userPassword) {
+void CMailSMTP::setUserAndPassword(const std::string& userName, 
+                             const std::string& userPassword) {
 
     this->userName = userName;
     this->userPassword = userPassword;
@@ -305,7 +307,7 @@ void CMailSMTP::setUserAndPassword(const std::string& userName, const std::strin
 // Get email account user
 //
 
-std::string CMailSMTP::getUser(void) {
+std::string CMailSMTP::getUser(void) const {
 
     return(this->userName);
 
@@ -324,7 +326,7 @@ void CMailSMTP::setFromAddress(const std::string& addressFrom) {
 // Get From address
 //
 
-std::string CMailSMTP::getFromAddress(void) {
+std::string CMailSMTP::getFromAddress(void) const {
 
     return(this->addressFrom);
     
@@ -344,7 +346,7 @@ void CMailSMTP::setToAddress(const std::string& addressTo) {
 // Get To address
 //
 
-std::string CMailSMTP::getToAddress(void) {
+std::string CMailSMTP::getToAddress(void) const {
 
     return(this->addressTo);
     
@@ -363,7 +365,7 @@ void CMailSMTP::setCCAddress(const std::string& addressCC) {
 // Get CC recipient address
 //
 
-std::string CMailSMTP::getCCAddress(void) {
+std::string CMailSMTP::getCCAddress(void) const {
 
     return(this->addressCC);
     
@@ -383,7 +385,7 @@ void CMailSMTP::setMailSubject(const std::string& mailSubject) {
 // Get email subject
 //
 
-std::string CMailSMTP::getMailSubject(void) {
+std::string CMailSMTP::getMailSubject(void) const {
 
     return(this->mailSubject);
 
@@ -401,7 +403,7 @@ void CMailSMTP::setMailMessage(const std::vector<std::string>& mailMessage) {
 // Get body of email message
 //
 
-std::string CMailSMTP::getMailMessage(void) {
+std::string CMailSMTP::getMailMessage(void) const {
     
    std::string mailMessage;
     
@@ -417,7 +419,9 @@ std::string CMailSMTP::getMailMessage(void) {
 // Add file attachment.
 // 
 
-void CMailSMTP::addFileAttachment(const std::string& fileName, const std::string& contentType, const std::string& contentTransferEncoding) {
+void CMailSMTP::addFileAttachment(const std::string& fileName, 
+                                  const std::string& contentType,
+                                  const std::string& contentTransferEncoding) {
 
     this->attachedFiles.push_back({fileName, contentType, contentTransferEncoding});
 
@@ -500,7 +504,8 @@ void CMailSMTP::postMail(void) {
 // Encode string to base64 string.
 //
 
-void CMailSMTP::encodeToBase64(const std::string& decodedString, std::string& encodedString, uint32_t numberOfBytes) {
+void CMailSMTP::encodeToBase64(const std::string& decodedString, 
+                std::string& encodedString, uint32_t numberOfBytes) {
 
     int trailing, byteIndex=0;
     register uint8_t byte1, byte2, byte3;
@@ -553,7 +558,8 @@ void CMailSMTP::encodeToBase64(const std::string& decodedString, std::string& en
 // Decode string from base64 encoded string.
 //
  
-void CMailSMTP::decodeFromBase64(const std::string& encodedString, std::string& decodedString, uint32_t numberOfBytes) {
+void CMailSMTP::decodeFromBase64(const std::string& encodedString, 
+               std::string& decodedString, uint32_t numberOfBytes) {
 
     int byteIndex = 0;
     register uint8_t byte1, byte2, byte3, byte4;

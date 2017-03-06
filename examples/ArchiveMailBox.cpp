@@ -188,9 +188,10 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Parse command response and return pointer to parsed data.
 //
 
-CMailIMAPParse::BASERESPONSE parseCommandResponse(const std::string& commandStr, const std::string& commandResponseStr) {
+CMailIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandStr, 
+                             const std::string& commandResponseStr) {
 
-    CMailIMAPParse::BASERESPONSE parsedResponse;
+    CMailIMAPParse::COMMANDRESPONSE parsedResponse;
 
     try {
         parsedResponse = CMailIMAPParse::parseResponse(commandResponseStr);
@@ -213,7 +214,8 @@ CMailIMAPParse::BASERESPONSE parseCommandResponse(const std::string& commandStr,
 // Send command to IMAP server. At present it checks for any errors and just exits.
 //
 
-std::string sendCommand(CMailIMAP& imap, const std::string& mailBoxNameStr, const std::string& commandStr) {
+std::string sendCommand(CMailIMAP& imap, const std::string& mailBoxNameStr, 
+                           const std::string& commandStr) {
 
     std::string commandResponseStr;
 
@@ -232,10 +234,11 @@ std::string sendCommand(CMailIMAP& imap, const std::string& mailBoxNameStr, cons
 // Fetch a given emails body and subject line and create an .eml file for it.
 //
 
-void fetchEmailAndArchive(CMailIMAP& imap, const std::string& mailBoxNameStr, const fs::path& destinationFolder, std::uint64_t index) {
+void fetchEmailAndArchive(CMailIMAP& imap, const std::string& mailBoxNameStr, 
+                     const fs::path& destinationFolder, std::uint64_t index) {
 
     std::string commandStr, commandResponseStr, subject, emailBody;
-    CMailIMAPParse::BASERESPONSE parsedResponse;
+    CMailIMAPParse::COMMANDRESPONSE parsedResponse;
 
     commandStr = "UID FETCH " + std::to_string(index) + " (BODY[] BODY[HEADER.FIELDS (SUBJECT)])";
     commandResponseStr = sendCommand(imap, mailBoxNameStr, commandStr);
@@ -243,8 +246,7 @@ void fetchEmailAndArchive(CMailIMAP& imap, const std::string& mailBoxNameStr, co
 
     if (parsedResponse) {
 
-        auto *ptr = static_cast<CMailIMAPParse::FetchResponse *> (parsedResponse.get());
-        for (auto fetchEntry : ptr->fetchList) {
+        for (auto fetchEntry : parsedResponse->fetchList) {
             std::cout << "EMAIL MESSAGE NO. [" << fetchEntry.index << "]" << std::endl;
             for (auto resp : fetchEntry.responseMap) {
                 if (resp.first.find("BODY[]") == 0) {
@@ -334,11 +336,12 @@ std::string getSearchDate(const fs::path& destinationFolder) {
 // Convert list of comma separated mailbox names / list all mailboxes and place into vector or mailbox name strings.
 //
 
-void createMailBoxList(CMailIMAP& imap, const ParamArgData& argData, std::vector<std::string>& mailBoxList) {
+void createMailBoxList(CMailIMAP& imap, const ParamArgData& argData, 
+                       std::vector<std::string>& mailBoxList) {
 
     if (argData.bAllMailBoxes) {
         std::string commandStr, commandResponseStr;
-        CMailIMAPParse::BASERESPONSE parsedResponse;
+        CMailIMAPParse::COMMANDRESPONSE parsedResponse;
 
         commandStr = "LIST \"\" *";
         commandResponseStr = sendCommand(imap, "", commandStr);
@@ -346,9 +349,7 @@ void createMailBoxList(CMailIMAP& imap, const ParamArgData& argData, std::vector
 
         if (parsedResponse) {
 
-            auto ptr = static_cast<CMailIMAPParse::ListResponse *> (parsedResponse.get());
-
-            for (auto mailBoxEntry : ptr->mailBoxList) {
+            for (auto mailBoxEntry : parsedResponse->mailBoxList) {
                 if (mailBoxEntry.mailBoxNameStr.front() == ' ') mailBoxEntry.mailBoxNameStr = mailBoxEntry.mailBoxNameStr.substr(1);
                 if (mailBoxEntry.attributesStr.find("\\Noselect") == std::string::npos) {
                     mailBoxList.push_back(mailBoxEntry.mailBoxNameStr);
@@ -403,7 +404,7 @@ int main(int argc, char** argv) {
 
         for (std::string mailBoxStr : mailBoxList) {
 
-            CMailIMAPParse::BASERESPONSE parsedResponse;
+            CMailIMAPParse::COMMANDRESPONSE parsedResponse;
             fs::path mailBoxPath;
             std::string commandStr, commandResponseStr, searchDate;
 
@@ -446,9 +447,8 @@ int main(int argc, char** argv) {
             commandResponseStr = sendCommand(imap, mailBoxStr, commandStr);
             parsedResponse = parseCommandResponse(commandStr, commandResponseStr);
             if (parsedResponse) {
-                auto *ptr = static_cast<CMailIMAPParse::SearchResponse *> (parsedResponse.get());
-                std::cout << "Messages found = " << ptr->indexes.size() << std::endl;
-                for (auto index : ptr->indexes) {
+                std::cout << "Messages found = " << parsedResponse->indexes.size() << std::endl;
+                for (auto index : parsedResponse->indexes) {
                     fetchEmailAndArchive(imap, mailBoxStr, mailBoxPath, index);
                 }
             }
@@ -459,9 +459,9 @@ int main(int argc, char** argv) {
 
         imap.disconnect();
 
-        //
-        // Catch any errors
-        //    
+    //
+    // Catch any errors
+    //    
 
     } catch (CMailIMAP::Exception &e) {
         exitWithError(e.what());

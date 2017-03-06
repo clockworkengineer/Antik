@@ -80,8 +80,8 @@ public:
     void setServer(const std::string& serverURL);
     void setUserAndPassword(const std::string& userName, const std::string& userPassword);  
     
-    std::string getServer(void);
-    std::string getUser(void);
+    std::string getServer(void) const;
+    std::string getUser(void) const;
  
     // Set/Get email message header details
     
@@ -89,9 +89,9 @@ public:
     void setToAddress(const std::string& addressTo);
     void setCCAddress(const std::string& addressCC);
     
-    std::string  getFromAddress(void);
-    std::string  getToAddress(void);
-    std::string  getCCAddress(void);
+    std::string  getFromAddress(void) const;
+    std::string  getToAddress(void) const;
+    std::string  getCCAddress(void) const;
     
     // Set email content details
     
@@ -99,8 +99,8 @@ public:
     void setMailMessage(const std::vector<std::string>& mailMessage);
     void addFileAttachment(const std::string& fileName, const std::string& contentType, const std::string& contentTransferEncoding);
  
-    std::string getMailSubject(void);
-    std::string getMailMessage(void);
+    std::string getMailSubject(void) const;
+    std::string getMailMessage(void) const;
     
     // Send email
    

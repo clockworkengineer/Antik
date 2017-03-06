@@ -150,16 +150,14 @@ void downloadAttachment(CMailIMAP& imap, fs::path& destinationFolder, CMailIMAPB
 
     std::string commandLineStr("FETCH " + attachment.indexStr + " BODY[" + attachment.partNoStr + "]");
     std::string parsedResponseStr(imap.sendCommand(commandLineStr));
-    CMailIMAPParse::BASERESPONSE parsedResponse(CMailIMAPParse::parseResponse(parsedResponseStr));
+    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(parsedResponseStr));
 
     if ((parsedResponse->status == CMailIMAPParse::RespCode::BAD) ||
             (parsedResponse->status == CMailIMAPParse::RespCode::NO)) {
         throw CMailIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessageStr);
     }
 
-    CMailIMAPParse::FetchResponse *ptr = static_cast<CMailIMAPParse::FetchResponse *> (parsedResponse.get());
-
-    for (auto fetchEntry : ptr->fetchList) {
+    for (auto fetchEntry : parsedResponse->fetchList) {
         
         for (auto resp : fetchEntry.responseMap) {
             
@@ -225,7 +223,7 @@ int main(int argc, char** argv) {
         ParamArgData argData;
         CMailIMAP imap;
         std::string parsedResponseStr;
-        CMailIMAPParse::BASERESPONSE  parsedResponse;
+        CMailIMAPParse::COMMANDRESPONSE  parsedResponse;
 
         // Read in command line parameters and process
 
@@ -274,12 +272,11 @@ int main(int argc, char** argv) {
             throw CMailIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
         }
 
-        CMailIMAPParse::FetchResponse *ptr = static_cast<CMailIMAPParse::FetchResponse *> (parsedResponse.get());
-        std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(ptr->command) << std::endl;
+        std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
 
         //  Take decoded response and get any attachments specified in BODYSTRUCTURE.
         
-        for (auto fetchEntry : ptr->fetchList) {
+        for (auto fetchEntry : parsedResponse->fetchList) {
             std::cout << "EMAIL INDEX [" << fetchEntry.index << "]" << std::endl;
             for (auto resp : fetchEntry.responseMap) {
                 if (resp.first.compare(CMailIMAP::kBODYSTRUCTUREStr) == 0) {

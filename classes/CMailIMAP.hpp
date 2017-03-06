@@ -113,6 +113,13 @@ public:
     static const char *kRFC822TEXTStr;
     static const char *kBYEStr;
 
+    //
+    // Response MAP generated entries.
+    //
+
+    static const char *kMAILBOXNAMEStr;
+    static const char *kMAILBOXACCESSStr;
+
     // ============
     // CONSTRUCTORS
     // ============
@@ -139,8 +146,8 @@ public:
 
     void setServer(const std::string& serverURLStr);
     void setUserAndPassword(const std::string& userNameStr, const std::string& userPasswordStr);
-    std::string getServer(void);
-    std::string getUser(void);
+    std::string getServer(void) const;
+    std::string getUser(void) const;
     
     //
     // IMAP connect, send command and disconnect
@@ -149,7 +156,7 @@ public:
     void connect(void);
     std::string sendCommand(const std::string& commandLineStr);
     void disconnect(void);
-    bool getConnectedStatus(void);
+    bool getConnectedStatus(void) const;
     
     // IMAP initialization and closedown processing
 

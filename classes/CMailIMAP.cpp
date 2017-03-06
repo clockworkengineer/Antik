@@ -113,6 +113,14 @@ const char *CMailIMAP::kRFC822SIZEStr = "RFC822.SIZE";
 const char *CMailIMAP::kRFC822TEXTStr = "RFC822.TEXT";
 const char *CMailIMAP::kBYEStr = "BYE";
 
+//
+// Response MAP generated entries.
+//
+
+const char *CMailIMAP::kMAILBOXNAMEStr = "MAILBOX-NAME";
+const char *CMailIMAP::kMAILBOXACCESSStr = "MAILBOX-ACCESS";
+
+
 // ========================
 // PRIVATE STATIC VARIABLES
 // ========================
@@ -335,7 +343,7 @@ void CMailIMAP::setServer(const std::string& serverURLStr) {
 // Get IMAP server URL
 // 
 
-std::string CMailIMAP::getServer(void) {
+std::string CMailIMAP::getServer(void) const {
 
     return (this->serverURLStr);
 
@@ -356,10 +364,9 @@ void CMailIMAP::setUserAndPassword(const std::string& userNameStr, const std::st
 // Get email account user details
 //
 
-std::string CMailIMAP::getUser(void) {
+std::string CMailIMAP::getUser(void) const {
 
-    this->userNameStr = userNameStr;
-    this->userPasswordStr = userPasswordStr;
+    return(userNameStr);
 
 }
 
@@ -367,7 +374,7 @@ std::string CMailIMAP::getUser(void) {
 // Get current connection status with server
 //
 
-bool CMailIMAP::getConnectedStatus(void) {
+bool CMailIMAP::getConnectedStatus(void) const {
 
     return (this->bConnected);
 

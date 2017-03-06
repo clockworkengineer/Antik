@@ -48,6 +48,7 @@ public:
     //
 
     enum class Commands {
+        NONE = -1,
         STARTTLS = 0,   // Supported (through curl connect)
         AUTHENTICATE,   // Supported (through curl connect)
         LOGIN,          // Supported (through curl connect)
@@ -127,165 +128,35 @@ public:
     //
     
     struct StoreRespData {
-        uint64_t index=0;             // EMail Index/UID
+        uint64_t index=0;           // EMail Index/UID
         std::string flagsListStr;   // EMail flags list
     };
 
     //
-    // Parsed command structures.
+    // Parsed command structure.
     // 
-    
-    // BASE
-    
-    struct BaseResponse {
-
-        BaseResponse(Commands command) : command {command} {}
-        
-        BaseResponse(Commands command, RespCode status, std::string  errorMessageStr, bool  bBYESent) 
-        : command {command}, status {status}, errorMessageStr { errorMessageStr}, bBYESent {bBYESent} {}
-        
-        Commands command;               // Command enum code
-        RespCode status=RespCode::OK;   // Command enum status
-        std::string errorMessageStr;    // Command error string
-        bool bBYESent=false;            // ==true then BYE sent as part of response
-
-    };
-
-    // SEARCH
-    
-    struct SearchResponse : public BaseResponse {
-    
-        SearchResponse(Commands command) : BaseResponse(command) {} 
-        
-        std::vector<uint64_t> indexes;  // Email index(s)/UID(s) returned
-        
-    };
-
-    // SELECT / EXAMINE
-    
-    struct SelectResponse : public BaseResponse {
       
-        SelectResponse(Commands command) : BaseResponse(command) {} 
-  
-        std::string mailBoxNameStr;    // Mailbox name
-        std::string mailBoxAccessStr;  // Mailbox access permissions
-        CommandRespMap responseMap;    // Command response map 
+    struct CommandResponse {
 
-    };
-    
-    struct ExamineResponse : public SelectResponse {
+        CommandResponse(Commands command) : command {command} {}
+             
+        Commands command=Commands::NONE; // Command enum code
+        RespCode status=RespCode::OK;    // Command enum status
+        std::string errorMessageStr;     // Command error string
+        bool bBYESent=false;             // ==true then BYE sent as part of response
+        CommandRespMap responseMap;      // Command response map 
 
-        ExamineResponse(Commands command) : SelectResponse(command) {}
-
-    };
- 
-    // LIST / LSUB
-    
-    struct ListResponse : public BaseResponse {
-    
-        ListResponse(Commands command) : BaseResponse(command) {}
-          
-        std::vector<ListRespData> mailBoxList;  // Vector of mailbox list response data
-        
-    };
-    
-    struct LSubResponse : public ListResponse {
-        
-        LSubResponse(Commands command) : ListResponse(command) {}
-    
-    };
-    
-    // STATUS
-    
-    struct StatusResponse : public BaseResponse {
-    
-       StatusResponse(Commands command) : BaseResponse(command) {}
- 
-       std::string mailBoxNameStr;     // Mailbox name
-       CommandRespMap responseMap;     // Command response map
-       
-    };
-    
-    // EXPUNGE
-    
-    struct ExpungeResponse : public BaseResponse {
-        
-        ExpungeResponse(Commands command) : BaseResponse(command) {}
- 
-        std::vector<uint64_t> exists;       // Vector of exists responses
-        std::vector<uint64_t> expunged;     // Vector of expunged responses
-    
-    };
-   
-    // STORE
-    
-    struct StoreResponse : public BaseResponse {
-        
-        StoreResponse(Commands command) : BaseResponse(command) {}
-
+        std::vector<uint64_t> indexes;          // Vector of SEARCH index(s)/UID(s)
+        std::vector<ListRespData> mailBoxList;  // Vector of LIST response data
         std::vector<StoreRespData> storeList;   // Vector of STORE response data
-    };
-    
-    // CAPABILITY
-    
-    struct CapabilityResponse : public BaseResponse {
-        
-        CapabilityResponse(Commands command) : BaseResponse(command) {}
-
-        std::string capabilitiesStr;    // Capabilities
-    
-    };
-    
-    // FETCH
-    
-    struct FetchResponse : public BaseResponse {
-        
-        FetchResponse(Commands command) : BaseResponse(command) {}
-    
+        std::vector<uint64_t> exists;           // Vector of EXISTS responses
+        std::vector<uint64_t> expunged;         // Vector of EXPUNGED responses
         std::vector<FetchRespData> fetchList;   // Vector of FETCH response data
-    
-    };
-    
-    // NOOP / LOGOUT / IDLE
-    
-    struct NoOpResponse : public BaseResponse {
+        std::vector<std::string> rawResponse;   // Vector of IDLE raw response data
         
-        NoOpResponse(Commands command) : BaseResponse(command) {}
-              
-        std::vector<std::string> rawResponse;   // Raw IDLE response data
-    
     };
     
-    struct LogOutResponse : public NoOpResponse {
-    
-        LogOutResponse(Commands command) : NoOpResponse(command) {}
-              
-    };
-    
-    struct IdleResponse : NoOpResponse {
-    
-        IdleResponse(Commands command) : NoOpResponse(command) {}
-              
-    };
-  
-    //
-    // Command response structure unique pointer wrapper.
-    //
-    
-    typedef  std::unique_ptr<BaseResponse> BASERESPONSE; 
-    typedef  std::unique_ptr<SearchResponse> SEARCHRESPONSE;
-    typedef  std::unique_ptr<SelectResponse> SELECTRESPONSE;
-    typedef  std::unique_ptr<ExamineResponse> EXAMINERESPONSE;
-    typedef  std::unique_ptr<ListResponse> LISTRESPONSE;
-    typedef  std::unique_ptr<LSubResponse> LSUBRESPONSE;
-    typedef  std::unique_ptr<StatusResponse> STATUSRESPONSE;
-    typedef  std::unique_ptr<ExpungeResponse> EXPUNGERESPONSE;
-    typedef  std::unique_ptr<StoreResponse> STORERESPONSE;
-    typedef  std::unique_ptr<CapabilityResponse> CAPABILITYRESPONSE;
-    typedef  std::unique_ptr<FetchResponse> FETCHRESPONSE;
-    typedef  std::unique_ptr<NoOpResponse> NOOPRESPONSE;
-    typedef  std::unique_ptr<LogOutResponse> LOGOUTRESPONSE;
-    typedef  std::unique_ptr<IdleResponse> IDLERESPONSE;
+    typedef  std::unique_ptr<CommandResponse> COMMANDRESPONSE; 
 
      // ============
     // CONSTRUCTORS
@@ -313,7 +184,7 @@ public:
     // Parse IMAP command response and return parsed response structure.
     //
     
-    static BASERESPONSE parseResponse(const std::string& commandResponseStr);
+    static COMMANDRESPONSE parseResponse(const std::string& commandResponseStr);
     
     //
     // Command response parse string utility methods
@@ -342,7 +213,7 @@ private:
     // Parse function pointer
     //
     
-    typedef std::function<BASERESPONSE  (CommandData& commandData)> ParseFunction;
+    typedef std::function<COMMANDRESPONSE  (CommandData& commandData)> ParseFunction;
     
     // ===========================================
     // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
@@ -366,7 +237,7 @@ private:
     // Command response parse utility methods
     //
    
-    static void parseStatus(const std::string& tagStr, const std::string& lineStr, BaseResponse* statusResponse);
+    static void parseStatus(const std::string& tagStr, const std::string& lineStr, CommandResponse* statusResponse);
     static void parseOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr, std::istringstream& responseStream);
     static void parseList(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
     static void parseString(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
@@ -376,17 +247,17 @@ private:
     // Command response parse methods
     //
     
-    static BASERESPONSE parseFETCH(CommandData& commandData);
-    static BASERESPONSE parseLIST(CommandData& commandData);
-    static BASERESPONSE parseSEARCH(CommandData& commandData);
-    static BASERESPONSE parseSELECT(CommandData& commandData);
-    static BASERESPONSE parseSTATUS(CommandData& commandData);
-    static BASERESPONSE parseEXPUNGE(CommandData& commandData);
-    static BASERESPONSE parseSTORE(CommandData& commandData);
-    static BASERESPONSE parseCAPABILITY(CommandData& commandData);
-    static BASERESPONSE parseNOOP(CommandData& commandData);
-    static BASERESPONSE parseLOGOUT(CommandData& commandData);
-    static BASERESPONSE parseDefault(CommandData& commandData);
+    static COMMANDRESPONSE parseFETCH(CommandData& commandData);
+    static COMMANDRESPONSE parseLIST(CommandData& commandData);
+    static COMMANDRESPONSE parseSEARCH(CommandData& commandData);
+    static COMMANDRESPONSE parseSELECT(CommandData& commandData);
+    static COMMANDRESPONSE parseSTATUS(CommandData& commandData);
+    static COMMANDRESPONSE parseEXPUNGE(CommandData& commandData);
+    static COMMANDRESPONSE parseSTORE(CommandData& commandData);
+    static COMMANDRESPONSE parseCAPABILITY(CommandData& commandData);
+    static COMMANDRESPONSE parseNOOP(CommandData& commandData);
+    static COMMANDRESPONSE parseLOGOUT(CommandData& commandData);
+    static COMMANDRESPONSE parseDefault(CommandData& commandData);
     
     // =================
     // PRIVATE VARIABLES
