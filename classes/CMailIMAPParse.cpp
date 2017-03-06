@@ -133,8 +133,7 @@ bool CMailIMAPParse::parseGetNextLine(std::istringstream& responseStream, std::s
         return (bLineRead);
     } else {
         throw Exception("error parsing command response (run out of input).");
-    }
-}
+    }}
 
 //
 // Parse item/number pair in command response and add to response map. Note the current line is 
@@ -208,32 +207,60 @@ void CMailIMAPParse::parseOctets(const std::string& itemStr, FetchRespData& fetc
 }
 
 //
-// Parse command response status and return response. At present an un-tagged BAD/NO gets 
-// sent to std::cerr. Note: Any optional string that the server provides with a status is 
-// stored away in the a response for use by the caller.
+// Parse command response common fields including status and return response. This may include
+// untagged EXISTS/EXPUNGED/RECENT replies to the current command or server replies to changes
+// in mailbox status.
 //
 
-void CMailIMAPParse::parseStatus(const std::string& tagStr, const std::string& lineStr, CommandResponse * statusResponse) {
+void CMailIMAPParse::parseCommon(const std::string& tagStr, const std::string& lineStr, CommandResponse * resp) {
 
-    if (stringEqual(lineStr, tagStr + " " + CMailIMAP::kOKStr)) {
-        statusResponse->status = RespCode::OK;
+    
+    if ((lineStr[0] == CMailIMAP::kUntaggedStr[0]) &&
+            (lineStr.find(CMailIMAP::kRECENTStr) != std::string::npos)) {
+        
+          if (resp->responseMap.find(CMailIMAP::kRECENTStr) == resp->responseMap.end()) {
+            resp->responseMap.insert({CMailIMAP::kRECENTStr, stringUntaggedNumber(lineStr)});
+        } else {
+            resp->responseMap[CMailIMAP::kRECENTStr] += " " + stringUntaggedNumber(lineStr);
+        }
+
+    } else if ((lineStr[0] == CMailIMAP::kUntaggedStr[0]) &&
+            (lineStr.find(CMailIMAP::kEXISTSStr) != std::string::npos)) {
+
+        if (resp->responseMap.find(CMailIMAP::kEXISTSStr) == resp->responseMap.end()) {
+            resp->responseMap.insert({CMailIMAP::kEXISTSStr, stringUntaggedNumber(lineStr)});
+        } else {
+            resp->responseMap[CMailIMAP::kEXISTSStr] += " " + stringUntaggedNumber(lineStr);
+        }
+
+    } else if ((lineStr[0] == CMailIMAP::kUntaggedStr[0]) &&
+            (lineStr.find(CMailIMAP::kEXPUNGEStr) != std::string::npos)) {
+
+        if (resp->responseMap.find(CMailIMAP::kEXPUNGEStr) == resp->responseMap.end()) {
+            resp->responseMap.insert({CMailIMAP::kEXPUNGEStr, stringUntaggedNumber(lineStr)});
+        } else {
+            resp->responseMap[CMailIMAP::kEXPUNGEStr] += " " + stringUntaggedNumber(lineStr);
+        }
+
+    } else if (stringEqual(lineStr, tagStr + " " + CMailIMAP::kOKStr)) {
+        resp->status = RespCode::OK;
 
     } else if (stringEqual(lineStr, tagStr + " " + CMailIMAP::kNOStr)) {
-        statusResponse->status = RespCode::NO;
-        statusResponse->errorMessageStr = lineStr;
+        resp->status = RespCode::NO;
+        resp->errorMessageStr = lineStr;
 
     } else if (stringEqual(lineStr, tagStr + " " + CMailIMAP::kBADStr)) {
-        statusResponse->status = RespCode::BAD;
-        statusResponse->errorMessageStr = lineStr;
+        resp->status = RespCode::BAD;
+        resp->errorMessageStr = lineStr;
 
-    } else if (stringEqual(lineStr, static_cast<std::string>(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kBYEStr)) {
-        if (!statusResponse->bBYESent) {
-            statusResponse->bBYESent = true;
+    } else if (stringEqual(lineStr, static_cast<std::string> (CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kBYEStr)) {
+        if (!resp->bBYESent) {
+            resp->bBYESent = true;
         }
-        statusResponse->errorMessageStr = lineStr;
+        resp->errorMessageStr = lineStr;
 
-    } else if ((stringEqual(lineStr, static_cast<std::string>(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kNOStr))
-            || (stringEqual(lineStr, static_cast<std::string>(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kBADStr))) {
+    } else if ((stringEqual(lineStr, static_cast<std::string> (CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kNOStr))
+            || (stringEqual(lineStr, static_cast<std::string> (CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kBADStr))) {
         std::cerr << lineStr << std::endl;
 
     } else if (stringEqual(lineStr, CMailIMAP::kUntaggedStr)) {
@@ -246,12 +273,10 @@ void CMailIMAPParse::parseStatus(const std::string& tagStr, const std::string& l
 }
 
 //
-// Parse SELECT/EXAMINE Response. Note: The mailbox name is stringed from the 
-// command line and used when decoding the response to find the mailbox access 
-// privileges (READ-ONLY or READ-WRITE).
+// Parse SELECT/EXAMINE Response.
 //
 
-CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSELECT(CMailIMAPParse::CommandData& commandData) {
+CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSELECT(CommandData& commandData) {
 
     COMMANDRESPONSE resp{ new CommandResponse { commandData.commandCode}};
 
@@ -291,14 +316,8 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSELECT(CMailIMAPParse::Comm
         } else if (lineStr.find(CMailIMAP::kUNSEENStr) == 0) {
             resp->responseMap.insert({CMailIMAP::kUNSEENStr, stringBetween(lineStr, ' ', ']')});
 
-        } else if (lineStr.find(CMailIMAP::kEXISTSStr) != std::string::npos) {
-            resp->responseMap.insert({CMailIMAP::kEXISTSStr, stringUntaggedNumber(lineStr)});
-
-        } else if (lineStr.find(CMailIMAP::kRECENTStr) != std::string::npos) {
-            resp->responseMap.insert({CMailIMAP::kRECENTStr, stringUntaggedNumber(lineStr)});
-
         } else {
-            parseStatus(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
+            parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
             if (resp->status == RespCode::OK) {
                 resp->responseMap.insert({CMailIMAP::kMAILBOXACCESSStr,  stringBetween(lineStr, '[', ']')});
             }
@@ -314,7 +333,7 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSELECT(CMailIMAPParse::Comm
 // Parse SEARCH Response.
 //
 
-CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSEARCH(CMailIMAPParse::CommandData& commandData) {
+CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSEARCH(CommandData& commandData) {
 
     COMMANDRESPONSE resp{ new CommandResponse { commandData.commandCode}};
 
@@ -336,7 +355,7 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSEARCH(CMailIMAPParse::Comm
             }
 
         } else {
-            parseStatus(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
+            parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
         }
 
     }
@@ -349,7 +368,7 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSEARCH(CMailIMAPParse::Comm
 // Parse LIST/LSUB Response.
 //
 
-CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseLIST(CMailIMAPParse::CommandData& commandData) {
+CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseLIST(CommandData& commandData) {
 
     COMMANDRESPONSE resp{ new CommandResponse { commandData.commandCode}};
 
@@ -371,7 +390,7 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseLIST(CMailIMAPParse::Comman
             resp->mailBoxList.push_back(std::move(mailBoxEntry));
 
         } else {
-            parseStatus(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
+            parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
         }
 
     }
@@ -384,7 +403,7 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseLIST(CMailIMAPParse::Comman
 // Parse STATUS Response.
 //
 
-CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSTATUS(CMailIMAPParse::CommandData& commandData) {
+CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSTATUS(CommandData& commandData) {
 
     COMMANDRESPONSE resp{ new CommandResponse { commandData.commandCode}};
 
@@ -410,7 +429,7 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSTATUS(CMailIMAPParse::Comm
             }
 
         } else {
-            parseStatus(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
+            parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
         }
 
     }
@@ -423,31 +442,13 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSTATUS(CMailIMAPParse::Comm
 // Parse EXPUNGE Response.
 //
 
-CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseEXPUNGE(CMailIMAPParse::CommandData& commandData) {
+CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseEXPUNGE(CommandData& commandData) {
 
     COMMANDRESPONSE resp{ new CommandResponse { commandData.commandCode}};
 
     for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
 
-        if (lineStr.find(CMailIMAP::kEXISTSStr) != std::string::npos) {
-            lineStr = stringUntaggedNumber(lineStr);
-            if (resp->responseMap.find(CMailIMAP::kEXISTSStr) == resp->responseMap.end()) {
-                resp->responseMap.insert( {CMailIMAP::kEXISTSStr, lineStr });
-            } else{
-                resp->responseMap[CMailIMAP::kEXISTSStr] += " " + lineStr;
-            }
-
-        } else if (lineStr.find(CMailIMAP::kEXPUNGEStr) != std::string::npos) {
-            lineStr = stringUntaggedNumber(lineStr);
-            if (resp->responseMap.find(CMailIMAP::kEXPUNGEStr) == resp->responseMap.end()) {
-                resp->responseMap.insert( {CMailIMAP::kEXPUNGEStr, lineStr });
-            } else{
-                resp->responseMap[CMailIMAP::kEXPUNGEStr] += " " + lineStr;
-            }
-
-        } else {
-            parseStatus(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
-        }
+        parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
 
     }
 
@@ -459,7 +460,7 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseEXPUNGE(CMailIMAPParse::Com
 // Parse STORE Response.
 //
 
-CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSTORE(CMailIMAPParse::CommandData& commandData) {
+CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSTORE(CommandData& commandData) {
 
     COMMANDRESPONSE resp{ new CommandResponse { commandData.commandCode}};
 
@@ -473,7 +474,7 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSTORE(CMailIMAPParse::Comma
             resp->storeList.push_back(std::move(storeData));
 
         } else {
-            parseStatus(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
+            parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
         }
 
     }
@@ -486,7 +487,7 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseSTORE(CMailIMAPParse::Comma
 // Parse CAPABILITY Response.
 //
 
-CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseCAPABILITY(CMailIMAPParse::CommandData& commandData) {
+CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseCAPABILITY(CommandData& commandData) {CMailIMAPParse::
 
     COMMANDRESPONSE resp{ new CommandResponse { commandData.commandCode}};
 
@@ -495,7 +496,7 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseCAPABILITY(CMailIMAPParse::
         if (stringEqual(lineStr, static_cast<std::string>(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kCAPABILITYStr)) {
             resp->responseMap.insert({ CMailIMAP::kCAPABILITYStr,  lineStr.substr((static_cast<std::string>(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kCAPABILITYStr).length() + 1)});
         } else {
-            parseStatus(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
+            parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
         }
 
     }
@@ -508,18 +509,12 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseCAPABILITY(CMailIMAPParse::
 // Parse NOOP/IDLE Response.
 //
 
-CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseNOOP(CMailIMAPParse::CommandData& commandData) {
+CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseNOOP(CommandData& commandData) {
 
     COMMANDRESPONSE resp{ new CommandResponse { commandData.commandCode}};
 
     for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
-
-        if (lineStr.find(CMailIMAP::kUntaggedStr) == 0) {
-            resp->rawResponse.push_back(std::move(lineStr));
-        } else {
-            parseStatus(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
-        }
-
+        parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
     }
 
     return (resp);
@@ -530,7 +525,7 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseNOOP(CMailIMAPParse::Comman
 // Parse FETCH Response
 //
 
-CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::CommandData& commandData) {
+CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseFETCH(CommandData& commandData) {
 
     COMMANDRESPONSE resp{ new CommandResponse { commandData.commandCode}};
 
@@ -594,7 +589,7 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::Comma
             resp->fetchList.push_back(std::move(fetchData));
 
         } else {
-            parseStatus(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
+            parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
         }
 
     }
@@ -607,20 +602,12 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseFETCH(CMailIMAPParse::Comma
 // Parse LOGOUT Response
 //
 
-CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseLOGOUT(CMailIMAPParse::CommandData& commandData) {
+CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseLOGOUT(CommandData& commandData) {
 
     COMMANDRESPONSE resp{ new CommandResponse { commandData.commandCode}};
 
     for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
-
-        if (stringEqual(lineStr, static_cast<std::string>(CMailIMAP::kUntaggedStr) + " " + CMailIMAP::kBYEStr)) {
-            resp->rawResponse.push_back(std::move(lineStr));
-            resp->bBYESent = true;
-            continue;
-        } else {
-            parseStatus(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
-        }
-
+        parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
     }
 
     return (resp);
@@ -631,13 +618,13 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseLOGOUT(CMailIMAPParse::Comm
 // Default Parse Response
 //
 
-CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseDefault(CMailIMAPParse::CommandData& commandData) {
+CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseDefault(CommandData& commandData) {
 
     COMMANDRESPONSE resp{ new CommandResponse { commandData.commandCode } };
 
     for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
 
-        parseStatus(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
+        parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (resp.get()));
 
     }
 
@@ -780,7 +767,7 @@ CMailIMAPParse::COMMANDRESPONSE CMailIMAPParse::parseResponse(const std::string 
 // Return string for IMAP command code
 //
 
-std::string CMailIMAPParse::commandCodeString(CMailIMAPParse::Commands commandCode) {
+std::string CMailIMAPParse::commandCodeString(Commands commandCode) {
 
     for (auto commandEntry : stringToCodeMap) {
         if (commandEntry.second == commandCode) {

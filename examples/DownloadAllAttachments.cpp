@@ -298,7 +298,11 @@ int main(int argc, char** argv) {
 
     } catch (CMailIMAP::Exception &e) {
         exitWithError(e.what());
-   } catch (std::exception & e) {
+    } catch (CMailIMAPParse::Exception &e) {
+        exitWithError(e.what());
+    } catch (const fs::filesystem_error & e) {
+        exitWithError(std::string("BOOST file system exception occured: [") + e.what() + "]");
+    } catch (std::exception & e) {
         exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
     }
 

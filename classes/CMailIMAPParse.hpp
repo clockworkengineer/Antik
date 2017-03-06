@@ -93,6 +93,7 @@ public:
     //
     
     enum class RespCode {
+        NONE = -1,
         OK = 0,
         NO,
         BAD
@@ -141,7 +142,7 @@ public:
         CommandResponse(Commands command) : command {command} {}
              
         Commands command=Commands::NONE; // Command enum code
-        RespCode status=RespCode::OK;    // Command enum status
+        RespCode status=RespCode::NONE;  // Command enum status
         std::string errorMessageStr;     // Command error string
         bool bBYESent=false;             // ==true then BYE sent as part of response
         CommandResponseMap responseMap;  // Command response map 
@@ -150,7 +151,6 @@ public:
         std::vector<ListRespData> mailBoxList;  // Vector of LIST response data
         std::vector<StoreRespData> storeList;   // Vector of STORE response data
         std::vector<FetchRespData> fetchList;   // Vector of FETCH response data
-        std::vector<std::string> rawResponse;   // Vector of IDLE raw response data
         
     };
     
@@ -233,7 +233,7 @@ private:
     // Command response parse utility methods
     //
    
-    static void parseStatus(const std::string& tagStr, const std::string& lineStr, CommandResponse* statusResponse);
+    static void parseCommon(const std::string& tagStr, const std::string& lineStr, CommandResponse* statusResponse);
     static void parseOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr, std::istringstream& responseStream);
     static void parseList(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
     static void parseString(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);

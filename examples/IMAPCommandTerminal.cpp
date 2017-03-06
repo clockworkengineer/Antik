@@ -215,7 +215,12 @@ void walkFn(std::unique_ptr<CMailIMAPBodyStruct::BodyNode>& bodyNode, CMailIMAPB
 void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::COMMANDRESPONSE& parsedResponse) {
 
     std::cout << std::string(120, '*') << std::endl;
-    if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
+
+    if (parsedResponse->bBYESent) {
+        std::cout << "BYE RECIEVED {" << parsedResponse->errorMessageStr << "}" << std::endl;
+        return;
+
+    } else if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
         std::cout << "COMMAND = {" << CMailIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
         std::cout << "ERROR = {" << parsedResponse->errorMessageStr << "}" << std::endl;
         std::cout << std::string(120, '!') << std::endl;
@@ -226,7 +231,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::COMMANDRESPONSE& parse
 
         case CMailIMAPParse::Commands::SEARCH:
         {
-            std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
+            std::cout << "COMMAND {" << CMailIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
             std::cout << "INDEXES = ";
             for (auto index : parsedResponse->indexes) {
                 std::cout << index << " ";
@@ -235,18 +240,11 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::COMMANDRESPONSE& parse
             break;
         }
 
+        case CMailIMAPParse::Commands::STATUS:
         case CMailIMAPParse::Commands::SELECT:
-        {
-            std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
-            for (auto resp : parsedResponse->responseMap) {
-                std::cout << resp.first << " = " << resp.second << std::endl;
-            }
-            break;
-        }
-
         case CMailIMAPParse::Commands::EXAMINE:
         {
-            std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
+            std::cout << "COMMAND {" << CMailIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
              for (auto resp : parsedResponse->responseMap) {
                 std::cout << resp.first << " = " << resp.second << std::endl;
             }
@@ -256,7 +254,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::COMMANDRESPONSE& parse
         case CMailIMAPParse::Commands::LIST:
         case CMailIMAPParse::Commands::LSUB:
         {
-            std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
+            std::cout << "COMMAND {" << CMailIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
             for (auto mailboxEntry : parsedResponse->mailBoxList) {
                 std::cout << "NAME = " << mailboxEntry.mailBoxNameStr << std::endl;
                 std::cout << "ATTRIB = " << mailboxEntry.attributesStr << std::endl;
@@ -265,18 +263,9 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::COMMANDRESPONSE& parse
             break;
         }
 
-        case CMailIMAPParse::Commands::STATUS:
-        {
-            std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
-            for (auto resp : parsedResponse->responseMap) {
-                std::cout << resp.first << " = " << resp.second << std::endl;
-            }
-            break;
-        }
-
         case CMailIMAPParse::Commands::EXPUNGE:
         {
-            std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
+            std::cout << "COMMAND {" << CMailIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
             std::cout << "EXISTS = " << parsedResponse->responseMap[CMailIMAP::kEXISTSStr] << std::endl;
             std::cout << "EXPUNGED = "<< parsedResponse->responseMap[CMailIMAP::kEXPUNGEStr] << std::endl;
             break;
@@ -284,7 +273,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::COMMANDRESPONSE& parse
 
         case CMailIMAPParse::Commands::STORE:
         {
-            std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
+            std::cout << "COMMAND {" << CMailIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
             for (auto storeEntry : parsedResponse->storeList) {
                 std::cout << "INDEX = " << storeEntry.index << std::endl;
                 std::cout << "FLAGS = " << storeEntry.flagsListStr << std::endl;
@@ -294,14 +283,14 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::COMMANDRESPONSE& parse
 
         case CMailIMAPParse::Commands::CAPABILITY:
         {
-            std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
+            std::cout << "COMMAND {" << CMailIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
             std::cout << "CAPABILITIES = " << parsedResponse->responseMap[CMailIMAP::kCAPABILITYStr] << std::endl;
             break;
         }
 
         case CMailIMAPParse::Commands::FETCH:
         {
-            std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
+            std::cout << "COMMAND {" << CMailIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
 
             for (auto fetchEntry : parsedResponse->fetchList) {
                 std::cout << "INDEX = " << fetchEntry.index << std::endl;
@@ -323,10 +312,10 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::COMMANDRESPONSE& parse
         case CMailIMAPParse::Commands::NOOP:
         case CMailIMAPParse::Commands::IDLE:
         {
-            std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
-            if (!parsedResponse->rawResponse.empty()) {
-                for (auto str : parsedResponse->rawResponse) {
-                    std::cout << str << std::endl;
+            std::cout << "COMMAND {" << CMailIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
+            if (!parsedResponse->responseMap.empty()) {
+                for (auto resp : parsedResponse->responseMap) {
+                    std::cout << resp.first << " = " << resp.second << std::endl;
                 }
             } else {
                 std::cout << "All quiet!!!" << std::endl;
@@ -336,7 +325,7 @@ void processIMAPResponse(CMailIMAP& imap, CMailIMAPParse::COMMANDRESPONSE& parse
 
         default:
         {
-            std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
+            std::cout << "COMMAND {" << CMailIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
             break;
         }
     }
@@ -355,7 +344,7 @@ int main(int argc, char** argv) {
 
         ParamArgData argData;
         CMailIMAP imap;
-        std::deque<std::string> startupCommandsStr { "SELECT INBOX", "EXPUNGE", "exit" };
+        std::deque<std::string> startupCommandsStr;
 
         // Read in command line parameters and process
 

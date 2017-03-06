@@ -475,7 +475,7 @@ TEST_F(CMailIMAPParseTests, EXPUNGEValid) {
         { "* 3 EXPUNGE" },
         { "* 3 EXPUNGE" },
         { "* 8 EXPUNGE" },
-        { "A000002 OK Success" }
+        { "A000002 OK EXPUNGE Success" }
    
     };
 
@@ -597,10 +597,11 @@ TEST_F(CMailIMAPParseTests, NOOPValid) {
     CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
     
     EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
-    EXPECT_EQ(1, parsedResponse->rawResponse.size());
-
-    if (parsedResponse->rawResponse.size() == 1) {
-        ASSERT_STREQ("* 8 EXISTS",parsedResponse->rawResponse[0].c_str());
+    EXPECT_EQ(1, parsedResponse->responseMap.size());
+    EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS") != parsedResponse->responseMap.end());
+ 
+    if (parsedResponse->responseMap.size() == 1) {
+        ASSERT_STREQ("8",parsedResponse->responseMap["EXISTS"].c_str());
     }
     
     EXPECT_FALSE(parsedResponse->bBYESent);
@@ -623,12 +624,13 @@ TEST_F(CMailIMAPParseTests, IDLEValid) {
     CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
     
     EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
-    EXPECT_EQ(1, parsedResponse->rawResponse.size());
-
-    if (parsedResponse->rawResponse.size() == 1) {
-        ASSERT_STREQ("* 1 EXISTS", parsedResponse->rawResponse[0].c_str());
+    EXPECT_EQ(1, parsedResponse->responseMap.size());
+    EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS") != parsedResponse->responseMap.end());
+ 
+    if (parsedResponse->responseMap.size() == 1) {
+        ASSERT_STREQ("1",parsedResponse->responseMap["EXISTS"].c_str());
     }
-    
+   
     EXPECT_FALSE(parsedResponse->bBYESent);
     
 }
@@ -650,11 +652,6 @@ TEST_F(CMailIMAPParseTests, LOGOUTValid) {
     CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
 
     EXPECT_TRUE(parsedResponse->status == CMailIMAPParse::RespCode::OK);
-    EXPECT_EQ(1, parsedResponse->rawResponse.size());
-
-    if (parsedResponse->rawResponse.size() == 1) {
-        ASSERT_STREQ("* BYE LOGOUT Requested", parsedResponse->rawResponse[0].c_str());
-    }
     
     EXPECT_TRUE(parsedResponse->bBYESent);
     
