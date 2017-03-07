@@ -13,13 +13,23 @@
 //
 // Program: ArchiveMailBox
 //
-// Description: Log on to a given IMAP server and download all e-mails for a given
-// mailbox and create an .eml file for them  in a specified destination folder. The
-// .eml files are created within a sub-folder with the mailbox name and with filenames 
-// consisting of the mail UID prefix and the subject line. If parameter --updates is set 
-// then the date of the newest .eml in the destination folder is used as the basis of
-// the IMAP search (ie. only download new e-mails).  If parameter --all is set then the
-// server is interrogated for a complete mailbox list and these are downloaded.
+// Description: This is a command line program to log on to an IMAP server and download e-mails
+// from a configured mailbox, command separated mailbox list or all mailboxes for an account.
+// A file (.eml) is created for each e-mail in a folder with the same name as the mailbox; with
+// the files name being a combination of the mails UID/index prefix and the subject name. All 
+// parameters and their meaning are obtained by running the program with the parameter --help.
+//
+// ArchiveMailBox Example Application
+// Program Options:
+//  --help                   Print help messages
+//   -c [ --config ] arg      Config File Name
+//   -s [ --server ] arg      IMAP Server URL and port
+//   -u [ --user ] arg        Account username
+//   -p [ --password ] arg    User password
+//   -m [ --mailbox ] arg     Mailbox name
+//   -d [ --destination ] arg Destination for attachments
+//   -u [ --updates ]         Search since last file archived.
+//   -a [ --all ]             Download files for all mailboxes.
 //
 // Note: MIME encoded words in the email subject line are decoded to the best ASCII fit
 // available.
@@ -62,14 +72,14 @@ namespace fs = boost::filesystem;
 //
 
 struct ParamArgData {
-    std::string userNameStr; // Email account user name
-    std::string userPasswordStr; // Email account user name password
-    std::string serverURLStr; // SMTP server URL
-    std::string mailBoxNameStr; // Mailbox name
-    fs::path destinationFolder; // Destination folder for attachments
-    std::string configFileNameStr; // Configuration file name
-    bool bOnlyUpdates; // = true search date since last .eml archived
-    bool bAllMailBoxes; // = true archive all mailboxes
+    std::string userNameStr;        // Email account user name
+    std::string userPasswordStr;    // Email account user name password
+    std::string serverURLStr;       // SMTP server URL
+    std::string mailBoxNameStr;     // Mailbox name
+    fs::path destinationFolder;     // Destination folder for attachments
+    std::string configFileNameStr;  // Configuration file name
+    bool bOnlyUpdates;              // = true search date since last .eml archived
+    bool bAllMailBoxes;             // = true archive all mailboxes
 
 };
 
@@ -112,7 +122,7 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
             ("mailbox,m", po::value<std::string>(&argData.mailBoxNameStr)->required(), "Mailbox name")
             ("destination,d", po::value<fs::path>(&argData.destinationFolder)->required(), "Destination for attachments")
             ("updates,u", "Search since last file archived.")
-            ("all,a", "Search since last file archived.");
+            ("all,a", "Download files for all mailboxes.");
 
 }
 
@@ -166,10 +176,14 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
             }
         }
 
+        // Search for new e-mails only
+        
         if (vm.count("updates")) {
             argData.bOnlyUpdates = true;
         }
 
+        // Download all mailboxes
+        
         if (vm.count("all")) {
             argData.bAllMailBoxes = true;
         }
@@ -231,7 +245,7 @@ std::string sendCommand(CMailIMAP& imap, const std::string& mailBoxNameStr,
 }
 
 //
-// Fetch a given emails body and subject line and create an .eml file for it.
+// Fetch a given e-mails body and subject line and create an .eml file for it.
 //
 
 void fetchEmailAndArchive(CMailIMAP& imap, const std::string& mailBoxNameStr, 

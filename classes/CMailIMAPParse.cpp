@@ -264,7 +264,7 @@ void CMailIMAPParse::parseCommon(const std::string& tagStr, const std::string& l
         std::cerr << lineStr << std::endl;
 
     } else if (stringEqual(lineStr, CMailIMAP::kUntaggedStr)) {
-         std::cerr << "ERROR: unhandled response: " <<lineStr << std::endl; // WARN of any untagged that should be processed.
+         std::cerr << "ERROR: un-handled response: " <<lineStr << std::endl; // WARN of any untagged that should be processed.
 
     } else {
         throw Exception("error while parsing IMAP command [" + lineStr + "]");
