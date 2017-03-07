@@ -20,7 +20,15 @@
 // Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
 //               Linux, Boost C++ Libraries.
 //
-
+// IMAPCommandTerminal
+// Program Options:
+//   --help                Print help messages
+//   -c [ --config ] arg   Config File Name
+//   -s [ --server ] arg   IMAP Server URL and port
+//   -u [ --user ] arg     Account username
+//   -p [ --password ] arg User password
+//   --parsed              Response parsed
+//   --bodystruct          Parsed output includes bodystructs
 //
 // C++ STL definitions
 //
@@ -37,7 +45,7 @@
 
 // Boost program options  & file system library definitions
 
-#include "boost/program_options.hpp" 
+#include <boost/program_options.hpp>  
 #include <boost/filesystem.hpp>
 
 namespace po = boost::program_options;
@@ -50,8 +58,8 @@ struct ParamArgData {
     std::string userPasswordStr;    // Email account user name password
     std::string serverURLStr;       // SMTP server URL
     std::string configFileNameStr;  // Configuration file name
-    bool bParsed;                   // true output parsed
-    bool bBodystruct;               // Parsed output includes BODYSTRUCTS
+    bool bParsed=false;             // true output parsed
+    bool bBodystruct=false;         // Parsed output includes BODYSTRUCTS
 };
 
 //
@@ -88,11 +96,6 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
 //
 
 void procCmdLine(int argc, char** argv, ParamArgData &argData) {
-
-    // Default values
-
-    argData.bParsed = false;
-    argData.bBodystruct = false;
 
     // Define and parse the program options
 

@@ -60,7 +60,7 @@
 // Boost program options  & file system library definitions
 //
 
-#include "boost/program_options.hpp" 
+#include <boost/program_options.hpp> 
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
 
@@ -87,7 +87,7 @@ struct ParamArgData {
 // Maximum subject line to take in file name
 //
 
-const int kMaxSubjectLine = 100;
+const int kMaxSubjectLine = 80;
 
 //
 // .eml file extention
@@ -272,8 +272,8 @@ void fetchEmailAndArchive(CMailIMAP& imap, const std::string& mailBoxNameStr,
                         if (subject.length() > kMaxSubjectLine) { // Truncate for file name
                             subject = subject.substr(0, kMaxSubjectLine);
                         }
-                        for (auto &ch : subject) { // Remove any possible folder hierarchy delimeter
-                            if ((ch == '\\') || (ch == '/')) ch = ' ';
+                        for (auto &ch : subject) { // Remove all but alpha numeric from subject
+                            if (!std::isalnum(ch)) ch = ' ';
                         }
                     }
                 }
@@ -305,44 +305,30 @@ void fetchEmailAndArchive(CMailIMAP& imap, const std::string& mailBoxNameStr,
 }
 
 //
-// Find the date on the last modified .eml file and use for SEARCH
+// Find the UID on the last message saved and search from that. Each saved .eml file has a "(UID)"
+// prefix; get the UID from this.
 //
 
-std::string getSearchDate(const fs::path& destinationFolder) {
-
-    std::string dateBuffer(32, ' ');
+uint64_t getLowerSearchLimit(const fs::path& destinationFolder) {
 
     if (fs::exists(destinationFolder) && fs::is_directory(destinationFolder)) {
 
-        std::time_t lastModified;
-        std::vector<std::time_t> fileTimes;
+        std::uint64_t highestUID=1, currentUID=0;
 
         for (auto& entry : boost::make_iterator_range(fs::directory_iterator(destinationFolder),{})) {
             if (fs::is_regular_file(entry.status()) && (entry.path().extension().compare(kEMLFileExt) == 0)) {
-                fileTimes.push_back(fs::last_write_time(entry.path()));
+                currentUID=std::strtoull(CMailIMAPParse::stringBetween(entry.path().filename().string(),'(', ')').c_str(), nullptr, 10);
+                if (currentUID > highestUID) {
+                    highestUID = currentUID;
+                } 
             }
         }
-
-        if (!fileTimes.empty()) {
-            lastModified = fileTimes.back();
-            fileTimes.pop_back();
-            while (!fileTimes.empty()) {
-                if (std::difftime(lastModified, fileTimes.back()) < 0) {
-                    lastModified = fileTimes.back();
-                }
-                fileTimes.pop_back();
-            }
-
-            std::tm * ptm = std::localtime(&lastModified);
-            dateBuffer.resize(std::strftime(&dateBuffer[0], dateBuffer.length(), "%d-%b-%Y", ptm));
-
-        } else {
-            dateBuffer = "";
-        }
-
+        
+        return (highestUID);
+        
     }
-
-    return (dateBuffer);
+    
+    return(0);
 
 }
 
@@ -420,8 +406,9 @@ int main(int argc, char** argv) {
 
             CMailIMAPParse::COMMANDRESPONSE parsedResponse;
             fs::path mailBoxPath;
-            std::string commandStr, commandResponseStr, searchDate;
-
+            std::string commandStr, commandResponseStr;
+            std::uint64_t searchUID=0;
+            
             std::cout << "MAIL BOX [" << mailBoxStr << "]" << std::endl;
 
             // SELECT mailbox
@@ -446,14 +433,14 @@ int main(int argc, char** argv) {
             // Get newest file creation date for search
 
             if (argData.bOnlyUpdates) {
-                searchDate = getSearchDate(mailBoxPath);
+                searchUID = getLowerSearchLimit(mailBoxPath);
             }
 
             // SEARCH for all present email and then create an archive for them.
 
-            if (!searchDate.empty()) {
-                std::cout << "Searching from [" << searchDate << "]" << std::endl;
-                commandStr = "UID SEARCH SENTSINCE " + searchDate;
+            if (searchUID!=0) {
+                std::cout << "Searching from [" << std::to_string(searchUID) << "]" << std::endl;
+                commandStr = "UID SEARCH "+std::to_string(searchUID)+":*";
             } else {
                 commandStr = "UID SEARCH 1:*";
             }
@@ -461,9 +448,13 @@ int main(int argc, char** argv) {
             commandResponseStr = sendCommand(imap, mailBoxStr, commandStr);
             parsedResponse = parseCommandResponse(commandStr, commandResponseStr);
             if (parsedResponse) {
-                std::cout << "Messages found = " << parsedResponse->indexes.size() << std::endl;
-                for (auto index : parsedResponse->indexes) {
-                    fetchEmailAndArchive(imap, mailBoxStr, mailBoxPath, index);
+                if ((parsedResponse->indexes.size() == 1) && (parsedResponse->indexes[0] == searchUID)) {
+                    std::cout << "Messages found = " << 0 << std::endl;
+                } else {
+                    std::cout << "Messages found = " << parsedResponse->indexes.size() << std::endl;
+                    for (auto index : parsedResponse->indexes) {
+                        fetchEmailAndArchive(imap, mailBoxStr, mailBoxPath, index);
+                    }
                 }
             }
 

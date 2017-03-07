@@ -144,6 +144,9 @@ bool CMailIMAP::bCurlVerbosity = false;
 void CMailIMAP::throwCurlError(std::string baseMessageStr) {
 
     std::string errMsgStr;
+    
+    disconnect();
+    
     if (std::strlen(this->curlErrMsgBuffer) != 0) {
         errMsgStr = this->curlErrMsgBuffer;
     } else {
@@ -219,7 +222,7 @@ void CMailIMAP::sendIMAPCommand(const std::string& commandStr) {
 // Wait for reply from sent IMAP command. Append received data onto the end of 
 // commandResponseStr and exit when command tag encountered. If the server 
 // disconnects the socket then curl_easy_recv will return CURLE_OK and recvLength 
-// == 0 so return.
+// == 0 so return (clearing any response being received).
 //
 
 void CMailIMAP::waitForIMAPCommandResponse(const std::string& commandTagStr, std::string& commandResponseStr) {
@@ -239,6 +242,7 @@ void CMailIMAP::waitForIMAPCommandResponse(const std::string& commandTagStr, std
         if (this->curlResult == CURLE_OK) {
 
             if (recvLength == 0) {
+                commandResponseStr.clear();
                 break;
             }
 
@@ -276,7 +280,7 @@ void CMailIMAP::waitForIMAPCommandResponse(const std::string& commandTagStr, std
 
 inline void CMailIMAP::generateTag() {
     std::ostringstream ss;
-    ss << "A" << std::setw(6) << std::setfill('0') << std::to_string(this->tagCount++);
+    ss << this->tagPrefix << std::setw(6) << std::setfill('0') << std::to_string(this->tagCount++);
     this->currentTagStr = ss.str();
 }
 
@@ -285,7 +289,8 @@ inline void CMailIMAP::generateTag() {
 // for a '+' from the server. Here it knows to wait for an un-tagged response where
 // upon it sends "DONE" and waits for the final tagged IDLE response. Note: The
 // un-tagged response before "DONE" sent is saved and placed onto the front of
-// the final IDLE response.
+// the final IDLE response. Any response that is empty signals a server disconnect
+// so stop processing and pass up.
 //
 
 void CMailIMAP::sendCommandIDLE(const std::string& commandLineStr) {
@@ -294,25 +299,32 @@ void CMailIMAP::sendCommandIDLE(const std::string& commandLineStr) {
 
     this->sendIMAPCommand(commandLineStr);
     this->waitForIMAPCommandResponse(kContinuationStr, this->commandResponseStr);
-    this->waitForIMAPCommandResponse(kUntaggedStr, responseStr);
 
-    if (!responseStr.empty()) {
-        this->sendIMAPCommand(static_cast<std::string>(kDONEStr) + kEOLStr);
-        this->waitForIMAPCommandResponse(this->currentTagStr, this->commandResponseStr);
-    } else {
-        throw CMailIMAP::Exception("Server Disconnect without BYE.");
+    if (!this->commandResponseStr.empty()) {
+
+        this->waitForIMAPCommandResponse(kUntaggedStr, responseStr);
+
+        if (!responseStr.empty()) {
+            this->sendIMAPCommand(static_cast<std::string> (kDONEStr) + kEOLStr);
+            this->waitForIMAPCommandResponse(this->currentTagStr, this->commandResponseStr);
+            if (!this->commandResponseStr.empty()) {
+                responseStr += this->commandResponseStr;
+                this->commandResponseStr = responseStr;
+            }
+
+        } else {
+            this->commandResponseStr.clear();
+        }
+
     }
-
-    responseStr += this->commandResponseStr;
-    this->commandResponseStr = responseStr;
-
 
 }
 
 //
 // Send APPPEND command (requires a special handler). The command up to  including the octet string
 // size has a "\r\n" appended and is sent. It then waits for a "+' where upon it sends the rest of the
-// octet string and the waits for the final APPEND response.
+// octet string and the waits for the final APPEND response.Any response that is empty signals a server 
+// disconnect sso stop processing and pass up.
 //
 
 void CMailIMAP::sendCommandAPPEND(const std::string& commandLineStr) {
@@ -320,8 +332,10 @@ void CMailIMAP::sendCommandAPPEND(const std::string& commandLineStr) {
     this->sendIMAPCommand(commandLineStr.substr(0, commandLineStr.find_first_of('}') + 1) + kEOLStr);
     this->waitForIMAPCommandResponse(kContinuationStr, this->commandResponseStr);
 
-    this->sendIMAPCommand(commandLineStr.substr(commandLineStr.find_first_of('}') + 1));
-    this->waitForIMAPCommandResponse(this->currentTagStr, this->commandResponseStr);
+    if (!this->commandResponseStr.empty()) {
+        this->sendIMAPCommand(commandLineStr.substr(commandLineStr.find_first_of('}') + 1));
+        this->waitForIMAPCommandResponse(this->currentTagStr, this->commandResponseStr);
+    }
 
 }
 
@@ -467,6 +481,13 @@ std::string CMailIMAP::sendCommand(const std::string& commandLineStr) {
     } else {
         this->sendIMAPCommand(this->currentTagStr + " " + commandLineStr + kEOLStr);
         this->waitForIMAPCommandResponse(this->currentTagStr, this->commandResponseStr);
+    }
+
+    // If response is empty then server disconnect without BYE
+    
+    if (this->commandResponseStr.empty()) {
+        disconnect();
+        throw CMailIMAP::Exception("Server Disconnect without BYE.");
     }
 
     return (this->currentTagStr + " " + commandLineStr + kEOLStr + this->commandResponseStr);

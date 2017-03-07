@@ -235,6 +235,7 @@ private:
    
     uint64_t tagCount=1;                // Current command tag count
     std::string currentTagStr;          // Current command tag
+    std::string tagPrefix { "A" };      // Current command tag prefixs
 
 };
 #endif /* CMAILIMAP_HPP */
