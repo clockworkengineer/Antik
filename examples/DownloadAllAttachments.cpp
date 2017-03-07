@@ -13,9 +13,21 @@
 //
 // Program: DownloadAllAttachments
 //
-// Description: Log on to a given IMAP server and download attachments found
-// in any e-mail in a specific mailbox to a given local folder. The destination
-// folder is a base name with the mailbox name attached.
+// Description: A command line program to log on to an IMAP server and download
+// any attachments found in any e-mails in a configured mailbox. The destination 
+// for any attachment being a folder with the same name as the mailbox created 
+// off of the destination folder.All parameters and their meaning are obtained 
+// by running the program with the parameter --help
+//
+// DownloadAllAttachments Example Application
+// Program Options:
+//   --help                   Print help messages
+//   -c [ --config ] arg      Config File Name
+//   -s [ --server ] arg      IMAP Server URL and port
+//   -u [ --user ] arg        Account username
+//   -p [ --password ] arg    User password
+//   -m [ --mailbox ] arg     Mailbox name
+//   -d [ --destination ] arg Destination for attachments
 // 
 // Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
 //               Linux, Boost C++ Libraries.
