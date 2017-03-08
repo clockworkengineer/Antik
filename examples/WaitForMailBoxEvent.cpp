@@ -73,12 +73,13 @@ namespace fs = boost::filesystem;
 //
 
 struct ParamArgData {
-    std::string userNameStr;            // Email account user name
-    std::string userPasswordStr;        // Email account user name password
-    std::string serverURLStr;           // SMTP server URL
-    std::string mailBoxNameStr;         // Mailbox name
-    std::string configFileNameStr;      // Configuration file name
-    bool bPolls=false;                  // ==true then use NOOP
+    std::string userNameStr; // Email account user name
+    std::string userPasswordStr; // Email account user name password
+    std::string serverURLStr; // SMTP server URL
+    std::string mailBoxNameStr; // Mailbox name
+    std::string configFileNameStr; // Configuration file name
+    bool bPolls = false; // ==true then use NOOP
+    bool bWaitForNewMail = false; // ==true wait for a new message to arrive
 };
 
 //
@@ -111,12 +112,13 @@ void exitWithError(std::string errMsgStr) {
 //
 
 void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
-    
+
     commonOptions.add_options()
             ("server,s", po::value<std::string>(&argData.serverURLStr)->required(), "IMAP Server URL and port")
             ("user,u", po::value<std::string>(&argData.userNameStr)->required(), "Account username")
             ("password,p", po::value<std::string>(&argData.userPasswordStr)->required(), "User password")
             ("mailbox,m", po::value<std::string>(&argData.mailBoxNameStr)->required(), "Mailbox name")
+            ("wait,w", "Wait for new mail.")
             ("poll,l", "Check status using NOOP");
 
 }
@@ -135,11 +137,11 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
             ("config,c", po::value<std::string>(&argData.configFileNameStr)->required(), "Config File Name");
 
     addCommonOptions(commandLine, argData);
-    
+
     po::options_description configFile("Config Files Options");
-  
+
     addCommonOptions(configFile, argData);
-       
+
     po::variables_map vm;
 
     try {
@@ -169,10 +171,17 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         po::notify(vm);
 
         // Check status with polling loop
-        
+
         if (vm.count("poll")) {
             argData.bPolls = true;
         }
+        
+        // Wait for new mail
+
+        if (vm.count("wait")) {
+            argData.bWaitForNewMail = true;
+        }
+
 
     } catch (po::error& e) {
         std::cerr << "WaitForMailBoxEvent Error: " << e.what() << std::endl << std::endl;
@@ -186,8 +195,8 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Parse command response and return pointer to parsed data.
 //
 
-CMailIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandStr, 
-                             const std::string& commandResponseStr) {
+CMailIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandStr,
+        const std::string& commandResponseStr) {
 
     CMailIMAPParse::COMMANDRESPONSE parsedResponse;
 
@@ -216,8 +225,8 @@ CMailIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandS
 // Send command to IMAP server. At present it checks for any errors and just exits.
 //
 
-std::string sendCommand(CMailIMAP& imap, const std::string& mailBoxNameStr, 
-                           const std::string& commandStr) {
+std::string sendCommand(CMailIMAP& imap, const std::string& mailBoxNameStr,
+        const std::string& commandStr) {
 
     std::string commandResponseStr;
 
@@ -243,7 +252,8 @@ int main(int argc, char** argv) {
         ParamArgData argData;
         CMailIMAP imap;
         std::string parsedResponseStr, commandStr;
-        CMailIMAPParse::COMMANDRESPONSE  parsedResponse;
+        CMailIMAPParse::COMMANDRESPONSE parsedResponse;
+        int exists = 0, newExists = 0;
 
         // Read in command line parameters and process
 
@@ -251,60 +261,78 @@ int main(int argc, char** argv) {
 
         // Initialise CMailIMAP internals
 
-        CMailIMAP::init();
+        CMailIMAP::init(true);
 
         // Set mail account user name and password
-        
+
         imap.setServer(argData.serverURLStr);
         imap.setUserAndPassword(argData.userNameStr, argData.userPasswordStr);
-        
+
         // Connect
- 
+
         std::cout << "Connecting to server [" << argData.serverURLStr << "]" << std::endl;
-               
+
         imap.connect();
 
         std::cout << "Connected." << std::endl;
-        
+
         // SELECT mailbox
 
         commandStr = "SELECT " + argData.mailBoxNameStr;
         parsedResponseStr = sendCommand(imap, argData.mailBoxNameStr, commandStr);
         parsedResponse = parseCommandResponse(commandStr, parsedResponseStr);
-        
-        // IDLE
 
-        std::cout << "Waiting on mailbox [" << argData.mailBoxNameStr << "]" << std::endl;
+        if (parsedResponse->responseMap.find("EXISTS") != parsedResponse->responseMap.end()) {
+            exists = std::strtoull(parsedResponse->responseMap["EXISTS"].c_str(), nullptr, 10);
+            std::cout << "Current Messages [" << exists << "]" << std::endl;
+        }
 
-        if (!argData.bPolls) {
-            commandStr = "IDLE";
-            parsedResponseStr = sendCommand(imap, argData.mailBoxNameStr, commandStr);
-            parsedResponse = parseCommandResponse(commandStr, parsedResponseStr);
-        } else {
-            while(true) {
-                std::cout << "Polling [" << argData.mailBoxNameStr << "]" << std::endl;
-                commandStr = "NOOP";
+        do {
+
+            // IDLE is prone to serve disc
+
+            std::cout << "Waiting on mailbox [" << argData.mailBoxNameStr << "]" << std::endl;
+
+            if (!argData.bPolls) {
+                commandStr = "IDLE";
                 parsedResponseStr = sendCommand(imap, argData.mailBoxNameStr, commandStr);
                 parsedResponse = parseCommandResponse(commandStr, parsedResponseStr);
-                if (parsedResponse->responseMap.size() >= 1) break;
-                std::this_thread::sleep_for(std::chrono::seconds(kPollPeriod));
+            } else {
+                while (true) {
+                    std::cout << "Polling [" << argData.mailBoxNameStr << "]" << std::endl;
+                    commandStr = "NOOP";
+                    parsedResponseStr = sendCommand(imap, argData.mailBoxNameStr, commandStr);
+                    parsedResponse = parseCommandResponse(commandStr, parsedResponseStr);
+                    if (parsedResponse->responseMap.size() >= 1) break;
+                    std::this_thread::sleep_for(std::chrono::seconds(kPollPeriod));
+                }
             }
-        }
-        
-        // Display any response
-        
-        for (auto& resp : parsedResponse->responseMap) {
-            std::cout << resp.first << " = " << resp.second << std::endl;
-        }
-        
+
+            // Display any response
+
+            for (auto& resp : parsedResponse->responseMap) {
+                std::cout << resp.first << " = " << resp.second << std::endl;
+            }
+
+            if (parsedResponse->responseMap.find("EXISTS") != parsedResponse->responseMap.end()) {
+                newExists = std::strtoull(parsedResponse->responseMap["EXISTS"].c_str(), nullptr, 10);
+                if (newExists > exists) {
+                    std::cout << "YOU HAVE NEW MAIL !!!" << std::endl;
+                    break;
+                }
+                exists = newExists;
+            }
+
+        } while (argData.bWaitForNewMail);
+
         std::cout << "Disconnecting from server [" << argData.serverURLStr << "]" << std::endl;
 
         imap.disconnect();
 
 
-    //
-    // Catch any errors
-    //    
+        //
+        // Catch any errors
+        //    
 
     } catch (CMailIMAP::Exception &e) {
         exitWithError(e.what());
@@ -317,7 +345,7 @@ int main(int argc, char** argv) {
     }
 
     // IMAP closedown
-    
+
     CMailIMAP::closedown();
 
     exit(EXIT_SUCCESS);
