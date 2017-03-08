@@ -164,9 +164,17 @@ namespace Antik {
         std::string sendCommand(const std::string& commandLineStr);
         void disconnect(void);
         bool getConnectedStatus(void) const;
+        
+        //
+        // Set IMAP command tag prefix
+        //
+        
+        void setTagPrefix(const std::string& tagPrefixStr);
 
+        //
         // IMAP initialization and closedown processing
-
+        //
+        
         static void init(bool bCurlVerbosity = false);
         static void closedown(void);
 
@@ -180,10 +188,18 @@ namespace Antik {
         // PRIVATE TYPES AND CONSTANTS
         // ===========================
 
+        //
         // Wait on socket timeout in milliseconds
-
+        //
+        
         static const long kWaitOnSocketTimeOut = 60000;
+        
+        //
+        // Default command prefix tag
+        //
 
+        static const char *kDefaultTagPrefixStr;
+        
         // ===========================================
         // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
         // ===========================================
@@ -242,7 +258,7 @@ namespace Antik {
 
         uint64_t tagCount = 1; // Current command tag count
         std::string currentTagStr; // Current command tag
-        std::string tagPrefix{ "A"}; // Current command tag prefixs
+        std::string tagPrefixStr{ kDefaultTagPrefixStr }; // Current command tag prefixes
 
     };
 

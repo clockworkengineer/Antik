@@ -131,9 +131,13 @@ namespace Antik {
     // PRIVATE STATIC VARIABLES
     // ========================
 
+    //
     // curl verbosity setting
-
+    //
+    
     bool CMailIMAP::bCurlVerbosity = false;
+    
+    const char *CMailIMAP::kDefaultTagPrefixStr = "A";
 
     // =======================
     // PUBLIC STATIC VARIABLES
@@ -286,7 +290,7 @@ namespace Antik {
 
     inline void CMailIMAP::generateTag() {
         std::ostringstream ss;
-        ss << this->tagPrefix << std::setw(6) << std::setfill('0') << std::to_string(this->tagCount++);
+        ss << this->tagPrefixStr << std::setw(6) << std::setfill('0') << std::to_string(this->tagCount++);
         this->currentTagStr = ss.str();
     }
 
@@ -400,6 +404,16 @@ namespace Antik {
 
     }
 
+    //
+    // Set IMAP command tag prefix.
+    //
+
+    void CMailIMAP::setTagPrefix(const std::string& tagPrefixStr) {
+
+        this->tagPrefixStr = tagPrefixStr;
+
+    }
+    
     //
     // Setup connection to server
     //
