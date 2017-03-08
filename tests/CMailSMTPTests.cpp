@@ -28,6 +28,8 @@
 
 #include "CMailSMTP.hpp" 
 
+using namespace Antik;
+
 // =======================
 // UNIT TEST FIXTURE CLASS
 // =======================

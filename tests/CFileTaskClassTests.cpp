@@ -28,6 +28,8 @@
 
 #include "CFileTask.hpp" 
 
+using namespace Antik;
+
 // Boost file system and format libraries definitions
 
 #include <boost/filesystem.hpp> 

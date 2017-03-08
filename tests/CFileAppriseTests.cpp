@@ -28,7 +28,8 @@
 
 // CFileApprise class definitions
 
-#include "CFileApprise.hpp" 
+#include "CFileApprise.hpp"
+using namespace Antik;
 
 // Boost file system and format libraries definitions
 

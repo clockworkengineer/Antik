@@ -29,6 +29,7 @@
 #include "CMailIMAP.hpp" 
 #include "CMailIMAPParse.hpp"
 
+using namespace Antik;
 
 // =======================
 // UNIT TEST FIXTURE CLASS
