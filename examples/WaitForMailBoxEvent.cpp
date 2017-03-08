@@ -291,7 +291,8 @@ int main(int argc, char** argv) {
 
         do {
 
-            // IDLE is prone to serve disc
+            // IDLE is prone to server disconnect so its recommended to use polling 
+            // instead but IDLE is shown here just for completion.
 
             std::cout << "Waiting on mailbox [" << argData.mailBoxNameStr << "]" << std::endl;
 
