@@ -2,7 +2,7 @@
 
 # Introduction #
 
-This repository contains the master copies of the C++ based utility classes that I use in my projects.  Copies of these classes in other repositories while working will not usually be up to date.
+This repository contains the master copies of the C++ based utility classes that I use in my projects.  Copies of these classes in other repositories while working will not usually be up to date. The classes com wrapped in a namespace called Antik though this may change in future.
 
 # [CFileTask](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CFileTask.cpp) #
 
@@ -95,15 +95,17 @@ Generic log trace class that will take a list of strings and output them either 
 
 This is a small but growing library of example programs  that use the above classes:
 
-1.  **IMAPCommandTerminal**  - A Simple IMAP command console/terminal that logs on to a given IMAP server and executes commands typed in. The raw command responses are echoed back as default but 
+1.  **[IMAPCommandTerminal](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/IMAPCommandTerminal.cpp)**  - A Simple IMAP command console/terminal that logs on to a given IMAP server and executes commands typed in. The raw command responses are echoed back as default but 
 parsed responses are displayed if specified in program options.
 
-1.  **DownloadAllAttachments** - Log on to a given IMAP server and download attachments found
+1.  **[DownloadAllAttachments](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/DownloadAllAttachments.cpp)** - Log on to a given IMAP server and download attachments found
 in any e-mail in a specific mailbox to a given local folder. The final destination folder is a base name with the mailbox name attached.
   
-1.  **ArchiveMailBox** - Log on to a given IMAP server and download all e-mails for a given
+1.  **[ArchiveMailBox](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/ArchiveMailBox.cpp)** - Log on to a given IMAP server and download all e-mails for a given
  mailbox and create an .eml file for them  in a specified destination folder. The .eml files are created within a sub-folder with the mailbox name and with filenames 
  consisting of the mail UID prefix and the subject line. If parameter --updates is set 
  then the date of the newest .eml in the destination folder is used as the basis of
  the IMAP search (ie. only download new e-mails). Note: MIME encoded words in the email subject line are decoded to the best ASCII fit
  available.
+
+1. **[WaitForMailBoxEvent](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/WaitForMailBoxEvent.cpp)** Log on to a IMAP server and wait for a status change in a specified mailbox. By default it will use IDLE but polling every time period using NOOP is also supported. This is not directly useful but may be applied to other situations where the functionality is needed.
