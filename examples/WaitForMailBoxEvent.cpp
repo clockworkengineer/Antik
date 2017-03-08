@@ -28,6 +28,8 @@
 //   -p [ --password ] arg User password
 //   -m [ --mailbox ] arg  Mailbox name
 //   -l [ --poll ]         Check status using NOOP
+//   -w [ --wait ]         Wait for new mail
+//   
 //
 // Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse),
 //               Linux, Boost C++ Libraries.
@@ -118,7 +120,7 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
             ("user,u", po::value<std::string>(&argData.userNameStr)->required(), "Account username")
             ("password,p", po::value<std::string>(&argData.userPasswordStr)->required(), "User password")
             ("mailbox,m", po::value<std::string>(&argData.mailBoxNameStr)->required(), "Mailbox name")
-            ("wait,w", "Wait for new mail.")
+            ("wait,w", "Wait for new mail")
             ("poll,l", "Check status using NOOP");
 
 }
