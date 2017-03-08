@@ -263,7 +263,7 @@ int main(int argc, char** argv) {
 
         // Initialise CMailIMAP internals
 
-        CMailIMAP::init(true);
+        CMailIMAP::init();
 
         // Set mail account user name and password
 
