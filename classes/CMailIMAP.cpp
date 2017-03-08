@@ -155,6 +155,8 @@ namespace Antik {
 
         std::string errMsgStr;
 
+        // Check for connected as an error can happen during connect
+        
         if (this->bConnected) {
             disconnect();
         }
