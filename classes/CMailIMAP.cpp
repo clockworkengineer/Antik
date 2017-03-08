@@ -155,7 +155,9 @@ namespace Antik {
 
         std::string errMsgStr;
 
-        disconnect();
+        if (this->bConnected) {
+            disconnect();
+        }
 
         if (std::strlen(this->curlErrMsgBuffer) != 0) {
             errMsgStr = this->curlErrMsgBuffer;
