@@ -32,110 +32,118 @@
 // CLASS IMPLEMENTATION
 // ====================
 
-// ===========================
-// PRIVATE TYPES AND CONSTANTS
-// ===========================
+// =========
+// NAMESPACE
+// =========
 
-// ==========================
-// PUBLIC TYPES AND CONSTANTS
-// ==========================
+namespace Antik {
 
-// ========================
-// PRIVATE STATIC VARIABLES
-// ========================
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
 
-// =======================
-// PUBLIC STATIC VARIABLES
-// =======================
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
 
-// ===============
-// PRIVATE METHODS
-// ===============
+    // ========================
+    // PRIVATE STATIC VARIABLES
+    // ========================
 
-// ===============
-// PRIVATE METHODS
-// ===============
+    // =======================
+    // PUBLIC STATIC VARIABLES
+    // =======================
 
-// ==============
-// PUBLIC METHODS
-// ==============
+    // ===============
+    // PRIVATE METHODS
+    // ===============
 
-//
-// Create CRedirect specifying output stream
-//
+    // ===============
+    // PRIVATE METHODS
+    // ===============
 
-CRedirect::CRedirect(std::ostream& outStream) {
-    this->outStream = &outStream;
-}
+    // ==============
+    // PUBLIC METHODS
+    // ==============
 
-//
-// Create CRedirect specifying output stream, output file and start the redirect
-//
+    //
+    // Create CRedirect specifying output stream
+    //
 
-CRedirect::CRedirect(std::ostream& outStream, std::string outfileName, std::ios_base::openmode mode) {
-    this->outStream = &outStream;
-    this->change(outfileName, mode);
-}
-
-//
-// Create CRedirect specifying file stream (stdout/stderr), output file and start the redirect
-//
-
- CRedirect::CRedirect(std::FILE* stdStream,  std::string outfileName, const char* mode) {
-     std::freopen(outfileName.c_str(), mode, stdStream);
- }
- 
-//
-// Create CRedirect specifying file stream (stdout/stderr)
-//
-
- CRedirect::CRedirect(std::FILE* stdStream) {
-     this->stdStream = stdStream;
- }
-
-//
-// Restore old output stream
-//
-
-CRedirect::~CRedirect() {
-    restore();
-}
-
-//
-// Change output for stream to file 
-//
-
-void CRedirect::change(std::string outfileName, std::ios_base::openmode mode) {
-    this->fileStream.reset(new std::ofstream{outfileName, mode});
-    this->outBuffer = outStream->rdbuf();
-    outStream->rdbuf((this->fileStream)->rdbuf());
-}
-
-//
-// Change output for file stream (stdout/stderr) to file.
-//
-
-void CRedirect::change(std::string outfileName, const char* mode) {
-    std::freopen(outfileName.c_str(), mode, this->stdStream);
-}
-
-//
-// Restore old output stream. Note that this will currently do nothing  for 
-// stdout/stderr (except close) as a dependable way of doing this hasn't 
-// been found yet.
-//
-
-void CRedirect::restore() {
-
-    if (this->outBuffer) {
-        outStream->rdbuf(this->outBuffer);
+    CRedirect::CRedirect(std::ostream& outStream) {
+        this->outStream = &outStream;
     }
-    
-    if (this->fileStream) {
-        this->fileStream->close();
+
+    //
+    // Create CRedirect specifying output stream, output file and start the redirect
+    //
+
+    CRedirect::CRedirect(std::ostream& outStream, std::string outfileName, std::ios_base::openmode mode) {
+        this->outStream = &outStream;
+        this->change(outfileName, mode);
     }
-    
-    if (this->stdStream) {
-        fclose(this->stdStream);
+
+    //
+    // Create CRedirect specifying file stream (stdout/stderr), output file and start the redirect
+    //
+
+    CRedirect::CRedirect(std::FILE* stdStream, std::string outfileName, const char* mode) {
+        std::freopen(outfileName.c_str(), mode, stdStream);
     }
-}
+
+    //
+    // Create CRedirect specifying file stream (stdout/stderr)
+    //
+
+    CRedirect::CRedirect(std::FILE* stdStream) {
+        this->stdStream = stdStream;
+    }
+
+    //
+    // Restore old output stream
+    //
+
+    CRedirect::~CRedirect() {
+        restore();
+    }
+
+    //
+    // Change output for stream to file 
+    //
+
+    void CRedirect::change(std::string outfileName, std::ios_base::openmode mode) {
+        this->fileStream.reset(new std::ofstream{outfileName, mode});
+        this->outBuffer = outStream->rdbuf();
+        outStream->rdbuf((this->fileStream)->rdbuf());
+    }
+
+    //
+    // Change output for file stream (stdout/stderr) to file.
+    //
+
+    void CRedirect::change(std::string outfileName, const char* mode) {
+        std::freopen(outfileName.c_str(), mode, this->stdStream);
+    }
+
+    //
+    // Restore old output stream. Note that this will currently do nothing  for 
+    // stdout/stderr (except close) as a dependable way of doing this hasn't 
+    // been found yet.
+    //
+
+    void CRedirect::restore() {
+
+        if (this->outBuffer) {
+            outStream->rdbuf(this->outBuffer);
+        }
+
+        if (this->fileStream) {
+            this->fileStream->close();
+        }
+
+        if (this->stdStream) {
+            fclose(this->stdStream);
+        }
+    }
+
+} // namespace Antik

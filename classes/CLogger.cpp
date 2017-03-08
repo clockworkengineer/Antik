@@ -39,126 +39,135 @@
 #include <thread>
 #include <ctime>
 
-// ===========================
-// PRIVATE TYPES AND CONSTANTS
-// ===========================
+// =========
+// NAMESPACE
+// =========
 
-// ==========================
-// PUBLIC TYPES AND CONSTANTS
-// ==========================
+namespace Antik {
 
-// Log output no op
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
 
-const CLogger::LogStringsFn CLogger::noOp = [] (const std::initializer_list<std::string>& outstr) { };
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
 
-// ========================
-// PRIVATE STATIC VARIABLES
-// ========================
+    // Log output no op
 
-std::mutex CLogger::mOutput;                // Mutex to control access to cout/cerr
-bool CLogger::bDateTimeStamped = false;     // ==true then output timetamped
+    const CLogger::LogStringsFn CLogger::noOp = [] (const std::initializer_list<std::string>& outstr) {
+    };
 
-// =======================
-// PUBLIC STATIC VARIABLES
-// =======================
+    // ========================
+    // PRIVATE STATIC VARIABLES
+    // ========================
 
-// ===============
-// PRIVATE METHODS
-// ===============
+    std::mutex CLogger::mOutput; // Mutex to control access to cout/cerr
+    bool CLogger::bDateTimeStamped = false; // ==true then output timetamped
 
-//
-// Get string for current date time
-//
+    // =======================
+    // PUBLIC STATIC VARIABLES
+    // =======================
 
-const std::string CLogger::currentDateAndTime(void) {
-    
-   std::time_t rawtime;
-   struct std::tm *info;
-   std::string buffer(80, ' ');
+    // ===============
+    // PRIVATE METHODS
+    // ===============
 
-   std::time( &rawtime );
-   info = std::localtime( &rawtime );
-   buffer.resize(std::strftime(&buffer[0],buffer.length(),"%F %T", info));
-   return(buffer);
+    //
+    // Get string for current date time
+    //
 
-}
+    const std::string CLogger::currentDateAndTime(void) {
 
-// ==============
-// PUBLIC METHODS
-// ==============
-//
+        std::time_t rawtime;
+        struct std::tm *info;
+        std::string buffer(80, ' ');
 
-//
-// CLogger object constructor. 
-//
+        std::time(&rawtime);
+        info = std::localtime(&rawtime);
+        buffer.resize(std::strftime(&buffer[0], buffer.length(), "%F %T", info));
+        return (buffer);
 
-CLogger::CLogger() {
-}
-
-//
-// CLogger Destructor
-//
-
-CLogger::~CLogger() {
-}
-
-//
-// Set whether log output is to have a date and time stamp.
-//
-
-void CLogger::setDateTimeStamped(const bool bDateTimeStamped) {
-    CLogger::bDateTimeStamped = bDateTimeStamped;
-}
- 
-//
-// Standard cout for intialiser list of strings. All calls to this function from different
-// threads are guarded by mutex CLogger::mOutput.
-//
-
-void CLogger::coutstr(const std::initializer_list<std::string>& outstr) {
-
-    std::lock_guard<std::mutex> locker(CLogger::mOutput);
-
-    if (outstr.size() > 0) {
-        if (CLogger::bDateTimeStamped) {
-            std::cout << ("[" + currentDateAndTime() + "]");
-        }
-        for (auto str : outstr) {
-            std::cout << str;
-        }
-        std::cout << std::endl;
     }
 
-}
+    // ==============
+    // PUBLIC METHODS
+    // ==============
+    //
 
-//
-// Standard cerr for intialiser list of strings. All calls to this function from different
-// threads are guarded by mutex CLogger::mOutput.
-//
+    //
+    // CLogger object constructor. 
+    //
 
-void CLogger::cerrstr(const std::initializer_list<std::string>& errstr) {
-
-    std::lock_guard<std::mutex> locker(CLogger::mOutput);
-
-    if (errstr.size() > 0) {
-        if (CLogger::bDateTimeStamped) {
-            std::cerr << ("[" + currentDateAndTime() + "]");
-        }
-        for (auto str : errstr) {
-            std::cerr << str;
-        }
-        std::cerr << std::endl;
+    CLogger::CLogger() {
     }
 
-}
+    //
+    // CLogger Destructor
+    //
 
-//
-// Thread id as Hex
-//
+    CLogger::~CLogger() {
+    }
 
-template <>
-std::string CLogger::toString( std::thread::id value) {
-    std::ostringstream ss;
-    ss << "0x" << std::hex << value;
-    return ss.str();
-}
+    //
+    // Set whether log output is to have a date and time stamp.
+    //
+
+    void CLogger::setDateTimeStamped(const bool bDateTimeStamped) {
+        CLogger::bDateTimeStamped = bDateTimeStamped;
+    }
+
+    //
+    // Standard cout for intialiser list of strings. All calls to this function from different
+    // threads are guarded by mutex CLogger::mOutput.
+    //
+
+    void CLogger::coutstr(const std::initializer_list<std::string>& outstr) {
+
+        std::lock_guard<std::mutex> locker(CLogger::mOutput);
+
+        if (outstr.size() > 0) {
+            if (CLogger::bDateTimeStamped) {
+                std::cout << ("[" + currentDateAndTime() + "]");
+            }
+            for (auto str : outstr) {
+                std::cout << str;
+            }
+            std::cout << std::endl;
+        }
+
+    }
+
+    //
+    // Standard cerr for intialiser list of strings. All calls to this function from different
+    // threads are guarded by mutex CLogger::mOutput.
+    //
+
+    void CLogger::cerrstr(const std::initializer_list<std::string>& errstr) {
+
+        std::lock_guard<std::mutex> locker(CLogger::mOutput);
+
+        if (errstr.size() > 0) {
+            if (CLogger::bDateTimeStamped) {
+                std::cerr << ("[" + currentDateAndTime() + "]");
+            }
+            for (auto str : errstr) {
+                std::cerr << str;
+            }
+            std::cerr << std::endl;
+        }
+
+    }
+
+    //
+    // Thread id as Hex
+    //
+
+    template <>
+    std::string CLogger::toString(std::thread::id value) {
+        std::ostringstream ss;
+        ss << "0x" << std::hex << value;
+        return ss.str();
+    }
+
+} // namespace Antik

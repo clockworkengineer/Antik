@@ -32,7 +32,11 @@
 // Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse),
 //               Linux, Boost C++ Libraries.
 //
- 
+
+// =============
+// INCLUDE FILES
+// =============
+
 //
 // C++ STL definitions
 //
@@ -42,11 +46,13 @@
 #include <thread>
 
 //
-// Classes
+// Antikythera Classes
 //
 
 #include "CMailIMAP.hpp"
 #include "CMailIMAPParse.hpp"
+
+using namespace Antik;
 
 //
 // Boost program options  & file system library definitions
@@ -57,6 +63,10 @@
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
+
+// ======================
+// LOCAL TYES/DEFINITIONS
+// ======================
 
 //
 // Command line parameter data
@@ -76,6 +86,11 @@ struct ParamArgData {
 //
 
 const int kPollPeriod = 15;
+
+// ===============
+// LOCAL FUNCTIONS
+// ===============
+
 
 //
 // Exit with error message/status

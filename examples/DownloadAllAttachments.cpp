@@ -33,6 +33,10 @@
 //               Linux, Boost C++ Libraries.
 //
  
+// =============
+// INCLUDE FILES
+// =============
+
 //
 // C++ STL definitions
 //
@@ -40,13 +44,15 @@
 #include <iostream>
 
 //
-// Classes
+// Antikythera Classes
 //
 
 #include "CMailIMAP.hpp"
 #include "CMailIMAPParse.hpp"
 #include "CMailIMAPBodyStruct.hpp"
 #include "CMailSMTP.hpp"
+
+using namespace Antik;
 
 //
 // Boost program options  & file system library definitions
@@ -57,6 +63,10 @@
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
+
+// ======================
+// LOCAL TYES/DEFINITIONS
+// ======================
 
 //
 // Command line parameter data
@@ -70,6 +80,10 @@ struct ParamArgData {
     fs::path destinationFolder;         // Destination folder for attachments
     std::string configFileNameStr;      // Configuration file name
 };
+
+// ===============
+// LOCAL FUNCTIONS
+// ===============
 
 //
 // Exit with error message/status

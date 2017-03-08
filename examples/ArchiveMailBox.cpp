@@ -38,6 +38,10 @@
 //               Linux, Boost C++ Libraries.
 //
 
+// =============
+// INCLUDE FILES
+// =============
+
 //
 // C++ STL definitions
 //
@@ -47,7 +51,7 @@
 #include <sstream>
 
 //
-// Classes
+// Antikythera Classes
 //
 
 #include "CMailIMAP.hpp"
@@ -55,6 +59,8 @@
 #include "CMailIMAPBodyStruct.hpp"
 #include "CMailSMTP.hpp"
 #include "CFileMIME.hpp"
+
+using namespace Antik;
 
 //
 // Boost program options  & file system library definitions
@@ -66,6 +72,10 @@
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
+
+// ======================
+// LOCAL TYES/DEFINITIONS
+// ======================
 
 //
 // Command line parameter data
@@ -94,6 +104,10 @@ const int kMaxSubjectLine = 80;
 //
 
 const std::string kEMLFileExt(".eml");
+
+// ===============
+// LOCAL FUNCTIONS
+// ===============
 
 //
 // Exit with error message/status

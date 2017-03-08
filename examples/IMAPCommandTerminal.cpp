@@ -29,6 +29,11 @@
 //   -p [ --password ] arg User password
 //   --parsed              Response parsed
 //   --bodystruct          Parsed output includes bodystructs
+
+// =============
+// INCLUDE FILES
+// =============
+
 //
 // C++ STL definitions
 //
@@ -36,20 +41,28 @@
 #include <iostream>
 
 //
-// Classes
+// Antikythera Classes
 //
 
 #include "CMailIMAP.hpp"
 #include "CMailIMAPParse.hpp"
 #include "CMailIMAPBodyStruct.hpp"
 
+using namespace Antik;
+
+//
 // Boost program options  & file system library definitions
+//
 
 #include <boost/program_options.hpp>  
 #include <boost/filesystem.hpp>
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
+
+// ======================
+// LOCAL TYES/DEFINITIONS
+// ======================
 
 // Command line parameter data
 
@@ -61,6 +74,10 @@ struct ParamArgData {
     bool bParsed=false;             // true output parsed
     bool bBodystruct=false;         // Parsed output includes BODYSTRUCTS
 };
+
+// ===============
+// LOCAL FUNCTIONS
+// ===============
 
 //
 // Exit with error message/status

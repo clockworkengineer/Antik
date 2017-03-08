@@ -20,107 +20,115 @@
 #include <mutex>
 #include <sstream>
 
-// ================
-// CLASS DEFINITION
-// ================
+// =========
+// NAMESPACE
+// =========
 
-class CLogger {
-public:
+namespace Antik {
 
-    // ==========================
-    // PUBLIC TYPES AND CONSTANTS
-    // ==========================
+    // ================
+    // CLASS DEFINITION
+    // ================
+
+    class CLogger {
+    public:
+
+        // ==========================
+        // PUBLIC TYPES AND CONSTANTS
+        // ==========================
+
+        //
+        // Logging output function
+        //
+
+        typedef std::function<void (const std::initializer_list<std::string>&) > LogStringsFn;
+
+        //
+        // NoOp output function
+        //
+
+        static const LogStringsFn noOp;
+
+        // ============
+        // CONSTRUCTORS
+        // ============
+
+        CLogger();
+
+        // ==========
+        // DESTRUCTOR
+        // ==========
+
+        virtual ~CLogger();
+
+        // ==============
+        // PUBLIC METHODS
+        // ==============
+
+        //
+        // Log to std::cout/std::cerr
+        //
+
+        static void coutstr(const std::initializer_list<std::string>& outstr);
+        static void cerrstr(const std::initializer_list<std::string>& errstr);
+
+        //
+        // Set output as date time stamped
+        // 
+
+        static void setDateTimeStamped(const bool bDateTimeStamped);
+
+        //
+        // Template for string conversion method
+        //
+
+        template <typename T> static std::string toString(T value);
+
+        // ===========================
+        // PRIVATE TYPES AND CONSTANTS
+        // ===========================
+
+        // ===========================================
+        // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+        // ===========================================
+
+        CLogger(const CLogger & orig) = delete;
+        CLogger(const CLogger && orig) = delete;
+        CLogger& operator=(CLogger other) = delete;
+
+    private:
+
+        // ===============
+        // PRIVATE METHODS
+        // ===============
+
+        //
+        // Return current date/time as a string
+        //
+
+        static const std::string currentDateAndTime(void);
+
+        // =================
+        // PRIVATE VARIABLES
+        // =================
+
+        static std::mutex mOutput; // Stream output mutex
+        static bool bDateTimeStamped; // ==true output date/time stamped
+
+    };
 
     //
-    // Logging output function
+    // Convert value to string for output
     //
 
-    typedef std::function<void (const std::initializer_list<std::string>&) > LogStringsFn;
+    template <typename T>
+    std::string CLogger::toString(T value) {
+        std::ostringstream ss;
+        ss << value;
+        return ss.str();
+    }
 
-    //
-    // NoOp output function
-    //
-
-    static const LogStringsFn noOp;
-
-    // ============
-    // CONSTRUCTORS
-    // ============
-
-    CLogger();
-
-    // ==========
-    // DESTRUCTOR
-    // ==========
-
-    virtual ~CLogger();
-
-    // ==============
-    // PUBLIC METHODS
-    // ==============
-
-    //
-    // Log to std::cout/std::cerr
-    //
-
-    static void coutstr(const std::initializer_list<std::string>& outstr);
-    static void cerrstr(const std::initializer_list<std::string>& errstr);
-
-    //
-    // Set output as date time stamped
-    // 
-
-    static void setDateTimeStamped(const bool bDateTimeStamped);
-
-    //
-    // Template for string conversion method
-    //
-
-    template <typename T> static std::string toString(T value);
-
-    // ===========================
-    // PRIVATE TYPES AND CONSTANTS
-    // ===========================
-
-   // ===========================================
-    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
-    // ===========================================
-
-    CLogger(const CLogger & orig) = delete;
-    CLogger(const CLogger && orig) = delete;
-    CLogger& operator=(CLogger other) = delete;
-
-private:
-
-    // ===============
-    // PRIVATE METHODS
-    // ===============
-
-    //
-    // Return current date/time as a string
-    //
-
-    static const std::string currentDateAndTime(void);
-
-    // =================
-    // PRIVATE VARIABLES
-    // =================
-
-    static std::mutex mOutput;        // Stream output mutex
-    static bool bDateTimeStamped;     // ==true output date/time stamped
-
-};
-
-//
-// Convert value to string for output
-//
-
-template <typename T>
-std::string CLogger::toString(T value) {
-    std::ostringstream ss;
-    ss << value;
-    return ss.str();
-}
+} // namespace Antik
 
 #endif /* CLOGGER_HPP */
 
