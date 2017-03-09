@@ -439,53 +439,53 @@ namespace Antik {
 
     void CMailSMTP::postMail(void) {
 
-        this->curl = curl_easy_init();
+        this->curlHandle = curl_easy_init();
 
-        if (this->curl) {
+        if (this->curlHandle) {
 
-            curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_SMTP | CURLPROTO_SMTPS);
+            curl_easy_setopt(curlHandle, CURLOPT_PROTOCOLS, CURLPROTO_SMTP | CURLPROTO_SMTPS);
 
-            curl_easy_setopt(this->curl, CURLOPT_USERNAME, this->userName.c_str());
-            curl_easy_setopt(this->curl, CURLOPT_PASSWORD, this->userPassword.c_str());
-            curl_easy_setopt(this->curl, CURLOPT_URL, this->serverURL.c_str());
+            curl_easy_setopt(this->curlHandle, CURLOPT_USERNAME, this->userName.c_str());
+            curl_easy_setopt(this->curlHandle, CURLOPT_PASSWORD, this->userPassword.c_str());
+            curl_easy_setopt(this->curlHandle, CURLOPT_URL, this->serverURL.c_str());
 
-            curl_easy_setopt(this->curl, CURLOPT_USE_SSL, (long) CURLUSESSL_ALL);
+            curl_easy_setopt(this->curlHandle, CURLOPT_USE_SSL, (long) CURLUSESSL_ALL);
 
-            curl_easy_setopt(this->curl, CURLOPT_ERRORBUFFER, this->errMsgBuffer);
+            curl_easy_setopt(this->curlHandle, CURLOPT_ERRORBUFFER, this->curlErrMsgBuffer);
 
             if (!this->mailCABundle.empty()) {
-                curl_easy_setopt(this->curl, CURLOPT_CAINFO, this->mailCABundle.c_str());
+                curl_easy_setopt(this->curlHandle, CURLOPT_CAINFO, this->mailCABundle.c_str());
             }
 
-            curl_easy_setopt(this->curl, CURLOPT_MAIL_FROM, this->addressFrom.c_str());
+            curl_easy_setopt(this->curlHandle, CURLOPT_MAIL_FROM, this->addressFrom.c_str());
 
-            this->recipients = curl_slist_append(this->recipients, this->addressTo.c_str());
+            this->curlRecipients = curl_slist_append(this->curlRecipients, this->addressTo.c_str());
 
             if (!this->addressCC.empty()) {
-                this->recipients = curl_slist_append(this->recipients, this->addressCC.c_str());
+                this->curlRecipients = curl_slist_append(this->curlRecipients, this->addressCC.c_str());
             }
 
-            curl_easy_setopt(this->curl, CURLOPT_MAIL_RCPT, this->recipients);
+            curl_easy_setopt(this->curlHandle, CURLOPT_MAIL_RCPT, this->curlRecipients);
 
             this->buildMailPayload();
 
-            curl_easy_setopt(this->curl, CURLOPT_READFUNCTION, CMailSMTP::payloadSource);
-            curl_easy_setopt(this->curl, CURLOPT_READDATA, &this->mailPayload);
-            curl_easy_setopt(this->curl, CURLOPT_UPLOAD, 1L);
+            curl_easy_setopt(this->curlHandle, CURLOPT_READFUNCTION, CMailSMTP::payloadSource);
+            curl_easy_setopt(this->curlHandle, CURLOPT_READDATA, &this->mailPayload);
+            curl_easy_setopt(this->curlHandle, CURLOPT_UPLOAD, 1L);
 
-            curl_easy_setopt(this->curl, CURLOPT_VERBOSE, CMailSMTP::bCurlVerbosity);
+            curl_easy_setopt(this->curlHandle, CURLOPT_VERBOSE, CMailSMTP::bCurlVerbosity);
 
-            errMsgBuffer[0] = 0;
-            this->res = curl_easy_perform(this->curl);
+            curlErrMsgBuffer[0] = 0;
+            this->curlResult = curl_easy_perform(this->curlHandle);
 
             // Check for errors
 
-            if (this->res != CURLE_OK) {
+            if (this->curlResult != CURLE_OK) {
                 std::string errMsg;
-                if (std::strlen(this->errMsgBuffer) != 0) {
-                    errMsg = this->errMsgBuffer;
+                if (std::strlen(this->curlErrMsgBuffer) != 0) {
+                    errMsg = this->curlErrMsgBuffer;
                 } else {
-                    errMsg = curl_easy_strerror(res);
+                    errMsg = curl_easy_strerror(curlResult);
                 }
                 throw CMailSMTP::Exception("curl_easy_perform() failed: " + errMsg);
             }
@@ -496,11 +496,11 @@ namespace Antik {
 
             // Free the list of this->recipients
 
-            curl_slist_free_all(this->recipients);
+            curl_slist_free_all(this->curlRecipients);
 
             // Always cleanup
 
-            curl_easy_cleanup(curl);
+            curl_easy_cleanup(curlHandle);
 
         }
 

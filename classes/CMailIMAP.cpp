@@ -266,6 +266,9 @@ namespace Antik {
                 recvLength = commandResponseStr.length();
                 if ((commandResponseStr[recvLength - 2] == '\r') &&
                         (commandResponseStr[recvLength - 1] == '\n')) {
+                    // Find the previous end of line and search for tag from there.
+                    // This cuts down search time on large buffered responses ie.
+                    // encoded attachments.
                     size_t prevNewLinePos = commandResponseStr.rfind(CMailIMAP::kEOLStr, recvLength - 3);
                     if (prevNewLinePos == std::string::npos) {
                         prevNewLinePos = 0;

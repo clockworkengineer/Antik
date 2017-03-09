@@ -211,10 +211,10 @@ namespace Antik {
 
         std::string mailCABundle = ""; // Path to CA bundle (Untested at present)
 
-        CURL *curl = nullptr; // curl handle
-        struct curl_slist *recipients = nullptr; // curl email recipients list
-        CURLcode res = CURLE_OK; // curl status
-        char errMsgBuffer[CURL_ERROR_SIZE]; // curl error string buffer  
+        CURL *curlHandle = nullptr; // curl handle
+        struct curl_slist *curlRecipients = nullptr; // curl email recipients list
+        CURLcode curlResult = CURLE_OK; // curl status
+        char curlErrMsgBuffer[CURL_ERROR_SIZE]; // curl error string buffer  
         static bool bCurlVerbosity; // curl verbosity setting
 
         std::deque<std::string> mailPayload; // Email payload

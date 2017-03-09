@@ -372,12 +372,7 @@ void createMailBoxList(CMailIMAP& imap, const ParamArgData& argData,
 
         }
     } else {
-        std::istringstream mailBoxStream(argData.mailBoxNameStr);
-        for (std::string mailBoxStr; std::getline(mailBoxStream, mailBoxStr, ',');) {
-            mailBoxStr = mailBoxStr.substr(mailBoxStr.find_first_not_of(' '));
-            mailBoxStr = mailBoxStr.substr(0, mailBoxStr.find_last_not_of(' ') + 1);
-            mailBoxList.push_back(mailBoxStr);
-        }
+        c
     }
 }
 
