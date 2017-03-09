@@ -15,7 +15,7 @@
 //
 // Description:  A command line program to log on to an SMTP server and
 // send an email to given recipients. The mails details such as contents,
-// subject and any attachments are configured via command lien arguments.
+// subject and any attachments are configured via command line arguments.
 // All parameters and their meaning are obtained by running the program 
 // with the  parameter --help.
 //

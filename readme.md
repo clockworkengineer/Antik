@@ -109,3 +109,12 @@ in any e-mail in a specific mailbox to a given local folder. The final destinati
  available.
 
 1. **[WaitForMailBoxEvent](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/WaitForMailBoxEvent.cpp)** Log on to a IMAP server and wait for a status change in a specified mailbox. By default it will use IDLE but polling every time period using NOOP is also supported. This is not directly useful but may be applied to other situations where the functionality is needed.
+
+1. **[SMTPSendMail](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/SMTPSendMail.cpp)** A command line program to log on to an SMTP server and send an email to given recipients. The mails details such as contents, subject and any attachments are configured via command line arguments.
+
+# Example Programs #
+
+1. Increase list of example programs.
+2. CMailIMAPEnvelope to parse envelope response ( need to find a use for this before i start).
+3. CFileZIP a class to create and read ZIP file archives.
+4. Extend existing unit tests and add more for classes which there are none.
