@@ -112,7 +112,7 @@ in any e-mail in a specific mailbox to a given local folder. The final destinati
 
 1. **[SMTPSendMail](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/SMTPSendMail.cpp)** A command line program to log on to an SMTP server and send an email to given recipients. The mails details such as contents, subject and any attachments are configured via command line arguments.
 
-# Example Programs #
+# To do list #
 
 1. Increase list of example programs.
 2. CMailIMAPEnvelope to parse envelope response ( need to find a use for this before i start).
