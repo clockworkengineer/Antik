@@ -179,7 +179,7 @@ namespace Antik {
 
         uint32_t calculateCRC32(std::ifstream& sourceFileStream, std::uint32_t sourceLength);
         void convertModificationDateTime(std::tm& modificationDateTime, std::uint16_t dateWord, std::uint16_t timeWord);
-        int inflateFile(std::ifstream& sourceFileStream, std::ofstream& destFileStream, std::uint32_t sourceLength);
+        bool inflateFile(std::ifstream& sourceFileStream, std::ofstream& destFileStream, std::uint32_t sourceLength);
         bool copyFile(std::ifstream& sourceFileStream, std::ofstream& destFileStream, std::uint32_t sourceLength); 
   
         // =================
@@ -187,7 +187,7 @@ namespace Antik {
         // =================
 
         std::string zipFileNameStr;
-        std::ifstream zipFileStream;
+        std::ifstream zipFileReadStream;
         EOCentralDirectoryRecord EOCentDirRec;
         CentralDirectoryFileHeader centDirFileHeader;
         std::vector<CentralDirectoryFileHeader> zipContentsList;

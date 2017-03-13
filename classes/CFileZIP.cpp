@@ -275,17 +275,17 @@ namespace Antik {
 
     void CFileZIP::open(void) {
 
-        this->zipFileStream.open(this->zipFileNameStr, std::ios::binary);
+        this->zipFileReadStream.open(this->zipFileNameStr, std::ios::binary);
 
-        if (this->zipFileStream.is_open()) {
+        if (this->zipFileReadStream.is_open()) {
 
-            this->getEOCentralDirectoryRecord(zipFileStream, EOCentDirRec);
+            this->getEOCentralDirectoryRecord(zipFileReadStream, EOCentDirRec);
 
-            this->zipFileStream.seekg(this->EOCentDirRec.offsetCentralDirRecords, std::ios_base::beg);
+            this->zipFileReadStream.seekg(this->EOCentDirRec.offsetCentralDirRecords, std::ios_base::beg);
 
             for (auto cnt01 = 0; cnt01 < this->EOCentDirRec.numberOfCentralDirRecords; cnt01++) {
                 CFileZIP::CentralDirectoryFileHeader centDirFileHeader;
-                this->getCentralDirectoryFileHeader(zipFileStream, centDirFileHeader);
+                this->getCentralDirectoryFileHeader(zipFileReadStream, centDirFileHeader);
                 this->zipContentsList.push_back(centDirFileHeader);
             }
 
@@ -311,19 +311,19 @@ namespace Antik {
 
     }
 
-    int CFileZIP::inflateFile(std::ifstream& sourceFileStream, std::ofstream& destFileStream, std::uint32_t sourceLength) {
+    bool CFileZIP::inflateFile(std::ifstream& sourceFileStream, std::ofstream& destFileStream, std::uint32_t sourceLength) {
 
         int inflateResult;
         std::uint32_t inflatedBytes;
         z_stream inlateZIPStream{ 0};
 
         if (sourceLength == 0) {
-            return (Z_OK);
+            return (true);
         }
 
         inflateResult = inflateInit2(&inlateZIPStream, -MAX_WBITS);
         if (inflateResult != Z_OK) {
-            return inflateResult;
+            return (false);
         }
 
         /* decompress until deflate stream ends or end of file */
@@ -334,7 +334,7 @@ namespace Antik {
 
             if (sourceFileStream.fail()) {
                 (void) inflateEnd(&inlateZIPStream);
-                return Z_ERRNO;
+                return (false);
             }
 
             inlateZIPStream.avail_in = sourceFileStream.gcount();
@@ -356,14 +356,14 @@ namespace Antik {
                     case Z_DATA_ERROR:
                     case Z_MEM_ERROR:
                         (void) inflateEnd(&inlateZIPStream);
-                        return inflateResult;
+                        return (false);
                 }
 
                 inflatedBytes = kZIPBufferSize - inlateZIPStream.avail_out;
                 destFileStream.write((char *) & this->zipOutBuffer[0], inflatedBytes);
                 if (destFileStream.fail()) {
                     (void) inflateEnd(&inlateZIPStream);
-                    return Z_ERRNO;
+                    return (false);
                 }
 
             } while (inlateZIPStream.avail_out == 0);
@@ -375,7 +375,8 @@ namespace Antik {
         /* clean up and return */
 
         (void) inflateEnd(&inlateZIPStream);
-        return inflateResult == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
+        
+        return (inflateResult == Z_STREAM_END ? true : false);
 
     }
 
@@ -389,7 +390,7 @@ namespace Antik {
                 bCopied = false;
                 break;
             }
-            destFileStream.write((char *) & this->zipInBuffer[0], std::min(sourceLength, this->kZIPBufferSize));
+            destFileStream.write((char *) & this->zipInBuffer[0], sourceFileStream.gcount());
             if (destFileStream.fail()) {
                 bCopied = false;
                 break;
@@ -432,20 +433,20 @@ namespace Antik {
 
             if (entry.fileNameStr.compare(fileNameStr) == 0) {
 
-                this->zipFileStream.seekg(entry.fileHeaderOffset, std::ios_base::beg);
+                this->zipFileReadStream.seekg(entry.fileHeaderOffset, std::ios_base::beg);
                 std::ofstream attachmentFileStream(destFileNameStr, std::ios::binary);
 
                 if (attachmentFileStream.is_open()) {
 
                     CFileZIP::FileHeader fileHeader;
-                    this->getFileHeader(this->zipFileStream, fileHeader);
+                    this->getFileHeader(this->zipFileReadStream, fileHeader);
 
                     if (fileHeader.compression == 0x8) {
-                        if (this->inflateFile(this->zipFileStream, attachmentFileStream, fileHeader.compressedSize) == Z_OK) {
-                            fileExtracted = true;
-                        }
+                        fileExtracted = this->inflateFile(this->zipFileReadStream, attachmentFileStream, fileHeader.compressedSize);
                     } else if (fileHeader.compression == 0) {
-                        fileExtracted = this->copyFile(this->zipFileStream, attachmentFileStream, fileHeader.compressedSize);
+                        fileExtracted = this->copyFile(this->zipFileReadStream, attachmentFileStream, fileHeader.compressedSize);
+                    } else {
+                        throw Exception("File uses unsupported compression = "+std::to_string(fileHeader.compression));
                     }
 
                     attachmentFileStream.close();
