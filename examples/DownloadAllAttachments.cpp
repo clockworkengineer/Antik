@@ -194,7 +194,7 @@ void downloadAttachment(CMailIMAP& imap, fs::path& destinationFolder, CMailIMAPB
                     std::string decodedStringStr;
                     std::istringstream responseStream(resp.second);
                     std::ofstream attachmentFileStream(fullFilePath.string(), std::ios::binary);
-                    if (attachmentFileStream) {
+                    if (attachmentFileStream.is_open()) {
                         std::cout << "Creating [" << fullFilePath.native() << "]" << std::endl;
                         // Encoded lines have terminating '\r\n' the getline removes '\n'
                         for (std::string lineStr; std::getline(responseStream, lineStr, '\n');) {

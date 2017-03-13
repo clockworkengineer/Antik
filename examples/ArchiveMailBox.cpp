@@ -302,7 +302,7 @@ void fetchEmailAndArchive(CMailIMAP& imap, const std::string& mailBoxNameStr,
             if (!fs::exists(fullFilePath)) {
                 std::istringstream emailBodyStream(emailBody);
                 std::ofstream emlFileStream(fullFilePath.string(), std::ios::binary);
-                if (emlFileStream) {
+                if (emlFileStream.is_open()) {
                     std::cout << "Creating [" << fullFilePath.native() << "]" << std::endl;
                     for (std::string lineStr; std::getline(emailBodyStream, lineStr, '\n');) {
                         lineStr.push_back('\n');
@@ -399,7 +399,7 @@ int main(int argc, char** argv) {
 
         // Initialise CMailIMAP internals
 
-        CMailIMAP::init();
+        CMailIMAP::init(true);
 
         // Set mail account user name and password
 

@@ -214,7 +214,7 @@ int main(int argc, char** argv) {
         if (!argData.configFileNameStr.empty()) {
             if (fs::exists(argData.mailContentsFileStr)) {
                 std::ifstream mailContentsStream(argData.mailContentsFileStr);
-                if (mailContentsStream.good()) {
+                if (mailContentsStream.is_open()) {
                     for (std::string lineStr; std::getline(mailContentsStream, lineStr, '\n');) {
                         mailMessage.push_back(lineStr);
                     }

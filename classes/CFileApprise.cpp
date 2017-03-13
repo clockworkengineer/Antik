@@ -329,7 +329,7 @@ namespace Antik {
 
         // Allocate inotify read buffer
 
-        this->inotifyBuffer.reset(new u_int8_t [CFileApprise::kInotifyEventBuffLen]);
+        this->inotifyBuffer.reset(new std::uint8_t [CFileApprise::kInotifyEventBuffLen]);
 
         // Create watch table
 
