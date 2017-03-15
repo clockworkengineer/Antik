@@ -57,13 +57,18 @@ namespace Antik {
             std::string fileCommentStr;
             std::tm  modificationDateTime={ };
             std::uint32_t uncompressedSize=0;
-         };
+            std::uint32_t compressedSize=0;
+            std::uint16_t compression=0;
+            std::uint16_t creatorVersion=0;
+            std::uint32_t externalFileAttrib=0;
+            std::vector<std::uint8_t>extraField;
+        };
 
         // ============
         // CONSTRUCTORS
         // ============
 
-        CFileZIP(std::string& zipFileNameStr);
+        CFileZIP(const std::string& zipFileNameStr);
 
         // ==========
         // DESTRUCTOR
@@ -77,8 +82,11 @@ namespace Antik {
 
         void open(void);
         std::vector<CFileZIP::FileDetail> getZIPFileDetails(void);
-        bool extractZIPFile(std::string fileNameStr, std::string destFolderStr);
-        
+        bool extractZIPFile(const std::string& fileNameStr, const std::string& destFolderStr);
+        void create(void);
+        void add(const std::string& fileNameStr);
+        void save(void);
+
         // ================
         // PUBLIC VARIABLES
         // ================
@@ -91,7 +99,7 @@ namespace Antik {
 
         struct FileHeader {
             const std::uint32_t signature = 0x04034b50;
-            std::uint16_t versionExtract = 0;
+            std::uint16_t creatorVersion = 0;
             std::uint16_t bitFlag = 0;
             std::uint16_t compression = 0;
             std::uint16_t modificationTime = 0;
@@ -102,7 +110,7 @@ namespace Antik {
             std::uint16_t fileNameLength = 0;
             std::uint16_t extraFieldLength = 0;
             std::string fileNameStr;
-            std::shared_ptr<std::uint8_t> extraField;
+            std::vector<std::uint8_t> extraField;
         };
 
         static const std::uint32_t kFileHeaderSize = 30;
@@ -118,8 +126,8 @@ namespace Antik {
 
         struct CentralDirectoryFileHeader {
             const std::uint32_t signature = 0x02014b50;
-            std::uint16_t versionExtract;
-            std::uint16_t versionMadeBys;
+            std::uint16_t creatorVersion;
+            std::uint16_t extractorVersion;
             std::uint16_t bitFlag;
             std::uint16_t compression;
             std::uint16_t modificationTime;
@@ -135,7 +143,7 @@ namespace Antik {
             std::uint32_t externalFileAttrib;
             std::uint32_t fileHeaderOffset;
             std::string fileNameStr;
-            std::shared_ptr<std::uint8_t>extraField;
+            std::vector<std::uint8_t>extraField;
             std::string fileCommentStr;
         };
 
@@ -150,12 +158,18 @@ namespace Antik {
             std::uint32_t sizeOfCentralDirRecords;
             std::uint32_t offsetCentralDirRecords;
             std::uint16_t commentLength;
-            std::shared_ptr<std::uint8_t> comment;
+            std::vector<std::uint8_t> comment;
         };
 
         static const std::uint32_t kEOCentralDirectoryRecordSize = 22;
         
         static const std::uint32_t kZIPBufferSize = 16384;
+        
+        struct AddedZIPContent {
+            bool flat=true;
+            std::string pathNameStr;
+            std::string baseFileNameStr;     
+        };
 
         // ===========================================
         // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
@@ -170,27 +184,42 @@ namespace Antik {
         // PRIVATE METHODS
         // ===============
 
+        void putField(const std::uint32_t& field, std::vector<std::uint8_t>& buffer);
+        void putField(const std::uint16_t& field, std::vector<std::uint8_t>& buffer);
+        void putDataDescriptor(CFileZIP::DataDescriptor& entry);
+        void putCentralDirectoryFileHeader(CFileZIP::CentralDirectoryFileHeader& entry);
+        void putFileHeader(CFileZIP::FileHeader& entry);
+        void putEOCentralDirectoryRecord(CFileZIP::EOCentralDirectoryRecord& entry);
+ 
         void getField(std::uint32_t& field, std::uint8_t *buffer);
         void getField(std::uint16_t& field, std::uint8_t *buffer);
-        void getDataDescriptor(std::ifstream& zipFileStream, CFileZIP::DataDescriptor& entry);
-        void getCentralDirectoryFileHeader(std::ifstream& zipFileStream, CFileZIP::CentralDirectoryFileHeader& entry);
-        void getFileHeader(std::ifstream& zipFileStream, CFileZIP::FileHeader& entry);
-        void getEOCentralDirectoryRecord(std::ifstream& zipFileStream, CFileZIP::EOCentralDirectoryRecord& entry);
+        void getDataDescriptor(CFileZIP::DataDescriptor& entry);
+        void getCentralDirectoryFileHeader(CFileZIP::CentralDirectoryFileHeader& entry);
+        void getFileHeader(CFileZIP::FileHeader& entry);
+        void getEOCentralDirectoryRecord(CFileZIP::EOCentralDirectoryRecord& entry);
 
         uint32_t calculateCRC32(std::ifstream& sourceFileStream, std::uint32_t sourceLength);
         void convertModificationDateTime(std::tm& modificationDateTime, std::uint16_t dateWord, std::uint16_t timeWord);
-        bool inflateFile(std::ifstream& sourceFileStream, std::ofstream& destFileStream, std::uint32_t sourceLength);
-        bool copyFile(std::ifstream& sourceFileStream, std::ofstream& destFileStream, std::uint32_t sourceLength); 
+        bool inflateFile(std::ofstream& destFileStream, std::uint32_t sourceLength);
+        bool copyFile(std::ofstream& destFileStream, std::uint32_t sourceLength); 
   
+        void getFileAttributes(const std::string& fileNameStr, std::uint32_t& attributes);
+        void getFileSize(const std::string& fileNameStr, std::uint32_t& fileSize);     
+        void getFileCRC32(const std::string& fileNameStr, std::uint32_t fileSize, std::uint32_t& crc32);
+        void getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificationDate, std::uint16_t& modificationTime);
+        void getFileData(std::string& fileNameStr, std::uint32_t fileLength);
+         
+        void writeFileHeaderAndData(AddedZIPContent& addedFile);
+        
         // =================
         // PRIVATE VARIABLES
         // =================
 
         std::string zipFileNameStr;
-        std::ifstream zipFileReadStream;
+        std::fstream zipFileStream;
         EOCentralDirectoryRecord EOCentDirRec;
-        CentralDirectoryFileHeader centDirFileHeader;
         std::vector<CentralDirectoryFileHeader> zipContentsList;
+        std::vector<AddedZIPContent> addedZipFiles;
         
         std::vector<uint8_t> zipInBuffer;
         std::vector<uint8_t> zipOutBuffer;
