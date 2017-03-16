@@ -22,6 +22,7 @@
 #include <fstream>
 #include <memory>
 #include <ctime>
+#include <set>
 
 // =========
 // NAMESPACE
@@ -55,7 +56,7 @@ namespace Antik {
         struct FileDetail {
             std::string fileNameStr;
             std::string fileCommentStr;
-            std::tm  modificationDateTime={ };
+            std::tm  modificationDateTime={ 0 };
             std::uint32_t uncompressedSize=0;
             std::uint32_t compressedSize=0;
             std::uint16_t compression=0;
@@ -80,9 +81,11 @@ namespace Antik {
         // PUBLIC METHODS
         // ==============
 
+        void name(const std::string& zipFileNameStr);
         void open(void);
+        void close(void);
         std::vector<CFileZIP::FileDetail> getZIPFileDetails(void);
-        bool extractZIPFile(const std::string& fileNameStr, const std::string& destFolderStr);
+        bool extract(const std::string& fileNameStr, const std::string& destFolderStr);
         void create(void);
         void add(const std::string& fileNameStr);
         void save(void);
@@ -117,31 +120,31 @@ namespace Antik {
 
         struct DataDescriptor {
             const std::uint32_t signature = 0x08074b50;
-            std::uint32_t crc32;
-            std::uint32_t compressedSize;
-            std::uint32_t uncompressedSize;
+            std::uint32_t crc32 = 0;
+            std::uint32_t compressedSize = 0;
+            std::uint32_t uncompressedSize = 0;
         };
 
         static const std::uint32_t kDataDescriptorSize = 12;
 
         struct CentralDirectoryFileHeader {
             const std::uint32_t signature = 0x02014b50;
-            std::uint16_t creatorVersion;
-            std::uint16_t extractorVersion;
-            std::uint16_t bitFlag;
-            std::uint16_t compression;
-            std::uint16_t modificationTime;
-            std::uint16_t modificationDate;
-            std::uint32_t crc32;
-            std::uint32_t compressedSize;
-            std::uint32_t uncompressedSize;
-            std::uint16_t fileNameLength;
-            std::uint16_t extraFieldLength;
-            std::uint16_t fileCommentLength;
-            std::uint16_t diskNoStart;
-            std::uint16_t internalFileAttrib;
-            std::uint32_t externalFileAttrib;
-            std::uint32_t fileHeaderOffset;
+            std::uint16_t creatorVersion = 0;
+            std::uint16_t extractorVersion = 0;
+            std::uint16_t bitFlag = 0;
+            std::uint16_t compression = 0;
+            std::uint16_t modificationTime = 0;
+            std::uint16_t modificationDate = 0;
+            std::uint32_t crc32 = 0;
+            std::uint32_t compressedSize = 0;
+            std::uint32_t uncompressedSize = 0;
+            std::uint16_t fileNameLength = 0;
+            std::uint16_t extraFieldLength = 0;
+            std::uint16_t fileCommentLength = 0;
+            std::uint16_t diskNoStart = 0;
+            std::uint16_t internalFileAttrib = 0;
+            std::uint32_t externalFileAttrib = 0;
+            std::uint32_t fileHeaderOffset = 0;
             std::string fileNameStr;
             std::vector<std::uint8_t>extraField;
             std::string fileCommentStr;
@@ -151,13 +154,13 @@ namespace Antik {
 
         struct EOCentralDirectoryRecord {
             const std::uint32_t signature = 0x06054b50;
-            std::uint16_t diskNnumber;
-            std::uint16_t centralDirectoryStartDisk;
-            std::uint16_t numberOfCentralDirRecords;
-            std::uint16_t totalCentralDirRecords;
-            std::uint32_t sizeOfCentralDirRecords;
-            std::uint32_t offsetCentralDirRecords;
-            std::uint16_t commentLength;
+            std::uint16_t diskNnumber = 0;
+            std::uint16_t centralDirectoryStartDisk = 0;
+            std::uint16_t numberOfCentralDirRecords = 0;
+            std::uint16_t totalCentralDirRecords = 0;
+            std::uint32_t sizeOfCentralDirRecords = 0;
+            std::uint32_t offsetCentralDirRecords = 0;
+            std::uint16_t commentLength = 0;
             std::vector<std::uint8_t> comment;
         };
 
@@ -204,14 +207,15 @@ namespace Antik {
         bool copyFile(std::ofstream& destFileStream, std::uint32_t sourceLength); 
         bool deflateFile(std::ifstream& sourceFileStream, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
   
+        bool fileExists(const std::string& fileNameStr);
         void getFileAttributes(const std::string& fileNameStr, std::uint32_t& attributes);
         void getFileSize(const std::string& fileNameStr, std::uint32_t& fileSize);     
         void getFileCRC32(const std::string& fileNameStr, std::uint32_t fileSize, std::uint32_t& crc32);
         void getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificationDate, std::uint16_t& modificationTime);
-        void getFileData(std::string& fileNameStr, std::uint32_t fileLength);
-        void getFileDataCompressed(std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
+        void getFileData(const std::string& fileNameStr, std::uint32_t fileLength);
+        void getFileDataCompressed(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
          
-        void writeFileHeaderAndData(AddedZIPContent& addedFile);
+        void writeFileHeaderAndData(const std::string& fileNameStr);
         
         // =================
         // PRIVATE VARIABLES
@@ -219,9 +223,9 @@ namespace Antik {
 
         std::string zipFileNameStr;
         std::fstream zipFileStream;
-        EOCentralDirectoryRecord EOCentDirRec;
-        std::vector<CentralDirectoryFileHeader> zipContentsList;
-        std::vector<AddedZIPContent> addedZipFiles;
+        EOCentralDirectoryRecord zipEOCentralDirectory;
+        std::vector<CentralDirectoryFileHeader> zipCentralDirectory;
+        std::vector<std::string> zipFileContentsList;
         
         std::vector<uint8_t> zipInBuffer;
         std::vector<uint8_t> zipOutBuffer;
