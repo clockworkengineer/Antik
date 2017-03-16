@@ -200,7 +200,7 @@ namespace Antik {
     void CFileZIP::getDataDescriptor(CFileZIP::DataDescriptor& entry) {
 
         std::vector<std::uint8_t> buffer(CFileZIP::kDataDescriptorSize);
-        uint32_t tag;
+        std::uint32_t tag;
         this->zipFileStream.read((char *) &buffer[0], 4);
         getField(tag, &buffer[0]);
 
@@ -219,7 +219,7 @@ namespace Antik {
     void CFileZIP::getCentralDirectoryFileHeader(CFileZIP::CentralDirectoryFileHeader& entry) {
 
         std::vector<std::uint8_t> buffer(CFileZIP::kCentralDirectoryFileHeaderSize);
-        uint32_t tag;
+        std::uint32_t tag;;
         this->zipFileStream.read((char *) &buffer[0], 4);
         getField(tag, &buffer[0]);
 
@@ -268,7 +268,7 @@ namespace Antik {
     void CFileZIP::getFileHeader(CFileZIP::FileHeader& entry) {
 
         std::vector<std::uint8_t> buffer(CFileZIP::kFileHeaderSize);
-        uint32_t tag;
+        std::uint32_t tag;
         this->zipFileStream.read((char *) &buffer[0], 4);
         getField(tag, &buffer[0]);
 
@@ -314,7 +314,7 @@ namespace Antik {
         this->zipFileStream.seekg(0, std::ios_base::end);
         uint64_t fileLength = this->zipFileStream.tellg();
         int64_t filePosition = fileLength-1;
-        uint32_t signature = 0;
+        std::uint32_t signature = 0;
         while (filePosition) {
             char curr;
             this->zipFileStream.seekg(filePosition, std::ios_base::beg);
@@ -385,8 +385,6 @@ namespace Antik {
             return (false);
         }
 
-        /* decompress until deflate stream ends or end of file */
-
         do {
 
             this->zipFileStream.read((char *) & this->zipInBuffer[0], ((CFileZIP::kZIPBufferSize > sourceLength) ? sourceLength : CFileZIP::kZIPBufferSize));
@@ -439,6 +437,62 @@ namespace Antik {
 
     }
 
+    bool CFileZIP::deflateFile(std::ifstream& sourceFileStream, std::uint32_t uncompressedSize, std::uint32_t& compressedSize) {
+        
+        int deflateResult, flushRemainder;
+        std::uint32_t  bytesDeflated;
+        z_stream deflateZIPStream = {0};
+
+        /* allocate deflate state */
+
+        deflateResult = deflateInit2(&deflateZIPStream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -MAX_WBITS, 8, Z_DEFAULT_STRATEGY);
+        if (deflateResult != Z_OK) {
+            return (false);
+        }
+
+        /* compress until end of file */
+        
+        do {
+            
+            sourceFileStream.read((char *) &this->zipInBuffer[0], std::min(uncompressedSize, CFileZIP::kZIPBufferSize));
+           if (sourceFileStream.fail() && !sourceFileStream.eof()) {
+                (void) deflateEnd(&deflateZIPStream);
+                return (false);
+            }
+            
+            deflateZIPStream.avail_in = sourceFileStream.gcount();
+            uncompressedSize -= deflateZIPStream.avail_in;
+
+            flushRemainder = ((sourceFileStream.eof()|| uncompressedSize==0)) ? Z_FINISH : Z_NO_FLUSH;
+            
+            deflateZIPStream.next_in = &this->zipInBuffer[0];
+
+            do {
+                
+                deflateZIPStream.avail_out = CFileZIP::kZIPBufferSize;
+                deflateZIPStream.next_out = &this->zipOutBuffer[0];
+                deflateResult = deflate(&deflateZIPStream, flushRemainder); /* no bad return value */
+
+                bytesDeflated = CFileZIP::kZIPBufferSize - deflateZIPStream.avail_out;
+                this->zipFileStream.write((char *)&this->zipOutBuffer[0], bytesDeflated); 
+                if (this->zipFileStream.fail()) {
+                    (void) deflateEnd(&deflateZIPStream);
+                    return (false);
+                }
+                
+                compressedSize += bytesDeflated;
+                
+            } while (deflateZIPStream.avail_out == 0);
+            
+
+        } while (flushRemainder != Z_FINISH);
+
+        (void) deflateEnd(&deflateZIPStream);
+        
+        return (true);
+
+    }
+
     bool CFileZIP::copyFile(std::ofstream& destFileStream, std::uint32_t sourceLength) {
 
         bool bCopied = true;
@@ -463,7 +517,7 @@ namespace Antik {
 
     }
 
-    uint32_t CFileZIP::calculateCRC32(std::ifstream& sourceFileStream, std::uint32_t sourceLength) {
+    std::uint32_t CFileZIP::calculateCRC32(std::ifstream& sourceFileStream, std::uint32_t sourceLength) {
 
         uLong crc = crc32(0L, Z_NULL, 0);
 
@@ -502,6 +556,15 @@ namespace Antik {
         }
 
     }
+    
+    void CFileZIP::getFileDataCompressed(std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize) {
+
+        std::ifstream fileStream(fileNameStr, std::ios::binary);
+       
+        this->deflateFile(fileStream, uncompressedSize, compressedSize);
+
+
+    }
 
     void CFileZIP::getFileAttributes(const std::string& fileNameStr, std::uint32_t& attributes) {
         struct stat fileStat;
@@ -538,17 +601,18 @@ namespace Antik {
         FileHeader fileHeader;
         CentralDirectoryFileHeader fileEntry;
         std::string fullFileNameStr = addedFile.pathNameStr+addedFile.baseFileNameStr;
+        std::uint32_t fileOffset;
 
         fileEntry.creatorVersion = 0x0314; // Unix
         fileEntry.extractorVersion = 0x0314; // Unix
         fileEntry.fileNameStr = addedFile.baseFileNameStr;
         fileEntry.fileNameLength = addedFile.baseFileNameStr.length();
         fileEntry.bitFlag = 0; // None
-        fileEntry.compression = 0; // No compression at present
+        fileEntry.compression = 8; // Deflated
         getFileModificationDateTime(fullFileNameStr, fileEntry.modificationDate, fileEntry.modificationTime);
         getFileSize(fullFileNameStr, fileEntry.uncompressedSize);
         getFileCRC32(fullFileNameStr, fileEntry.uncompressedSize, fileEntry.crc32);
-        fileEntry.compressedSize = fileEntry.uncompressedSize;
+        fileEntry.compressedSize = 0;
 
         fileEntry.internalFileAttrib = 0; // ???
         getFileAttributes(fullFileNameStr, fileEntry.externalFileAttrib);
@@ -569,7 +633,21 @@ namespace Antik {
         
         this->putFileHeader(fileHeader);
         
-        this->getFileData(fullFileNameStr, fileEntry.uncompressedSize);
+        //this->getFileData(fullFileNameStr, fileEntry.uncompressedSize);
+        
+        this->getFileDataCompressed(fullFileNameStr, fileEntry.uncompressedSize,fileEntry.compressedSize);
+        fileOffset = this->zipFileStream.tellp();
+        this->zipFileStream.seekg(fileEntry.fileHeaderOffset, std::ios_base::beg);
+        if (fileEntry.compressedSize < fileEntry.uncompressedSize) {
+            fileHeader.compressedSize = fileEntry.compressedSize;
+            this->putFileHeader(fileHeader);
+            this->zipFileStream.seekg(fileOffset, std::ios_base::beg);
+        } else {
+           fileHeader.compression =  fileEntry.compression= 0;
+           fileHeader.compressedSize = fileEntry.compressedSize = fileEntry.uncompressedSize;
+           this->putFileHeader(fileHeader);
+           this->getFileData(fullFileNameStr, fileEntry.uncompressedSize);
+        }
         
         this->zipContentsList.push_back(fileEntry);
 
@@ -661,7 +739,7 @@ namespace Antik {
                     attachmentFileStream.close();
 
                     std::ifstream inflatedFileStream(destFileNameStr, std::ios::binary);
-                    uint32_t crc32 = this->calculateCRC32(inflatedFileStream, fileHeader.uncompressedSize);
+                    std::uint32_t crc32 = this->calculateCRC32(inflatedFileStream, fileHeader.uncompressedSize);
                     if (crc32 != fileHeader.crc32) {
                         throw Exception("File " + destFileNameStr + " has an invalid CRC.");
                     }
