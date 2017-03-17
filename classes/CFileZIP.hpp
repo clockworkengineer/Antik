@@ -90,7 +90,7 @@ namespace Antik {
         std::vector<CFileZIP::FileDetail> contents(void);
         bool extract(const std::string& fileNameStr, const std::string& destFolderStr);
         void create(void);
-        void add(const std::string& fileNameStr);
+        void add(const std::string& fileNameStr, const std::string& zipFileNameStr );
         void save(void);
 
         // ================
@@ -228,14 +228,14 @@ namespace Antik {
         void getFileData(const std::string& fileNameStr, std::uint32_t fileLength);
         void getFileDataCompressed(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
          
-        void writeFileHeaderAndData(const std::string& fileNameStr);
+        void writeFileHeaderAndData(const std::pair<std::string, std::string>& fileNames);
         
         // =================
         // PRIVATE VARIABLES
         // =================
 
         std::string zipFileNameStr; // ZIP archive name
-        std::vector<std::string> zipFileContentsList;   // ZIP archive add content list
+        std::vector<std::pair<std::string, std::string>> zipFileContentsList;   // ZIP archive add content list
               
         std::fstream zipFileStream; // ZIP archive file stream
         EOCentralDirectoryRecord zipEOCentralDirectory; // ZIP archive End Of Central Directory record

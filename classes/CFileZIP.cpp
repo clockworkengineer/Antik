@@ -732,7 +732,7 @@ namespace Antik {
     // Write a File Header record (including file contents) to ZIP file.
     //
     
-    void CFileZIP::writeFileHeaderAndData(const std::string& fileNameStr) {
+    void CFileZIP::writeFileHeaderAndData(const std::pair<std::string, std::string>& fileNames) {
 
         FileHeader fileHeader = FileHeader();
         CentralDirectoryFileHeader fileEntry = CentralDirectoryFileHeader();
@@ -740,17 +740,17 @@ namespace Antik {
 
         fileEntry.creatorVersion = 0x0314; // Unix
         fileEntry.extractorVersion = 0x0014;
-        fileEntry.fileNameStr = (fileNameStr.front()!='/') ? fileNameStr : fileNameStr.substr(1);
+        fileEntry.fileNameStr = fileNames.second;
         fileEntry.fileNameLength = fileEntry.fileNameStr.length();
         fileEntry.bitFlag = 0; // None
         fileEntry.compression = 8; // Deflated
-        getFileModificationDateTime(fileNameStr, fileEntry.modificationDate, fileEntry.modificationTime);
-        getFileSize(fileNameStr, fileEntry.uncompressedSize);
-        getFileCRC32(fileNameStr, fileEntry.uncompressedSize, fileEntry.crc32);
+        getFileModificationDateTime(fileNames.first, fileEntry.modificationDate, fileEntry.modificationTime);
+        getFileSize(fileNames.first, fileEntry.uncompressedSize);
+        getFileCRC32(fileNames.first, fileEntry.uncompressedSize, fileEntry.crc32);
         fileEntry.compressedSize = 0;
 
         fileEntry.internalFileAttrib = 0; // ???
-        getFileAttributes(fileNameStr, fileEntry.externalFileAttrib);
+        getFileAttributes(fileNames.first, fileEntry.externalFileAttrib);
         fileEntry.fileHeaderOffset = this->zipFileStream.tellp();
 
         fileHeader.creatorVersion = fileEntry.creatorVersion;
@@ -768,7 +768,7 @@ namespace Antik {
         
         this->putFileHeader(fileHeader);
         
-        this->getFileDataCompressed(fileNameStr, fileEntry.uncompressedSize,fileEntry.compressedSize);
+        this->getFileDataCompressed(fileNames.first, fileEntry.uncompressedSize,fileEntry.compressedSize);
         fileOffset = this->zipFileStream.tellp();
         this->zipFileStream.seekg(fileEntry.fileHeaderOffset, std::ios_base::beg);
         if (fileEntry.compressedSize < fileEntry.uncompressedSize) {
@@ -779,7 +779,7 @@ namespace Antik {
            fileHeader.compression =  fileEntry.compression= 0;
            fileHeader.compressedSize = fileEntry.compressedSize = fileEntry.uncompressedSize;
            this->putFileHeader(fileHeader);
-           this->getFileData(fileNameStr, fileEntry.uncompressedSize);
+           this->getFileData(fileNames.first, fileEntry.uncompressedSize);
         }
         
         this->zipCentralDirectory.push_back(fileEntry);
@@ -953,9 +953,9 @@ namespace Antik {
     // Add file to list of ZIP archive files.
     //
     
-    void CFileZIP::add(const std::string& fileNameStr) {
+    void CFileZIP::add(const std::string& fileNameStr, const std::string& zipFileNameStr ) {
         if (this->fileExists(fileNameStr)) {
-            this->zipFileContentsList.push_back(fileNameStr);
+            this->zipFileContentsList.push_back(std::make_pair(fileNameStr, zipFileNameStr));
         } else {
             std::cerr << "File does not exist [" << fileNameStr << "]" << std::endl;
         }
@@ -985,7 +985,7 @@ namespace Antik {
     }
     
     //
-    // Save current ZIP archive contents to archive.
+    // Save current ZIP contents to archive.
     //
      
     void CFileZIP::save(void) {
