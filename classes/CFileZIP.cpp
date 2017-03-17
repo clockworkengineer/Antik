@@ -146,7 +146,7 @@ namespace Antik {
         putField(entry.externalFileAttrib, buffer);
         putField(entry.fileHeaderOffset, buffer);
 
-        this->zipFileStream.write((char *) &buffer[0], CFileZIP::kCentralDirectoryFileHeaderSize);
+        this->zipFileStream.write((char *) &buffer[0], entry.size);
         this->zipFileStream.write((char *) &entry.fileNameStr[0], entry.fileNameLength);
         if (entry.extraFieldLength)
             this->zipFileStream.write((char *) &entry.extraField[0], entry.extraFieldLength);
@@ -263,14 +263,14 @@ namespace Antik {
 
     void CFileZIP::getCentralDirectoryFileHeader(CFileZIP::CentralDirectoryFileHeader& entry) {
 
-        std::vector<std::uint8_t> buffer(CFileZIP::kCentralDirectoryFileHeaderSize);
+        std::vector<std::uint8_t> buffer(entry.size);
         std::uint32_t tag;;
         this->zipFileStream.read((char *) &buffer[0], 4);
         getField(tag, &buffer[0]);
 
         if (tag == entry.signature) {
 
-            this->zipFileStream.read((char *) &buffer[4], CFileZIP::kCentralDirectoryFileHeaderSize - 4);
+            this->zipFileStream.read((char *) &buffer[4], entry.size - 4);
 
             getField(entry.creatorVersion, &buffer[4]);
             getField(entry.extractorVersion, &buffer[6]);

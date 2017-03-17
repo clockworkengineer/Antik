@@ -22,7 +22,6 @@
 #include <fstream>
 #include <memory>
 #include <ctime>
-#include <set>
 
 // =========
 // NAMESPACE
@@ -53,16 +52,20 @@ namespace Antik {
 
         };
 
+        //
+        // ZIP file archive file details entry
+        //
+        
         struct FileDetail {
-            std::string fileNameStr;
-            std::string fileCommentStr;
-            std::tm  modificationDateTime={ 0 };
-            std::uint32_t uncompressedSize=0;
-            std::uint32_t compressedSize=0;
-            std::uint16_t compression=0;
-            std::uint16_t creatorVersion=0;
-            std::uint32_t externalFileAttrib=0;
-            std::vector<std::uint8_t>extraField;
+            std::string fileNameStr;                // Name
+            std::string fileCommentStr;             // Comment
+            std::tm  modificationDateTime={ 0 };    // Last modified date/time
+            std::uint32_t uncompressedSize=0;       // Uncompressed size
+            std::uint32_t compressedSize=0;         // Compressed size
+            std::uint16_t compression=0;            // Compression stored as
+            std::uint16_t creatorVersion=0;         // Archive creator
+            std::uint32_t externalFileAttrib=0;     // Attributes
+            std::vector<std::uint8_t>extraField;    // Extra data
         };
 
         // ============
@@ -100,6 +103,10 @@ namespace Antik {
         // PRIVATE TYPES AND CONSTANTS
         // ===========================
 
+        //
+        // Archive File Header Record
+        //
+        
         struct FileHeader {
             const std::uint32_t signature = 0x04034b50;
             const std::uint32_t size = 30;
@@ -117,7 +124,9 @@ namespace Antik {
             std::vector<std::uint8_t> extraField;
         };
 
-//        static const std::uint32_t kFileHeaderSize = 30;
+        //
+        // Archive Data Descriptor record.
+        //
 
         struct DataDescriptor {
             const std::uint32_t signature = 0x08074b50;
@@ -127,7 +136,9 @@ namespace Antik {
             std::uint32_t uncompressedSize = 0;
         };
 
- //       static const std::uint32_t kDataDescriptorSize = 12;
+        //
+        // Archive Central Directory File Header record.
+        //
 
         struct CentralDirectoryFileHeader {
             const std::uint32_t signature = 0x02014b50;
@@ -153,7 +164,9 @@ namespace Antik {
             std::string fileCommentStr;
         };
 
-        static const std::uint32_t kCentralDirectoryFileHeaderSize = 46;
+        //
+        // Archive End Of Central Directory record.
+        //
 
         struct EOCentralDirectoryRecord {
             const std::uint32_t signature = 0x06054b50;
@@ -168,7 +181,9 @@ namespace Antik {
             std::vector<std::uint8_t> comment;
         };
 
- //       static const std::uint32_t kEOCentralDirectoryRecordSize = 22;
+        //
+        // ZIP inflate/deflate buffer size.
+        //
         
         static const std::uint32_t kZIPBufferSize = 16384;
 
@@ -219,11 +234,16 @@ namespace Antik {
         // PRIVATE VARIABLES
         // =================
 
-        std::string zipFileNameStr;
-        std::fstream zipFileStream;
-        EOCentralDirectoryRecord zipEOCentralDirectory;
-        std::vector<CentralDirectoryFileHeader> zipCentralDirectory;
-        std::vector<std::string> zipFileContentsList;
+        std::string zipFileNameStr; // ZIP archive name
+        std::vector<std::string> zipFileContentsList;   // ZIP archive add content list
+              
+        std::fstream zipFileStream; // ZIP archive file stream
+        EOCentralDirectoryRecord zipEOCentralDirectory; // ZIP archive End Of Central Directory record
+        std::vector<CentralDirectoryFileHeader> zipCentralDirectory;    // ZIP archive Central Directory list
+
+        //
+        // Inflate/deflate buffers.
+        //
         
         std::vector<uint8_t> zipInBuffer;
         std::vector<uint8_t> zipOutBuffer;
