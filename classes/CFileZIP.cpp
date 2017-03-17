@@ -13,10 +13,15 @@
 //
 // Class: CFileZIP
 // 
-// Description:
+// Description:  Class to create and manipulate ZIP file archives. At present it
+// supports archive creation and extraction of files from an existing arhcives. 
+// Files are either saved using store (file copy) or deflation compressed. The current
+// class compiles and works on Linux/CYGWIN and it marks the archives as creted on
+// Unix.
 //
 // Dependencies:   C11++     - Language standard features used.
-
+//                 ziplib    - File compression/decompression
+//                 Linux     - stat call for file information.
 //
 
 // =================
@@ -36,6 +41,10 @@
 #include <iostream>
 #include <cstring>
 
+//
+// Ziplib and Linux stat file interface
+//
+
 #include <zlib.h>
 #include <sys/stat.h>
 
@@ -49,10 +58,10 @@ namespace Antik {
     // PRIVATE TYPES AND CONSTANTS
     // ===========================
 
-    const std::uint32_t CFileZIP::kFileHeaderSize;
-    const std::uint32_t CFileZIP::kDataDescriptorSize;
-    const std::uint32_t CFileZIP::kCentralDirectoryFileHeaderSize;
-    const std::uint32_t CFileZIP::kEOCentralDirectoryRecordSize;
+   
+    //
+    // ZIP deflate/inflate buffer size
+    //
 
     const std::uint32_t CFileZIP::kZIPBufferSize;
 
@@ -71,6 +80,10 @@ namespace Antik {
     // ===============
     // PRIVATE METHODS
     // ===============
+    
+    //
+    // Put a 32 bit word into buffer.
+    //
 
     void CFileZIP::putField(const std::uint32_t& field, std::vector<std::uint8_t>& buffer) {
         buffer.push_back(static_cast<std::uint8_t> (field & 0x000000FF));
@@ -79,12 +92,20 @@ namespace Antik {
         buffer.push_back(static_cast<std::uint8_t> ((field >> 24)));
      }
 
+    //
+    // Put a 16 bit word into buffer.
+    //
+    
     void CFileZIP::putField(const std::uint16_t& field, std::vector<std::uint8_t>& buffer) {
    
         buffer.push_back(static_cast<std::uint8_t> (field & 0x00FF));
         buffer.push_back(static_cast<std::uint8_t> ((field & 0xFF00) >> 8));
     }
 
+    //
+    // Put Data Descriptor record into buffer.
+    //
+    
     void CFileZIP::putDataDescriptor(CFileZIP::DataDescriptor& entry) {
 
         std::vector<std::uint8_t> buffer;
@@ -94,11 +115,15 @@ namespace Antik {
         putField(entry.compressedSize, buffer);
         putField(entry.uncompressedSize, buffer);
 
-        this->zipFileStream.write((char *) &buffer[0], CFileZIP::kDataDescriptorSize);
+        this->zipFileStream.write((char *) &buffer[0], entry.size);
         if (this->zipFileStream.fail()) std::cerr << "Write to ZIP fail" << std::endl;;
 
     }
 
+    //
+    // Put Central Directory File Header record into buffer.
+    //
+    
     void CFileZIP::putCentralDirectoryFileHeader(CFileZIP::CentralDirectoryFileHeader& entry) {
 
         std::vector<std::uint8_t> buffer;
@@ -131,6 +156,10 @@ namespace Antik {
         if (this->zipFileStream.fail()) std::cerr << "Write to ZIP fail" << std::endl;;
 
     }
+    
+    //
+    // Put File Header record into buffer.
+    //
 
     void CFileZIP::putFileHeader(CFileZIP::FileHeader& entry) {
 
@@ -148,7 +177,7 @@ namespace Antik {
         putField(entry.fileNameLength, buffer);
         putField(entry.extraFieldLength, buffer);
 
-        this->zipFileStream.write((char *) &buffer[0], CFileZIP::kFileHeaderSize);
+        this->zipFileStream.write((char *) &buffer[0], entry.size);
         this->zipFileStream.write((char *) &entry.fileNameStr[0], entry.fileNameLength);
         if (entry.extraFieldLength)
             this->zipFileStream.write((char *) &entry.extraField[0], entry.extraFieldLength);
@@ -156,6 +185,10 @@ namespace Antik {
         if (this->zipFileStream.fail()) std::cerr << "Write to ZIP fail" << std::endl;;
         
     }
+
+    //
+    // Put End Of Central Directory File Header record into buffer.
+    //
 
     void CFileZIP::putEOCentralDirectoryRecord(CFileZIP::EOCentralDirectoryRecord& entry) {
 
@@ -170,7 +203,7 @@ namespace Antik {
         putField(entry.offsetCentralDirRecords, buffer);
         putField(entry.commentLength, buffer);
 
-        this->zipFileStream.write((char *) &buffer[0], CFileZIP::kEOCentralDirectoryRecordSize);
+        this->zipFileStream.write((char *) &buffer[0], entry.size);
         if (entry.commentLength)
             this->zipFileStream.write((char *) &entry.comment[0], entry.commentLength);
 
@@ -178,6 +211,10 @@ namespace Antik {
         
         
     }
+    
+    //
+    // Get 32 bit word from buffer.
+    //
 
     void CFileZIP::getField(std::uint32_t& field, std::uint8_t *buffer) {
         std::uint32_t byte1 = buffer[0], byte2 = buffer[1], byte3 = buffer[2], byte4 = buffer[3];
@@ -187,21 +224,29 @@ namespace Antik {
         field |= byte1;
     }
 
+    //
+    // Get 16 bit word value from buffer.
+    //
+    
     void CFileZIP::getField(std::uint16_t& field, std::uint8_t *buffer) {
         std::uint16_t byte1 = buffer[0], byte2 = buffer[1];
         field = byte2 << 8;
         field |= byte1;
     }
 
+    //
+    // Get Data Descriptor records from buffer. 
+    //
+    
     void CFileZIP::getDataDescriptor(CFileZIP::DataDescriptor& entry) {
 
-        std::vector<std::uint8_t> buffer(CFileZIP::kDataDescriptorSize);
+        std::vector<std::uint8_t> buffer(entry.size);
         std::uint32_t tag;
         this->zipFileStream.read((char *) &buffer[0], 4);
         getField(tag, &buffer[0]);
 
         if (tag == entry.signature) {
-            this->zipFileStream.read((char *) &buffer[4], CFileZIP::kDataDescriptorSize - 4);
+            this->zipFileStream.read((char *) &buffer[4], entry.size - 4);
             getField(entry.crc32, &buffer[4]);
             getField(entry.compressedSize, &buffer[8]);
             getField(entry.uncompressedSize, &buffer[12]);
@@ -211,6 +256,10 @@ namespace Antik {
         }
 
     }
+    
+    //
+    // Get Central Directory File Header record from buffer.
+    //
 
     void CFileZIP::getCentralDirectoryFileHeader(CFileZIP::CentralDirectoryFileHeader& entry) {
 
@@ -261,16 +310,20 @@ namespace Antik {
 
     }
 
+    //
+    // Get File Header record from buffer.
+    //
+    
     void CFileZIP::getFileHeader(CFileZIP::FileHeader& entry) {
 
-        std::vector<std::uint8_t> buffer(CFileZIP::kFileHeaderSize);
+        std::vector<std::uint8_t> buffer(entry.size);
         std::uint32_t tag;
         this->zipFileStream.read((char *) &buffer[0], 4);
         getField(tag, &buffer[0]);
 
         if (tag == entry.signature) {
 
-            this->zipFileStream.read((char *) &buffer[4], CFileZIP::kFileHeaderSize - 4);
+            this->zipFileStream.read((char *) &buffer[4], entry.size - 4);
             getField(entry.creatorVersion, &buffer[4]);
             getField(entry.bitFlag, &buffer[6]);
             getField(entry.compression, &buffer[8]);
@@ -304,6 +357,10 @@ namespace Antik {
 
 
     }
+    
+    //
+    // Get End Of Central Directory File Header record from buffer.
+    //
 
     void CFileZIP::getEOCentralDirectoryRecord(CFileZIP::EOCentralDirectoryRecord& entry) {
 
@@ -324,9 +381,9 @@ namespace Antik {
         }
 
         if (filePosition != -1) {
-            std::vector<std::uint8_t> buffer(CFileZIP::kEOCentralDirectoryRecordSize);
+            std::vector<std::uint8_t> buffer(entry.size);
             this->zipFileStream.seekg(filePosition, std::ios_base::beg);
-            this->zipFileStream.read((char *) &buffer[0], CFileZIP::kEOCentralDirectoryRecordSize);
+            this->zipFileStream.read((char *) &buffer[0], entry.size);
             getField(entry.diskNnumber, &buffer[4]);
             getField(entry.centralDirectoryStartDisk, &buffer[6]);
             getField(entry.numberOfCentralDirRecords, &buffer[8]);
@@ -347,6 +404,10 @@ namespace Antik {
             std::cerr << "No End of central directory record found." << std::endl;
         }
     }
+    
+    //
+    // Convert stat based modified date/time to ZIP format.
+    //
 
     void CFileZIP::convertModificationDateTime(std::tm& modificationDateTime, std::uint16_t dateWord, std::uint16_t timeWord) {
 
@@ -366,13 +427,17 @@ namespace Antik {
 
     }
 
-    bool CFileZIP::inflateFile(std::ofstream& destFileStream, std::uint32_t sourceLength) {
+    //
+    // Uncompress ZIP file entry data to file.
+    //
+    
+    bool CFileZIP::inflateFile(std::ofstream& destFileStream, std::uint32_t fileSize) {
 
         int inflateResult=0;
         std::uint32_t inflatedBytes=0;
         z_stream inlateZIPStream {0};
 
-        if (sourceLength == 0) {
+        if (fileSize == 0) {
             return (true);
         }
 
@@ -383,7 +448,7 @@ namespace Antik {
 
         do {
 
-            this->zipFileStream.read((char *) & this->zipInBuffer[0], ((CFileZIP::kZIPBufferSize > sourceLength) ? sourceLength : CFileZIP::kZIPBufferSize));
+            this->zipFileStream.read((char *) & this->zipInBuffer[0], ((CFileZIP::kZIPBufferSize > fileSize) ? fileSize : CFileZIP::kZIPBufferSize));
 
             if (this->zipFileStream.fail()) {
                 (void) inflateEnd(&inlateZIPStream);
@@ -421,7 +486,7 @@ namespace Antik {
 
             } while (inlateZIPStream.avail_out == 0);
 
-            sourceLength -= CFileZIP::kZIPBufferSize;
+            fileSize -= CFileZIP::kZIPBufferSize;
 
         } while (inflateResult != Z_STREAM_END); // 
 
@@ -432,6 +497,10 @@ namespace Antik {
         return (inflateResult == Z_STREAM_END ? true : false);
 
     }
+    
+    //
+    // Compress source file to and write as part of ZIP file header record.
+    //
 
     bool CFileZIP::deflateFile(std::ifstream& sourceFileStream, std::uint32_t uncompressedSize, std::uint32_t& compressedSize) {
         
@@ -488,13 +557,17 @@ namespace Antik {
         return (true);
 
     }
+    
+    //
+    // Copy Uncompressed ZIP file entry data to file.
+    //
 
-    bool CFileZIP::copyFile(std::ofstream& destFileStream, std::uint32_t sourceLength) {
+    bool CFileZIP::copyFile(std::ofstream& destFileStream, std::uint32_t fileSize) {
 
         bool bCopied = true;
 
-        while (sourceLength) {
-            this->zipFileStream.read((char *) & this->zipInBuffer[0], std::min(sourceLength, CFileZIP::kZIPBufferSize));
+        while (fileSize) {
+            this->zipFileStream.read((char *) & this->zipInBuffer[0], std::min(fileSize, CFileZIP::kZIPBufferSize));
             if (this->zipFileStream.fail()) {
                 bCopied = false;
                 break;
@@ -505,27 +578,31 @@ namespace Antik {
                 break;
             }
 
-            sourceLength -= (std::min(sourceLength, CFileZIP::kZIPBufferSize));
+            fileSize -= (std::min(fileSize, CFileZIP::kZIPBufferSize));
 
         }
 
         return (bCopied);
 
     }
+    
+    //
+    // Calculate a files CRC232 value.
+    //
 
-    std::uint32_t CFileZIP::calculateCRC32(std::ifstream& sourceFileStream, std::uint32_t sourceLength) {
+    std::uint32_t CFileZIP::calculateCRC32(std::ifstream& sourceFileStream, std::uint32_t fileSize) {
 
         uLong crc = crc32(0L, Z_NULL, 0);
 
-        while (sourceLength) {
-            sourceFileStream.read((char *) & this->zipInBuffer[0], std::min(sourceLength, CFileZIP::kZIPBufferSize));
+        while (fileSize) {
+            sourceFileStream.read((char *) & this->zipInBuffer[0], std::min(fileSize, CFileZIP::kZIPBufferSize));
             if (sourceFileStream.fail()) {
                 break;
             }
 
             crc = crc32(crc, &this->zipInBuffer[0], sourceFileStream.gcount());
 
-            sourceLength -= (std::min(sourceLength, CFileZIP::kZIPBufferSize));
+            fileSize -= (std::min(fileSize, CFileZIP::kZIPBufferSize));
 
         }
 
@@ -533,12 +610,16 @@ namespace Antik {
 
     }
     
-    void CFileZIP::getFileData(const std::string& fileNameStr, std::uint32_t fileLength) {
+    //
+    // Store file data as part of ZIP file header.
+    //
+    
+    void CFileZIP::getFileData(const std::string& fileNameStr, std::uint32_t fileSize) {
 
         std::ifstream fileStream(fileNameStr, std::ios::binary);
-        while (fileLength) {
+        while (fileSize) {
             
-            fileStream.read((char *) & this->zipInBuffer[0], std::min(fileLength, CFileZIP::kZIPBufferSize));
+            fileStream.read((char *) & this->zipInBuffer[0], std::min(fileSize, CFileZIP::kZIPBufferSize));
             if (fileStream.fail()) {
                 break;
             }
@@ -547,11 +628,15 @@ namespace Antik {
             if (this->zipFileStream.fail()) {
                 break;
             }
-            fileLength -= (std::min(fileLength, CFileZIP::kZIPBufferSize));
+            fileSize -= (std::min(fileSize, CFileZIP::kZIPBufferSize));
 
         }
 
     }
+    
+    //
+    // Write deflated file data as part of ZIP file header.
+    //
     
     void CFileZIP::getFileDataCompressed(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize) {
 
@@ -561,6 +646,10 @@ namespace Antik {
 
 
     }
+    
+    //
+    // Get file attributes (Linux).
+    //
 
     void CFileZIP::getFileAttributes(const std::string& fileNameStr, std::uint32_t& attributes) {
 
@@ -576,6 +665,10 @@ namespace Antik {
         }
         
     }
+    
+    //
+    // Get a files size.
+    //
 
     void CFileZIP::getFileSize(const std::string& fileNameStr, std::uint32_t& fileSize) {
         
@@ -593,6 +686,10 @@ namespace Antik {
         }
     }
     
+    //
+    // Check whether a file exists.
+    //
+    
     bool CFileZIP::fileExists(const std::string& fileNameStr) {
         
         struct stat fileStat {0};
@@ -602,6 +699,9 @@ namespace Antik {
         
     }
     
+    //
+    // Get a files CRC32 value.
+    //
 
     void CFileZIP::getFileCRC32(const std::string& fileNameStr, std::uint32_t fileSize, std::uint32_t& crc32) {
 
@@ -609,6 +709,10 @@ namespace Antik {
         crc32 = this->calculateCRC32(fileStream, fileSize);
 
     }
+    
+    //
+    // Get files stat based modified time ans convert to ZIP format.
+    //
 
     void CFileZIP::getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificatioDate, std::uint16_t& modificationTime) {
 
@@ -624,6 +728,10 @@ namespace Antik {
         }
     }
 
+    //
+    // Write a File Header record (including file contents) to ZIP file.
+    //
+    
     void CFileZIP::writeFileHeaderAndData(const std::string& fileNameStr) {
 
         FileHeader fileHeader = FileHeader();
@@ -631,7 +739,7 @@ namespace Antik {
         std::uint32_t fileOffset=0;
 
         fileEntry.creatorVersion = 0x0314; // Unix
-        fileEntry.extractorVersion = 0x0014; // Unix
+        fileEntry.extractorVersion = 0x0014;
         fileEntry.fileNameStr = (fileNameStr.front()!='/') ? fileNameStr : fileNameStr.substr(1);
         fileEntry.fileNameLength = fileEntry.fileNameStr.length();
         fileEntry.bitFlag = 0; // None
@@ -682,6 +790,10 @@ namespace Antik {
     // PUBLIC METHODS
     // ==============
 
+    //
+    // Constructor
+    //
+    
     CFileZIP::CFileZIP(const std::string& zipFileNameStr) : zipFileNameStr{zipFileNameStr} {
 
         zipInBuffer.resize(CFileZIP::kZIPBufferSize);
@@ -689,16 +801,28 @@ namespace Antik {
 
     }
 
+    //
+    // Destructor
+    //
+    
     CFileZIP::~CFileZIP() {
 
     }
+    
+    //
+    // Set ZIP archive name
+    //
 
     void CFileZIP::name(const std::string& zipFileNameStr) {
         
         this->zipFileNameStr=zipFileNameStr;
 
     }
-           
+    
+    //
+    // Open zip file and read in Central Directory Header records.
+    //
+    
     void CFileZIP::open(void) {
 
         this->zipFileStream.open(this->zipFileNameStr, std::ios::binary | std::ios_base::in | std::ios_base::out);
@@ -718,8 +842,12 @@ namespace Antik {
         }
 
     }
+    
+    //
+    // Read Central Directory and return a list of ZIP archive contents.
+    //
 
-    std::vector<CFileZIP::FileDetail> CFileZIP::getZIPFileDetails(void) {
+    std::vector<CFileZIP::FileDetail> CFileZIP::contents(void) {
 
         CFileZIP::FileDetail fileEntry = FileDetail();
         std::vector<CFileZIP::FileDetail> fileDetailList;
@@ -740,6 +868,10 @@ namespace Antik {
         return (fileDetailList);
 
     }
+    
+    //
+    // Extract a ZIP archive file and create in a specified destination.
+    //
 
     bool CFileZIP::extract(const std::string& fileNameStr, const std::string& destFileNameStr) {
 
@@ -786,6 +918,10 @@ namespace Antik {
         return (fileExtracted);
 
     }
+    
+    //
+    // Create an empty ZIP archive.
+    //
 
     void CFileZIP::create(void) {
 
@@ -813,6 +949,10 @@ namespace Antik {
 
     }
 
+    //
+    // Add file to list of ZIP archive files.
+    //
+    
     void CFileZIP::add(const std::string& fileNameStr) {
         if (this->fileExists(fileNameStr)) {
             this->zipFileContentsList.push_back(fileNameStr);
@@ -821,6 +961,10 @@ namespace Antik {
         }
     }
 
+    //
+    // Close ZIP archive
+    //
+    
     void CFileZIP::close(void) {
 
         this->zipEOCentralDirectory.centralDirectoryStartDisk = 0;
@@ -839,6 +983,10 @@ namespace Antik {
         this->zipFileStream.close();
 
     }
+    
+    //
+    // Save current ZIP archive contents to archive.
+    //
      
     void CFileZIP::save(void) {
 
