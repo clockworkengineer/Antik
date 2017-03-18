@@ -91,7 +91,7 @@ namespace Antik {
         bool extract(const std::string& fileNameStr, const std::string& destFolderStr);
         void create(void);
         void add(const std::string& fileNameStr, const std::string& zipFileNameStr );
-        void append(const std::string& fileNameStr, const std::string& zipFileNameStr );
+        bool append(const std::string& fileNameStr, const std::string& zipFileNameStr );
         void save(void);
 
         // ================
@@ -230,6 +230,7 @@ namespace Antik {
         void getFileDataCompressed(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
          
         void writeFileHeaderAndData(const std::pair<std::string, std::string>& fileNames);
+        void UpdateCentralDiectory();
         
         // =================
         // PRIVATE VARIABLES
