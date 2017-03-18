@@ -91,6 +91,7 @@ namespace Antik {
         bool extract(const std::string& fileNameStr, const std::string& destFolderStr);
         void create(void);
         void add(const std::string& fileNameStr, const std::string& zipFileNameStr );
+        void append(const std::string& fileNameStr, const std::string& zipFileNameStr );
         void save(void);
 
         // ================
@@ -233,13 +234,32 @@ namespace Antik {
         // =================
         // PRIVATE VARIABLES
         // =================
+        
+        //
+        // ZIP archive status
+        //
+        
+        bool bOpen=false;
+        
+        //
+        // ZIP archive filename and added contents list
+        //
 
-        std::string zipFileNameStr; // ZIP archive name
-        std::vector<std::pair<std::string, std::string>> zipFileContentsList;   // ZIP archive add content list
-              
+        std::string zipFileNameStr;
+        std::vector<std::pair<std::string, std::string>> zipFileContentsList;
+        
+        //
+        // ZIP archive I/O stream
+        //
+        
         std::fstream zipFileStream; // ZIP archive file stream
-        EOCentralDirectoryRecord zipEOCentralDirectory; // ZIP archive End Of Central Directory record
-        std::vector<CentralDirectoryFileHeader> zipCentralDirectory;    // ZIP archive Central Directory list
+        
+        //
+        //  ZIP archive End Of Central Directory record  and  Central Directory
+        // 
+        
+        EOCentralDirectoryRecord zipEOCentralDirectory;
+        std::vector<CentralDirectoryFileHeader> zipCentralDirectory;
 
         //
         // Inflate/deflate buffers.
@@ -247,6 +267,7 @@ namespace Antik {
         
         std::vector<uint8_t> zipInBuffer;
         std::vector<uint8_t> zipOutBuffer;
+        
 
     };
 
