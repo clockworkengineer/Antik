@@ -14,8 +14,8 @@
 // Class: CFileZIP
 // 
 // Description:  Class to create and manipulate ZIP file archives. At present it
-// supports archive creation and extraction of files from an existing arhcives. 
-// Files are either saved using store (file copy) or deflation compressed. The current
+// supports archive creation and extraction of files from an existing archives. 
+// Files are either saved using store (file copy) or deflate compression. The current
 // class compiles and works on Linux/CYGWIN and it marks the archives as created on
 // Unix.
 //
@@ -894,6 +894,8 @@ namespace Antik {
                 this->getCentralDirectoryFileHeader(centDirFileHeader);
                 this->zipCentralDirectory.push_back(centDirFileHeader);
             }
+            
+            this->bOpen=true;
 
         }
 
