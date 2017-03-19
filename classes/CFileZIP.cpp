@@ -313,6 +313,7 @@ namespace Antik {
             }
 
             this->zipFileStream.read((char *) &buffer[0], entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
+            
             if (entry.fileNameLength) {
                 entry.fileNameStr.append((char *) &buffer[0], entry.fileNameLength);
             }
@@ -358,7 +359,9 @@ namespace Antik {
             if ((entry.fileNameLength + entry.extraFieldLength) > buffer.size()) {
                 buffer.resize(entry.fileNameLength + entry.extraFieldLength);
             }
+            
             this->zipFileStream.read((char *) &buffer[0], entry.fileNameLength + entry.extraFieldLength);
+            
             if (entry.fileNameLength) {
                 entry.fileNameStr.append((char *) &buffer[0], entry.fileNameLength);
             }

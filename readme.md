@@ -1,4 +1,4 @@
-## Antikythera Mechanism C ++ Class Repository##
+## Antikythera Mechanism C ++ Class Repository ##
 
 # Introduction #
 
@@ -87,6 +87,10 @@ CMailIMAPBodyStruct is used to parse any bodystructures returned by CMailIMAPPar
 
 CFileMIME contains any MIME processing functionality/utilities used on projects. It is still quite small with just a file extension to MIME type mapping function, a parser for MIME word encoded strings and a function to convert such a string to a best possible 7-bit ASCII mapping.
 
+# [CFileZIP](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CFileZIP.cpp) #
+
+CFIleZIP is a class that enables the creation and manipulation of ZIP files archives. It supports 2.0 compatible archives at present either storing or retrieving files in deflate compressed format or a simple stored copy of a file.
+
 # [CLogger](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CLogger.cpp) #
 
 Generic log trace class that will take a list of strings and output them either to cout or cerr with an optional time and date stamp. It also includes a template method for converting an arbitrary value to a string to be placed in the list of strings to be output. This class is very much a work in progress and will probably change until I find a solution that I like for my logging needs.
@@ -112,9 +116,14 @@ in any e-mail in a specific mailbox to a given local folder. The final destinati
 
 1. **[SMTPSendMail](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/SMTPSendMail.cpp)** A command line program to log on to an SMTP server and send an email to given recipients. The mails details such as contents, subject and any attachments are configured via command line arguments.
 
+1. **[ArchiveFolder](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/ArchiveFolder.cpp)** A command line program that writes the contents of a source folder to a ZIP archive; traversing it recursively and adding any sub-folder contents. It compresses each file with deflate unless its size does not decrease in which case it simply stores the file.
+
+2. **[ExtractToFolder](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/ExtractToFolder.cpp)** A command line program that extracts the contents of a ZIP archive to a specified destination folder. Note: Any destination folders are created by the program before a file is extracted as the class will not do this. 
+
+
+
 # To do list #
 
 1. Increase list of example programs.
 2. CMailIMAPEnvelope to parse envelope response ( need to find a use for this before i start).
-3. CFileZIP a class to create and read ZIP file archives.
 4. Extend existing unit tests and add more for classes which there are none.
