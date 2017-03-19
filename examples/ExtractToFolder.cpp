@@ -178,14 +178,20 @@ int main(int argc, char** argv) {
 
             CFileZIP zipFile(argData.zipFileNameStr);
 
+            // Create destination folder
+            
             if (!fs::exists(argData.destinationFolderNameStr)) {
                 fs::create_directories(argData.destinationFolderNameStr);
             }
 
+            // Open archive and extract a content list
+            
             zipFile.open();
             
             std::vector<CFileZIP::FileDetail> zipContents(zipFile.contents());
 
+            // For each file create any directory hierarchy needed and extract file.
+            
             for (auto & file : zipContents) {
                 fs::path destinationPath(argData.destinationFolderNameStr + file.fileNameStr);
                 destinationPath.remove_filename();
@@ -197,6 +203,8 @@ int main(int argc, char** argv) {
                     std::cout << "Extracted [" << destinationPath.native() << "]" << std::endl;
                 }
             }
+            
+            // Close archive
 
             zipFile.close();
 

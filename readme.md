@@ -89,7 +89,7 @@ CFileMIME contains any MIME processing functionality/utilities used on projects.
 
 # [CFileZIP](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CFileZIP.cpp) #
 
-CFIleZIP is a class that enables the creation and manipulation of ZIP files archives. It supports 2.0 compatible archives at present either storing or retrieving files in deflate compressed format or a simple stored copy of a file.
+CFIleZIP is a class that enables the creation and manipulation of ZIP file archives. It supports 2.0 compatible archives at present either storing or retrieving files in deflate compressed format or a simple stored copy of a file. The current supported compression format inflate/deflate  functionality is provided through the use of [zlib](http://www.zlib.net/).
 
 # [CLogger](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CLogger.cpp) #
 
