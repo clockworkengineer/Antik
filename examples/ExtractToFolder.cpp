@@ -194,12 +194,10 @@ int main(int argc, char** argv) {
             
             for (auto & file : zipContents) {
                 fs::path destinationPath(argData.destinationFolderNameStr + file.fileNameStr);
-                destinationPath.remove_filename();
-                if (!fs::exists(destinationPath)) {
-                    fs::create_directories(destinationPath);
+                if (!fs::exists(destinationPath.parent_path())) {
+                    fs::create_directories(destinationPath.parent_path());
                 }
-                destinationPath = argData.destinationFolderNameStr + file.fileNameStr;
-                if (zipFile.extract(file.fileNameStr, argData.destinationFolderNameStr + file.fileNameStr)) {
+                if (zipFile.extract(file.fileNameStr,destinationPath.string())) {
                     std::cout << "Extracted [" << destinationPath.native() << "]" << std::endl;
                 }
             }
