@@ -816,6 +816,8 @@ namespace Antik {
         }
 
         this->zipCentralDirectory.push_back(fileEntry);
+        
+        this->bModified = true;
 
     }
     
@@ -825,19 +827,23 @@ namespace Antik {
 
     void CFileZIP::UpdateCentralDiectory() {
 
-        this->zipEOCentralDirectory.numberOfCentralDirRecords = this->zipCentralDirectory.size();
-        this->zipEOCentralDirectory.totalCentralDirRecords = this->zipCentralDirectory.size();
-        this->zipEOCentralDirectory.offsetCentralDirRecords = this->zipFileStream.tellp();
+        if (this->bModified) {
+            
+            this->zipEOCentralDirectory.numberOfCentralDirRecords = this->zipCentralDirectory.size();
+            this->zipEOCentralDirectory.totalCentralDirRecords = this->zipCentralDirectory.size();
+            this->zipEOCentralDirectory.offsetCentralDirRecords = this->zipFileStream.tellp();
 
-        for (auto& fileEntry : this->zipCentralDirectory) {
-            this->putCentralDirectoryFileHeader(fileEntry);
+            for (auto& fileEntry : this->zipCentralDirectory) {
+                this->putCentralDirectoryFileHeader(fileEntry);
+            }
+
+            this->zipEOCentralDirectory.sizeOfCentralDirRecords = this->zipFileStream.tellp();
+            this->zipEOCentralDirectory.sizeOfCentralDirRecords -= this->zipEOCentralDirectory.offsetCentralDirRecords;
+
+            this->putEOCentralDirectoryRecord(this->zipEOCentralDirectory);
+            
         }
-
-        this->zipEOCentralDirectory.sizeOfCentralDirRecords = this->zipFileStream.tellp();
-        this->zipEOCentralDirectory.sizeOfCentralDirRecords -= this->zipEOCentralDirectory.offsetCentralDirRecords;
-
-        this->putEOCentralDirectoryRecord(this->zipEOCentralDirectory);
-
+        
     }
 
     // ==============
@@ -881,7 +887,7 @@ namespace Antik {
     void CFileZIP::open(void) {
 
         if (this->bOpen) {
-            throw Exception("ZIP archive has not been opened.");
+            throw Exception("ZIP archive has already been opened.");
         }
 
         this->zipFileStream.open(this->zipFileNameStr, std::ios::binary | std::ios_base::in | std::ios_base::out);
@@ -1023,23 +1029,6 @@ namespace Antik {
     }
 
     //
-    // Add file to list of ZIP archive files.
-    //
-
-    void CFileZIP::add(const std::string& fileNameStr, const std::string& zipFileNameStr) {
-
-        if (this->bOpen) {
-            throw Exception("ZIP archive should not be open.");
-        }
-
-        if (this->fileExists(fileNameStr)) {
-            this->zipFileContentsList.push_back(std::make_pair(fileNameStr, zipFileNameStr));
-        } else {
-            std::cerr << "File does not exist [" << fileNameStr << "]" << std::endl;
-        }
-    }
-
-    //
     // Close ZIP archive
     //
 
@@ -1048,6 +1037,8 @@ namespace Antik {
         if (!this->bOpen) {
             throw Exception("ZIP archive has not been opened.");
         }
+
+        this->UpdateCentralDiectory();
 
         this->zipEOCentralDirectory.centralDirectoryStartDisk = 0;
         this->zipEOCentralDirectory.diskNnumber = 0;
@@ -1060,37 +1051,11 @@ namespace Antik {
         this->zipEOCentralDirectory.comment.clear();
 
         this->zipCentralDirectory.clear();
-        this->zipFileContentsList.clear();
 
         this->zipFileStream.close();
 
         this->bOpen = false;
-
-    }
-
-    //
-    // Save current ZIP contents to archive.
-    //
-
-    void CFileZIP::save(void) {
-
-        this->zipFileStream.open(this->zipFileNameStr, std::ios::binary | std::ios_base::in | std::ios_base::out);
-
-        if (this->zipFileStream.is_open()) {
-
-            this->bOpen = true;
-
-            this->zipFileStream.seekg(0, std::ios_base::beg);
-
-            for (auto& fileEntry : this->zipFileContentsList) {
-                this->writeFileHeaderAndData(fileEntry);
-            }
-
-            UpdateCentralDiectory();
-
-            this->close();
-
-        }
+        this->bModified=false;
 
     }
 
@@ -1098,7 +1063,7 @@ namespace Antik {
     // Append file to ZIP archive.
     //
 
-    bool CFileZIP::append(const std::string& fileNameStr, const std::string& zipFileNameStr) {
+    bool CFileZIP::add(const std::string& fileNameStr, const std::string& zipFileNameStr) {
 
         if (!this->bOpen) {
             throw Exception("ZIP archive has not been opened.");
@@ -1106,15 +1071,13 @@ namespace Antik {
 
         for (auto& fileEntry : this->zipCentralDirectory) {
             if (fileEntry.fileNameStr.compare(zipFileNameStr) == 0) {
+                std::cerr << "File already present in archive [" << zipFileNameStr << "]" << std::endl;
                 return (false);
             }
         }
 
         if (this->fileExists(fileNameStr)) {
-
-            this->zipFileStream.seekg(this->zipEOCentralDirectory.offsetCentralDirRecords, std::ios_base::beg);
             this->writeFileHeaderAndData(std::make_pair(fileNameStr, zipFileNameStr));
-            this->UpdateCentralDiectory();
             return (true);
 
         } else {

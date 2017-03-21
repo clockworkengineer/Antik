@@ -184,6 +184,8 @@ int main(int argc, char** argv) {
             fs::recursive_directory_iterator begin(zipFolder), end;
             std::vector<fs::directory_entry> fileNameList(begin, end);
             
+            zipFile.open();
+            
             // Add files to archive
             
             std::cout << "There are " << fileNameList.size() << " files: " << std::endl;
@@ -195,7 +197,7 @@ int main(int argc, char** argv) {
             // Save archive
             
             std::cout << "Creating Archive " << argData.zipFileNameStr << "." << std::endl;           
-            zipFile.save();
+            zipFile.close();
       
         }
 

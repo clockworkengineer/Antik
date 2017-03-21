@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
                 if (!fs::exists(destinationPath.parent_path())) {
                     fs::create_directories(destinationPath.parent_path());
                 }
-                if (zipFile.extract(file.fileNameStr,destinationPath.string())) {
+                if (zipFile.remove(file.fileNameStr)) {
                     std::cout << "Extracted [" << destinationPath.native() << "]" << std::endl;
                 }
             }

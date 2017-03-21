@@ -85,14 +85,12 @@ namespace Antik {
         // ==============
 
         void name(const std::string& zipFileNameStr);
+        void create(void);
         void open(void);
         void close(void);
         std::vector<CFileZIP::FileDetail> contents(void);
         bool extract(const std::string& fileNameStr, const std::string& destFolderStr);
-        void create(void);
-        void add(const std::string& fileNameStr, const std::string& zipFileNameStr );
-        bool append(const std::string& fileNameStr, const std::string& zipFileNameStr );
-        void save(void);
+        bool add(const std::string& fileNameStr, const std::string& zipFileNameStr );
 
         // ================
         // PUBLIC VARIABLES
@@ -241,13 +239,13 @@ namespace Antik {
         //
         
         bool bOpen=false;
+        bool bModified=false;
         
         //
         // ZIP archive filename and added contents list
         //
 
         std::string zipFileNameStr;
-        std::vector<std::pair<std::string, std::string>> zipFileContentsList;
         
         //
         // ZIP archive I/O stream
