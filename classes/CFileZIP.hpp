@@ -106,7 +106,7 @@ namespace Antik {
         // Archive File Header Record
         //
         
-        struct FileHeader {
+        struct s {
             const std::uint32_t signature = 0x04034b50;
             const std::uint32_t size = 30;
             std::uint16_t creatorVersion = 0;
@@ -226,7 +226,8 @@ namespace Antik {
         void getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificationDate, std::uint16_t& modificationTime);
         void getFileData(const std::string& fileNameStr, std::uint32_t fileLength);
         void getFileDataCompressed(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
-         
+ 
+        void findEndOfFileHeaders(void);        
         void writeFileHeaderAndData(const std::pair<std::string, std::string>& fileNames);
         void UpdateCentralDiectory();
         

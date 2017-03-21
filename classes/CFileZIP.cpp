@@ -313,7 +313,7 @@ namespace Antik {
             }
 
             this->zipFileStream.read((char *) &buffer[0], entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
-            
+
             if (entry.fileNameLength) {
                 entry.fileNameStr.append((char *) &buffer[0], entry.fileNameLength);
             }
@@ -359,9 +359,9 @@ namespace Antik {
             if ((entry.fileNameLength + entry.extraFieldLength) > buffer.size()) {
                 buffer.resize(entry.fileNameLength + entry.extraFieldLength);
             }
-            
+
             this->zipFileStream.read((char *) &buffer[0], entry.fileNameLength + entry.extraFieldLength);
-            
+
             if (entry.fileNameLength) {
                 entry.fileNameStr.append((char *) &buffer[0], entry.fileNameLength);
             }
@@ -681,7 +681,9 @@ namespace Antik {
 
     void CFileZIP::getFileAttributes(const std::string& fileNameStr, std::uint32_t& attributes) {
 
-        struct stat fileStat {0};
+        struct stat fileStat {
+            0
+        };
 
         int rc = stat(fileNameStr.c_str(), &fileStat);
 
@@ -700,7 +702,9 @@ namespace Antik {
 
     void CFileZIP::getFileSize(const std::string& fileNameStr, std::uint32_t& fileSize) {
 
-        struct stat fileStat {0};
+        struct stat fileStat {
+            0
+        };
 
         int rc = stat(fileNameStr.c_str(), &fileStat);
         if (rc == 0) {
@@ -720,7 +724,9 @@ namespace Antik {
 
     bool CFileZIP::fileExists(const std::string& fileNameStr) {
 
-        struct stat fileStat {0};
+        struct stat fileStat {
+            0
+        };
 
         int rc = stat(fileNameStr.c_str(), &fileStat);
         return (rc == 0);
@@ -744,7 +750,9 @@ namespace Antik {
 
     void CFileZIP::getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificatioDate, std::uint16_t& modificationTime) {
 
-        struct stat fileStat { 0 };
+        struct stat fileStat {
+            0
+        };
 
         int rc = stat(fileNameStr.c_str(), &fileStat);
         if (rc == 0) {
@@ -757,6 +765,35 @@ namespace Antik {
     }
 
     //
+    // Find the file offset to the end of file headers and seek to there 
+    // (ie. position where to add new file headers.
+    //
+    
+    void CFileZIP::findEndOfFileHeaders(void) {
+
+        std::uint32_t offset;
+
+        if (!this->zipCentralDirectory.empty()) {
+            
+            CentralDirectoryFileHeader centralDirLast = this->zipCentralDirectory.back();
+            FileHeader fileHeader;
+
+            this->zipFileStream.seekg(centralDirLast.fileHeaderOffset, std::ios::beg);
+            this->getFileHeader(fileHeader);
+
+            offset = centralDirLast.fileHeaderOffset + fileHeader.size + fileHeader.compressedSize +
+                    fileHeader.fileNameLength + fileHeader.extraFieldLength;
+
+
+        } else {
+            offset = 0;
+        }
+        
+        this->zipFileStream.seekg(offset, std::ios::beg);
+
+    }
+
+    //
     // Write a File Header record (including file contents) to ZIP file. The filenames pair
     // are the original files name and the ZIP file name it is stored under for later extraction.
     //
@@ -766,6 +803,8 @@ namespace Antik {
         FileHeader fileHeader = FileHeader();
         CentralDirectoryFileHeader fileEntry = CentralDirectoryFileHeader();
         std::uint32_t fileOffset = 0;
+
+        this->findEndOfFileHeaders();
 
         fileEntry.creatorVersion = 0x0314; // Unix
         fileEntry.extractorVersion = 0x0014;
@@ -816,11 +855,11 @@ namespace Antik {
         }
 
         this->zipCentralDirectory.push_back(fileEntry);
-        
+
         this->bModified = true;
 
     }
-    
+
     //
     // Update a ZIP archives Central Directory.
     //
@@ -828,7 +867,7 @@ namespace Antik {
     void CFileZIP::UpdateCentralDiectory() {
 
         if (this->bModified) {
-            
+
             this->zipEOCentralDirectory.numberOfCentralDirRecords = this->zipCentralDirectory.size();
             this->zipEOCentralDirectory.totalCentralDirRecords = this->zipCentralDirectory.size();
             this->zipEOCentralDirectory.offsetCentralDirRecords = this->zipFileStream.tellp();
@@ -841,9 +880,9 @@ namespace Antik {
             this->zipEOCentralDirectory.sizeOfCentralDirRecords -= this->zipEOCentralDirectory.offsetCentralDirRecords;
 
             this->putEOCentralDirectoryRecord(this->zipEOCentralDirectory);
-            
+
         }
-        
+
     }
 
     // ==============
@@ -903,8 +942,8 @@ namespace Antik {
                 this->getCentralDirectoryFileHeader(centDirFileHeader);
                 this->zipCentralDirectory.push_back(centDirFileHeader);
             }
-            
-            this->bOpen=true;
+
+            this->bOpen = true;
 
         }
 
@@ -1055,7 +1094,7 @@ namespace Antik {
         this->zipFileStream.close();
 
         this->bOpen = false;
-        this->bModified=false;
+        this->bModified = false;
 
     }
 
@@ -1083,9 +1122,9 @@ namespace Antik {
         } else {
             std::cerr << "File does not exist [" << fileNameStr << "]" << std::endl;
         }
-        
+
         return (false);
-        
+
     }
 
 } // namespace Antik
