@@ -106,7 +106,7 @@ namespace Antik {
         // Archive File Header Record
         //
         
-        struct s {
+        struct FileHeader {
             const std::uint32_t signature = 0x04034b50;
             const std::uint32_t size = 30;
             std::uint16_t creatorVersion = 0;
