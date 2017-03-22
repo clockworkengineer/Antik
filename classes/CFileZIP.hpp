@@ -89,7 +89,7 @@ namespace Antik {
         void open(void);
         void close(void);
         std::vector<CFileZIP::FileDetail> contents(void);
-        bool extract(const std::string& fileNameStr, const std::string& destFolderStr);
+        bool extract(const std::string& fileNameStr, const std::string& destFolderStr, bool bCheckCRC=true);
         bool add(const std::string& fileNameStr, const std::string& zipFileNameStr );
 
         // ================

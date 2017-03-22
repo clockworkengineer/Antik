@@ -370,13 +370,6 @@ namespace Antik {
                 std::memcpy(&entry.extraField[0], &buffer[entry.fileNameLength], entry.extraFieldLength);
             }
 
-            // Read any data descriptor and discard
-
-            if (entry.bitFlag & 0x8) {
-                DataDescriptor dataDesc;
-                CFileZIP::getDataDescriptor(dataDesc);
-            }
-
         } else {
             throw Exception("No File Header record found.");
         }
@@ -984,7 +977,7 @@ namespace Antik {
     // Extract a ZIP archive file and create in a specified destination.
     //
 
-    bool CFileZIP::extract(const std::string& fileNameStr, const std::string& destFileNameStr) {
+    bool CFileZIP::extract(const std::string& fileNameStr, const std::string& destFileNameStr, bool bCheckCRC) {
 
         bool fileExtracted = false;
 
@@ -1003,6 +996,15 @@ namespace Antik {
 
                     CFileZIP::FileHeader fileHeader;
                     this->getFileHeader(fileHeader);
+                    
+                    // If data descriptor present then initialize possible zero values in 
+                    // file header from Central Directory.
+                    
+                    if (fileHeader.bitFlag & 0x08) {
+                        if (fileHeader.compressedSize==0) fileHeader.compressedSize=entry.compressedSize;
+                        if (fileHeader.uncompressedSize==0) fileHeader.uncompressedSize=entry.uncompressedSize; 
+                        if (fileHeader.crc32==0) fileHeader.crc32=entry.crc32;  
+                    }
 
                     if (fileHeader.compression == 0x8) {
                         fileExtracted = this->inflateFile(extractedFileStream, fileHeader.compressedSize);
@@ -1014,10 +1016,12 @@ namespace Antik {
 
                     extractedFileStream.close();
 
-                    std::ifstream crc32FileStream(destFileNameStr, std::ios::binary);
-                    std::uint32_t crc32 = this->calculateCRC32(crc32FileStream, fileHeader.uncompressedSize);
-                    if (crc32 != fileHeader.crc32) {
-                        throw Exception("File " + destFileNameStr + " has an invalid CRC.");
+                    if (bCheckCRC) {
+                        std::ifstream crc32FileStream(destFileNameStr, std::ios::binary);
+                        std::uint32_t crc32 = this->calculateCRC32(crc32FileStream, fileHeader.uncompressedSize);
+                        if (crc32 != fileHeader.crc32) {
+                            throw Exception("File " + destFileNameStr + " has an invalid CRC.");
+                        }
                     }
 
                 }
