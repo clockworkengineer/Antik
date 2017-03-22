@@ -84,14 +84,36 @@ namespace Antik {
         // PUBLIC METHODS
         // ==============
 
+        //
+        // Set ZIP archive name
+        //
+        
         void name(const std::string& zipFileNameStr);
+        
+        //
+        // Create an empty archive file
+        //
         void create(void);
+        
+        //
+        // Open/close archive file
+        //
         void open(void);
         void close(void);
-        std::vector<CFileZIP::FileDetail> contents(void);
+        
+        //
+        // Add/extract files to archive
+        //
+        
         bool extract(const std::string& fileNameStr, const std::string& destFolderStr, bool bCheckCRC=true);
-        bool add(const std::string& fileNameStr, const std::string& zipFileNameStr );
+        bool add(const std::string& fileNameStr, const std::string& zippedFileNameStr );
 
+        //
+        // Get archives contents
+        //
+        
+        std::vector<CFileZIP::FileDetail> contents(void);
+  
         // ================
         // PUBLIC VARIABLES
         // ================
@@ -228,7 +250,7 @@ namespace Antik {
         void getFileDataCompressed(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
  
         void findEndOfFileHeaders(void);        
-        void writeFileHeaderAndData(const std::pair<std::string, std::string>& fileNames);
+        void writeFileHeaderAndData(const std::string& fileNameStr, const std::string& zippedFileNameStr);
         void UpdateCentralDiectory();
         
         // =================
@@ -252,7 +274,7 @@ namespace Antik {
         // ZIP archive I/O stream
         //
         
-        std::fstream zipFileStream; // ZIP archive file stream
+        std::fstream zipFileStream;
         
         //
         //  ZIP archive End Of Central Directory record  and  Central Directory

@@ -787,11 +787,10 @@ namespace Antik {
     }
 
     //
-    // Write a File Header record (including file contents) to ZIP file. The filenames pair
-    // are the original files name and the ZIP file name it is stored under for later extraction.
+    // Write a File Header record (including file contents) to ZIP file.
     //
 
-    void CFileZIP::writeFileHeaderAndData(const std::pair<std::string, std::string>& fileNames) {
+    void CFileZIP::writeFileHeaderAndData(const std::string& fileNameStr, const std::string& zippedFileNameStr) {
 
         FileHeader fileHeader = FileHeader();
         CentralDirectoryFileHeader fileEntry = CentralDirectoryFileHeader();
@@ -801,17 +800,17 @@ namespace Antik {
 
         fileEntry.creatorVersion = 0x0314; // Unix
         fileEntry.extractorVersion = 0x0014;
-        fileEntry.fileNameStr = fileNames.second;
+        fileEntry.fileNameStr = zippedFileNameStr;
         fileEntry.fileNameLength = fileEntry.fileNameStr.length();
         fileEntry.bitFlag = 0; // None
         fileEntry.compression = 8; // Deflated
-        getFileModificationDateTime(fileNames.first, fileEntry.modificationDate, fileEntry.modificationTime);
-        getFileSize(fileNames.first, fileEntry.uncompressedSize);
-        getFileCRC32(fileNames.first, fileEntry.uncompressedSize, fileEntry.crc32);
+        getFileModificationDateTime(fileNameStr, fileEntry.modificationDate, fileEntry.modificationTime);
+        getFileSize(fileNameStr, fileEntry.uncompressedSize);
+        getFileCRC32(fileNameStr, fileEntry.uncompressedSize, fileEntry.crc32);
         fileEntry.compressedSize = 0;
 
         fileEntry.internalFileAttrib = 0; // ???
-        getFileAttributes(fileNames.first, fileEntry.externalFileAttrib);
+        getFileAttributes(fileNameStr, fileEntry.externalFileAttrib);
         fileEntry.fileHeaderOffset = this->zipFileStream.tellp();
 
         fileHeader.creatorVersion = fileEntry.creatorVersion;
@@ -833,7 +832,7 @@ namespace Antik {
         // File Header entry to have the correct compressed size or if its compressed size
         // is greater then or equal to its original size then store file instead of compress.
 
-        this->getFileDataCompressed(fileNames.first, fileEntry.uncompressedSize, fileEntry.compressedSize);
+        this->getFileDataCompressed(fileNameStr, fileEntry.uncompressedSize, fileEntry.compressedSize);
         fileOffset = this->zipFileStream.tellp();
         this->zipFileStream.seekg(fileEntry.fileHeaderOffset, std::ios_base::beg);
         if (fileEntry.compressedSize < fileEntry.uncompressedSize) {
@@ -844,7 +843,7 @@ namespace Antik {
             fileHeader.compression = fileEntry.compression = 0;
             fileHeader.compressedSize = fileEntry.compressedSize = fileEntry.uncompressedSize;
             this->putFileHeader(fileHeader);
-            this->getFileData(fileNames.first, fileEntry.uncompressedSize);
+            this->getFileData(fileNameStr, fileEntry.uncompressedSize);
         }
 
         this->zipCentralDirectory.push_back(fileEntry);
@@ -1103,24 +1102,24 @@ namespace Antik {
     }
 
     //
-    // Append file to ZIP archive.
+    // Add file to ZIP archive.
     //
 
-    bool CFileZIP::add(const std::string& fileNameStr, const std::string& zipFileNameStr) {
+    bool CFileZIP::add(const std::string& fileNameStr, const std::string& zippedFileNameStr) {
 
         if (!this->bOpen) {
             throw Exception("ZIP archive has not been opened.");
         }
 
         for (auto& fileEntry : this->zipCentralDirectory) {
-            if (fileEntry.fileNameStr.compare(zipFileNameStr) == 0) {
-                std::cerr << "File already present in archive [" << zipFileNameStr << "]" << std::endl;
+            if (fileEntry.fileNameStr.compare(zippedFileNameStr) == 0) {
+                std::cerr << "File already present in archive [" << zippedFileNameStr << "]" << std::endl;
                 return (false);
             }
         }
 
         if (this->fileExists(fileNameStr)) {
-            this->writeFileHeaderAndData(std::make_pair(fileNameStr, zipFileNameStr));
+            this->writeFileHeaderAndData(fileNameStr, zippedFileNameStr);
             return (true);
 
         } else {
