@@ -210,8 +210,8 @@ namespace Antik {
         std::vector<std::uint8_t> buffer;
 
         putField(entry.signature, buffer);
-        putField(entry.diskNnumber, buffer);
-        putField(entry.centralDirectoryStartDisk, buffer);
+        putField(entry.diskNumber, buffer);
+        putField(entry.startDiskNumber, buffer);
         putField(entry.numberOfCentralDirRecords, buffer);
         putField(entry.totalCentralDirRecords, buffer);
         putField(entry.sizeOfCentralDirRecords, buffer);
@@ -231,15 +231,29 @@ namespace Antik {
     }
 
     //
+    // Get 64 bit word from buffer.
+    //
+
+    void CFileZIP::getField(std::uint64_t& field, std::uint8_t *buffer) {
+        field  = static_cast<std::uint64_t>(buffer[7]) << 56;
+        field |=  static_cast<std::uint64_t>(buffer[6]) << 48;
+        field |=  static_cast<std::uint64_t>(buffer[5]) << 40; 
+        field |=  static_cast<std::uint64_t>(buffer[4]) << 32;
+        field |=  static_cast<std::uint64_t>(buffer[3]) << 24;
+        field |=  static_cast<std::uint64_t>(buffer[2]) << 16;
+        field |=  static_cast<std::uint64_t>(buffer[1]) << 8;
+        field |=  static_cast<std::uint64_t>(buffer[0]);
+    }
+
+    //
     // Get 32 bit word from buffer.
     //
 
     void CFileZIP::getField(std::uint32_t& field, std::uint8_t *buffer) {
-        std::uint32_t byte1 = buffer[0], byte2 = buffer[1], byte3 = buffer[2], byte4 = buffer[3];
-        field = byte4 << 24;
-        field |= byte3 << 16;
-        field |= byte2 << 8;
-        field |= byte1;
+        field = static_cast<std::uint32_t>(buffer[3]) << 24;
+        field |= static_cast<std::uint32_t>(buffer[2]) << 16;
+        field |= static_cast<std::uint32_t>(buffer[1]) << 8;
+        field |= static_cast<std::uint32_t>(buffer[0]);
     }
 
     //
@@ -247,9 +261,8 @@ namespace Antik {
     //
 
     void CFileZIP::getField(std::uint16_t& field, std::uint8_t *buffer) {
-        std::uint16_t byte1 = buffer[0], byte2 = buffer[1];
-        field = byte2 << 8;
-        field |= byte1;
+          field = static_cast<std::uint16_t>(buffer[1]) << 8;       
+          field |= static_cast<std::uint16_t>(buffer[0]);
     }
 
     //
@@ -408,8 +421,8 @@ namespace Antik {
             std::vector<std::uint8_t> buffer(entry.size);
             this->zipFileStream.seekg(filePosition, std::ios_base::beg);
             this->zipFileStream.read((char *) &buffer[0], entry.size);
-            getField(entry.diskNnumber, &buffer[4]);
-            getField(entry.centralDirectoryStartDisk, &buffer[6]);
+            getField(entry.diskNumber, &buffer[4]);
+            getField(entry.startDiskNumber, &buffer[6]);
             getField(entry.numberOfCentralDirRecords, &buffer[8]);
             getField(entry.totalCentralDirRecords, &buffer[10]);
             getField(entry.sizeOfCentralDirRecords, &buffer[12]);
@@ -429,6 +442,80 @@ namespace Antik {
         }
     }
 
+    void CFileZIP::getZip64EOCentralDirectoryRecord(CFileZIP::Zip64EOCentralDirectoryRecord& entry) {
+
+        std::vector<std::uint8_t> buffer(entry.size);
+        std::uint32_t tag;
+        std::uint64_t extensionSize;
+        
+        this->zipFileStream.read((char *) &buffer[0], 4);
+        getField(tag, &buffer[0]);
+
+        if (tag == entry.signature) {
+
+            this->zipFileStream.read((char *) &buffer[4], entry.size - 4);
+            getField(entry.totalRecordSize, &buffer[4]);
+            getField(entry.creatorVersion, &buffer[12]);
+            getField(entry.extractorVersion, &buffer[14]);
+            getField(entry.diskNumber, &buffer[16]);
+            getField(entry.startDiskNumber, &buffer[20]);
+            getField(entry.numberOfCentralDirRecords, &buffer[24]);
+            getField(entry.totalCentralDirRecords, &buffer[32]);
+            getField(entry.sizeOfCentralDirRecords, &buffer[40]);
+            getField(entry.offsetCentralDirRecords, &buffer[48]);
+
+            extensionSize = entry.totalRecordSize - entry.size + 12;
+            if (extensionSize) {
+                entry.extensibleDataSector.resize(extensionSize);
+                this->zipFileStream.read((char *) &entry.extensibleDataSector[0], extensionSize );
+            }
+
+
+        } else {
+            throw Exception("No ZIP64 End Of Central Directory record found.");
+        }
+        
+    }
+      
+    //
+    // Get End Of Central Directory File Header record from buffer.
+    //
+
+    void CFileZIP::zip64EOCentDirRecordLocator(CFileZIP::Zip64EOCentDirRecordLocator& entry) {
+
+        this->zipFileStream.seekg(0, std::ios_base::end);
+        uint64_t fileLength = this->zipFileStream.tellg();
+        int64_t filePosition = fileLength - 1;
+        std::uint32_t signature = 0;
+
+        // Read file in reverse looking for End Of Central Directory File Header signature
+
+        while (filePosition) {
+            char curr;
+            this->zipFileStream.seekg(filePosition, std::ios_base::beg);
+            this->zipFileStream.get(curr);
+            signature <<= 8;
+            signature |= curr;
+            if (signature == entry.signature) {
+                break;
+            }
+            filePosition--;
+        }
+
+        // If record found then get
+
+        if (filePosition != -1) {
+            std::vector<std::uint8_t> buffer(entry.size);
+            this->zipFileStream.seekg(filePosition, std::ios_base::beg);
+            this->zipFileStream.read((char *) &buffer[0], entry.size);
+            this->getField(entry.startDiskNumber, &buffer[4]);
+            this->getField(entry.offset, &buffer[8]);
+            this->getField(entry.numberOfDisks, &buffer[12]);
+        } else {
+            throw Exception("No ZIP64 End Of Central Directory Locator record found.");
+        }
+    }
+    
     //
     // Convert stat based modified date/time to ZIP format.
     //
@@ -925,11 +1012,24 @@ namespace Antik {
 
         if (this->zipFileStream.is_open()) {
 
+            std::int64_t noOfFileRecords=0;
+            
             this->getEOCentralDirectoryRecord(this->zipEOCentralDirectory);
 
-            this->zipFileStream.seekg(this->zipEOCentralDirectory.offsetCentralDirRecords, std::ios_base::beg);
+            if (this->zipEOCentralDirectory.offsetCentralDirRecords == 0xFFFFFFFF) {
+                
+                this->zip64EOCentDirRecordLocator(this->zip64EOCentralDirLocator);
+                this->zipFileStream.seekg(this->zip64EOCentralDirLocator.offset, std::ios::beg);
+                this->getZip64EOCentralDirectoryRecord(this->zip64EOCentralDirectory);
+                this->zipFileStream.seekg(this->zip64EOCentralDirectory.offsetCentralDirRecords, std::ios_base::beg);          
+                noOfFileRecords = this->zip64EOCentralDirectory.numberOfCentralDirRecords;
+                
+            } else {
+                this->zipFileStream.seekg(this->zipEOCentralDirectory.offsetCentralDirRecords, std::ios_base::beg);
+                noOfFileRecords = this->zipEOCentralDirectory.numberOfCentralDirRecords;
+            }
 
-            for (auto cnt01 = 0; cnt01 < this->zipEOCentralDirectory.numberOfCentralDirRecords; cnt01++) {
+            for (auto cnt01 = 0; cnt01 < noOfFileRecords; cnt01++) {
                 CFileZIP::CentralDirectoryFileHeader centDirFileHeader;
                 this->getCentralDirectoryFileHeader(centDirFileHeader);
                 this->zipCentralDirectory.push_back(centDirFileHeader);
@@ -937,6 +1037,8 @@ namespace Antik {
 
             this->bOpen = true;
 
+        } else {
+             throw Exception("ZIP archive "+this->zipFileNameStr+" could not be opened.");
         }
 
     }
@@ -1023,6 +1125,8 @@ namespace Antik {
                         }
                     }
 
+                } else {
+                    throw Exception("Could not open destination file " + destFileNameStr + " for output.");
                 }
 
                 break;
@@ -1050,9 +1154,9 @@ namespace Antik {
 
         if (this->zipFileStream.is_open()) {
 
-            this->zipEOCentralDirectory.centralDirectoryStartDisk = 0;
-            this->zipEOCentralDirectory.diskNnumber = 0;
-            this->zipEOCentralDirectory.centralDirectoryStartDisk = 0;
+            this->zipEOCentralDirectory.startDiskNumber = 0;
+            this->zipEOCentralDirectory.diskNumber = 0;
+            this->zipEOCentralDirectory.startDiskNumber = 0;
             this->zipEOCentralDirectory.numberOfCentralDirRecords = 0;
             this->zipEOCentralDirectory.totalCentralDirRecords = 0;
             this->zipEOCentralDirectory.sizeOfCentralDirRecords = 0;
@@ -1082,9 +1186,9 @@ namespace Antik {
 
         this->UpdateCentralDiectory();
 
-        this->zipEOCentralDirectory.centralDirectoryStartDisk = 0;
-        this->zipEOCentralDirectory.diskNnumber = 0;
-        this->zipEOCentralDirectory.centralDirectoryStartDisk = 0;
+        this->zipEOCentralDirectory.startDiskNumber = 0;
+        this->zipEOCentralDirectory.diskNumber = 0;
+        this->zipEOCentralDirectory.startDiskNumber = 0;
         this->zipEOCentralDirectory.numberOfCentralDirRecords = 0;
         this->zipEOCentralDirectory.totalCentralDirRecords = 0;
         this->zipEOCentralDirectory.sizeOfCentralDirRecords = 0;
@@ -1129,5 +1233,15 @@ namespace Antik {
         return (false);
 
     }
+    
+    //
+    // If a archive file entry is a directory return true
+    //
+
+     bool CFileZIP::isDirectory(const CFileZIP::FileDetail& fileEntry) {
+         
+         return((fileEntry.externalFileAttrib & 0x10) || (S_ISDIR(fileEntry.externalFileAttrib >> 16)));
+         
+     }
 
 } // namespace Antik

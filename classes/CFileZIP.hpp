@@ -113,6 +113,8 @@ namespace Antik {
         //
         
         std::vector<CFileZIP::FileDetail> contents(void);
+        
+        bool isDirectory(const CFileZIP::FileDetail& fileEntry);
   
         // ================
         // PUBLIC VARIABLES
@@ -129,8 +131,8 @@ namespace Antik {
         //
         
         struct FileHeader {
-            const std::uint32_t signature = 0x04034b50;
             const std::uint32_t size = 30;
+            const std::uint32_t signature = 0x04034b50;
             std::uint16_t creatorVersion = 0;
             std::uint16_t bitFlag = 0;
             std::uint16_t compression = 0;
@@ -150,8 +152,8 @@ namespace Antik {
         //
 
         struct DataDescriptor {
-            const std::uint32_t signature = 0x08074b50;
             const std::uint32_t size = 12;
+            const std::uint32_t signature = 0x08074b50;
             std::uint32_t crc32 = 0;
             std::uint32_t compressedSize = 0;
             std::uint32_t uncompressedSize = 0;
@@ -162,8 +164,8 @@ namespace Antik {
         //
 
         struct CentralDirectoryFileHeader {
+            const std::uint32_t size = 46;            
             const std::uint32_t signature = 0x02014b50;
-            const std::uint32_t size = 46;
             std::uint16_t creatorVersion = 0;
             std::uint16_t extractorVersion = 0;
             std::uint16_t bitFlag = 0;
@@ -190,10 +192,10 @@ namespace Antik {
         //
 
         struct EOCentralDirectoryRecord {
-            const std::uint32_t signature = 0x06054b50;
             const std::uint32_t size = 22;
-            std::uint16_t diskNnumber = 0;
-            std::uint16_t centralDirectoryStartDisk = 0;
+            const std::uint32_t signature = 0x06054b50;
+            std::uint16_t diskNumber = 0;
+            std::uint16_t startDiskNumber = 0;
             std::uint16_t numberOfCentralDirRecords = 0;
             std::uint16_t totalCentralDirRecords = 0;
             std::uint32_t sizeOfCentralDirRecords = 0;
@@ -201,7 +203,52 @@ namespace Antik {
             std::uint16_t commentLength = 0;
             std::vector<std::uint8_t> comment;
         };
+              
+        //
+        // ZIP64 Archive End Of Central Directory record.
+        //
 
+        struct Zip64EOCentralDirectoryRecord {
+            const std::uint32_t size = 54;
+            const std::uint32_t signature = 0x06064b50;
+            std::uint64_t  totalRecordSize = 0;
+            std::uint16_t creatorVersion = 0;
+            std::uint16_t extractorVersion = 0;
+            std::uint32_t diskNumber = 0;
+            std::uint32_t startDiskNumber = 0;
+            std::uint64_t numberOfCentralDirRecords = 0;
+            std::uint64_t  totalCentralDirRecords = 0;
+            std::uint64_t sizeOfCentralDirRecords = 0;
+            std::uint64_t offsetCentralDirRecords = 0;
+            std::vector<std::uint8_t> extensibleDataSector;
+ 
+        };
+
+        //
+        // ZIP64 Archive End Of Central Directory record locator.
+        //
+
+        struct Zip64EOCentDirRecordLocator {
+            const std::uint32_t size = 20;
+            const std::uint32_t signature = 0x07064b50;
+            std::uint32_t startDiskNumber = 0;
+            std::uint64_t offset = 0;
+            std::uint32_t numberOfDisks = 0;
+        };
+
+        //
+        // ZIP64 Archive extended information field.
+        //
+
+        struct Zip64ExtendedInformationExtraField {
+            const std::uint16_t signature = 0x0001;
+            std::uint16_t size = 0;
+            std::uint64_t originalSize = 0;
+            std::uint64_t compressedSize = 0;
+            std::uint64_t fileHeaderOffset = 0;
+            std::uint32_t diskNo = 0;
+        };
+        
         //
         // ZIP inflate/deflate buffer size.
         //
@@ -228,12 +275,16 @@ namespace Antik {
         void putFileHeader(CFileZIP::FileHeader& entry);
         void putEOCentralDirectoryRecord(CFileZIP::EOCentralDirectoryRecord& entry);
  
+        void getField(std::uint64_t& field, std::uint8_t *buffer);
         void getField(std::uint32_t& field, std::uint8_t *buffer);
         void getField(std::uint16_t& field, std::uint8_t *buffer);
         void getDataDescriptor(CFileZIP::DataDescriptor& entry);
         void getCentralDirectoryFileHeader(CFileZIP::CentralDirectoryFileHeader& entry);
         void getFileHeader(CFileZIP::FileHeader& entry);
         void getEOCentralDirectoryRecord(CFileZIP::EOCentralDirectoryRecord& entry);
+  
+        void getZip64EOCentralDirectoryRecord(CFileZIP::Zip64EOCentralDirectoryRecord& entry);
+        void zip64EOCentDirRecordLocator(CFileZIP::Zip64EOCentDirRecordLocator& entry);
 
         std::uint32_t calculateCRC32(std::ifstream& sourceFileStream, std::uint32_t fileSize);
         void convertModificationDateTime(std::tm& modificationDateTime, std::uint16_t dateWord, std::uint16_t timeWord);
@@ -282,7 +333,9 @@ namespace Antik {
         
         EOCentralDirectoryRecord zipEOCentralDirectory;
         std::vector<CentralDirectoryFileHeader> zipCentralDirectory;
-
+        Zip64EOCentDirRecordLocator zip64EOCentralDirLocator;
+        Zip64EOCentralDirectoryRecord zip64EOCentralDirectory;
+        
         //
         // Inflate/deflate buffers.
         //
