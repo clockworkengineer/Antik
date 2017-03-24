@@ -528,9 +528,10 @@ namespace Antik {
 
         std::uint16_t signature = 0;
         std::int16_t currentField = 0;
+        std::uint16_t fieldSize;
 
         while (currentField < info.size()) {
-            std::uint16_t fieldSize;
+
             this->getField(signature, &info[currentField + 0]);
             this->getField(fieldSize, &info[currentField + 2]);
             if (signature == extendedInfo.signature) {
@@ -596,13 +597,11 @@ namespace Antik {
         std::uint64_t inflatedBytes = 0;
         z_stream inlateZIPStream{0};
         
-        crc = 0;
+        crc = crc32(0L, Z_NULL, 0);
 
         if (fileSize == 0) {
             return (true);
         }
-
-        crc = crc32(0L, Z_NULL, 0);
                
         inflateResult = inflateInit2(&inlateZIPStream, -MAX_WBITS);
         if (inflateResult != Z_OK) {
@@ -754,7 +753,7 @@ namespace Antik {
     // Store file data as part of ZIP file header.
     //
 
-    void CFileZIP::getFileData(const std::string& fileNameStr, std::uint32_t fileSize) {
+    void CFileZIP::storeFileData(const std::string& fileNameStr, std::uint32_t fileSize) {
 
         std::ifstream fileStream(fileNameStr, std::ios::binary);
         while (fileSize) {
@@ -891,35 +890,6 @@ namespace Antik {
     }
 
     //
-    // Find the file offset to the end of file headers and seek to there 
-    // (ie. position where to add new file headers.
-    //
-
-    void CFileZIP::findEndOfFileHeaders(void) {
-
-        std::uint32_t offset;
-
-        if (!this->zipCentralDirectory.empty()) {
-
-            CentralDirectoryFileHeader centralDirLast = this->zipCentralDirectory.back();
-            FileHeader fileHeader;
-
-            this->zipFileStream.seekg(centralDirLast.fileHeaderOffset, std::ios::beg);
-            this->getFileHeader(fileHeader);
-
-            offset = centralDirLast.fileHeaderOffset + fileHeader.size + fileHeader.compressedSize +
-                    fileHeader.fileNameLength + fileHeader.extraFieldLength;
-
-
-        } else {
-            offset = 0;
-        }
-
-        this->zipFileStream.seekg(offset, std::ios::beg);
-
-    }
-
-    //
     // Write a File Header record (including file contents) to ZIP file.
     //
 
@@ -927,9 +897,9 @@ namespace Antik {
 
         FileHeader fileHeader = FileHeader();
         CentralDirectoryFileHeader fileEntry = CentralDirectoryFileHeader();
-        std::uint32_t fileOffset = 0;
+        std::uint64_t fileOffset = 0;
 
-        this->findEndOfFileHeaders();
+        this->zipFileStream.seekg(this->offsetToNextFileHeader, std::ios_base::beg);
 
         fileEntry.creatorVersion = 0x0314; // Unix / PK 2.0
         fileEntry.extractorVersion = 0x0014; // PK 2.0
@@ -976,11 +946,13 @@ namespace Antik {
             fileHeader.compression = fileEntry.compression = 0;
             fileHeader.compressedSize = fileEntry.compressedSize = fileEntry.uncompressedSize;
             this->putFileHeader(fileHeader);
-            this->getFileData(fileNameStr, fileEntry.uncompressedSize);
+            this->storeFileData(fileNameStr, fileEntry.uncompressedSize);
         }
 
         this->zipCentralDirectory.push_back(fileEntry);
 
+        this->offsetToNextFileHeader = this->zipFileStream.tellp();
+        
         this->bModified = true;
 
     }
@@ -993,6 +965,8 @@ namespace Antik {
 
         if (this->bModified) {
 
+            this->zipFileStream.seekg(this->offsetToNextFileHeader, std::ios_base::beg);
+                   
             this->zipEOCentralDirectory.numberOfCentralDirRecords = this->zipCentralDirectory.size();
             this->zipEOCentralDirectory.totalCentralDirRecords = this->zipCentralDirectory.size();
             this->zipEOCentralDirectory.offsetCentralDirRecords = this->zipFileStream.tellp();
@@ -1062,17 +1036,27 @@ namespace Antik {
 
             this->getEOCentralDirectoryRecord(this->zipEOCentralDirectory);
 
-            if (this->zipEOCentralDirectory.offsetCentralDirRecords == 0xFFFFFFFF) {
+            // One of the central directory fields is to large to store so ZIP64
+            
+            if ((this->zipEOCentralDirectory.totalCentralDirRecords==0xFFFF) ||
+                (this->zipEOCentralDirectory.numberOfCentralDirRecords==0xFFFF) ||
+                (this->zipEOCentralDirectory.sizeOfCentralDirRecords==0xFFFFFFFF) ||
+                (this->zipEOCentralDirectory.totalCentralDirRecords==0xFFFF) ||
+                (this->zipEOCentralDirectory.startDiskNumber==0xFFFF) ||
+                (this->zipEOCentralDirectory.diskNumber==0xFFFF)||
+                (this->zipEOCentralDirectory.offsetCentralDirRecords == 0xFFFFFFFF)) {
 
                 this->zip64EOCentDirRecordLocator(this->zip64EOCentralDirLocator);
                 this->zipFileStream.seekg(this->zip64EOCentralDirLocator.offset, std::ios::beg);
                 this->getZip64EOCentralDirectoryRecord(this->zip64EOCentralDirectory);
                 this->zipFileStream.seekg(this->zip64EOCentralDirectory.offsetCentralDirRecords, std::ios_base::beg);
                 noOfFileRecords = this->zip64EOCentralDirectory.numberOfCentralDirRecords;
+                this->offsetToNextFileHeader = this->zip64EOCentralDirectory.offsetCentralDirRecords;
 
             } else {
                 this->zipFileStream.seekg(this->zipEOCentralDirectory.offsetCentralDirRecords, std::ios_base::beg);
                 noOfFileRecords = this->zipEOCentralDirectory.numberOfCentralDirRecords;
+                this->offsetToNextFileHeader = this->zipEOCentralDirectory.offsetCentralDirRecords;
             }
 
             for (auto cnt01 = 0; cnt01 < noOfFileRecords; cnt01++) {
@@ -1094,7 +1078,6 @@ namespace Antik {
     //
 
     std::vector<CFileZIP::FileDetail> CFileZIP::contents(void) {
-
 
         FileDetail fileEntry = FileDetail();
         std::vector<CFileZIP::FileDetail> fileDetailList;
@@ -1154,8 +1137,8 @@ namespace Antik {
                     // If dealing with ZIP64 extract full 64 bit values from extended field
                     
                     if ((entry.compressedSize == 0xFFFFFFFF) ||
-                            (entry.uncompressedSize == 0xFFFFFFFF) ||
-                            (entry.fileHeaderOffset == 0xFFFFFFFF)) {
+                        (entry.uncompressedSize == 0xFFFFFFFF) ||
+                        (entry.fileHeaderOffset == 0xFFFFFFFF)) {
                         getZip64ExtendedInformationExtraField(extendedInfo, entry.extraField);
                     }
 

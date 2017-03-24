@@ -297,10 +297,9 @@ namespace Antik {
         void getFileSize(const std::string& fileNameStr, std::uint32_t& fileSize);     
         void getFileCRC32(const std::string& fileNameStr, std::uint64_t fileSize, std::uint32_t& crc32);
         void getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificationDate, std::uint16_t& modificationTime);
-        void getFileData(const std::string& fileNameStr, std::uint32_t fileLength);
+        void storeFileData(const std::string& fileNameStr, std::uint32_t fileLength);
         void getFileDataCompressed(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
- 
-        void findEndOfFileHeaders(void);        
+     
         void writeFileHeaderAndData(const std::string& fileNameStr, const std::string& zippedFileNameStr);
         void UpdateCentralDiectory();
         
@@ -333,8 +332,11 @@ namespace Antik {
         
         EOCentralDirectoryRecord zipEOCentralDirectory;
         std::vector<CentralDirectoryFileHeader> zipCentralDirectory;
+        
         Zip64EOCentDirRecordLocator zip64EOCentralDirLocator;
         Zip64EOCentralDirectoryRecord zip64EOCentralDirectory;
+        
+        std::uint64_t offsetToNextFileHeader=0;
         
         //
         // Inflate/deflate buffers.
