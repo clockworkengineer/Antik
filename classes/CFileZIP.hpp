@@ -105,7 +105,7 @@ namespace Antik {
         // Add/extract files to archive
         //
         
-        bool extract(const std::string& fileNameStr, const std::string& destFolderStr, bool bCheckCRC=true);
+        bool extract(const std::string& fileNameStr, const std::string& destFolderStr);
         bool add(const std::string& fileNameStr, const std::string& zippedFileNameStr );
 
         //
@@ -285,17 +285,17 @@ namespace Antik {
   
         void getZip64EOCentralDirectoryRecord(CFileZIP::Zip64EOCentralDirectoryRecord& entry);
         void zip64EOCentDirRecordLocator(CFileZIP::Zip64EOCentDirRecordLocator& entry);
+        void getZip64ExtendedInformationExtraField(Zip64ExtendedInformationExtraField& extendedInfo, std::vector<std::uint8_t> & info);
 
-        std::uint32_t calculateCRC32(std::ifstream& sourceFileStream, std::uint32_t fileSize);
         void convertModificationDateTime(std::tm& modificationDateTime, std::uint16_t dateWord, std::uint16_t timeWord);
-        bool inflateFile(std::ofstream& destFileStream, std::uint32_t fileSize);
-        bool copyFile(std::ofstream& destFileStream, std::uint32_t fileSize); 
+        bool inflateFile(std::ofstream& destFileStream, std::uint64_t fileSize, std::uint32_t& crc);
+        bool copyFile(std::ofstream& destFileStream, std::uint64_t fileSize, std::uint32_t& crc); 
         bool deflateFile(std::ifstream& sourceFileStream, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
   
         bool fileExists(const std::string& fileNameStr);
         void getFileAttributes(const std::string& fileNameStr, std::uint32_t& attributes);
         void getFileSize(const std::string& fileNameStr, std::uint32_t& fileSize);     
-        void getFileCRC32(const std::string& fileNameStr, std::uint32_t fileSize, std::uint32_t& crc32);
+        void getFileCRC32(const std::string& fileNameStr, std::uint64_t fileSize, std::uint32_t& crc32);
         void getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificationDate, std::uint16_t& modificationTime);
         void getFileData(const std::string& fileNameStr, std::uint32_t fileLength);
         void getFileDataCompressed(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
