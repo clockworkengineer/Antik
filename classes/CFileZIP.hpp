@@ -253,7 +253,7 @@ namespace Antik {
         // ZIP inflate/deflate buffer size.
         //
         
-        static const std::uint32_t kZIPBufferSize = 16384;
+        static constexpr const std::uint32_t kZIPBufferSize = 16384;
 
         // ===========================================
         // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
@@ -268,6 +268,11 @@ namespace Antik {
         // PRIVATE METHODS
         // ===============
 
+        bool fieldOverflow(const std::uint64_t& field);
+        bool fieldOverflow(const std::uint32_t& field);
+        bool fieldOverflow(const std::uint16_t& field);
+                     
+        void putField(const std::uint64_t& field, std::vector<std::uint8_t>& buffer);
         void putField(const std::uint32_t& field, std::vector<std::uint8_t>& buffer);
         void putField(const std::uint16_t& field, std::vector<std::uint8_t>& buffer);
         void putDataDescriptor(CFileZIP::DataDescriptor& entry);
@@ -288,20 +293,20 @@ namespace Antik {
         void getZip64ExtendedInformationExtraField(Zip64ExtendedInformationExtraField& extendedInfo, std::vector<std::uint8_t> & info);
 
         void convertModificationDateTime(std::tm& modificationDateTime, std::uint16_t dateWord, std::uint16_t timeWord);
-        bool inflateFile(std::ofstream& destFileStream, std::uint64_t fileSize, std::uint32_t& crc);
-        bool copyFile(std::ofstream& destFileStream, std::uint64_t fileSize, std::uint32_t& crc); 
-        bool deflateFile(std::ifstream& sourceFileStream, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
-  
+        
+        void inflateFile(std::ofstream& destFileStream, std::uint64_t fileSize, std::uint32_t& crc);
+        void extractFile(std::ofstream& destFileStream, std::uint64_t fileSize, std::uint32_t& crc); 
+        void deflateFile(std::ifstream& sourceFileStream, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
+        void storeFile(const std::string& fileNameStr, std::uint32_t fileLength);
+   
         bool fileExists(const std::string& fileNameStr);
         void getFileAttributes(const std::string& fileNameStr, std::uint32_t& attributes);
         void getFileSize(const std::string& fileNameStr, std::uint32_t& fileSize);     
         void getFileCRC32(const std::string& fileNameStr, std::uint64_t fileSize, std::uint32_t& crc32);
         void getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificationDate, std::uint16_t& modificationTime);
-        void storeFileData(const std::string& fileNameStr, std::uint32_t fileLength);
-        void getFileDataCompressed(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
-     
+   
         void writeFileHeaderAndData(const std::string& fileNameStr, const std::string& zippedFileNameStr);
-        void UpdateCentralDiectory();
+        void UpdateCentralDirectory();
         
         // =================
         // PRIVATE VARIABLES
@@ -335,6 +340,10 @@ namespace Antik {
         
         Zip64EOCentDirRecordLocator zip64EOCentralDirLocator;
         Zip64EOCentralDirectoryRecord zip64EOCentralDirectory;
+        
+        //
+        // Offset in ZIP archive to put next File Header added.
+        //
         
         std::uint64_t offsetToNextFileHeader=0;
         

@@ -148,7 +148,7 @@ namespace Antik {
 
         static const char *kMimeBoundaryStr; // Text string used for MIME boundary
 
-        static const int kBase64EncodeBufferSize = 54; // Optimum encode buffer size (since encoded max 76 bytes)
+        static constexpr const int kBase64EncodeBufferSize = 54; // Optimum encode buffer size (since encoded max 76 bytes)
 
         static const char *kEOLStr; // End of line
 
