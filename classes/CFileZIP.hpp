@@ -20,7 +20,6 @@
 #include <vector>
 #include <stdexcept>
 #include <fstream>
-#include <memory>
 #include <ctime>
 
 // =========
@@ -40,6 +39,14 @@ namespace Antik {
         // PUBLIC TYPES AND CONSTANTS
         // ==========================
 
+        //
+        // Although these are meant to be the specified sizes add a double check.
+        //
+        
+        static_assert(sizeof(std::uint16_t)==2, "Error : std::uint16_t needs to be 2 bytes.");
+        static_assert(sizeof(std::uint32_t)==4, "Error : std::uint32_t needs to be 4 bytes.");
+        static_assert(sizeof(std::uint64_t)==8, "Error : std::uint64_t needs to be 8 bytes.");
+        
         //
         // Class exception
         //
@@ -114,6 +121,10 @@ namespace Antik {
         
         std::vector<CFileZIP::FileDetail> contents(void);
         
+        //
+        // Return true if archive file entry is a directory
+        //
+        
         bool isDirectory(const CFileZIP::FileDetail& fileEntry);
   
         // ================
@@ -166,10 +177,10 @@ namespace Antik {
         struct CentralDirectoryFileHeader {
             const std::uint32_t size = 46;            
             const std::uint32_t signature = 0x02014b50;
-            std::uint16_t creatorVersion = 0;
-            std::uint16_t extractorVersion = 0;
+            std::uint16_t creatorVersion = 0x0314;    // Unix / ZIP 2.0
+            std::uint16_t extractorVersion = 0x0014;  // ZIP 2.0
             std::uint16_t bitFlag = 0;
-            std::uint16_t compression = 0;
+            std::uint16_t compression = 8;            // Deflated
             std::uint16_t modificationTime = 0;
             std::uint16_t modificationDate = 0;
             std::uint32_t crc32 = 0;
@@ -253,7 +264,7 @@ namespace Antik {
         // ZIP inflate/deflate buffer size.
         //
         
-        static constexpr const std::uint32_t kZIPBufferSize = 16384;
+        static const std::uint32_t kZIPBufferSize = 16384;
 
         // ===========================================
         // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
@@ -294,19 +305,18 @@ namespace Antik {
 
         void convertModificationDateTime(std::tm& modificationDateTime, std::uint16_t dateWord, std::uint16_t timeWord);
         
-        void inflateFile(std::ofstream& destFileStream, std::uint64_t fileSize, std::uint32_t& crc);
-        void extractFile(std::ofstream& destFileStream, std::uint64_t fileSize, std::uint32_t& crc); 
-        void deflateFile(std::ifstream& sourceFileStream, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
+        void inflateFile(const std::string& fileNameStr, std::uint64_t fileSize, std::uint32_t& crc);
+        void extractFile(const std::string& fileNameStr, std::uint64_t fileSize, std::uint32_t& crc); 
+        void deflateFile(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize, std::uint32_t& crc);
         void storeFile(const std::string& fileNameStr, std::uint32_t fileLength);
    
         bool fileExists(const std::string& fileNameStr);
         void getFileAttributes(const std::string& fileNameStr, std::uint32_t& attributes);
         void getFileSize(const std::string& fileNameStr, std::uint32_t& fileSize);     
-        void getFileCRC32(const std::string& fileNameStr, std::uint64_t fileSize, std::uint32_t& crc32);
         void getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificationDate, std::uint16_t& modificationTime);
    
-        void writeFileHeaderAndData(const std::string& fileNameStr, const std::string& zippedFileNameStr);
-        void UpdateCentralDirectory();
+        void addFileHeaderAndContents(const std::string& fileNameStr, const std::string& zippedFileNameStr);
+        void UpdateCentralDirectory(void);
         
         // =================
         // PRIVATE VARIABLES
