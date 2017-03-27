@@ -202,16 +202,16 @@ namespace Antik {
         }
 
         if (this->zipFileStream.fail()) {
-            throw Exception("Error in writing Central Directory File Header record.");
+            throw Exception("Error in writing Central Directory Local File Header record.");
         }
 
     }
 
     //
-    // Put File Header record into buffer.
+    // Put Local File Header record into buffer.
     //
 
-    void CFileZIP::putFileHeader(CFileZIP::FileHeader& entry) {
+    void CFileZIP::putFileHeader(CFileZIP::LocalFileHeader& entry) {
 
         std::vector<std::uint8_t> buffer;
 
@@ -237,7 +237,7 @@ namespace Antik {
         }
 
         if (this->zipFileStream.fail()) {
-            throw Exception("Error in writing File Header record.");
+            throw Exception("Error in writing Local File Header record.");
         }
 
     }
@@ -266,7 +266,7 @@ namespace Antik {
         }
 
         if (this->zipFileStream.fail()) {
-            throw Exception("Error in writing End Of Central Directory File Header record.");
+            throw Exception("Error in writing End Of Central Directory Local File Header record.");
         }
 
     }
@@ -386,7 +386,7 @@ namespace Antik {
             }
 
             if (this->zipFileStream.fail()) {
-                throw Exception("Error in reading Central Directory File Header record.");
+                throw Exception("Error in reading Central Directory Local File Header record.");
             }
 
         } else {
@@ -396,10 +396,10 @@ namespace Antik {
     }
 
     //
-    // Get File Header record from buffer.
+    // Get Local File Header record from buffer.
     //
 
-    void CFileZIP::getFileHeader(CFileZIP::FileHeader& entry) {
+    void CFileZIP::getFileHeader(CFileZIP::LocalFileHeader& entry) {
 
         std::vector<std::uint8_t> buffer(entry.size);
         std::uint32_t signature;
@@ -436,12 +436,12 @@ namespace Antik {
             }
 
             if (this->zipFileStream.fail()) {
-                throw Exception("Error in reading File Header record.");
+                throw Exception("Error in reading Local File Header record.");
             }
 
 
         } else {
-            throw Exception("No File Header record found.");
+            throw Exception("No Local File Header record found.");
         }
 
 
@@ -943,13 +943,13 @@ namespace Antik {
     }
 
     //
-    // Add a File Header record and file contents to ZIP file. Note: Also add 
+    // Add a Local File Header record and file contents to ZIP file. Note: Also add 
     // an entry to central directory for flushing out to the archive on close.
     //
 
     void CFileZIP::addFileHeaderAndContents(const std::string& fileNameStr, const std::string& zippedFileNameStr) {
 
-        FileHeader fileHeader;
+        LocalFileHeader fileHeader;
         CentralDirectoryFileHeader directoryEntry;
 
         directoryEntry.fileNameStr = zippedFileNameStr;
@@ -959,6 +959,17 @@ namespace Antik {
         getFileModificationDateTime(fileNameStr, directoryEntry.modificationDate, directoryEntry.modificationTime);
         getFileSize(fileNameStr, directoryEntry.uncompressedSize);
         getFileAttributes(fileNameStr, directoryEntry.externalFileAttrib);
+        
+        // File directory so add trailing delimeter, no compression and extractor version  1.0
+        
+        if (S_ISDIR(directoryEntry.externalFileAttrib >> 16)) {
+            if (directoryEntry.fileNameStr.back()!='/') { 
+                directoryEntry.fileNameStr.push_back('/');
+                directoryEntry.fileNameLength++;
+            }
+            directoryEntry.extractorVersion = 0x000a;
+            directoryEntry.compression = 0;
+        }
         
         fileHeader.creatorVersion = directoryEntry.creatorVersion;
         fileHeader.bitFlag = directoryEntry.bitFlag;
@@ -974,26 +985,34 @@ namespace Antik {
         this->zipFileStream.seekg(this->offsetToNextFileHeader, std::ios_base::beg);
         this->putFileHeader(fileHeader);
 
-        // Calculate files compressed size while deflating it and then either modify its
-        // File Header entry to have the correct compressed size and CRC or if its compressed size
-        // is greater then or equal to its original size then store file instead of compress.
+        if (directoryEntry.uncompressedSize) {
 
-        this->deflateFile(fileNameStr, directoryEntry.uncompressedSize, directoryEntry.compressedSize, directoryEntry.crc32);
+            // Calculate files compressed size while deflating it and then either modify its
+            // Local File Header record to have the correct compressed size and CRC or if its 
+            // compressed size is greater then or equal to its original size then store file 
+            // instead of compress.
 
-        fileHeader.crc32 = directoryEntry.crc32;
-                  
-        this->offsetToNextFileHeader = this->zipFileStream.tellp();
+            this->deflateFile(fileNameStr, directoryEntry.uncompressedSize, directoryEntry.compressedSize, directoryEntry.crc32);
 
-        this->zipFileStream.seekg(directoryEntry.fileHeaderOffset, std::ios_base::beg);
-        if (directoryEntry.compressedSize < directoryEntry.uncompressedSize) {
-            fileHeader.compressedSize = directoryEntry.compressedSize;
-            this->putFileHeader(fileHeader);
-        } else {
-            fileHeader.compression = directoryEntry.compression = 0;
-            fileHeader.compressedSize = directoryEntry.compressedSize = directoryEntry.uncompressedSize;
-            this->putFileHeader(fileHeader);
-            this->storeFile(fileNameStr, directoryEntry.uncompressedSize);
+            fileHeader.crc32 = directoryEntry.crc32;
+
             this->offsetToNextFileHeader = this->zipFileStream.tellp();
+
+            this->zipFileStream.seekg(directoryEntry.fileHeaderOffset, std::ios_base::beg);
+            if (directoryEntry.compressedSize < directoryEntry.uncompressedSize) {
+                fileHeader.compressedSize = directoryEntry.compressedSize;
+                this->putFileHeader(fileHeader);
+            } else {
+                directoryEntry.extractorVersion = 0x000a;
+                fileHeader.compression = directoryEntry.compression = 0;
+                fileHeader.compressedSize = directoryEntry.compressedSize = directoryEntry.uncompressedSize;
+                this->putFileHeader(fileHeader);
+                this->storeFile(fileNameStr, directoryEntry.uncompressedSize);
+                this->offsetToNextFileHeader = this->zipFileStream.tellp();
+            }
+
+        } else {
+           this->offsetToNextFileHeader = this->zipFileStream.tellp();
         }
 
         this->zipCentralDirectory.push_back(directoryEntry);
@@ -1166,7 +1185,7 @@ namespace Antik {
             if (directoryEntry.fileNameStr.compare(fileNameStr) == 0) {
 
                 Zip64ExtendedInformationExtraField extendedInfo;
-                CFileZIP::FileHeader fileHeader;
+                CFileZIP::LocalFileHeader fileHeader;
                 std::uint32_t crc32;
 
                 // Set up 64 bit data values if needed

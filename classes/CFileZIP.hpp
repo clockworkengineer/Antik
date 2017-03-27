@@ -138,10 +138,10 @@ namespace Antik {
         // ===========================
 
         //
-        // Archive File Header Record
+        // Archive Local File Header record
         //
         
-        struct FileHeader {
+        struct LocalFileHeader {
             const std::uint32_t size = 30;
             const std::uint32_t signature = 0x04034b50;
             std::uint16_t creatorVersion = 0;
@@ -288,7 +288,7 @@ namespace Antik {
         void putField(const std::uint16_t& field, std::vector<std::uint8_t>& buffer);
         void putDataDescriptor(CFileZIP::DataDescriptor& entry);
         void putCentralDirectoryFileHeader(CFileZIP::CentralDirectoryFileHeader& entry);
-        void putFileHeader(CFileZIP::FileHeader& entry);
+        void putFileHeader(CFileZIP::LocalFileHeader& entry);
         void putEOCentralDirectoryRecord(CFileZIP::EOCentralDirectoryRecord& entry);
  
         void getField(std::uint64_t& field, std::uint8_t *buffer);
@@ -296,7 +296,7 @@ namespace Antik {
         void getField(std::uint16_t& field, std::uint8_t *buffer);
         void getDataDescriptor(CFileZIP::DataDescriptor& entry);
         void getCentralDirectoryFileHeader(CFileZIP::CentralDirectoryFileHeader& entry);
-        void getFileHeader(CFileZIP::FileHeader& entry);
+        void getFileHeader(CFileZIP::LocalFileHeader& entry);
         void getEOCentralDirectoryRecord(CFileZIP::EOCentralDirectoryRecord& entry);
   
         void getZip64EOCentralDirectoryRecord(CFileZIP::Zip64EOCentralDirectoryRecord& entry);
