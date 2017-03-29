@@ -4,9 +4,9 @@
  * 
  * Author: Robert Tizzard
  * 
- * Created on January 24, 2017, 2:33 PM
+ * Created on March 24, 2017, 2:33 PM
  *
- * Copyright 2016.
+ * Copyright 2017.
  *
  */
 
@@ -72,7 +72,6 @@ namespace Antik {
 
     CFileZIPIO::CFileZIPIO() {
 
-   
     }
 
     //
@@ -585,6 +584,10 @@ namespace Antik {
         std::vector<std::uint8_t> buffer(entry.size);
         std::uint32_t signature;
         std::uint64_t extensionSize;
+        Zip64EOCentDirRecordLocator zip64EOCentralDirLocator;
+       
+        this->getZip64EOCentDirRecordLocator(zip64EOCentralDirLocator);
+        this->zipFileStream.seekg(zip64EOCentralDirLocator.offset, std::ios::beg);
 
         this->zipFileStream.read((char *) &buffer[0], sizeof (signature));
         getField(signature, &buffer[0]);

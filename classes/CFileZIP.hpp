@@ -124,7 +124,13 @@ namespace Antik {
         //
         
         bool isDirectory(const CFileZIP::FileDetail& fileEntry);
-  
+         
+        //
+        // Return true if archive is in ZIP64 format.
+        //
+ 
+        bool isZIP64(void);
+        
         // ================
         // PUBLIC VARIABLES
         // ================
@@ -154,16 +160,16 @@ namespace Antik {
         // PRIVATE METHODS
         // ===============
 
-        void convertModificationDateTime(std::tm& modificationDateTime, std::uint16_t dateWord, std::uint16_t timeWord);
+        std::tm convertModificationDateTime(std::uint16_t dateWord, std::uint16_t timeWord);
         
-        void inflateFile(const std::string& fileNameStr, std::uint64_t fileSize, std::uint32_t& crc);
-        void extractFile(const std::string& fileNameStr, std::uint64_t fileSize, std::uint32_t& crc); 
-        void deflateFile(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize, std::uint32_t& crc);
+        std::uint32_t inflateFile(const std::string& fileNameStr, std::uint64_t fileSize);
+        std::uint32_t extractFile(const std::string& fileNameStr, std::uint64_t fileSize); 
+        std::uint32_t deflateFile(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
         void storeFile(const std::string& fileNameStr, std::uint32_t fileLength);
    
         bool fileExists(const std::string& fileNameStr);
-        void getFileAttributes(const std::string& fileNameStr, std::uint32_t& attributes);
-        void getFileSize(const std::string& fileNameStr, std::uint32_t& fileSize);     
+        std::uint32_t  getFileAttributes(const std::string& fileNameStr);
+        std::uint32_t  getFileSize(const std::string& fileNameStr);     
         void getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificationDate, std::uint16_t& modificationTime);
    
         void addFileHeaderAndContents(const std::string& fileNameStr, const std::string& zippedFileNameStr);
@@ -179,7 +185,8 @@ namespace Antik {
         
         bool bOpen=false;
         bool bModified=false;
-        
+        bool bZIP64=false;
+
         //
         // ZIP archive filename and added contents list
         //

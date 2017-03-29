@@ -15,8 +15,7 @@
 // 
 // Description:  Class to create and manipulate ZIP file archives. At present it
 // supports archive creation and addition/extraction of files from an existing 
-// archives. ZIP archives in ZIP64 format may have their contents extracted but 
-// the creation of archives and the adding of files are not supported. Files
+// archives. For ZIP64 format archives only extraction is supported currently. Files
 // are either saved using store (file copy) or deflate compression. The current
 // class compiles and works on Linux/CYGWIN and it marks the archives as created on
 // Unix.
@@ -83,13 +82,13 @@ namespace Antik {
     // ===============
 
     //
-    // Convert stat based modified date/time to ZIP format.
+    // Convert  ZIP format based modified date/time to tm format.
     //
 
-    void CFileZIP::convertModificationDateTime(std::tm& modificationDateTime, std::uint16_t dateWord, std::uint16_t timeWord) {
+    std::tm CFileZIP::convertModificationDateTime(std::uint16_t dateWord, std::uint16_t timeWord) {
 
         std::time_t rawtime = 0;
-
+        std::tm modificationDateTime;
         std::time(&rawtime);
         std::memcpy(&modificationDateTime, std::localtime(&rawtime), sizeof (std::tm));
 
@@ -101,21 +100,24 @@ namespace Antik {
         modificationDateTime.tm_year = ((dateWord & 0b1111111000000000) >> 9) + 80;
 
         mktime(&modificationDateTime);
+        
+        return(modificationDateTime);
 
     }
 
     //
-    // Uncompress ZIP file entry data to file. Note: The crc32 is calculated 
-    // while the data is inflated.
+    // Uncompress ZIP file entry data to file. Note: The files crc32 is calculated 
+    // while the data is being inflated and returned.
     //
 
-    void CFileZIP::inflateFile(const std::string& fileNameStr, std::uint64_t fileSize, std::uint32_t& crc) {
+    std::uint32_t CFileZIP::inflateFile(const std::string& fileNameStr, std::uint64_t fileSize) {
 
         int inflateResult = Z_OK;
         std::uint64_t inflatedBytes = 0;
         z_stream inlateZIPStream{0};
-        std::ofstream fileStream(fileNameStr, std::ios::binary | std::ios::trunc);
-
+        std::ofstream fileStream(fileNameStr, std::ios::binary | std::ios::trunc);              
+        std::uint32_t crc;
+        
         if (fileStream.fail()) {
             throw Exception("Could not open destination file for inflate.");
         }
@@ -123,7 +125,7 @@ namespace Antik {
         crc = crc32(0L, Z_NULL, 0);
 
         if (fileSize == 0) {
-            return;
+            return(crc);
         }
 
         inflateResult = inflateInit2(&inlateZIPStream, -MAX_WBITS);
@@ -178,19 +180,25 @@ namespace Antik {
         } while (inflateResult != Z_STREAM_END);
 
         inflateEnd(&inlateZIPStream);
+        
+        return(crc);
 
     }
 
     //
-    // Compress source file and write as part of ZIP file header record.
+    // Compress source file and write as part of ZIP file header record. The files 
+    // crc32 is calculated  while the data is being deflated and returned. 
+    // The files compressed size if also calculated and returned though a reference 
+    // parameter.
     //
 
-    void CFileZIP::deflateFile(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize, std::uint32_t& crc) {
+     std::uint32_t CFileZIP::deflateFile(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize) {
 
         int deflateResult = 0, flushRemainder = 0;
         std::uint32_t bytesDeflated = 0;
         z_stream deflateZIPStream{0};
         std::ifstream fileStream(fileNameStr, std::ios::binary);
+        std::uint32_t crc;
 
         if (fileStream.fail()) {
             throw Exception("Could not open source file for deflate.");
@@ -243,16 +251,19 @@ namespace Antik {
         deflateEnd(&deflateZIPStream);
 
         fileStream.close();
+        
+        return(crc);
 
     }
 
     //
-    // Extract uncompressed (stored) ZIP file entry data to file. Note: The crc32 
-    // is calculated while the data is copied.
+    // Extract uncompressed (stored) ZIP file entry data to file. Note: The files 
+    // crc32 is calculated while the data being is copied and returned.
     //
 
-    void CFileZIP::extractFile(const std::string& fileNameStr, std::uint64_t fileSize, std::uint32_t& crc) {
+    std::uint32_t  CFileZIP::extractFile(const std::string& fileNameStr, std::uint64_t fileSize) {
 
+        std::uint32_t crc;
         crc = crc32(0L, Z_NULL, 0);
         std::ofstream fileStream(fileNameStr, std::ios::binary | std::ios::trunc);
 
@@ -273,6 +284,8 @@ namespace Antik {
             fileSize -= (std::min(fileSize, static_cast<std::uint64_t> (CFileZIP::kZIPBufferSize)));
 
         }
+        
+        return(crc);
 
     }
 
@@ -310,11 +323,10 @@ namespace Antik {
     // Get file attributes.
     //
 
-    void CFileZIP::getFileAttributes(const std::string& fileNameStr, std::uint32_t& attributes) {
+    std::uint32_t CFileZIP::getFileAttributes(const std::string& fileNameStr) {
 
-        struct stat fileStat {
-            0
-        };
+        struct stat fileStat {0};
+        std::uint32_t attributes=0;
 
         int rc = stat(fileNameStr.c_str(), &fileStat);
 
@@ -322,8 +334,10 @@ namespace Antik {
             attributes = fileStat.st_mode;
             attributes <<= 16;
         } else {
-            attributes = 0;
+            throw Exception("stat() error getting file attributes. ERRNO = "+std::to_string(errno));
         }
+        
+        return(attributes);
 
     }
 
@@ -331,12 +345,11 @@ namespace Antik {
     // Get a files size.
     //
 
-    void CFileZIP::getFileSize(const std::string& fileNameStr, std::uint32_t& fileSize) {
-
-        struct stat fileStat {
-            0
-        };
-
+    std::uint32_t  CFileZIP::getFileSize(const std::string& fileNameStr) {
+        
+        struct stat fileStat {0};
+        std::uint32_t fileSize=0;
+        
         int rc = stat(fileNameStr.c_str(), &fileStat);
         if (rc == 0) {
             if (S_ISDIR(fileStat.st_mode)) {
@@ -345,8 +358,11 @@ namespace Antik {
                 fileSize = fileStat.st_size;
             }
         } else {
-            fileSize = 0;
+            throw Exception("stat() error getting file size. ERRNO = "+std::to_string(errno));
         }
+        
+        return(fileSize);
+        
     }
 
     //
@@ -355,9 +371,7 @@ namespace Antik {
 
     bool CFileZIP::fileExists(const std::string& fileNameStr) {
 
-        struct stat fileStat {
-            0
-        };
+        struct stat fileStat {0};
 
         int rc = stat(fileNameStr.c_str(), &fileStat);
         return (rc == 0);
@@ -365,14 +379,13 @@ namespace Antik {
     }
 
     //
-    // Get files stat based modified date/time and convert to ZIP format.
+    // Get files stat based modified date/time and convert to ZIP format. The values
+    // are passed back though two reference parameters.
     //
 
     void CFileZIP::getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificatioDate, std::uint16_t& modificationTime) {
 
-        struct stat fileStat {
-            0
-        };
+        struct stat fileStat {0};
 
         int rc = stat(fileNameStr.c_str(), &fileStat);
         if (rc == 0) {
@@ -384,8 +397,9 @@ namespace Antik {
                     ((((fileTimeInfo->tm_mon + 1) & 0b1111)) << 5) |
                     (((fileTimeInfo->tm_year - 80)& 0b1111111) << 9);
         } else {
-            modificationTime = modificatioDate = 0;
+            throw Exception("stat() error getting file modified time. ERRNO = "+std::to_string(errno));
         }
+        
     }
 
     //
@@ -403,8 +417,8 @@ namespace Antik {
         directoryEntry.fileHeaderOffset = this->offsetToNextFileHeader;
 
         getFileModificationDateTime(fileNameStr, directoryEntry.modificationDate, directoryEntry.modificationTime);
-        getFileSize(fileNameStr, directoryEntry.uncompressedSize);
-        getFileAttributes(fileNameStr, directoryEntry.externalFileAttrib);
+        directoryEntry.uncompressedSize = getFileSize(fileNameStr);
+        directoryEntry.externalFileAttrib = getFileAttributes(fileNameStr);
 
         // File is a directory so add trailing delimeter, set no compression and extractor version  1.0
 
@@ -438,12 +452,11 @@ namespace Antik {
             // compressed size is greater then or equal to its original size then store file 
             // instead of compress.
 
-            this->deflateFile(fileNameStr, directoryEntry.uncompressedSize, directoryEntry.compressedSize, directoryEntry.crc32);
+            directoryEntry.crc32 = this->deflateFile(fileNameStr, directoryEntry.uncompressedSize, directoryEntry.compressedSize);
 
             fileHeader.crc32 = directoryEntry.crc32;
 
             this->offsetToNextFileHeader = this->currentPositionZIPFile();
-            ;
 
             this->positionInZIPFile(directoryEntry.fileHeaderOffset);
             if (directoryEntry.compressedSize < directoryEntry.uncompressedSize) {
@@ -456,12 +469,10 @@ namespace Antik {
                 this->putFileHeader(fileHeader);
                 this->storeFile(fileNameStr, directoryEntry.uncompressedSize);
                 this->offsetToNextFileHeader = this->currentPositionZIPFile();
-                ;
             }
 
         } else {
             this->offsetToNextFileHeader = this->currentPositionZIPFile();
-            ;
         }
 
         this->zipCentralDirectory.push_back(directoryEntry);
@@ -483,14 +494,12 @@ namespace Antik {
             this->zipEOCentralDirectory.numberOfCentralDirRecords = this->zipCentralDirectory.size();
             this->zipEOCentralDirectory.totalCentralDirRecords = this->zipCentralDirectory.size();
             this->zipEOCentralDirectory.offsetCentralDirRecords = this->currentPositionZIPFile();
-            ;
 
             for (auto& directoryEntry : this->zipCentralDirectory) {
                 this->putCentralDirectoryFileHeader(directoryEntry);
             }
 
             this->zipEOCentralDirectory.sizeOfCentralDirRecords = this->currentPositionZIPFile();
-            ;
             this->zipEOCentralDirectory.sizeOfCentralDirRecords -= this->zipEOCentralDirectory.offsetCentralDirRecords;
 
             this->putEOCentralDirectoryRecord(this->zipEOCentralDirectory);
@@ -509,8 +518,8 @@ namespace Antik {
 
     CFileZIP::CFileZIP(const std::string& zipFileNameStr) : zipFileNameStr{zipFileNameStr}
     {
-        zipInBuffer.resize(CFileZIP::kZIPBufferSize);
-        zipOutBuffer.resize(CFileZIP::kZIPBufferSize);
+        this->zipInBuffer.resize(CFileZIP::kZIPBufferSize);
+        this->zipOutBuffer.resize(CFileZIP::kZIPBufferSize);
     }
 
     //
@@ -557,10 +566,7 @@ namespace Antik {
                 fieldOverflow(this->zipEOCentralDirectory.diskNumber) ||
                 fieldOverflow(this->zipEOCentralDirectory.offsetCentralDirRecords)) {
 
-            Zip64EOCentDirRecordLocator zip64EOCentralDirLocator;
-
-            this->getZip64EOCentDirRecordLocator(zip64EOCentralDirLocator);
-            this->positionInZIPFile(zip64EOCentralDirLocator.offset);
+            this->bZIP64 = true;
             this->getZip64EOCentralDirectoryRecord(this->zip64EOCentralDirectory);
             this->positionInZIPFile(this->zip64EOCentralDirectory.offsetCentralDirRecords);
             noOfFileRecords = this->zip64EOCentralDirectory.numberOfCentralDirRecords;
@@ -573,9 +579,12 @@ namespace Antik {
         }
 
         for (auto cnt01 = 0; cnt01 < noOfFileRecords; cnt01++) {
-            CFileZIP::CentralDirectoryFileHeader centDirFileHeader;
-            this->getCentralDirectoryFileHeader(centDirFileHeader);
-            this->zipCentralDirectory.push_back(centDirFileHeader);
+            CFileZIP::CentralDirectoryFileHeader directoryEntry;
+            this->getCentralDirectoryFileHeader(directoryEntry);
+            this->zipCentralDirectory.push_back(directoryEntry);
+            this->bZIP64 = fieldOverflow(directoryEntry.compressedSize) ||
+                    fieldOverflow(directoryEntry.uncompressedSize) ||
+                    fieldOverflow(directoryEntry.fileHeaderOffset);
         }
 
         this->bOpen = true;
@@ -604,8 +613,9 @@ namespace Antik {
             fileEntry.externalFileAttrib = directoryEntry.externalFileAttrib;
             fileEntry.creatorVersion = directoryEntry.creatorVersion;
             fileEntry.extraField = directoryEntry.extraField;
-            this->convertModificationDateTime(fileEntry.modificationDateTime,
-                    directoryEntry.modificationDate, directoryEntry.modificationTime);
+            fileEntry.modificationDateTime = 
+                    this->convertModificationDateTime(directoryEntry.modificationDate, 
+                                                      directoryEntry.modificationTime);
             fileDetailList.push_back(fileEntry);
         }
 
@@ -642,8 +652,8 @@ namespace Antik {
                 // If dealing with ZIP64 extract full 64 bit values from extended field
 
                 if (fieldOverflow(directoryEntry.compressedSize) ||
-                        fieldOverflow(directoryEntry.uncompressedSize) ||
-                        fieldOverflow(directoryEntry.fileHeaderOffset)) {
+                    fieldOverflow(directoryEntry.uncompressedSize) ||
+                    fieldOverflow(directoryEntry.fileHeaderOffset)) {
                     getZip64ExtendedInformationExtraField(extendedInfo, directoryEntry.extraField);
                 }
 
@@ -651,10 +661,10 @@ namespace Antik {
                 this->getLocalFileHeader(fileHeader);
 
                 if (directoryEntry.compression == 0x8) {
-                    this->inflateFile(destFileNameStr, extendedInfo.compressedSize, crc32);
+                    crc32 =  this->inflateFile(destFileNameStr, extendedInfo.compressedSize);
                     fileExtracted = true;
                 } else if (directoryEntry.compression == 0) {
-                    this->extractFile(destFileNameStr, extendedInfo.originalSize, crc32);
+                    crc32 = this->extractFile(destFileNameStr, extendedInfo.originalSize);
                     fileExtracted = true;
                 } else {
                     throw Exception("File uses unsupported compression = " + std::to_string(directoryEntry.compression));
@@ -687,16 +697,6 @@ namespace Antik {
 
         this->openZIPFile(this->zipFileNameStr, std::ios::binary | std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
-        this->zipEOCentralDirectory.startDiskNumber = 0;
-        this->zipEOCentralDirectory.diskNumber = 0;
-        this->zipEOCentralDirectory.startDiskNumber = 0;
-        this->zipEOCentralDirectory.numberOfCentralDirRecords = 0;
-        this->zipEOCentralDirectory.totalCentralDirRecords = 0;
-        this->zipEOCentralDirectory.sizeOfCentralDirRecords = 0;
-        this->zipEOCentralDirectory.offsetCentralDirRecords = 0;
-        this->zipEOCentralDirectory.commentLength = 0;
-        this->zipEOCentralDirectory.comment.clear();
-
         this->putEOCentralDirectoryRecord(this->zipEOCentralDirectory);
 
         this->closeZIPFile();
@@ -708,7 +708,7 @@ namespace Antik {
     //
 
     void CFileZIP::close(void) {
-
+        
         if (!this->bOpen) {
             throw Exception("ZIP archive has not been opened.");
         }
@@ -725,12 +725,26 @@ namespace Antik {
         this->zipEOCentralDirectory.commentLength = 0;
         this->zipEOCentralDirectory.comment.clear();
 
+        this->zip64EOCentralDirectory.totalRecordSize = 0;
+        this->zip64EOCentralDirectory.creatorVersion = 0;
+        this->zip64EOCentralDirectory.extractorVersion = 0;
+        this->zip64EOCentralDirectory.diskNumber = 0;
+        this->zip64EOCentralDirectory.startDiskNumber = 0;
+        this->zip64EOCentralDirectory.numberOfCentralDirRecords = 0;
+        this->zip64EOCentralDirectory.totalCentralDirRecords = 0;
+        this->zip64EOCentralDirectory.sizeOfCentralDirRecords = 0;
+        this->zip64EOCentralDirectory.offsetCentralDirRecords = 0;
+        this->zip64EOCentralDirectory.extensibleDataSector.clear();
+
         this->zipCentralDirectory.clear();
+        
+        this->offsetToNextFileHeader = 0;
 
         this->closeZIPFile();
 
         this->bOpen = false;
         this->bModified = false;
+        this->bZIP64 = false;
 
     }
 
@@ -770,6 +784,16 @@ namespace Antik {
     bool CFileZIP::isDirectory(const CFileZIP::FileDetail& fileEntry) {
 
         return ((fileEntry.externalFileAttrib & 0x10) || (S_ISDIR(fileEntry.externalFileAttrib >> 16)));
+
+    }
+    
+    //
+    // If a ZIP64 archive return true
+    //
+
+    bool CFileZIP::isZIP64(void) {
+
+        return (this->bZIP64);
 
     }
 
