@@ -547,9 +547,7 @@ namespace Antik {
                 this->offsetToNextFileHeader = this->currentPositionZIPFile();
             }
 
-        } //else {
-          //  this->offsetToNextFileHeader = this->currentPositionZIPFile();
-        //}
+        } 
 
         // Save Central Directory File Entry
         
@@ -737,12 +735,17 @@ namespace Antik {
             
             // File size information stored in Extended information.
             
-            if (!directoryEntry.extraField.empty()) {
+            if (fieldOverflow(directoryEntry.compressedSize) ||
+                    fieldOverflow(directoryEntry.uncompressedSize) ||
+                    fieldOverflow(directoryEntry.fileHeaderOffset)) {
                 Zip64ExtendedInformationExtraField extra;
-                extra.compressedSize = extra.fileHeaderOffset = extra.originalSize = 0xFFFFFFFF;
+                extra.compressedSize = directoryEntry.compressedSize;
+                extra.fileHeaderOffset = directoryEntry.fileHeaderOffset;
+                extra.originalSize = directoryEntry.uncompressedSize;
                 this->getZip64ExtendedInformationExtraField(extra, fileEntry.extraField);
                 fileEntry.uncompressedSize = extra.originalSize;
                 fileEntry.compressedSize = extra.compressedSize;
+                fileEntry.bZIP64=true;
             }
                 
             fileDetailList.push_back(fileEntry);
@@ -803,6 +806,8 @@ namespace Antik {
                     throw Exception("File uses unsupported compression = " + std::to_string(directoryEntry.compression));
                 }
 
+                // Check file CRC32
+                
                 if (crc32 != directoryEntry.crc32) {
                     throw Exception("File " + destFileNameStr + " has an invalid CRC.");
                 }
@@ -925,7 +930,8 @@ namespace Antik {
     }
     
     //
-    // If a ZIP64 archive return true
+    // If a ZIP64 archive return true. Note if any part of an archive contains
+    // ZIP64 format entry then this will be true.
     //
 
     bool CFileZIP::isZIP64(void) {

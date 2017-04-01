@@ -83,7 +83,7 @@ namespace Antik {
     }
 
     //
-    // Open ZIP archive for I/O..
+    // Open ZIP archive for I/O.
     //
 
     void CFileZIPIO::openZIPFile(const std::string fileNameStr, std::ios_base::openmode mode) {
@@ -335,23 +335,28 @@ namespace Antik {
     }
 
     //
-    // Put any ZIP64 extended information record into byte array.
+    // Put any ZIP64 extended information record into byte array If a field is zero
+    // (not present) then it is not placed in the buffer.
     //
 
     void CFileZIPIO::putZip64ExtendedInformationExtraField(Zip64ExtendedInformationExtraField& extendedInfo, std::vector<std::uint8_t>& info) {
 
-        std::uint16_t fieldSize = 28;
+        std::uint16_t fieldSize = 0;
 
         info.clear();
 
+        if (extendedInfo.originalSize) fieldSize += 8;
+        if (extendedInfo.compressedSize) fieldSize += 8;
+        if (extendedInfo.fileHeaderOffset) fieldSize += 8;
+        if (extendedInfo.fileHeaderOffset) fieldSize += 4;
+        
         this->putField(extendedInfo.signature, info);
         this->putField(fieldSize, info);
-        this->putField(extendedInfo.originalSize, info);
-        this->putField(extendedInfo.compressedSize, info);
-        this->putField(extendedInfo.fileHeaderOffset, info);
-        this->putField(extendedInfo.diskNo, info);
         
-
+        if (extendedInfo.originalSize) this->putField(extendedInfo.originalSize, info);
+        if (extendedInfo.compressedSize) this->putField(extendedInfo.compressedSize, info);
+        if (extendedInfo.fileHeaderOffset)this->putField(extendedInfo.fileHeaderOffset, info);
+        if (extendedInfo.diskNo)this->putField(extendedInfo.diskNo, info);
 
     }
 

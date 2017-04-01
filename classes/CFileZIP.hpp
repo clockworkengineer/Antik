@@ -71,6 +71,7 @@ namespace Antik {
             std::uint16_t creatorVersion=0;         // Archive creator
             std::uint32_t externalFileAttrib=0;     // Attributes
             std::vector<std::uint8_t>extraField;    // Extra data field
+            bool bZIP64=false;                      // true then in ZIP64 format
         };
 
         // ============
