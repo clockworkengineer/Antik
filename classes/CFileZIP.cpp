@@ -114,7 +114,7 @@ namespace Antik {
 
         int inflateResult = Z_OK;
         std::uint64_t inflatedBytes = 0;
-        z_stream inlateZIPStream{0};
+        z_stream inlateZIPStream {};
         std::ofstream fileStream(fileNameStr, std::ios::binary | std::ios::trunc);              
         std::uint32_t crc;
         
@@ -196,7 +196,7 @@ namespace Antik {
 
         int deflateResult = 0, flushRemainder = 0;
         std::uint64_t bytesDeflated = 0;
-        z_stream deflateZIPStream{0};
+        z_stream deflateZIPStream {};
         std::ifstream fileStream(fileNameStr, std::ios::binary);
         std::uint32_t crc;
 
@@ -326,7 +326,7 @@ namespace Antik {
 
     std::uint32_t CFileZIP::getFileAttributes(const std::string& fileNameStr) {
 
-        struct stat64 fileStat {0};
+        struct stat64 fileStat {};
         std::uint32_t attributes=0;
 
         int rc = lstat64(fileNameStr.c_str(), &fileStat);
@@ -348,7 +348,7 @@ namespace Antik {
 
     std::uint64_t  CFileZIP::getFileSize(const std::string& fileNameStr) {
         
-        struct stat64 fileStat {0};
+        struct stat64 fileStat {};
         std::uint64_t fileSize=0;
         
         int rc = lstat64(fileNameStr.c_str(), &fileStat);
@@ -372,7 +372,7 @@ namespace Antik {
 
     bool CFileZIP::fileExists(const std::string& fileNameStr) {
 
-        struct stat64 fileStat {0};
+        struct stat64 fileStat {};
 
         int rc = lstat64(fileNameStr.c_str(), &fileStat);
         if (rc!=0) {
@@ -389,7 +389,7 @@ namespace Antik {
 
     void CFileZIP::getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificatioDate, std::uint16_t& modificationTime) {
 
-        struct stat64 fileStat {0};
+        struct stat64 fileStat {};
 
         int rc = lstat64(fileNameStr.c_str(), &fileStat);
         if (rc == 0) {
