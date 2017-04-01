@@ -85,21 +85,20 @@ namespace Antik {
     //
     // Open ZIP archive for I/O..
     //
-    
+
     void CFileZIPIO::openZIPFile(const std::string fileNameStr, std::ios_base::openmode mode) {
 
         this->zipFileStream.open(fileNameStr, mode);
 
         if (this->zipFileStream.fail()) {
-         throw Exception("Could not open ZIP archive " + fileNameStr);
+            throw Exception("Could not open ZIP archive " + fileNameStr);
         }
 
     }
-    
+
     //
     // Close ZIP archive.
     //
-  
 
     void CFileZIPIO::closeZIPFile(void) {
         this->zipFileStream.close();
@@ -108,7 +107,7 @@ namespace Antik {
     //
     // Move to position in ZIP archive.
     //
-    
+
     void CFileZIPIO::positionInZIPFile(std::uint64_t offset) {
         this->zipFileStream.seekg(offset, std::ios::beg);
     }
@@ -116,43 +115,43 @@ namespace Antik {
     //
     // Return current position within ZIP archive.
     //
-    
-    std::uint64_t  CFileZIPIO::currentPositionZIPFile(void) {
-        return(this->zipFileStream.tellg());
+
+    std::uint64_t CFileZIPIO::currentPositionZIPFile(void) {
+        return (this->zipFileStream.tellg());
     }
-    
+
     //
     // Write data to ZIP archive.
     //
-    
+
     void CFileZIPIO::writeZIPFile(std::vector<std::uint8_t>& buffer, std::uint64_t count) {
-        this->zipFileStream.write((char *) &buffer[0], count); 
+        this->zipFileStream.write((char *) &buffer[0], count);
     }
-       
+
     //
     // Read data from ZIP archive.
     //
- 
+
     void CFileZIPIO::readZIPFile(std::vector<std::uint8_t>& buffer, std::uint64_t count) {
-        this->zipFileStream.read((char *) &buffer[0], count); 
+        this->zipFileStream.read((char *) &buffer[0], count);
     }
-    
+
     //
     // Return amount of data returned from last read.
     //
-    
+
     std::uint64_t CFileZIPIO::readCountZIPFile() {
-           return(this->zipFileStream.gcount()); 
+        return (this->zipFileStream.gcount());
     }
 
     //
     // Return true if error in ZIP archive I/O..
     //
-    
+
     bool CFileZIPIO::errorInZIPFile(void) {
-        return(this->zipFileStream.fail());
+        return (this->zipFileStream.fail());
     }
-    
+
     //
     // Return true if field contains all 1s.
     //
@@ -176,19 +175,19 @@ namespace Antik {
     bool CFileZIPIO::fieldOverflow(const std::uint16_t& field) {
         return (field == static_cast<std::uint16_t> (~0));
     }
-    
-   //
+
+    //
     // Put a 64 bit word into buffer.
     //
 
     void CFileZIPIO::putField(const std::uint64_t& field, std::vector<std::uint8_t>& buffer) {
-        buffer.push_back(static_cast<std::uint8_t> (field & 0x000000FF));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0x0000FF00) >> 8));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0x00FF0000) >> 16));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0xFF000000) >> 24));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0xFF00000000) >> 32));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0xFF0000000000) >> 40));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0xFF000000000000) >> 48));
+        buffer.push_back(static_cast<std::uint8_t> (field & 0x00000000000000FF));
+        buffer.push_back(static_cast<std::uint8_t> ((field & 0x000000000000FF00) >> 8));
+        buffer.push_back(static_cast<std::uint8_t> ((field & 0x0000000000FF0000) >> 16));
+        buffer.push_back(static_cast<std::uint8_t> ((field & 0x00000000FF000000) >> 24));
+        buffer.push_back(static_cast<std::uint8_t> ((field & 0x000000FF00000000) >> 32));
+        buffer.push_back(static_cast<std::uint8_t> ((field & 0x0000FF0000000000) >> 40));
+        buffer.push_back(static_cast<std::uint8_t> ((field & 0x00FF000000000000) >> 48));
         buffer.push_back(static_cast<std::uint8_t> ((field >> 56)));
 
     }
@@ -214,7 +213,7 @@ namespace Antik {
     }
 
     //
-    // Put Data Descriptor record into buffer.
+    // Put Data Descriptor record into buffer and write to disk.
     //
 
     void CFileZIPIO::putDataDescriptor(CFileZIPIO::DataDescriptor& entry) {
@@ -235,7 +234,7 @@ namespace Antik {
     }
 
     //
-    // Put Central Directory File Header record into buffer.
+    // Put Central Directory File Header record into buffer and write to disk.
     //
 
     void CFileZIPIO::putCentralDirectoryFileHeader(CFileZIPIO::CentralDirectoryFileHeader& entry) {
@@ -279,7 +278,7 @@ namespace Antik {
     }
 
     //
-    // Put Local File Header record into buffer.
+    // Put Local File Header record into buffer and write to disk.
     //
 
     void CFileZIPIO::putFileHeader(CFileZIPIO::LocalFileHeader& entry) {
@@ -314,7 +313,7 @@ namespace Antik {
     }
 
     //
-    // Put End Of Central Directory record into buffer.
+    // Put End Of Central Directory record into buffer and write to disk.
     //
 
     void CFileZIPIO::putEOCentralDirectoryRecord(CFileZIPIO::EOCentralDirectoryRecord& entry) {
@@ -339,6 +338,80 @@ namespace Antik {
         if (this->zipFileStream.fail()) {
             throw Exception("Error in writing End Of Central Directory Local File Header record.");
         }
+
+    }
+
+    //
+    // Put ZIP64 End Of Central Directory record into buffer and write to disk.
+    //
+
+    void CFileZIPIO::putZip64EOCentralDirectoryRecord(CFileZIPIO::Zip64EOCentralDirectoryRecord& entry) {
+
+        std::vector<std::uint8_t> buffer;
+
+        entry.totalRecordSize = entry.size - 12 +
+                entry.extensibleDataSector.size();
+                       
+        putField(entry.signature, buffer);
+        putField(entry.totalRecordSize, buffer);
+        putField(entry.creatorVersion, buffer);
+        putField(entry.extractorVersion, buffer);
+        putField(entry.diskNumber, buffer);
+        putField(entry.startDiskNumber, buffer);
+        putField(entry.numberOfCentralDirRecords, buffer);
+        putField(entry.totalCentralDirRecords, buffer);
+        putField(entry.sizeOfCentralDirRecords, buffer);
+        putField(entry.offsetCentralDirRecords, buffer);
+        this->zipFileStream.write((char *) &buffer[0], entry.size);
+
+        if (entry.extensibleDataSector.size()) {
+            this->zipFileStream.write((char *) &entry.extensibleDataSector[0], entry.extensibleDataSector.size());
+        }
+
+        if (this->zipFileStream.fail()) {
+            throw Exception("Error in writing ZIP64 End Of Central Directory record.");
+        }
+
+    }
+
+    //
+    // Put ZIP64 End Of Central Directory record locator into buffer and write to disk.
+    //
+
+    void CFileZIPIO::putZip64EOCentDirRecordLocator(CFileZIPIO::Zip64EOCentDirRecordLocator& entry) {
+
+        std::vector<std::uint8_t> buffer;
+
+        putField(entry.signature, buffer);
+        putField(entry.startDiskNumber, buffer);
+        putField(entry.offset, buffer);
+        putField(entry.numberOfDisks, buffer);
+        this->zipFileStream.write((char *) &buffer[0], entry.size);
+
+        if (this->zipFileStream.fail()) {
+            throw Exception("Error in writing ZIP64 End Of Central Directory record locator.");
+        }
+
+    }
+
+    //
+    // Put any ZIP64 extended information record into byte array.
+    //
+
+    void CFileZIPIO::putZip64ExtendedInformationExtraField(Zip64ExtendedInformationExtraField& extendedInfo, std::vector<std::uint8_t>& info) {
+
+        std::uint16_t fieldSize = 28;
+
+        info.clear();
+
+        this->putField(extendedInfo.signature, info);
+        this->putField(fieldSize, info);
+        this->putField(extendedInfo.originalSize, info);
+        this->putField(extendedInfo.compressedSize, info);
+        this->putField(extendedInfo.fileHeaderOffset, info);
+        this->putField(extendedInfo.diskNo, info);
+        
+
 
     }
 
@@ -378,7 +451,7 @@ namespace Antik {
     }
 
     //
-    // Get Data Descriptor record from buffer. 
+    // Get Data Descriptor record from ZIP archive. 
     //
 
     void CFileZIPIO::getDataDescriptor(CFileZIPIO::DataDescriptor& entry) {
@@ -407,7 +480,7 @@ namespace Antik {
     }
 
     //
-    // Get Central Directory File Header record from buffer.
+    // Get Central Directory File Header record from ZIP archive.
     //
 
     void CFileZIPIO::getCentralDirectoryFileHeader(CFileZIPIO::CentralDirectoryFileHeader& entry) {
@@ -467,7 +540,7 @@ namespace Antik {
     }
 
     //
-    // Get Local File Header record from buffer.
+    // Get Local File Header record from ZIP archive.
     //
 
     void CFileZIPIO::getLocalFileHeader(CFileZIPIO::LocalFileHeader& entry) {
@@ -519,7 +592,7 @@ namespace Antik {
     }
 
     //
-    // Get End Of Central Directory File Header record from buffer.
+    // Get End Of Central Directory File Header record from ZIP archive.
     //
 
     void CFileZIPIO::getEOCentralDirectoryRecord(CFileZIPIO::EOCentralDirectoryRecord& entry) {
@@ -576,7 +649,7 @@ namespace Antik {
     }
 
     //
-    // Get ZIP64 End Of Central Directory record
+    // Get ZIP64 End Of Central Directory record from ZIP archive
     //
 
     void CFileZIPIO::getZip64EOCentralDirectoryRecord(CFileZIPIO::Zip64EOCentralDirectoryRecord& entry) {
@@ -585,7 +658,7 @@ namespace Antik {
         std::uint32_t signature;
         std::uint64_t extensionSize;
         Zip64EOCentDirRecordLocator zip64EOCentralDirLocator;
-       
+
         this->getZip64EOCentDirRecordLocator(zip64EOCentralDirLocator);
         this->zipFileStream.seekg(zip64EOCentralDirLocator.offset, std::ios::beg);
 
@@ -622,7 +695,7 @@ namespace Antik {
     }
 
     //
-    // Get ZIP64 End Of Central Directory record locator
+    // Get ZIP64 End Of Central Directory record locator from ZIP archive
     //
 
     void CFileZIPIO::getZip64EOCentDirRecordLocator(CFileZIPIO::Zip64EOCentDirRecordLocator& entry) {
@@ -668,7 +741,7 @@ namespace Antik {
     }
 
     //
-    // Get any ZIP64 extended information
+    // Get any ZIP64 extended information from byte array.
     //
 
     void CFileZIPIO::getZip64ExtendedInformationExtraField(Zip64ExtendedInformationExtraField& extendedInfo, std::vector<std::uint8_t>& info) {
@@ -683,19 +756,19 @@ namespace Antik {
             this->getField(fieldSize, &info[fieldOffset + 2]);
             if (signature == extendedInfo.signature) {
                 fieldOffset += (sizeof (std::uint16_t)*2);
-                if (fieldOverflow(extendedInfo.originalSize)) {
+                if (fieldOverflow(static_cast<std::uint32_t>(extendedInfo.originalSize))) {
                     this->getField(extendedInfo.originalSize, &info[fieldOffset]);
                     fieldSize -= sizeof (std::uint64_t);
                     fieldOffset += sizeof (std::uint64_t);
                     if (!fieldSize) break;
                 }
-                if (fieldOverflow(extendedInfo.compressedSize)) {
+                if (fieldOverflow(static_cast<std::uint32_t>(extendedInfo.compressedSize))) {
                     this->getField(extendedInfo.compressedSize, &info[fieldOffset]);
                     fieldSize -= sizeof (std::uint64_t);
                     fieldOffset += sizeof (std::uint64_t);
                     if (!fieldSize) break;
                 }
-                if (fieldOverflow(extendedInfo.fileHeaderOffset)) {
+                if (fieldOverflow(static_cast<std::uint32_t>(extendedInfo.fileHeaderOffset))) {
                     this->getField(extendedInfo.fileHeaderOffset, &info[fieldOffset]);
                     fieldSize -= sizeof (std::uint64_t);
                     fieldOffset += sizeof (std::uint64_t);

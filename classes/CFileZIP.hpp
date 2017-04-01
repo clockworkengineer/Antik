@@ -65,8 +65,8 @@ namespace Antik {
             std::string fileNameStr;                // Name
             std::string fileCommentStr;             // Comment
             std::tm  modificationDateTime={ 0 };    // Last modified date/time
-            std::uint32_t uncompressedSize=0;       // Uncompressed size
-            std::uint32_t compressedSize=0;         // Compressed size
+            std::uint64_t uncompressedSize=0;       // Uncompressed size
+            std::uint64_t compressedSize=0;         // Compressed size
             std::uint16_t compression=0;            // Compression stored as
             std::uint16_t creatorVersion=0;         // Archive creator
             std::uint32_t externalFileAttrib=0;     // Attributes
@@ -164,12 +164,12 @@ namespace Antik {
         
         std::uint32_t inflateFile(const std::string& fileNameStr, std::uint64_t fileSize);
         std::uint32_t extractFile(const std::string& fileNameStr, std::uint64_t fileSize); 
-        std::uint32_t deflateFile(const std::string& fileNameStr, std::uint32_t uncompressedSize, std::uint32_t& compressedSize);
-        void storeFile(const std::string& fileNameStr, std::uint32_t fileLength);
+        std::uint32_t deflateFile(const std::string& fileNameStr, std::uint64_t uncompressedSize, std::uint64_t& compressedSize);
+        void storeFile(const std::string& fileNameStr, std::uint64_t fileLength);
    
         bool fileExists(const std::string& fileNameStr);
         std::uint32_t  getFileAttributes(const std::string& fileNameStr);
-        std::uint32_t  getFileSize(const std::string& fileNameStr);     
+        std::uint64_t  getFileSize(const std::string& fileNameStr);     
         void getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificationDate, std::uint16_t& modificationTime);
    
         void addFileHeaderAndContents(const std::string& fileNameStr, const std::string& zippedFileNameStr);
@@ -185,7 +185,7 @@ namespace Antik {
         
         bool bOpen=false;
         bool bModified=false;
-        bool bZIP64=false;
+        bool bZIP64=true;
 
         //
         // ZIP archive filename and added contents list

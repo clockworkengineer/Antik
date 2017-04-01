@@ -141,11 +141,11 @@ namespace Antik {
         //
 
         struct Zip64EOCentralDirectoryRecord {
-            const std::uint32_t size = 54;
+            const std::uint32_t size = 56;
             const std::uint32_t signature = 0x06064b50;
             std::uint64_t  totalRecordSize = 0;
-            std::uint16_t creatorVersion = 0;
-            std::uint16_t extractorVersion = 0;
+            std::uint16_t creatorVersion = 0x0314;
+            std::uint16_t extractorVersion = 0x0014;
             std::uint32_t diskNumber = 0;
             std::uint32_t startDiskNumber = 0;
             std::uint64_t numberOfCentralDirRecords = 0;
@@ -208,7 +208,11 @@ namespace Antik {
         void putCentralDirectoryFileHeader(CFileZIPIO::CentralDirectoryFileHeader& entry);
         void putFileHeader(CFileZIPIO::LocalFileHeader& entry);
         void putEOCentralDirectoryRecord(CFileZIPIO::EOCentralDirectoryRecord& entry);
- 
+
+        void putZip64ExtendedInformationExtraField(Zip64ExtendedInformationExtraField& extendedInfo, std::vector<std::uint8_t>& info);
+        void putZip64EOCentralDirectoryRecord(Zip64EOCentralDirectoryRecord& entry);
+        void putZip64EOCentDirRecordLocator(Zip64EOCentDirRecordLocator& entry);
+      
         void getField(std::uint64_t& field, std::uint8_t *buffer);
         void getField(std::uint32_t& field, std::uint8_t *buffer);
         void getField(std::uint16_t& field, std::uint8_t *buffer);
