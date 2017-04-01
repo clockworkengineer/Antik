@@ -197,13 +197,10 @@ namespace Antik {
         // PUBLIC METHODS
         // ==============
  
-        bool fieldOverflow(const std::uint64_t& field);
-        bool fieldOverflow(const std::uint32_t& field);
-        bool fieldOverflow(const std::uint16_t& field);
-  
-        void putField(const std::uint64_t& field, std::vector<std::uint8_t>& buffer);
-        void putField(const std::uint32_t& field, std::vector<std::uint8_t>& buffer);
-        void putField(const std::uint16_t& field, std::vector<std::uint8_t>& buffer);
+        template <typename T> static bool fieldOverflow(const T& field);
+        template <typename T> static void putField(T field, std::vector<std::uint8_t>& buffer);
+        template <typename T> static void getField(T& field, std::uint8_t *buffer);
+       
         void putDataDescriptor(CFileZIPIO::DataDescriptor& entry);
         void putCentralDirectoryFileHeader(CFileZIPIO::CentralDirectoryFileHeader& entry);
         void putFileHeader(CFileZIPIO::LocalFileHeader& entry);
@@ -212,10 +209,7 @@ namespace Antik {
         void putZip64ExtendedInformationExtraField(Zip64ExtendedInformationExtraField& extendedInfo, std::vector<std::uint8_t>& info);
         void putZip64EOCentralDirectoryRecord(Zip64EOCentralDirectoryRecord& entry);
         void putZip64EOCentDirRecordLocator(Zip64EOCentDirRecordLocator& entry);
-      
-        void getField(std::uint64_t& field, std::uint8_t *buffer);
-        void getField(std::uint32_t& field, std::uint8_t *buffer);
-        void getField(std::uint16_t& field, std::uint8_t *buffer);
+             
         void getDataDescriptor(CFileZIPIO::DataDescriptor& entry);
         void getCentralDirectoryFileHeader(CFileZIPIO::CentralDirectoryFileHeader& entry);
         void getLocalFileHeader(CFileZIPIO::LocalFileHeader& entry);
@@ -267,6 +261,42 @@ namespace Antik {
         std::fstream zipFileStream;
  
     };
+
+    //
+    // Return true if field contains all 1s.
+    //
+    
+    template <typename T>
+    bool CFileZIPIO::fieldOverflow(const T& field) {
+        return (field == static_cast<T> (~0));
+    }
+
+    //
+    // Place a word into buffer.
+    //
+
+    template <typename T>
+    void CFileZIPIO::putField(T field, std::vector<std::uint8_t>& buffer) {
+        uint16_t size = sizeof (T);
+        while (size--) {
+            buffer.push_back(static_cast<std::uint8_t> (field & 0xFF));
+            field >>= 8;
+        }
+    }
+
+    //
+    // Get word from buffer
+    //
+
+    template <typename T>
+    void CFileZIPIO::getField(T& field, std::uint8_t *buffer) {
+        std::uint16_t size = sizeof (T) - 1;
+        field = buffer[size];
+        do {
+            field <<= 8;
+            field |= buffer[size - 1];
+        } while (--size);
+    }
 
 } // namespace Antik
 

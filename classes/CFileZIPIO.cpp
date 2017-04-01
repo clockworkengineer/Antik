@@ -151,67 +151,7 @@ namespace Antik {
     bool CFileZIPIO::errorInZIPFile(void) {
         return (this->zipFileStream.fail());
     }
-
-    //
-    // Return true if field contains all 1s.
-    //
-
-    bool CFileZIPIO::fieldOverflow(const std::uint64_t& field) {
-        return (field == static_cast<std::uint64_t> (~0));
-    }
-
-    //
-    // Return true if field contains all 1s.
-    //
-
-    bool CFileZIPIO::fieldOverflow(const std::uint32_t& field) {
-        return (field == static_cast<std::uint32_t> (~0));
-    }
-
-    //
-    // Return true if field contains all 1s.
-    //
-
-    bool CFileZIPIO::fieldOverflow(const std::uint16_t& field) {
-        return (field == static_cast<std::uint16_t> (~0));
-    }
-
-    //
-    // Put a 64 bit word into buffer.
-    //
-
-    void CFileZIPIO::putField(const std::uint64_t& field, std::vector<std::uint8_t>& buffer) {
-        buffer.push_back(static_cast<std::uint8_t> (field & 0x00000000000000FF));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0x000000000000FF00) >> 8));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0x0000000000FF0000) >> 16));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0x00000000FF000000) >> 24));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0x000000FF00000000) >> 32));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0x0000FF0000000000) >> 40));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0x00FF000000000000) >> 48));
-        buffer.push_back(static_cast<std::uint8_t> ((field >> 56)));
-
-    }
-
-    //
-    // Put a 32 bit word into buffer.
-    //
-
-    void CFileZIPIO::putField(const std::uint32_t& field, std::vector<std::uint8_t>& buffer) {
-        buffer.push_back(static_cast<std::uint8_t> (field & 0x000000FF));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0x0000FF00) >> 8));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0x00FF0000) >> 16));
-        buffer.push_back(static_cast<std::uint8_t> ((field >> 24)));
-    }
-
-    //
-    // Put a 16 bit word into buffer.
-    //
-
-    void CFileZIPIO::putField(const std::uint16_t& field, std::vector<std::uint8_t>& buffer) {
-        buffer.push_back(static_cast<std::uint8_t> (field & 0x00FF));
-        buffer.push_back(static_cast<std::uint8_t> ((field & 0xFF00) >> 8));
-    }
-
+    
     //
     // Put Data Descriptor record into buffer and write to disk.
     //
@@ -413,41 +353,6 @@ namespace Antik {
         
 
 
-    }
-
-    //
-    // Get 64 bit word from buffer.
-    //
-
-    void CFileZIPIO::getField(std::uint64_t& field, std::uint8_t *buffer) {
-        field = static_cast<std::uint64_t> (buffer[7]) << 56;
-        field |= static_cast<std::uint64_t> (buffer[6]) << 48;
-        field |= static_cast<std::uint64_t> (buffer[5]) << 40;
-        field |= static_cast<std::uint64_t> (buffer[4]) << 32;
-        field |= static_cast<std::uint64_t> (buffer[3]) << 24;
-        field |= static_cast<std::uint64_t> (buffer[2]) << 16;
-        field |= static_cast<std::uint64_t> (buffer[1]) << 8;
-        field |= static_cast<std::uint64_t> (buffer[0]);
-    }
-
-    //
-    // Get 32 bit word from buffer.
-    //
-
-    void CFileZIPIO::getField(std::uint32_t& field, std::uint8_t *buffer) {
-        field = static_cast<std::uint32_t> (buffer[3]) << 24;
-        field |= static_cast<std::uint32_t> (buffer[2]) << 16;
-        field |= static_cast<std::uint32_t> (buffer[1]) << 8;
-        field |= static_cast<std::uint32_t> (buffer[0]);
-    }
-
-    //
-    // Get 16 bit word value from buffer.
-    //
-
-    void CFileZIPIO::getField(std::uint16_t& field, std::uint8_t *buffer) {
-        field = static_cast<std::uint16_t> (buffer[1]) << 8;
-        field |= static_cast<std::uint16_t> (buffer[0]);
     }
 
     //
