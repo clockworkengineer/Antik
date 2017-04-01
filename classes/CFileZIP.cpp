@@ -60,10 +60,10 @@ namespace Antik {
     // ===========================
 
     //
-    // ZIP deflate/inflate buffer size
+    // ZIP deflate/inflate default buffer size
     //
 
-    const std::uint64_t CFileZIP::kZIPBufferSize;
+    const std::uint64_t CFileZIP::kZIPDefaultBufferSize;
 
     // ==========================
     // PUBLIC TYPES AND CONSTANTS
@@ -135,7 +135,7 @@ namespace Antik {
 
         do {
 
-            this->readZIPFile(this->zipInBuffer, std::min(fileSize, CFileZIP::kZIPBufferSize));
+            this->readZIPFile(this->zipInBuffer, std::min(fileSize, this->zipIOBufferSize));
 
             if (this->errorInZIPFile()) {
                 inflateEnd(&inlateZIPStream);
@@ -151,7 +151,7 @@ namespace Antik {
 
             do {
 
-                inlateZIPStream.avail_out = CFileZIP::kZIPBufferSize;
+                inlateZIPStream.avail_out = this->zipIOBufferSize;
                 inlateZIPStream.next_out = (Bytef *) & this->zipOutBuffer[0];
 
                 inflateResult = inflate(&inlateZIPStream, Z_NO_FLUSH);
@@ -164,7 +164,7 @@ namespace Antik {
                         throw Exception("Error inflating ZIP archive. = " + std::to_string(inflateResult));
                 }
 
-                inflatedBytes = CFileZIP::kZIPBufferSize - inlateZIPStream.avail_out;
+                inflatedBytes = this->zipIOBufferSize - inlateZIPStream.avail_out;
                 fileStream.write((char *) & this->zipOutBuffer[0], inflatedBytes);
                 if (fileStream.fail()) {
                     inflateEnd(&inlateZIPStream);
@@ -175,7 +175,7 @@ namespace Antik {
 
             } while (inlateZIPStream.avail_out == 0);
             
-            fileSize -= CFileZIP::kZIPBufferSize;
+            fileSize -= this->zipIOBufferSize;
 
         } while (inflateResult != Z_STREAM_END);
 
@@ -213,7 +213,7 @@ namespace Antik {
 
         do {
 
-            fileStream.read((char *) & this->zipInBuffer[0], std::min(uncompressedSize, CFileZIP::kZIPBufferSize));
+            fileStream.read((char *) & this->zipInBuffer[0], std::min(uncompressedSize, this->zipIOBufferSize));
             if (fileStream.fail() && !fileStream.eof()) {
                 deflateEnd(&deflateZIPStream);
                 throw Exception("Error reading source file to deflate.");
@@ -230,11 +230,11 @@ namespace Antik {
 
             do {
 
-                deflateZIPStream.avail_out = CFileZIP::kZIPBufferSize;
+                deflateZIPStream.avail_out = this->zipIOBufferSize;
                 deflateZIPStream.next_out = &this->zipOutBuffer[0];
                 deflateResult = deflate(&deflateZIPStream, flushRemainder); /* no bad return value */
 
-                bytesDeflated = CFileZIP::kZIPBufferSize - deflateZIPStream.avail_out;
+                bytesDeflated = this->zipIOBufferSize - deflateZIPStream.avail_out;
                 this->writeZIPFile(this->zipOutBuffer, bytesDeflated);
                 if (this->errorInZIPFile()) {
                     deflateEnd(&deflateZIPStream);
@@ -272,7 +272,7 @@ namespace Antik {
         }
 
         while (fileSize) {
-            this->readZIPFile(this->zipInBuffer, std::min(fileSize, CFileZIP::kZIPBufferSize));
+            this->readZIPFile(this->zipInBuffer, std::min(fileSize, this->zipIOBufferSize));
             if (this->errorInZIPFile()) {
                 throw Exception("Error in reading ZIP archive file.");
             }
@@ -281,7 +281,7 @@ namespace Antik {
             if (fileStream.fail()) {
                 throw Exception("Error in writing extracted file.");
             }
-            fileSize -= (std::min(fileSize, CFileZIP::kZIPBufferSize));
+            fileSize -= (std::min(fileSize, this->zipIOBufferSize));
 
         }
         
@@ -303,7 +303,7 @@ namespace Antik {
 
         while (fileSize) {
 
-            fileStream.read((char *) & this->zipInBuffer[0], std::min(fileSize, CFileZIP::kZIPBufferSize));
+            fileStream.read((char *) & this->zipInBuffer[0], std::min(fileSize, this->zipIOBufferSize));
             if (fileStream.fail()) {
                 throw Exception("Error reading source file to store in ZIP archive.");
             }
@@ -313,7 +313,7 @@ namespace Antik {
                 throw Exception("Error writing to ZIP archive.");
             }
 
-            fileSize -= (std::min(fileSize, CFileZIP::kZIPBufferSize));
+            fileSize -= (std::min(fileSize, this->zipIOBufferSize));
 
         }
 
@@ -629,10 +629,11 @@ namespace Antik {
     // Constructor
     //
 
-    CFileZIP::CFileZIP(const std::string& zipFileNameStr) : zipFileNameStr{zipFileNameStr}
-    {
-        this->zipInBuffer.resize(CFileZIP::kZIPBufferSize);
-        this->zipOutBuffer.resize(CFileZIP::kZIPBufferSize);
+    CFileZIP::CFileZIP(const std::string& zipFileNameStr) : zipFileNameStr{zipFileNameStr} {
+    
+        this->zipInBuffer.resize(this->zipIOBufferSize);
+        this->zipOutBuffer.resize(this->zipIOBufferSize);
+        
     }
 
     //
@@ -939,5 +940,18 @@ namespace Antik {
         return (this->bZIP64);
 
     }
+    
+    //
+    // Set ZIP I/O buffer size.
+    //
+
+    void CFileZIP::setZIPBufferSize(std::uint64_t newBufferSize) {
+
+        this->zipIOBufferSize = newBufferSize;
+        this->zipInBuffer.resize(this->zipIOBufferSize);
+        this->zipOutBuffer.resize(this->zipIOBufferSize);
+
+    }
+
 
 } // namespace Antik

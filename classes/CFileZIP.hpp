@@ -131,6 +131,12 @@ namespace Antik {
         //
  
         bool isZIP64(void);
+
+        //
+        // Set ZIP I/O buffer size.
+        //
+
+        void setZIPBufferSize(std::uint64_t newBufferSize);
         
         // ================
         // PUBLIC VARIABLES
@@ -146,7 +152,7 @@ namespace Antik {
         // ZIP inflate/deflate buffer size.
         //
         
-        static const std::uint64_t kZIPBufferSize = 16384;
+        static const std::uint64_t kZIPDefaultBufferSize = 16384;
  
         // ===========================================
         // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
@@ -214,6 +220,13 @@ namespace Antik {
         //
         
         std::uint64_t offsetToNextFileHeader=0;
+        
+              
+        //
+        // Offset in ZIP archive to put next File Header added.
+        //
+        
+        std::uint64_t zipIOBufferSize=kZIPDefaultBufferSize;
 
     };
 
