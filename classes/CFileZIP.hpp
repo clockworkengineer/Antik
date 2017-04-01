@@ -70,7 +70,7 @@ namespace Antik {
             std::uint16_t compression=0;            // Compression stored as
             std::uint16_t creatorVersion=0;         // Archive creator
             std::uint32_t externalFileAttrib=0;     // Attributes
-            std::vector<std::uint8_t>extraField;    // Extra data
+            std::vector<std::uint8_t>extraField;    // Extra data field
         };
 
         // ============
@@ -145,7 +145,7 @@ namespace Antik {
         // ZIP inflate/deflate buffer size.
         //
         
-        static const std::uint32_t kZIPBufferSize = 16384;
+        static const std::uint64_t kZIPBufferSize = 16384;
  
         // ===========================================
         // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
