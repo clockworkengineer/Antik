@@ -426,12 +426,12 @@ namespace Antik {
         
         // If current  offset > 32 bits use ZIP64
 
-        if (this->field64bit(this->offsetToNextFileHeader)) {
+        if (this->field64bit(this->offsetToEndOfLocalFileHeaders)) {
             directoryEntry.fileHeaderOffset = static_cast<std::uint32_t> (~0);
-            info.fileHeaderOffset = this->offsetToNextFileHeader;
+            info.fileHeaderOffset = this->offsetToEndOfLocalFileHeaders;
             bZIP64 = true;
         } else {
-            directoryEntry.fileHeaderOffset = this->offsetToNextFileHeader;
+            directoryEntry.fileHeaderOffset = this->offsetToEndOfLocalFileHeaders;
         }
 
         // File size > 32 bit then use ZIP64
@@ -488,7 +488,7 @@ namespace Antik {
         fileHeader.fileNameStr = directoryEntry.fileNameStr;
         fileHeader.extraField = directoryEntry.extraField;
 
-        this->positionInZIPFile(this->offsetToNextFileHeader);
+        this->positionInZIPFile(this->offsetToEndOfLocalFileHeaders);
         this->putFileHeader(fileHeader);
 
         // Write any file contents next
@@ -515,7 +515,7 @@ namespace Antik {
 
             // Save away current position for next file
             
-            this->offsetToNextFileHeader = this->currentPositionZIPFile();
+            this->offsetToEndOfLocalFileHeaders = this->currentPositionZIPFile();
 
             // Back up to beginning of Local file header
             
@@ -544,10 +544,12 @@ namespace Antik {
                 fileHeader.compressedSize = directoryEntry.compressedSize = directoryEntry.uncompressedSize;
                 this->putFileHeader(fileHeader);
                 this->storeFile(fileNameStr, uncompressedSize);
-                this->offsetToNextFileHeader = this->currentPositionZIPFile();
+                this->offsetToEndOfLocalFileHeaders = this->currentPositionZIPFile();
             }
 
-        } 
+        } else {
+            this->offsetToEndOfLocalFileHeaders = this->currentPositionZIPFile();
+        }
 
         // Save Central Directory File Entry
         
@@ -565,45 +567,45 @@ namespace Antik {
         
         if (this->bModified) {
             
-            Zip64EOCentralDirectoryRecord updatedentralDirectory;
+            Zip64EOCentralDirectoryRecord zip64CentralDirectory;
             bool bZIP64=false;
       
-            this->positionInZIPFile(this->offsetToNextFileHeader);
+            this->positionInZIPFile(this->offsetToEndOfLocalFileHeaders);
 
             this->zipEOCentralDirectory.numberOfCentralDirRecords = this->zipCentralDirectory.size();
             this->zipEOCentralDirectory.totalCentralDirRecords = this->zipCentralDirectory.size();
             this->zipEOCentralDirectory.offsetCentralDirRecords = this->currentPositionZIPFile();
             
-            updatedentralDirectory.numberOfCentralDirRecords = this->zipCentralDirectory.size();
-            updatedentralDirectory.totalCentralDirRecords = this->zipCentralDirectory.size();
-            updatedentralDirectory.offsetCentralDirRecords = this->currentPositionZIPFile();
+            zip64CentralDirectory.numberOfCentralDirRecords = this->zipCentralDirectory.size();
+            zip64CentralDirectory.totalCentralDirRecords = this->zipCentralDirectory.size();
+            zip64CentralDirectory.offsetCentralDirRecords = this->currentPositionZIPFile();
 
             for (auto& directoryEntry : this->zipCentralDirectory) {
                 this->putCentralDirectoryFileHeader(directoryEntry);
             }
 
-            updatedentralDirectory.sizeOfCentralDirRecords = this->currentPositionZIPFile();
-            updatedentralDirectory.sizeOfCentralDirRecords -= this->zipEOCentralDirectory.offsetCentralDirRecords;
+            zip64CentralDirectory.sizeOfCentralDirRecords = this->currentPositionZIPFile();
+            zip64CentralDirectory.sizeOfCentralDirRecords -= this->zipEOCentralDirectory.offsetCentralDirRecords;
 
             this->zipEOCentralDirectory.sizeOfCentralDirRecords = this->currentPositionZIPFile();
             this->zipEOCentralDirectory.sizeOfCentralDirRecords -= this->zipEOCentralDirectory.offsetCentralDirRecords;
 
-            if (this->field32bit(updatedentralDirectory.numberOfCentralDirRecords)) {
+            if (this->field32bit(zip64CentralDirectory.numberOfCentralDirRecords)) {
                 this->zipEOCentralDirectory.numberOfCentralDirRecords = static_cast<std::uint16_t> (~0);
                 bZIP64 = true;
             }
 
-            if (this->field32bit(updatedentralDirectory.totalCentralDirRecords)) {
+            if (this->field32bit(zip64CentralDirectory.totalCentralDirRecords)) {
                 this->zipEOCentralDirectory.totalCentralDirRecords = static_cast<std::uint16_t> (~0);
                 bZIP64 = true;
             }
 
-            if (this->field64bit(updatedentralDirectory.offsetCentralDirRecords)) {
+            if (this->field64bit(zip64CentralDirectory.offsetCentralDirRecords)) {
                 this->zipEOCentralDirectory.offsetCentralDirRecords = static_cast<std::uint32_t> (~0);
                 bZIP64 = true;
             }
 
-            if (this->field64bit(updatedentralDirectory.sizeOfCentralDirRecords)) {
+            if (this->field64bit(zip64CentralDirectory.sizeOfCentralDirRecords)) {
                 this->zipEOCentralDirectory.sizeOfCentralDirRecords = static_cast<std::uint32_t> (~0);
                 bZIP64 = true;
             }
@@ -611,7 +613,7 @@ namespace Antik {
             if (bZIP64) {
                 Zip64EOCentDirRecordLocator locator;
                 locator.offset = this->currentPositionZIPFile();
-                this->putZip64EOCentralDirectoryRecord(updatedentralDirectory);
+                this->putZip64EOCentralDirectoryRecord(zip64CentralDirectory);
                 this->putZip64EOCentDirRecordLocator(locator);
             }
             
@@ -684,12 +686,12 @@ namespace Antik {
             this->getZip64EOCentralDirectoryRecord(this->zip64EOCentralDirectory);
             this->positionInZIPFile(this->zip64EOCentralDirectory.offsetCentralDirRecords);
             noOfFileRecords = this->zip64EOCentralDirectory.numberOfCentralDirRecords;
-            this->offsetToNextFileHeader = this->zip64EOCentralDirectory.offsetCentralDirRecords;
+            this->offsetToEndOfLocalFileHeaders = this->zip64EOCentralDirectory.offsetCentralDirRecords;
 
         } else {
             this->positionInZIPFile(this->zipEOCentralDirectory.offsetCentralDirRecords);
             noOfFileRecords = this->zipEOCentralDirectory.numberOfCentralDirRecords;
-            this->offsetToNextFileHeader = this->zipEOCentralDirectory.offsetCentralDirRecords;
+            this->offsetToEndOfLocalFileHeaders = this->zipEOCentralDirectory.offsetCentralDirRecords;
         }
         
         // Read in Central File Directory
@@ -878,7 +880,7 @@ namespace Antik {
 
         this->zipCentralDirectory.clear();
         
-        this->offsetToNextFileHeader = 0;
+        this->offsetToEndOfLocalFileHeaders = 0;
 
         this->closeZIPFile();
 

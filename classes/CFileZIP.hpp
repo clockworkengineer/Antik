@@ -220,7 +220,7 @@ namespace Antik {
         // Offset in ZIP archive to put next File Header added.
         //
         
-        std::uint64_t offsetToNextFileHeader=0;
+        std::uint64_t offsetToEndOfLocalFileHeaders=0;
         
               
         //
