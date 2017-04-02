@@ -430,7 +430,7 @@ namespace Antik {
 
         // If current  offset > 32 bits use ZIP64
 
-        if (this->field64bit(this->offsetToEndOfLocalFileHeaders)) {
+        if (this->fieldRequires64bits(this->offsetToEndOfLocalFileHeaders)) {
             directoryEntry.fileHeaderOffset = static_cast<std::uint32_t> (~0);
             info.fileHeaderOffset = this->offsetToEndOfLocalFileHeaders;
             bZIP64 = true;
@@ -441,7 +441,7 @@ namespace Antik {
         // File size > 32 bit then use ZIP64
 
         info.originalSize = getFileSize(fileNameStr);
-        if (this->field64bit(info.originalSize)) {
+        if (this->fieldRequires64bits(info.originalSize)) {
             info.compressedSize = info.originalSize;
             directoryEntry.uncompressedSize = static_cast<std::uint32_t> (~0);
             directoryEntry.compressedSize = static_cast<std::uint32_t> (~0);
@@ -571,57 +571,59 @@ namespace Antik {
 
         if (this->bModified) {
 
+            EOCentralDirectoryRecord zipEOCentralDirectory;
+            Zip64EOCentralDirectoryRecord zip64EOCentralDirectory;           
             bool bZIP64 = false;
 
             this->positionInZIPFile(this->offsetToEndOfLocalFileHeaders);
 
-            this->zip64EOCentralDirectory.numberOfCentralDirRecords = this->zipCentralDirectory.size();
-            this->zip64EOCentralDirectory.totalCentralDirRecords = this->zipCentralDirectory.size();
-            this->zip64EOCentralDirectory.offsetCentralDirRecords = this->currentPositionZIPFile();
+            zip64EOCentralDirectory.numberOfCentralDirRecords = this->zipCentralDirectory.size();
+            zip64EOCentralDirectory.totalCentralDirRecords = this->zipCentralDirectory.size();
+            zip64EOCentralDirectory.offsetCentralDirRecords = this->currentPositionZIPFile();
 
             for (auto& directoryEntry : this->zipCentralDirectory) {
                 this->putCentralDirectoryFileHeader(directoryEntry);
             }
 
-            this->zip64EOCentralDirectory.sizeOfCentralDirRecords = this->currentPositionZIPFile();
-            this->zip64EOCentralDirectory.sizeOfCentralDirRecords -= this->zipEOCentralDirectory.offsetCentralDirRecords;
+            zip64EOCentralDirectory.sizeOfCentralDirRecords = this->currentPositionZIPFile();
+            zip64EOCentralDirectory.sizeOfCentralDirRecords -= zipEOCentralDirectory.offsetCentralDirRecords;
 
-
-            if (this->field32bit(this->zip64EOCentralDirectory.numberOfCentralDirRecords)) {
-                this->zipEOCentralDirectory.numberOfCentralDirRecords = static_cast<std::uint16_t> (~0);
+            if (this->fieldRequires32bits(zip64EOCentralDirectory.numberOfCentralDirRecords)) {
+                zipEOCentralDirectory.numberOfCentralDirRecords = static_cast<std::uint16_t> (~0);
                 bZIP64 = true;
             } else {
-                this->zipEOCentralDirectory.numberOfCentralDirRecords = this->zip64EOCentralDirectory.numberOfCentralDirRecords;
+                zipEOCentralDirectory.numberOfCentralDirRecords = zip64EOCentralDirectory.numberOfCentralDirRecords;
             }
 
-            if (this->field32bit(this->zip64EOCentralDirectory.totalCentralDirRecords)) {
-                this->zipEOCentralDirectory.totalCentralDirRecords = static_cast<std::uint16_t> (~0);
+            if (this->fieldRequires32bits(zip64EOCentralDirectory.totalCentralDirRecords)) {
+                zipEOCentralDirectory.totalCentralDirRecords = static_cast<std::uint16_t> (~0);
                 bZIP64 = true;
             } else {
-                this->zipEOCentralDirectory.totalCentralDirRecords = this->zip64EOCentralDirectory.totalCentralDirRecords;
+                zipEOCentralDirectory.totalCentralDirRecords = zip64EOCentralDirectory.totalCentralDirRecords;
             }
 
-            if (this->field64bit(this->zip64EOCentralDirectory.offsetCentralDirRecords)) {
-                this->zipEOCentralDirectory.offsetCentralDirRecords = static_cast<std::uint32_t> (~0);
+            if (this->fieldRequires64bits(zip64EOCentralDirectory.offsetCentralDirRecords)) {
+                zipEOCentralDirectory.offsetCentralDirRecords = static_cast<std::uint32_t> (~0);
                 bZIP64 = true;
             } else {
-                this->zipEOCentralDirectory.offsetCentralDirRecords = this->zip64EOCentralDirectory.offsetCentralDirRecords;
+                zipEOCentralDirectory.offsetCentralDirRecords = zip64EOCentralDirectory.offsetCentralDirRecords;
             }
 
-            if (this->field64bit(zip64EOCentralDirectory.sizeOfCentralDirRecords)) {
-                this->zipEOCentralDirectory.sizeOfCentralDirRecords = static_cast<std::uint32_t> (~0);
+            if (this->fieldRequires64bits(zip64EOCentralDirectory.sizeOfCentralDirRecords)) {
+                zipEOCentralDirectory.sizeOfCentralDirRecords = static_cast<std::uint32_t> (~0);
                 bZIP64 = true;
             } else {
-                this->zipEOCentralDirectory.sizeOfCentralDirRecords = this->zip64EOCentralDirectory.sizeOfCentralDirRecords;
+                zipEOCentralDirectory.sizeOfCentralDirRecords = zip64EOCentralDirectory.sizeOfCentralDirRecords;
             }
+            
             if (bZIP64) {
                 Zip64EOCentDirRecordLocator locator;
                 locator.offset = this->currentPositionZIPFile();
-                this->putZip64EOCentralDirectoryRecord(this->zip64EOCentralDirectory);
+                this->putZip64EOCentralDirectoryRecord(zip64EOCentralDirectory);
                 this->putZip64EOCentDirRecordLocator(locator);
             }
 
-            this->putEOCentralDirectoryRecord(this->zipEOCentralDirectory);
+            this->putEOCentralDirectoryRecord(zipEOCentralDirectory);
 
         }
 
@@ -671,32 +673,35 @@ namespace Antik {
             throw Exception("ZIP archive has already been opened.");
         }
 
+        EOCentralDirectoryRecord zipEOCentralDirectory;
+        Zip64EOCentralDirectoryRecord zip64EOCentralDirectory;
+
         this->openZIPFile(this->zipFileNameStr, std::ios::binary | std::ios_base::in | std::ios_base::out);
 
         std::int64_t noOfFileRecords = 0;
 
-        this->getEOCentralDirectoryRecord(this->zipEOCentralDirectory);
+        this->getEOCentralDirectoryRecord(zipEOCentralDirectory);
 
         // If one of the central directory fields is to large to store so ZIP64
 
-        if (this->fieldOverflow(this->zipEOCentralDirectory.totalCentralDirRecords) ||
-                this->fieldOverflow(this->zipEOCentralDirectory.numberOfCentralDirRecords) ||
-                this->fieldOverflow(this->zipEOCentralDirectory.sizeOfCentralDirRecords) ||
-                this->fieldOverflow(this->zipEOCentralDirectory.totalCentralDirRecords) ||
-                this->fieldOverflow(this->zipEOCentralDirectory.startDiskNumber) ||
-                this->fieldOverflow(this->zipEOCentralDirectory.diskNumber) ||
-                this->fieldOverflow(this->zipEOCentralDirectory.offsetCentralDirRecords)) {
+        if (this->fieldOverflow(zipEOCentralDirectory.totalCentralDirRecords) ||
+                this->fieldOverflow(zipEOCentralDirectory.numberOfCentralDirRecords) ||
+                this->fieldOverflow(zipEOCentralDirectory.sizeOfCentralDirRecords) ||
+                this->fieldOverflow(zipEOCentralDirectory.totalCentralDirRecords) ||
+                this->fieldOverflow(zipEOCentralDirectory.startDiskNumber) ||
+                this->fieldOverflow(zipEOCentralDirectory.diskNumber) ||
+                this->fieldOverflow(zipEOCentralDirectory.offsetCentralDirRecords)) {
 
             this->bZIP64 = true;
-            this->getZip64EOCentralDirectoryRecord(this->zip64EOCentralDirectory);
-            this->positionInZIPFile(this->zip64EOCentralDirectory.offsetCentralDirRecords);
-            noOfFileRecords = this->zip64EOCentralDirectory.numberOfCentralDirRecords;
-            this->offsetToEndOfLocalFileHeaders = this->zip64EOCentralDirectory.offsetCentralDirRecords;
+            this->getZip64EOCentralDirectoryRecord(zip64EOCentralDirectory);
+            this->positionInZIPFile(zip64EOCentralDirectory.offsetCentralDirRecords);
+            noOfFileRecords = zip64EOCentralDirectory.numberOfCentralDirRecords;
+            this->offsetToEndOfLocalFileHeaders = zip64EOCentralDirectory.offsetCentralDirRecords;
 
         } else {
-            this->positionInZIPFile(this->zipEOCentralDirectory.offsetCentralDirRecords);
-            noOfFileRecords = this->zipEOCentralDirectory.numberOfCentralDirRecords;
-            this->offsetToEndOfLocalFileHeaders = this->zipEOCentralDirectory.offsetCentralDirRecords;
+            this->positionInZIPFile(zipEOCentralDirectory.offsetCentralDirRecords);
+            noOfFileRecords = zipEOCentralDirectory.numberOfCentralDirRecords;
+            this->offsetToEndOfLocalFileHeaders = zipEOCentralDirectory.offsetCentralDirRecords;
         }
 
         // Read in Central File Directory
@@ -842,9 +847,11 @@ namespace Antik {
             throw Exception("ZIP archive should not be open.");
         }
 
+        EOCentralDirectoryRecord zipEOCentralDirectory;
+    
         this->openZIPFile(this->zipFileNameStr, std::ios::binary | std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
-        this->putEOCentralDirectoryRecord(this->zipEOCentralDirectory);
+        this->putEOCentralDirectoryRecord(zipEOCentralDirectory);
 
         this->closeZIPFile();
 
@@ -861,27 +868,6 @@ namespace Antik {
         }
 
         this->UpdateCentralDirectory();
-
-        this->zipEOCentralDirectory.startDiskNumber = 0;
-        this->zipEOCentralDirectory.diskNumber = 0;
-        this->zipEOCentralDirectory.startDiskNumber = 0;
-        this->zipEOCentralDirectory.numberOfCentralDirRecords = 0;
-        this->zipEOCentralDirectory.totalCentralDirRecords = 0;
-        this->zipEOCentralDirectory.sizeOfCentralDirRecords = 0;
-        this->zipEOCentralDirectory.offsetCentralDirRecords = 0;
-        this->zipEOCentralDirectory.commentLength = 0;
-        this->zipEOCentralDirectory.comment.clear();
-
-        this->zip64EOCentralDirectory.totalRecordSize = 0;
-        this->zip64EOCentralDirectory.creatorVersion = (CFileZIP::kZIPCreatorUnix << 8) | CFileZIP::kZIPVersion45;
-        this->zip64EOCentralDirectory.extractorVersion = CFileZIP::kZIPVersion45;
-        this->zip64EOCentralDirectory.diskNumber = 0;
-        this->zip64EOCentralDirectory.startDiskNumber = 0;
-        this->zip64EOCentralDirectory.numberOfCentralDirRecords = 0;
-        this->zip64EOCentralDirectory.totalCentralDirRecords = 0;
-        this->zip64EOCentralDirectory.sizeOfCentralDirRecords = 0;
-        this->zip64EOCentralDirectory.offsetCentralDirRecords = 0;
-        this->zip64EOCentralDirectory.extensibleDataSector.clear();
 
         this->zipCentralDirectory.clear();
 

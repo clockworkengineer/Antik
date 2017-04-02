@@ -222,8 +222,8 @@ namespace Antik {
         template <typename T> static void putField(T field, std::vector<std::uint8_t>& buffer);
         template <typename T> static void getField(T& field, std::uint8_t *buffer);
        
-        static bool field64bit(std::uint64_t field) { return(field & 0xFFFFFFFF00000000); };
-        static bool field32bit(std::uint32_t field) { return(field & 0xFFFF0000); };
+        static bool fieldRequires64bits(std::uint64_t field) { return(field & 0xFFFFFFFF00000000); };
+        static bool fieldRequires32bits(std::uint32_t field) { return(field & 0xFFFF0000); };
         
         void putDataDescriptor(CFileZIPIO::DataDescriptor& entry);
         void putCentralDirectoryFileHeader(CFileZIPIO::CentralDirectoryFileHeader& entry);

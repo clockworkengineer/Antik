@@ -212,8 +212,8 @@ namespace Antik {
         //  ZIP(64) archive End Of Central Directory record  and  Central Directory
         // 
         
-        EOCentralDirectoryRecord zipEOCentralDirectory;
-        Zip64EOCentralDirectoryRecord zip64EOCentralDirectory;
+     //   EOCentralDirectoryRecord zipEOCentralDirectory;
+    //    Zip64EOCentralDirectoryRecord zip64EOCentralDirectory;
         std::vector<CentralDirectoryFileHeader> zipCentralDirectory;
         
         //
