@@ -45,7 +45,28 @@ namespace Antik {
         static_assert(sizeof(std::uint16_t)==2, "Error : std::uint16_t needs to be 2 bytes.");
         static_assert(sizeof(std::uint32_t)==4, "Error : std::uint32_t needs to be 4 bytes.");
         static_assert(sizeof(std::uint64_t)==8, "Error : std::uint64_t needs to be 8 bytes.");
-       
+        
+        //
+        // ZIP archive compression methods.
+        //
+ 
+        static const std::uint16_t kZIPCompressionStore = 0;
+        static const std::uint16_t kZIPCompressionDeflate = 8;
+        
+        //
+        // ZIP archive versions
+        //
+        
+        static const std::uint8_t kZIPVersion10 = 0x0a;
+        static const std::uint8_t kZIPVersion20 = 0x14;
+        static const std::uint8_t kZIPVersion45 = 0x2d;
+        
+        //
+        // ZIP archive creator
+        //
+   
+        static const std::uint8_t kZIPCreatorUnix = 0x03;
+
         //
         // Class exception
         //
@@ -98,10 +119,10 @@ namespace Antik {
         struct CentralDirectoryFileHeader {
             const std::uint32_t size = 46;            
             const std::uint32_t signature = 0x02014b50;
-            std::uint16_t creatorVersion = 0x0314;    // Unix / ZIP 2.0
-            std::uint16_t extractorVersion = 0x0014;  // ZIP 2.0
+            std::uint16_t creatorVersion = (kZIPCreatorUnix<<8)|kZIPVersion20;
+            std::uint16_t extractorVersion = kZIPVersion20;
             std::uint16_t bitFlag = 0;
-            std::uint16_t compression = 8;            // Deflated
+            std::uint16_t compression = kZIPCompressionDeflate;
             std::uint16_t modificationTime = 0;
             std::uint16_t modificationDate = 0;
             std::uint32_t crc32 = 0;
@@ -144,8 +165,8 @@ namespace Antik {
             const std::uint32_t size = 56;
             const std::uint32_t signature = 0x06064b50;
             std::uint64_t  totalRecordSize = 0;
-            std::uint16_t creatorVersion = 0x0314;
-            std::uint16_t extractorVersion = 0x0014;
+            std::uint16_t creatorVersion = (kZIPCreatorUnix<<8)|kZIPVersion45;
+            std::uint16_t extractorVersion = kZIPVersion45;
             std::uint32_t diskNumber = 0;
             std::uint32_t startDiskNumber = 0;
             std::uint64_t numberOfCentralDirRecords = 0;
@@ -201,6 +222,9 @@ namespace Antik {
         template <typename T> static void putField(T field, std::vector<std::uint8_t>& buffer);
         template <typename T> static void getField(T& field, std::uint8_t *buffer);
        
+        static bool field64bit(std::uint64_t field) { return(field & 0xFFFFFFFF00000000); };
+        static bool field32bit(std::uint32_t field) { return(field & 0xFFFF0000); };
+        
         void putDataDescriptor(CFileZIPIO::DataDescriptor& entry);
         void putCentralDirectoryFileHeader(CFileZIPIO::CentralDirectoryFileHeader& entry);
         void putFileHeader(CFileZIPIO::LocalFileHeader& entry);

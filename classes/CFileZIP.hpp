@@ -153,7 +153,8 @@ namespace Antik {
         //
         
         static const std::uint64_t kZIPDefaultBufferSize = 16384;
- 
+        
+  
         // ===========================================
         // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
         // ===========================================

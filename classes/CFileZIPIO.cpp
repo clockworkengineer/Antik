@@ -46,6 +46,27 @@ namespace Antik {
     // PRIVATE TYPES AND CONSTANTS
     // ===========================
 
+    //
+    // ZIP archive compression methods.
+    //
+
+    const std::uint16_t CFileZIPIO::kZIPCompressionStore;
+    const std::uint16_t CFileZIPIO::kZIPCompressionDeflate;
+
+    //
+    // ZIP archive versions
+    //
+
+    const std::uint8_t CFileZIPIO::kZIPVersion10;
+    const std::uint8_t CFileZIPIO::kZIPVersion20;
+    const std::uint8_t CFileZIPIO::kZIPVersion45;
+
+    //
+    // ZIP archive creator
+    //
+
+    const std::uint8_t CFileZIPIO::kZIPCreatorUnix;
+    
     // ==========================
     // PUBLIC TYPES AND CONSTANTS
     // ==========================
@@ -160,10 +181,10 @@ namespace Antik {
 
         std::vector<std::uint8_t> buffer;
 
-        putField(entry.signature, buffer);
-        putField(entry.crc32, buffer);
-        putField(entry.compressedSize, buffer);
-        putField(entry.uncompressedSize, buffer);
+        this->putField(entry.signature, buffer);
+        this->putField(entry.crc32, buffer);
+        this->putField(entry.compressedSize, buffer);
+        this->putField(entry.uncompressedSize, buffer);
 
         this->zipFileStream.write((char *) &buffer[0], entry.size);
 
@@ -181,23 +202,23 @@ namespace Antik {
 
         std::vector<std::uint8_t> buffer;
 
-        putField(entry.signature, buffer);
-        putField(entry.creatorVersion, buffer);
-        putField(entry.extractorVersion, buffer);
-        putField(entry.bitFlag, buffer);
-        putField(entry.compression, buffer);
-        putField(entry.modificationTime, buffer);
-        putField(entry.modificationDate, buffer);
-        putField(entry.crc32, buffer);
-        putField(entry.compressedSize, buffer);
-        putField(entry.uncompressedSize, buffer);
-        putField(entry.fileNameLength, buffer);
-        putField(entry.extraFieldLength, buffer);
-        putField(entry.fileCommentLength, buffer);
-        putField(entry.diskNoStart, buffer);
-        putField(entry.internalFileAttrib, buffer);
-        putField(entry.externalFileAttrib, buffer);
-        putField(entry.fileHeaderOffset, buffer);
+        this->putField(entry.signature, buffer);
+        this->putField(entry.creatorVersion, buffer);
+        this->putField(entry.extractorVersion, buffer);
+        this->putField(entry.bitFlag, buffer);
+        this->putField(entry.compression, buffer);
+        this->putField(entry.modificationTime, buffer);
+        this->putField(entry.modificationDate, buffer);
+        this->putField(entry.crc32, buffer);
+        this->putField(entry.compressedSize, buffer);
+        this->putField(entry.uncompressedSize, buffer);
+        this->putField(entry.fileNameLength, buffer);
+        this->putField(entry.extraFieldLength, buffer);
+        this->putField(entry.fileCommentLength, buffer);
+        this->putField(entry.diskNoStart, buffer);
+        this->putField(entry.internalFileAttrib, buffer);
+        this->putField(entry.externalFileAttrib, buffer);
+        this->putField(entry.fileHeaderOffset, buffer);
 
         this->zipFileStream.write((char *) &buffer[0], entry.size);
 
@@ -225,17 +246,17 @@ namespace Antik {
 
         std::vector<std::uint8_t> buffer;
 
-        putField(entry.signature, buffer);
-        putField(entry.creatorVersion, buffer);
-        putField(entry.bitFlag, buffer);
-        putField(entry.compression, buffer);
-        putField(entry.modificationTime, buffer);
-        putField(entry.modificationDate, buffer);
-        putField(entry.crc32, buffer);
-        putField(entry.compressedSize, buffer);
-        putField(entry.uncompressedSize, buffer);
-        putField(entry.fileNameLength, buffer);
-        putField(entry.extraFieldLength, buffer);
+        this->putField(entry.signature, buffer);
+        this->putField(entry.creatorVersion, buffer);
+        this->putField(entry.bitFlag, buffer);
+        this->putField(entry.compression, buffer);
+        this->putField(entry.modificationTime, buffer);
+        this->putField(entry.modificationDate, buffer);
+        this->putField(entry.crc32, buffer);
+        this->putField(entry.compressedSize, buffer);
+        this->putField(entry.uncompressedSize, buffer);
+        this->putField(entry.fileNameLength, buffer);
+        this->putField(entry.extraFieldLength, buffer);
 
         this->zipFileStream.write((char *) &buffer[0], entry.size);
 
@@ -260,14 +281,14 @@ namespace Antik {
 
         std::vector<std::uint8_t> buffer;
 
-        putField(entry.signature, buffer);
-        putField(entry.diskNumber, buffer);
-        putField(entry.startDiskNumber, buffer);
-        putField(entry.numberOfCentralDirRecords, buffer);
-        putField(entry.totalCentralDirRecords, buffer);
-        putField(entry.sizeOfCentralDirRecords, buffer);
-        putField(entry.offsetCentralDirRecords, buffer);
-        putField(entry.commentLength, buffer);
+        this->putField(entry.signature, buffer);
+        this->putField(entry.diskNumber, buffer);
+        this->putField(entry.startDiskNumber, buffer);
+        this->putField(entry.numberOfCentralDirRecords, buffer);
+        this->putField(entry.totalCentralDirRecords, buffer);
+        this->putField(entry.sizeOfCentralDirRecords, buffer);
+        this->putField(entry.offsetCentralDirRecords, buffer);
+        this->putField(entry.commentLength, buffer);
 
         this->zipFileStream.write((char *) &buffer[0], entry.size);
 
@@ -292,16 +313,16 @@ namespace Antik {
         entry.totalRecordSize = entry.size - 12 +
                 entry.extensibleDataSector.size();
                        
-        putField(entry.signature, buffer);
-        putField(entry.totalRecordSize, buffer);
-        putField(entry.creatorVersion, buffer);
-        putField(entry.extractorVersion, buffer);
-        putField(entry.diskNumber, buffer);
-        putField(entry.startDiskNumber, buffer);
-        putField(entry.numberOfCentralDirRecords, buffer);
-        putField(entry.totalCentralDirRecords, buffer);
-        putField(entry.sizeOfCentralDirRecords, buffer);
-        putField(entry.offsetCentralDirRecords, buffer);
+        this->putField(entry.signature, buffer);
+        this->putField(entry.totalRecordSize, buffer);
+        this->putField(entry.creatorVersion, buffer);
+        this->putField(entry.extractorVersion, buffer);
+        this->putField(entry.diskNumber, buffer);
+        this->putField(entry.startDiskNumber, buffer);
+        this->putField(entry.numberOfCentralDirRecords, buffer);
+        this->putField(entry.totalCentralDirRecords, buffer);
+        this->putField(entry.sizeOfCentralDirRecords, buffer);
+        this->putField(entry.offsetCentralDirRecords, buffer);
         this->zipFileStream.write((char *) &buffer[0], entry.size);
 
         if (entry.extensibleDataSector.size()) {
@@ -322,10 +343,10 @@ namespace Antik {
 
         std::vector<std::uint8_t> buffer;
 
-        putField(entry.signature, buffer);
-        putField(entry.startDiskNumber, buffer);
-        putField(entry.offset, buffer);
-        putField(entry.numberOfDisks, buffer);
+        this->putField(entry.signature, buffer);
+        this->putField(entry.startDiskNumber, buffer);
+        this->putField(entry.offset, buffer);
+        this->putField(entry.numberOfDisks, buffer);
         this->zipFileStream.write((char *) &buffer[0], entry.size);
 
         if (this->zipFileStream.fail()) {
@@ -345,10 +366,10 @@ namespace Antik {
 
         info.clear();
 
-        if (extendedInfo.originalSize) fieldSize += 8;
-        if (extendedInfo.compressedSize) fieldSize += 8;
-        if (extendedInfo.fileHeaderOffset) fieldSize += 8;
-        if (extendedInfo.fileHeaderOffset) fieldSize += 4;
+        if (extendedInfo.originalSize) fieldSize += sizeof(std::uint64_t);
+        if (extendedInfo.compressedSize) fieldSize += sizeof(std::uint64_t);
+        if (extendedInfo.fileHeaderOffset) fieldSize += sizeof(std::uint64_t);
+        if (extendedInfo.fileHeaderOffset) fieldSize += sizeof(std::uint32_t);
         
         this->putField(extendedInfo.signature, info);
         this->putField(fieldSize, info);
@@ -370,14 +391,14 @@ namespace Antik {
         std::uint32_t signature;
 
         this->zipFileStream.read((char *) &buffer[0], sizeof (signature));
-        getField(signature, &buffer[0]);
+        this->getField(signature, &buffer[0]);
 
         if (signature == entry.signature) {
 
             this->zipFileStream.read((char *) &buffer[sizeof (signature)], entry.size - sizeof (signature));
-            getField(entry.crc32, &buffer[sizeof (signature)]);
-            getField(entry.compressedSize, &buffer[8]);
-            getField(entry.uncompressedSize, &buffer[12]);
+            this->getField(entry.crc32, &buffer[sizeof (signature)]);
+            this->getField(entry.compressedSize, &buffer[8]);
+            this->getField(entry.uncompressedSize, &buffer[12]);
 
             if (this->zipFileStream.fail()) {
                 throw Exception("Error in reading Data Descriptor Record.");
@@ -399,28 +420,28 @@ namespace Antik {
         std::uint32_t signature;
 
         this->zipFileStream.read((char *) &buffer[0], sizeof (signature));
-        getField(signature, &buffer[0]);
+        this->getField(signature, &buffer[0]);
 
         if (signature == entry.signature) {
 
             this->zipFileStream.read((char *) &buffer[sizeof (signature)], entry.size - sizeof (signature));
 
-            getField(entry.creatorVersion, &buffer[sizeof (signature)]);
-            getField(entry.extractorVersion, &buffer[6]);
-            getField(entry.bitFlag, &buffer[8]);
-            getField(entry.compression, &buffer[10]);
-            getField(entry.modificationTime, &buffer[12]);
-            getField(entry.modificationDate, &buffer[14]);
-            getField(entry.crc32, &buffer[16]);
-            getField(entry.compressedSize, &buffer[20]);
-            getField(entry.uncompressedSize, &buffer[24]);
-            getField(entry.fileNameLength, &buffer[28]);
-            getField(entry.extraFieldLength, &buffer[30]);
-            getField(entry.fileCommentLength, &buffer[32]);
-            getField(entry.diskNoStart, &buffer[34]);
-            getField(entry.internalFileAttrib, &buffer[36]);
-            getField(entry.externalFileAttrib, &buffer[38]);
-            getField(entry.fileHeaderOffset, &buffer[42]);
+            this->getField(entry.creatorVersion, &buffer[sizeof (signature)]);
+            this->getField(entry.extractorVersion, &buffer[6]);
+            this->getField(entry.bitFlag, &buffer[8]);
+            this->getField(entry.compression, &buffer[10]);
+            this->getField(entry.modificationTime, &buffer[12]);
+            this->getField(entry.modificationDate, &buffer[14]);
+            this->getField(entry.crc32, &buffer[16]);
+            this->getField(entry.compressedSize, &buffer[20]);
+            this->getField(entry.uncompressedSize, &buffer[24]);
+            this->getField(entry.fileNameLength, &buffer[28]);
+            this->getField(entry.extraFieldLength, &buffer[30]);
+            this->getField(entry.fileCommentLength, &buffer[32]);
+            this->getField(entry.diskNoStart, &buffer[34]);
+            this->getField(entry.internalFileAttrib, &buffer[36]);
+            this->getField(entry.externalFileAttrib, &buffer[38]);
+            this->getField(entry.fileHeaderOffset, &buffer[42]);
 
             if ((entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength) > buffer.size()) {
                 buffer.resize(entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
@@ -457,22 +478,23 @@ namespace Antik {
 
         std::vector<std::uint8_t> buffer(entry.size);
         std::uint32_t signature;
+        
         this->zipFileStream.read((char *) &buffer[0], sizeof (signature));
-        getField(signature, &buffer[0]);
+        this->getField(signature, &buffer[0]);
 
         if (signature == entry.signature) {
 
             this->zipFileStream.read((char *) &buffer[sizeof (signature)], entry.size - sizeof (signature));
-            getField(entry.creatorVersion, &buffer[sizeof (signature)]);
-            getField(entry.bitFlag, &buffer[6]);
-            getField(entry.compression, &buffer[8]);
-            getField(entry.modificationTime, &buffer[10]);
-            getField(entry.modificationDate, &buffer[12]);
-            getField(entry.crc32, &buffer[14]);
-            getField(entry.compressedSize, &buffer[18]);
-            getField(entry.uncompressedSize, &buffer[22]);
-            getField(entry.fileNameLength, &buffer[26]);
-            getField(entry.extraFieldLength, &buffer[28]);
+            this->getField(entry.creatorVersion, &buffer[sizeof (signature)]);
+            this->getField(entry.bitFlag, &buffer[6]);
+            this->getField(entry.compression, &buffer[8]);
+            this->getField(entry.modificationTime, &buffer[10]);
+            this->getField(entry.modificationDate, &buffer[12]);
+            this->getField(entry.crc32, &buffer[14]);
+            this->getField(entry.compressedSize, &buffer[18]);
+            this->getField(entry.uncompressedSize, &buffer[22]);
+            this->getField(entry.fileNameLength, &buffer[26]);
+            this->getField(entry.extraFieldLength, &buffer[28]);
 
             if ((entry.fileNameLength + entry.extraFieldLength) > buffer.size()) {
                 buffer.resize(entry.fileNameLength + entry.extraFieldLength);
@@ -533,13 +555,13 @@ namespace Antik {
             std::vector<std::uint8_t> buffer(entry.size);
             this->zipFileStream.seekg(filePosition, std::ios_base::beg);
             this->zipFileStream.read((char *) &buffer[0], entry.size);
-            getField(entry.diskNumber, &buffer[4]);
-            getField(entry.startDiskNumber, &buffer[6]);
-            getField(entry.numberOfCentralDirRecords, &buffer[8]);
-            getField(entry.totalCentralDirRecords, &buffer[10]);
-            getField(entry.sizeOfCentralDirRecords, &buffer[12]);
-            getField(entry.offsetCentralDirRecords, &buffer[16]);
-            getField(entry.commentLength, &buffer[20]);
+            this->getField(entry.diskNumber, &buffer[4]);
+            this->getField(entry.startDiskNumber, &buffer[6]);
+            this->getField(entry.numberOfCentralDirRecords, &buffer[8]);
+            this->getField(entry.totalCentralDirRecords, &buffer[10]);
+            this->getField(entry.sizeOfCentralDirRecords, &buffer[12]);
+            this->getField(entry.offsetCentralDirRecords, &buffer[16]);
+            this->getField(entry.commentLength, &buffer[20]);
             if (entry.commentLength != 0) {
                 if (entry.commentLength > buffer.size()) {
                     buffer.resize(entry.commentLength);
@@ -573,20 +595,20 @@ namespace Antik {
         this->zipFileStream.seekg(zip64EOCentralDirLocator.offset, std::ios::beg);
 
         this->zipFileStream.read((char *) &buffer[0], sizeof (signature));
-        getField(signature, &buffer[0]);
+        this->getField(signature, &buffer[0]);
 
         if (signature == entry.signature) {
 
             this->zipFileStream.read((char *) &buffer[sizeof (signature)], entry.size - sizeof (signature));
-            getField(entry.totalRecordSize, &buffer[sizeof (signature)]);
-            getField(entry.creatorVersion, &buffer[12]);
-            getField(entry.extractorVersion, &buffer[14]);
-            getField(entry.diskNumber, &buffer[16]);
-            getField(entry.startDiskNumber, &buffer[20]);
-            getField(entry.numberOfCentralDirRecords, &buffer[24]);
-            getField(entry.totalCentralDirRecords, &buffer[32]);
-            getField(entry.sizeOfCentralDirRecords, &buffer[40]);
-            getField(entry.offsetCentralDirRecords, &buffer[48]);
+            this->getField(entry.totalRecordSize, &buffer[sizeof (signature)]);
+            this->getField(entry.creatorVersion, &buffer[12]);
+            this->getField(entry.extractorVersion, &buffer[14]);
+            this->getField(entry.diskNumber, &buffer[16]);
+            this->getField(entry.startDiskNumber, &buffer[20]);
+            this->getField(entry.numberOfCentralDirRecords, &buffer[24]);
+            this->getField(entry.totalCentralDirRecords, &buffer[32]);
+            this->getField(entry.sizeOfCentralDirRecords, &buffer[40]);
+            this->getField(entry.offsetCentralDirRecords, &buffer[48]);
 
             extensionSize = entry.totalRecordSize - entry.size + 12;
             if (extensionSize) {
@@ -684,7 +706,7 @@ namespace Antik {
                     fieldOffset += sizeof (std::uint64_t);
                     if (!fieldSize) break;
                 }
-                this->getField(extendedInfo.diskNo, &info[fieldOffset + 28]);
+                this->getField(extendedInfo.diskNo, &info[fieldOffset]);
                 break;
             }
 
