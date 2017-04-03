@@ -192,13 +192,14 @@ namespace Antik {
     // parameter.
     //
 
-    std::uint32_t CFileZIP::deflateFile(const std::string& fileNameStr, std::uint64_t uncompressedSize, std::uint64_t& compressedSize) {
+    std::pair<std::uint32_t, std::uint64_t> CFileZIP::deflateFile(const std::string& fileNameStr, std::uint64_t fileSize) {
 
         int deflateResult = 0, flushRemainder = 0;
         std::uint64_t bytesDeflated = 0;
         z_stream deflateZIPStream{};
         std::ifstream fileStream(fileNameStr, std::ios::binary);
         std::uint32_t crc;
+        std::uint64_t compressedSize=0;
 
         if (fileStream.fail()) {
             throw Exception("Could not open source file for deflate.");
@@ -213,18 +214,18 @@ namespace Antik {
 
         do {
 
-            fileStream.read((char *) & this->zipInBuffer[0], std::min(uncompressedSize, this->zipIOBufferSize));
+            fileStream.read((char *) & this->zipInBuffer[0], std::min(fileSize, this->zipIOBufferSize));
             if (fileStream.fail() && !fileStream.eof()) {
                 deflateEnd(&deflateZIPStream);
                 throw Exception("Error reading source file to deflate.");
             }
 
             deflateZIPStream.avail_in = fileStream.gcount();
-            uncompressedSize -= deflateZIPStream.avail_in;
+            fileSize -= deflateZIPStream.avail_in;
 
             crc = crc32(crc, &this->zipInBuffer[0], deflateZIPStream.avail_in);
 
-            flushRemainder = ((fileStream.eof() || uncompressedSize == 0)) ? Z_FINISH : Z_NO_FLUSH;
+            flushRemainder = ((fileStream.eof() || fileSize == 0)) ? Z_FINISH : Z_NO_FLUSH;
 
             deflateZIPStream.next_in = &this->zipInBuffer[0];
 
@@ -252,7 +253,7 @@ namespace Antik {
 
         fileStream.close();
 
-        return (crc);
+        return (std::make_pair(crc, compressedSize));
 
     }
 
@@ -440,7 +441,7 @@ namespace Antik {
             directoryEntry.fileHeaderOffset = this->offsetToEndOfLocalFileHeaders;
         }
 
-        // File size > 4GB then use ZIP64
+        // File size > 32 bits then use ZIP64
 
         info.originalSize = getFileSize(fileNameStr);
         if (this->fieldRequires64bits(info.originalSize)) {
@@ -454,8 +455,8 @@ namespace Antik {
 
         // Get file modified time and attributes.
 
-        std::pair<std::uint16_t, std::uint16_t> modification;
-        modification = getFileModificationDateTime(fileNameStr);
+        std::pair<std::uint16_t, std::uint16_t> modification = getFileModificationDateTime(fileNameStr);
+       
         directoryEntry.modificationDate = modification.first;
         directoryEntry.modificationTime =  modification.second;
         
@@ -519,8 +520,9 @@ namespace Antik {
             // compressed size is greater then or equal to its original size then store file 
             // instead of compress.
 
-
-            directoryEntry.crc32 = this->deflateFile(fileNameStr, uncompressedSize, compressedSize);
+            std::pair<std::uint32_t, std::int64_t> deflateValues = this->deflateFile(fileNameStr, uncompressedSize);
+            directoryEntry.crc32 = deflateValues.first;
+            compressedSize = deflateValues.second;
 
             fileHeader.crc32 = directoryEntry.crc32;
 

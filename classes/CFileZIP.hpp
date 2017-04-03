@@ -172,7 +172,7 @@ namespace Antik {
         
         std::uint32_t inflateFile(const std::string& fileNameStr, std::uint64_t fileSize);
         std::uint32_t extractFile(const std::string& fileNameStr, std::uint64_t fileSize); 
-        std::uint32_t deflateFile(const std::string& fileNameStr, std::uint64_t uncompressedSize, std::uint64_t& compressedSize);
+        std::pair<std::uint32_t, std::uint64_t> deflateFile(const std::string& fileNameStr, std::uint64_t fileSize);
         void storeFile(const std::string& fileNameStr, std::uint64_t fileLength);
    
         bool fileExists(const std::string& fileNameStr);
