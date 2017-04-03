@@ -220,8 +220,8 @@ namespace Antik {
  
         template <typename T> static bool fieldOverflow(const T& field);
         template <typename T> static void putField(T field, std::vector<std::uint8_t>& buffer);
-        template <typename T> static void getField(T& field, std::uint8_t *buffer);
-       
+        template <typename T> static void getField(T& field, std::uint8_t* &buffptr);
+        
         static bool fieldRequires64bits(std::uint64_t field) { return(field & 0xFFFFFFFF00000000); };
         static bool fieldRequires32bits(std::uint32_t field) { return(field & 0xFFFF0000); };
         
@@ -307,19 +307,20 @@ namespace Antik {
             field >>= 8;
         }
     }
-
+    
     //
-    // Get word from buffer
+    // Get word from buffer. Incrementing buffptr by the word size after.
     //
 
     template <typename T>
-    void CFileZIPIO::getField(T& field, std::uint8_t *buffer) {
+    void CFileZIPIO::getField(T& field, std::uint8_t* &buffptr) {
         std::uint16_t size = sizeof (T) - 1;
-        field = buffer[size];
+        field = buffptr[size];
         do {
             field <<= 8;
-            field |= buffer[size - 1];
+            field |= buffptr[size - 1];
         } while (--size);
+        buffptr += sizeof(T);
     }
 
 } // namespace Antik
