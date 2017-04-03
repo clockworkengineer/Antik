@@ -178,7 +178,7 @@ namespace Antik {
         bool fileExists(const std::string& fileNameStr);
         std::uint32_t  getFileAttributes(const std::string& fileNameStr);
         std::uint64_t  getFileSize(const std::string& fileNameStr);     
-        void getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificationDate, std::uint16_t& modificationTime);
+        std::pair<std::uint16_t, std::uint16_t>  getFileModificationDateTime(const std::string& fileNameStr);
    
         void addFileHeaderAndContents(const std::string& fileNameStr, const std::string& zippedFileNameStr);
         void UpdateCentralDirectory(void);

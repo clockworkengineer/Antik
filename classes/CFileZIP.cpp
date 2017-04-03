@@ -15,7 +15,7 @@
 // 
 // Description:  Class to create and manipulate ZIP file archives. At present it
 // supports archive creation and addition/extraction of files from an existing 
-// archives; ZIP64 format archives are also supported. Files are either saved 
+// archives; ZIP64 extensions are also supported. Files are either saved 
 // using store (file copy) or deflate compression. Use is made of the stat64 API
 // instead of stat for 64 bit files. The current class compiles and works on 
 // Linux/CYGWIN and it marks the archives as created on Unix.
@@ -321,7 +321,7 @@ namespace Antik {
 
     //
     // Get file Linux attributes. To convert to ZIP file  format just shift 16
-    // bits.
+    // bits left.
     //
 
     std::uint32_t CFileZIP::getFileAttributes(const std::string& fileNameStr) {
@@ -387,13 +387,13 @@ namespace Antik {
 
     //
     // Get files stat based modified date/time and convert to ZIP format. The values
-    // are passed back though two reference parameters.
+    // are passed back through a pair.
     //
 
-    void CFileZIP::getFileModificationDateTime(const std::string& fileNameStr, std::uint16_t& modificatioDate, std::uint16_t& modificationTime) {
+    std::pair<std::uint16_t, std::uint16_t> CFileZIP::getFileModificationDateTime(const std::string& fileNameStr) {
 
-        struct stat64 fileStat {
-        };
+        struct stat64 fileStat {};
+        std::uint16_t modificatioDate, modificationTime;
 
         int rc = lstat64(fileNameStr.c_str(), &fileStat);
         if (rc == 0) {
@@ -408,6 +408,8 @@ namespace Antik {
             throw Exception("stat() error getting file modified time. ERRNO = " + std::to_string(errno));
         }
 
+        return(std::make_pair(modificatioDate, modificationTime));
+        
     }
 
     //
@@ -428,7 +430,7 @@ namespace Antik {
         directoryEntry.fileNameStr = zippedFileNameStr;
         directoryEntry.fileNameLength = directoryEntry.fileNameStr.length();
 
-        // If current  offset > 32 bits use ZIP64
+        // If current offset > 32 bits use ZIP64
 
         if (this->fieldRequires64bits(this->offsetToEndOfLocalFileHeaders)) {
             directoryEntry.fileHeaderOffset = static_cast<std::uint32_t> (~0);
@@ -438,7 +440,7 @@ namespace Antik {
             directoryEntry.fileHeaderOffset = this->offsetToEndOfLocalFileHeaders;
         }
 
-        // File size > 32 bit then use ZIP64
+        // File size > 4GB then use ZIP64
 
         info.originalSize = getFileSize(fileNameStr);
         if (this->fieldRequires64bits(info.originalSize)) {
@@ -452,7 +454,11 @@ namespace Antik {
 
         // Get file modified time and attributes.
 
-        getFileModificationDateTime(fileNameStr, directoryEntry.modificationDate, directoryEntry.modificationTime);
+        std::pair<std::uint16_t, std::uint16_t> modification;
+        modification = getFileModificationDateTime(fileNameStr);
+        directoryEntry.modificationDate = modification.first;
+        directoryEntry.modificationTime =  modification.second;
+        
         directoryEntry.externalFileAttrib = getFileAttributes(fileNameStr);
 
         // File is a directory so add trailing delimeter, set no compression and extractor version  1.0
@@ -463,6 +469,7 @@ namespace Antik {
                 directoryEntry.fileNameLength++;
             }
             directoryEntry.extractorVersion = CFileZIP::kZIPVersion10;
+            directoryEntry.creatorVersion = (CFileZIP::kZIPCreatorUnix<<8)|CFileZIP::kZIPVersion10;
             directoryEntry.compression = CFileZIP::kZIPCompressionStore;
         }
 
@@ -544,6 +551,7 @@ namespace Antik {
             } else {
                 // Store non-compressed file.
                 directoryEntry.extractorVersion = CFileZIP::kZIPVersion10;
+                fileHeader.creatorVersion = (CFileZIP::kZIPCreatorUnix<<8)|CFileZIP::kZIPVersion10;
                 fileHeader.compression = directoryEntry.compression = CFileZIP::kZIPCompressionStore;
                 fileHeader.compressedSize = directoryEntry.compressedSize = directoryEntry.uncompressedSize;
                 this->putFileHeader(fileHeader);
@@ -575,19 +583,29 @@ namespace Antik {
             Zip64EOCentralDirectoryRecord zip64EOCentralDirectory;           
             bool bZIP64 = false;
 
+            // Position to end of local file headers
+            
             this->positionInZIPFile(this->offsetToEndOfLocalFileHeaders);
 
+            // Initalise central directory offset and size
+            
             zip64EOCentralDirectory.numberOfCentralDirRecords = this->zipCentralDirectory.size();
             zip64EOCentralDirectory.totalCentralDirRecords = this->zipCentralDirectory.size();
             zip64EOCentralDirectory.offsetCentralDirRecords = this->currentPositionZIPFile();
 
+            // Write Central Directory to ZIP archive
+            
             for (auto& directoryEntry : this->zipCentralDirectory) {
                 this->putCentralDirectoryFileHeader(directoryEntry);
             }
 
+            // Calculate Central Directory size in byes.
+            
             zip64EOCentralDirectory.sizeOfCentralDirRecords = this->currentPositionZIPFile();
             zip64EOCentralDirectory.sizeOfCentralDirRecords -= zipEOCentralDirectory.offsetCentralDirRecords;
 
+            // Number of records 16 bit overflow so use ZIP64 ie. 32 bits
+            
             if (this->fieldRequires32bits(zip64EOCentralDirectory.numberOfCentralDirRecords)) {
                 zipEOCentralDirectory.numberOfCentralDirRecords = static_cast<std::uint16_t> (~0);
                 bZIP64 = true;
@@ -595,6 +613,8 @@ namespace Antik {
                 zipEOCentralDirectory.numberOfCentralDirRecords = zip64EOCentralDirectory.numberOfCentralDirRecords;
             }
 
+            // Total number of records 16 bit overflow so use ZIP64 ie. 32 bits
+            
             if (this->fieldRequires32bits(zip64EOCentralDirectory.totalCentralDirRecords)) {
                 zipEOCentralDirectory.totalCentralDirRecords = static_cast<std::uint16_t> (~0);
                 bZIP64 = true;
@@ -602,6 +622,8 @@ namespace Antik {
                 zipEOCentralDirectory.totalCentralDirRecords = zip64EOCentralDirectory.totalCentralDirRecords;
             }
 
+            // Offset 32 bit overflow so use ZIP64 ie. 64 bits
+            
             if (this->fieldRequires64bits(zip64EOCentralDirectory.offsetCentralDirRecords)) {
                 zipEOCentralDirectory.offsetCentralDirRecords = static_cast<std::uint32_t> (~0);
                 bZIP64 = true;
@@ -609,12 +631,16 @@ namespace Antik {
                 zipEOCentralDirectory.offsetCentralDirRecords = zip64EOCentralDirectory.offsetCentralDirRecords;
             }
 
+            // Central Directory size 32 bit overflow so use ZIP64 ie. 64 bits
+            
             if (this->fieldRequires64bits(zip64EOCentralDirectory.sizeOfCentralDirRecords)) {
                 zipEOCentralDirectory.sizeOfCentralDirRecords = static_cast<std::uint32_t> (~0);
                 bZIP64 = true;
             } else {
                 zipEOCentralDirectory.sizeOfCentralDirRecords = zip64EOCentralDirectory.sizeOfCentralDirRecords;
             }
+            
+            // ZIP64 so write extension records
             
             if (bZIP64) {
                 Zip64EOCentDirRecordLocator locator;
@@ -623,6 +649,8 @@ namespace Antik {
                 this->putZip64EOCentDirRecordLocator(locator);
             }
 
+            // Write End Of Central Directory record
+            
             this->putEOCentralDirectoryRecord(zipEOCentralDirectory);
 
         }
