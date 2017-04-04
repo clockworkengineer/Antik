@@ -241,7 +241,7 @@ namespace Antik {
   
         void getZip64EOCentralDirectoryRecord(CFileZIPIO::Zip64EOCentralDirectoryRecord& entry);
         void getZip64EOCentDirRecordLocator(CFileZIPIO::Zip64EOCentDirRecordLocator& entry);
-        void getZip64ExtendedInformationExtraField(Zip64ExtendedInfoExtraField& extendedInfo, std::vector<std::uint8_t> & info);
+        void getZip64ExtendedInfoExtraField(Zip64ExtendedInfoExtraField& extendedInfo, std::vector<std::uint8_t> & info);
 
         void openZIPFile(const std::string fileNameStr, std::ios_base::openmode mode);
         void closeZIPFile(void);

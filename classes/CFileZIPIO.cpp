@@ -706,7 +706,7 @@ namespace Antik {
     // Get any ZIP64 extended information from byte array.
     //
 
-    void CFileZIPIO::getZip64ExtendedInformationExtraField(Zip64ExtendedInfoExtraField& zip64ExtendedInfo, std::vector<std::uint8_t>& info) {
+    void CFileZIPIO::getZip64ExtendedInfoExtraField(Zip64ExtendedInfoExtraField& zip64ExtendedInfo, std::vector<std::uint8_t>& info) {
 
         std::uint16_t signature = 0;
         std::uint16_t fieldSize = 0;
