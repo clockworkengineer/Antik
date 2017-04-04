@@ -629,6 +629,25 @@ namespace Antik {
             } else {
                 zipEOCentralDirectory.sizeOfCentralDirRecords = zip64EOCentralDirectory.sizeOfCentralDirRecords;
             }
+            
+            // Central Directory start disk 16 bit overflow so use ZIP64 ie. 32 bits
+
+            if (this->fieldRequires32bits(zip64EOCentralDirectory.startDiskNumber)) {
+                zipEOCentralDirectory.startDiskNumber = static_cast<std::uint16_t> (~0);
+                bZIP64 = true;
+            } else {
+                zipEOCentralDirectory.startDiskNumber = zip64EOCentralDirectory.startDiskNumber;
+            }
+            
+                      
+            // Central Directory number of disks 16 bit overflow so use ZIP64 ie. 32 bits
+
+            if (this->fieldRequires32bits(zip64EOCentralDirectory.diskNumber)) {
+                zipEOCentralDirectory.diskNumber = static_cast<std::uint16_t> (~0);
+                bZIP64 = true;
+            } else {
+                zipEOCentralDirectory.diskNumber = zip64EOCentralDirectory.diskNumber;
+            }
 
             // ZIP64 so write extension records
 
@@ -927,7 +946,6 @@ namespace Antik {
 
         if (this->fileExists(fileNameStr)) {
             this->addFileHeaderAndContents(fileNameStr, zippedFileNameStr);
-            std::cout << "Added [" << fileNameStr << "]" << std::endl;
             return (true);
 
         } else {
