@@ -604,7 +604,7 @@ namespace Antik {
             // Calculate Central Directory size in byes.
             
             zip64EOCentralDirectory.sizeOfCentralDirRecords = this->currentPositionZIPFile();
-            zip64EOCentralDirectory.sizeOfCentralDirRecords -= zipEOCentralDirectory.offsetCentralDirRecords;
+            zip64EOCentralDirectory.sizeOfCentralDirRecords -= zip64EOCentralDirectory.offsetCentralDirRecords;
 
             // Number of records 16 bit overflow so use ZIP64 ie. 32 bits
             
