@@ -356,28 +356,44 @@ namespace Antik {
     }
 
     //
-    // Put any ZIP64 extended information record into byte array If a field is zero
-    // (not present) then it is not placed in the buffer.
+    // Put any ZIP64 extended information record into byte array. Only perform if the
+    // value is too large for its default storage. Sizes are stored as pair because
+    // of the requirement for Local file headers.
     //
 
-    void CFileZIPIO::putZip64ExtendedInformationExtraField(Zip64ExtendedInformationExtraField& extendedInfo, std::vector<std::uint8_t>& info) {
+    void CFileZIPIO::putZip64ExtendedInfoExtraField(Zip64ExtendedInfoExtraField& extendedInfo, std::vector<std::uint8_t>& info) {
 
         std::uint16_t fieldSize = 0;
 
         info.clear();
 
-        if (extendedInfo.originalSize) fieldSize += sizeof(std::uint64_t);
-        if (extendedInfo.compressedSize) fieldSize += sizeof(std::uint64_t);
-        if (extendedInfo.fileHeaderOffset) fieldSize += sizeof(std::uint64_t);
-        if (extendedInfo.fileHeaderOffset) fieldSize += sizeof(std::uint32_t);
+        if (this->fieldRequires64bits(extendedInfo.originalSize)) {
+            fieldSize += sizeof(std::uint64_t); // Store sizes as a pair.
+            fieldSize += sizeof(std::uint64_t);
+        }
+        
+        if (this->fieldRequires64bits(extendedInfo.fileHeaderOffset)) {
+            fieldSize += sizeof(std::uint64_t);
+        }
+        
+        if (this->fieldRequires32bits(extendedInfo.diskNo)) {
+            fieldSize += sizeof(std::uint32_t);
+        }
         
         this->putField(extendedInfo.signature, info);
         this->putField(fieldSize, info);
         
-        if (extendedInfo.originalSize) this->putField(extendedInfo.originalSize, info);
-        if (extendedInfo.compressedSize) this->putField(extendedInfo.compressedSize, info);
-        if (extendedInfo.fileHeaderOffset)this->putField(extendedInfo.fileHeaderOffset, info);
-        if (extendedInfo.diskNo)this->putField(extendedInfo.diskNo, info);
+        if (this->fieldRequires64bits(extendedInfo.originalSize)) {
+            this->putField(extendedInfo.originalSize, info);
+            this->putField(extendedInfo.compressedSize, info);
+        }
+        
+        if (this->fieldRequires64bits(extendedInfo.fileHeaderOffset)) { 
+            this->putField(extendedInfo.fileHeaderOffset, info);
+        }
+        if (this->fieldRequires32bits(extendedInfo.diskNo)) {
+            this->putField(extendedInfo.diskNo, info);
+        }
 
     }
 
@@ -690,7 +706,7 @@ namespace Antik {
     // Get any ZIP64 extended information from byte array.
     //
 
-    void CFileZIPIO::getZip64ExtendedInformationExtraField(Zip64ExtendedInformationExtraField& zip64ExtendedInfo, std::vector<std::uint8_t>& info) {
+    void CFileZIPIO::getZip64ExtendedInformationExtraField(Zip64ExtendedInfoExtraField& zip64ExtendedInfo, std::vector<std::uint8_t>& info) {
 
         std::uint16_t signature = 0;
         std::uint16_t fieldSize = 0;

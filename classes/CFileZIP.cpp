@@ -423,7 +423,7 @@ namespace Antik {
 
         LocalFileHeader fileHeader;
         CentralDirectoryFileHeader directoryEntry;
-        Zip64ExtendedInformationExtraField info;
+        Zip64ExtendedInfoExtraField info;
         bool bZIP64 = false;
 
         // Save filename details
@@ -482,7 +482,7 @@ namespace Antik {
             this->bZIP64 = true;
             directoryEntry.extractorVersion = CFileZIP::kZIPVersion45;
             directoryEntry.creatorVersion = (CFileZIP::kZIPCreatorUnix << 8) | (CFileZIP::kZIPVersion45);
-            this->putZip64ExtendedInformationExtraField(info, directoryEntry.extraField);
+            this->putZip64ExtendedInfoExtraField(info, directoryEntry.extraField);
             directoryEntry.extraFieldLength = directoryEntry.extraField.size();
         }
 
@@ -544,7 +544,7 @@ namespace Antik {
             if ((compressedSize < uncompressedSize) || bZIP64) {
                 if (bZIP64) {
                     info.compressedSize = compressedSize;
-                    this->putZip64ExtendedInformationExtraField(info, directoryEntry.extraField);
+                    this->putZip64ExtendedInfoExtraField(info, directoryEntry.extraField);
                     fileHeader.extraField = directoryEntry.extraField;
                 } else {
                     fileHeader.compressedSize = directoryEntry.compressedSize = compressedSize;
@@ -782,7 +782,7 @@ namespace Antik {
                     this->fieldOverflow(directoryEntry.uncompressedSize) ||
                     this->fieldOverflow(directoryEntry.fileHeaderOffset)) {
 
-                Zip64ExtendedInformationExtraField extra;
+                Zip64ExtendedInfoExtraField extra;
                 extra.compressedSize = directoryEntry.compressedSize;
                 extra.fileHeaderOffset = directoryEntry.fileHeaderOffset;
                 extra.originalSize = directoryEntry.uncompressedSize;
@@ -816,7 +816,7 @@ namespace Antik {
 
             if (directoryEntry.fileNameStr.compare(fileNameStr) == 0) {
 
-                Zip64ExtendedInformationExtraField extendedInfo;
+                Zip64ExtendedInfoExtraField extendedInfo;
                 LocalFileHeader fileHeader;
                 std::uint32_t crc32;
 

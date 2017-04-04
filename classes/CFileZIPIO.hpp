@@ -193,7 +193,7 @@ namespace Antik {
         // ZIP64 Archive extended information field.
         //
 
-        struct Zip64ExtendedInformationExtraField {
+        struct Zip64ExtendedInfoExtraField {
             const std::uint16_t signature = 0x0001;
             std::uint16_t size = 0;
             std::uint64_t originalSize = 0;
@@ -230,7 +230,7 @@ namespace Antik {
         void putFileHeader(CFileZIPIO::LocalFileHeader& entry);
         void putEOCentralDirectoryRecord(CFileZIPIO::EOCentralDirectoryRecord& entry);
 
-        void putZip64ExtendedInformationExtraField(Zip64ExtendedInformationExtraField& extendedInfo, std::vector<std::uint8_t>& info);
+        void putZip64ExtendedInfoExtraField(Zip64ExtendedInfoExtraField& extendedInfo, std::vector<std::uint8_t>& info);
         void putZip64EOCentralDirectoryRecord(Zip64EOCentralDirectoryRecord& entry);
         void putZip64EOCentDirRecordLocator(Zip64EOCentDirRecordLocator& entry);
              
@@ -241,7 +241,7 @@ namespace Antik {
   
         void getZip64EOCentralDirectoryRecord(CFileZIPIO::Zip64EOCentralDirectoryRecord& entry);
         void getZip64EOCentDirRecordLocator(CFileZIPIO::Zip64EOCentDirRecordLocator& entry);
-        void getZip64ExtendedInformationExtraField(Zip64ExtendedInformationExtraField& extendedInfo, std::vector<std::uint8_t> & info);
+        void getZip64ExtendedInformationExtraField(Zip64ExtendedInfoExtraField& extendedInfo, std::vector<std::uint8_t> & info);
 
         void openZIPFile(const std::string fileNameStr, std::ios_base::openmode mode);
         void closeZIPFile(void);
