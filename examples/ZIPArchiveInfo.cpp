@@ -163,7 +163,7 @@ void dumpBytes(std::vector<std::uint8_t>& bytes) {
     std::cout << std::hex;
     for (int byte : bytes) {
         std::cout << "0x" << byte << " ";
-        if (!((byteCount++)&0xF))std::cout << std::endl;
+        if (!((byteCount++)&0xF))std::cout << "\n";
     }
     std::cout << std::dec << std::endl;
 }
@@ -174,17 +174,17 @@ void dumpBytes(std::vector<std::uint8_t>& bytes) {
 
 void dumpEOCentralDirectoryRecord(CFileZIPIO::EOCentralDirectoryRecord& endOfCentralDirectory) {
 
-    std::cout << "End Of Central Directory Record" << std::endl;
-    std::cout << "-------------------------------\n" << std::endl;
-    std::cout << "Start Disk Number                         : " << endOfCentralDirectory.startDiskNumber << std::endl;
-    std::cout << "Total Disk Number                         : " << endOfCentralDirectory.diskNumber << std::endl;
-    std::cout << "Number Of Central Directory Entries       : " << endOfCentralDirectory.numberOfCentralDirRecords << std::endl;
-    std::cout << "Total Number Of Central Directory Entries : " << endOfCentralDirectory.totalCentralDirRecords << std::endl;
-    std::cout << "Central Directory Offset                  : " << endOfCentralDirectory.offsetCentralDirRecords << std::endl;
-    std::cout << "Comment length                            : " << endOfCentralDirectory.commentLength << std::endl;
+    std::cout << "End Of Central Directory Record" << "\n";
+    std::cout << "-------------------------------\n" << "\n";
+    std::cout << "Start Disk Number                         : " << endOfCentralDirectory.startDiskNumber << "\n";
+    std::cout << "Total Disk Number                         : " << endOfCentralDirectory.diskNumber << "\n";
+    std::cout << "Number Of Central Directory Entries       : " << endOfCentralDirectory.numberOfCentralDirRecords << "\n";
+    std::cout << "Total Number Of Central Directory Entries : " << endOfCentralDirectory.totalCentralDirRecords << "\n";
+    std::cout << "Central Directory Offset                  : " << endOfCentralDirectory.offsetCentralDirRecords << "\n";
+    std::cout << "Comment length                            : " << endOfCentralDirectory.commentLength << "\n";
 
     if (endOfCentralDirectory.commentLength) {
-        std::cout << "Comment                                   : " << endOfCentralDirectory.commentStr << std::endl;
+        std::cout << "Comment                                   : " << endOfCentralDirectory.commentStr << "\n";
     }
 
     std::cout << std::endl;
@@ -197,29 +197,29 @@ void dumpEOCentralDirectoryRecord(CFileZIPIO::EOCentralDirectoryRecord& endOfCen
 
 void dumpCentralDirectoryFileHeader(CFileZIPIO& zipFile, CFileZIPIO::CentralDirectoryFileHeader& fileHeader, std::uint32_t number) {
 
-    std::cout << "Central Directory File Header No: " << number << std::endl;
-    std::cout << "--------------------------------\n" << std::endl;
+    std::cout << "Central Directory File Header No: " << number << "\n";
+    std::cout << "--------------------------------\n" << "\n";
 
-    std::cout << "File Name Length        : " << fileHeader.fileNameLength << std::endl;
-    std::cout << "File Name               : " << fileHeader.fileNameStr << std::endl;
-    std::cout << "General Bit Flag        : " << fileHeader.bitFlag << std::endl;
-    std::cout << "Compressed Size         : " << fileHeader.compressedSize << std::endl;
-    std::cout << "Compression Method      : " << fileHeader.compression << std::endl;
-    std::cout << "CRC 32                  : " << fileHeader.crc32 << std::endl;
-    std::cout << "Creator Version         : " << fileHeader.creatorVersion << std::endl;
-    std::cout << "Start Disk Number       : " << fileHeader.diskNoStart << std::endl;
-    std::cout << "External File Attribute : " << fileHeader.externalFileAttrib << std::endl;
-    std::cout << "Extractor Version       : " << fileHeader.extractorVersion << std::endl;
-    std::cout << "File HeaderOffset       : " << fileHeader.fileHeaderOffset << std::endl;
-    std::cout << "Internal File Attribute : " << fileHeader.internalFileAttrib << std::endl;
-    std::cout << "Modification Date       : " << fileHeader.modificationDate << std::endl;
-    std::cout << "Modification Time       : " << fileHeader.modificationTime << std::endl;
-    std::cout << "Uncompressed Size       : " << fileHeader.uncompressedSize << std::endl;
-    std::cout << "File Comment Length     : " << fileHeader.fileCommentLength << std::endl;
-    std::cout << "Extra Field Length      : " << fileHeader.extraFieldLength << std::endl;
+    std::cout << "File Name Length        : " << fileHeader.fileNameLength << "\n";
+    std::cout << "File Name               : " << fileHeader.fileNameStr << "\n";
+    std::cout << "General Bit Flag        : " << fileHeader.bitFlag << "\n";
+    std::cout << "Compressed Size         : " << fileHeader.compressedSize << "\n";
+    std::cout << "Compression Method      : " << fileHeader.compression << "\n";
+    std::cout << "CRC 32                  : " << fileHeader.crc32 << "\n";
+    std::cout << "Creator Version         : " << fileHeader.creatorVersion << "\n";
+    std::cout << "Start Disk Number       : " << fileHeader.diskNoStart << "\n";
+    std::cout << "External File Attribute : " << fileHeader.externalFileAttrib << "\n";
+    std::cout << "Extractor Version       : " << fileHeader.extractorVersion << "\n";
+    std::cout << "File HeaderOffset       : " << fileHeader.fileHeaderOffset << "\n";
+    std::cout << "Internal File Attribute : " << fileHeader.internalFileAttrib << "\n";
+    std::cout << "Modification Date       : " << fileHeader.modificationDate << "\n";
+    std::cout << "Modification Time       : " << fileHeader.modificationTime << "\n";
+    std::cout << "Uncompressed Size       : " << fileHeader.uncompressedSize << "\n";
+    std::cout << "File Comment Length     : " << fileHeader.fileCommentLength << "\n";
+    std::cout << "Extra Field Length      : " << fileHeader.extraFieldLength << "\n";
 
     if (fileHeader.fileCommentLength) {
-        std::cout << "Comment                 : " << fileHeader.fileCommentStr << std::endl;
+        std::cout << "Comment                 : " << fileHeader.fileCommentStr << "\n";
     }
 
     if (fileHeader.extraFieldLength) {
@@ -236,17 +236,17 @@ void dumpCentralDirectoryFileHeader(CFileZIPIO& zipFile, CFileZIPIO::CentralDire
         extra.compressedSize = fileHeader.compressedSize;
         extra.fileHeaderOffset = fileHeader.fileHeaderOffset;
         extra.originalSize = fileHeader.uncompressedSize;
-        std::cout << "ZIP64 extension data :\n";
+        std::cout << "\nZIP64 extension data :\n";
         std::cout << "+++++++++++++++++++++\n";
         zipFile.getZip64ExtendedInfoExtraField(extra, fileHeader.extraField);
         if (zipFile.fieldOverflow(fileHeader.compressedSize)) {
-            std::cout << "Compressed Size         : " << extra.compressedSize << std::endl;
+            std::cout << "Compressed Size         : " << extra.compressedSize << "\n";
         }
         if (zipFile.fieldOverflow(fileHeader.uncompressedSize)) {
-            std::cout << "Uncompressed Size       : " << extra.originalSize << std::endl;
+            std::cout << "Uncompressed Size       : " << extra.originalSize << "\n";
         }
         if (zipFile.fieldOverflow(fileHeader.fileHeaderOffset)) {
-            std::cout << "File HeaderOffset       : " << extra.fileHeaderOffset << std::endl;
+            std::cout << "File HeaderOffset       : " << extra.fileHeaderOffset << "\n";
         }
     }
 
