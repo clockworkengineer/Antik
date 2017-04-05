@@ -154,7 +154,7 @@ namespace Antik {
             std::uint32_t sizeOfCentralDirRecords = 0;
             std::uint32_t offsetCentralDirRecords = 0;
             std::uint16_t commentLength = 0;
-            std::vector<std::uint8_t> comment;
+            std::string commentStr;
         };
               
         //

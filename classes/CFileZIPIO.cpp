@@ -293,7 +293,7 @@ namespace Antik {
         this->zipFileStream.write((char *) &buffer[0], entry.size);
 
         if (entry.commentLength) {
-            this->zipFileStream.write((char *) &entry.comment[0], entry.commentLength);
+            this->zipFileStream.write((char *) &entry.commentStr[0], entry.commentLength);
         }
 
         if (this->zipFileStream.fail()) {
@@ -592,8 +592,8 @@ namespace Antik {
                     buffer.resize(entry.commentLength);
                 }
                 this->zipFileStream.read((char *) &buffer[0], entry.commentLength);
-                entry.comment.resize(entry.commentLength);
-                std::memcpy(&entry.comment[0], &buffer[0], entry.commentLength);
+                entry.commentStr.resize(entry.commentLength);
+                entry.commentStr.append((char *)&buffer[0], entry.commentLength);
             }
 
             if (this->zipFileStream.fail()) {
