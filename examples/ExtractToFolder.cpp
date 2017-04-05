@@ -23,7 +23,7 @@
 //   --help                      Display help message
 //   -c [ --config ] arg         Config File Name
 //   -d [ --destination ] arg    Destination folder for extract
-//   -z [ --zip ] arg            ZIP File Name
+//   -z [ --zip ] arg            ZIP Archive Name
 // 
 // Dependencies: C11++, Classes (CFileZIP), Linux, Boost C++ Libraries.
 //
@@ -97,7 +97,7 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData &argD
 
     commonOptions.add_options()
             ("destination,d", po::value<std::string>(&argData.destinationFolderNameStr)->required(), "Destination folder for extract")
-            ("zip,z", po::value<std::string>(&argData.zipFileNameStr)->required(), "ZIP File Name");
+            ("zip,z", po::value<std::string>(&argData.zipFileNameStr)->required(), "ZIP Archive Name");
 
 }
 

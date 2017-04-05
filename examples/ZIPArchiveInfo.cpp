@@ -159,11 +159,11 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
 void dumpBytes(std::vector<std::uint8_t>& bytes) {
 
-    std::uint32_t byteCount=1;
-     std::cout << std::hex;
+    std::uint32_t byteCount = 1;
+    std::cout << std::hex;
     for (int byte : bytes) {
         std::cout << "0x" << byte << " ";
-        if (!((byteCount++)&0xF) )std::cout << std::endl;
+        if (!((byteCount++)&0xF))std::cout << std::endl;
     }
     std::cout << std::dec << std::endl;
 }
@@ -172,7 +172,7 @@ void dumpBytes(std::vector<std::uint8_t>& bytes) {
 // Output End Of Central Directory record information.
 //
 
-void dumpEOCentralDirectoryRecord( CFileZIPIO::EOCentralDirectoryRecord& endOfCentralDirectory) {
+void dumpEOCentralDirectoryRecord(CFileZIPIO::EOCentralDirectoryRecord& endOfCentralDirectory) {
 
     std::cout << "End Of Central Directory Record" << std::endl;
     std::cout << "-------------------------------\n" << std::endl;
@@ -182,24 +182,24 @@ void dumpEOCentralDirectoryRecord( CFileZIPIO::EOCentralDirectoryRecord& endOfCe
     std::cout << "Total Number Of Central Directory Entries : " << endOfCentralDirectory.totalCentralDirRecords << std::endl;
     std::cout << "Central Directory Offset                  : " << endOfCentralDirectory.offsetCentralDirRecords << std::endl;
     std::cout << "Comment length                            : " << endOfCentralDirectory.commentLength << std::endl;
-    
+
     if (endOfCentralDirectory.commentLength) {
         std::cout << "Comment                                   : " << endOfCentralDirectory.commentStr << std::endl;
     }
-    
+
     std::cout << std::endl;
-    
+
 }
 
 //
 // Output Central Directory File Header record information.
 //
 
-void dumpCentralDirectoryFileHeader( CFileZIPIO::CentralDirectoryFileHeader& fileHeader, std::uint32_t number) {
+void dumpCentralDirectoryFileHeader(CFileZIPIO& zipFile, CFileZIPIO::CentralDirectoryFileHeader& fileHeader, std::uint32_t number) {
 
     std::cout << "Central Directory File Header No: " << number << std::endl;
     std::cout << "--------------------------------\n" << std::endl;
-    
+
     std::cout << "File Name Length        : " << fileHeader.fileNameLength << std::endl;
     std::cout << "File Name               : " << fileHeader.fileNameStr << std::endl;
     std::cout << "General Bit Flag        : " << fileHeader.bitFlag << std::endl;
@@ -217,18 +217,41 @@ void dumpCentralDirectoryFileHeader( CFileZIPIO::CentralDirectoryFileHeader& fil
     std::cout << "Uncompressed Size       : " << fileHeader.uncompressedSize << std::endl;
     std::cout << "File Comment Length     : " << fileHeader.fileCommentLength << std::endl;
     std::cout << "Extra Field Length      : " << fileHeader.extraFieldLength << std::endl;
-       
+
     if (fileHeader.fileCommentLength) {
         std::cout << "Comment                 : " << fileHeader.fileCommentStr << std::endl;
     }
-    
+
     if (fileHeader.extraFieldLength) {
         std::cout << "Extra Field             :\n";
         dumpBytes(fileHeader.extraField);
     }
+
+    // For file header data > 32 bits display ZIP64 values.
     
+    if (zipFile.fieldOverflow(fileHeader.compressedSize) ||
+            zipFile.fieldOverflow(fileHeader.uncompressedSize) ||
+            zipFile.fieldOverflow(fileHeader.fileHeaderOffset)) {
+        CFileZIPIO::Zip64ExtendedInfoExtraField extra;
+        extra.compressedSize = fileHeader.compressedSize;
+        extra.fileHeaderOffset = fileHeader.fileHeaderOffset;
+        extra.originalSize = fileHeader.uncompressedSize;
+        std::cout << "ZIP64 extension data :\n";
+        std::cout << "+++++++++++++++++++++\n";
+        zipFile.getZip64ExtendedInfoExtraField(extra, fileHeader.extraField);
+        if (zipFile.fieldOverflow(fileHeader.compressedSize)) {
+            std::cout << "Compressed Size         : " << extra.compressedSize << std::endl;
+        }
+        if (zipFile.fieldOverflow(fileHeader.uncompressedSize)) {
+            std::cout << "Uncompressed Size       : " << extra.originalSize << std::endl;
+        }
+        if (zipFile.fieldOverflow(fileHeader.fileHeaderOffset)) {
+            std::cout << "File HeaderOffset       : " << extra.fileHeaderOffset << std::endl;
+        }
+    }
+
     std::cout << std::endl;
-        
+
 }
 
 // ============================
@@ -251,26 +274,26 @@ int main(int argc, char** argv) {
             CFileZIPIO::EOCentralDirectoryRecord endOfCentralDirectory;
 
             //  Open zip file for read
-            
+
             zipFile.openZIPFile(argData.zipFileNameStr, std::ios::in);
 
             // Read End Of Central Directory and display info
-            
+
             zipFile.getEOCentralDirectoryRecord(endOfCentralDirectory);
             dumpEOCentralDirectoryRecord(endOfCentralDirectory);
-            
+
             // Move to start of Central Directory and loop displaying entries.
-            
+
             zipFile.positionInZIPFile(endOfCentralDirectory.offsetCentralDirRecords);
-            
+
             for (auto entryNumber = 0; entryNumber < endOfCentralDirectory.numberOfCentralDirRecords; entryNumber++) {
                 CFileZIPIO::CentralDirectoryFileHeader fileHeader;
                 zipFile.getCentralDirectoryFileHeader(fileHeader);
-                dumpCentralDirectoryFileHeader(fileHeader, entryNumber );
+                dumpCentralDirectoryFileHeader(zipFile, fileHeader, entryNumber);
             }
-            
+
             // Close archive.
-            
+
             zipFile.closeZIPFile();
 
         }
@@ -280,7 +303,7 @@ int main(int argc, char** argv) {
         // Catch any errors
         //
 
-   } catch (const CFileZIPIO::Exception & e) {
+    } catch (const CFileZIPIO::Exception & e) {
         exitWithError(e.what());
     } catch (const std::exception & e) {
         exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
