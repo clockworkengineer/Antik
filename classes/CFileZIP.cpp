@@ -762,8 +762,7 @@ namespace Antik {
     //
 
     std::vector<CFileZIP::FileDetail> CFileZIP::contents(void) {
-
-        FileDetail fileEntry;
+ 
         std::vector<CFileZIP::FileDetail> fileDetailList;
 
         if (!this->bOpen) {
@@ -771,6 +770,8 @@ namespace Antik {
         }
 
         for (auto& directoryEntry : this->zipCentralDirectory) {
+            
+            FileDetail fileEntry;
 
             fileEntry.fileNameStr = directoryEntry.fileNameStr;
             fileEntry.fileCommentStr = directoryEntry.fileCommentStr;
