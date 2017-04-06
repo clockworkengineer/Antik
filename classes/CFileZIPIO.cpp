@@ -83,6 +83,493 @@ namespace Antik {
     // PRIVATE METHODS
     // ===============
 
+    //
+    // Put Data Descriptor record into buffer and write to disk.
+    //
+
+    void CFileZIPIO::writeDataDescriptor(std::fstream &zipFileStream, CFileZIPIO::DataDescriptor& entry) {
+
+        std::vector<std::uint8_t> buffer;
+
+        putField(entry.signature, buffer);
+        putField(entry.crc32, buffer);
+        putField(entry.compressedSize, buffer);
+        putField(entry.uncompressedSize, buffer);
+
+        zipFileStream.write((char *) &buffer[0], entry.size);
+
+        if (zipFileStream.fail()) {
+            throw Exception("Error in writing Data Descriptor Record.");
+        }
+
+    }
+
+    //
+    // Put Central Directory File Header record into buffer and write to disk.
+    //
+
+    void CFileZIPIO::writeCentralDirectoryFileHeader(std::fstream &zipFileStream, CFileZIPIO::CentralDirectoryFileHeader& entry) {
+
+        std::vector<std::uint8_t> buffer;
+
+        putField(entry.signature, buffer);
+        putField(entry.creatorVersion, buffer);
+        putField(entry.extractorVersion, buffer);
+        putField(entry.bitFlag, buffer);
+        putField(entry.compression, buffer);
+        putField(entry.modificationTime, buffer);
+        putField(entry.modificationDate, buffer);
+        putField(entry.crc32, buffer);
+        putField(entry.compressedSize, buffer);
+        putField(entry.uncompressedSize, buffer);
+        putField(entry.fileNameLength, buffer);
+        putField(entry.extraFieldLength, buffer);
+        putField(entry.fileCommentLength, buffer);
+        putField(entry.diskNoStart, buffer);
+        putField(entry.internalFileAttrib, buffer);
+        putField(entry.externalFileAttrib, buffer);
+        putField(entry.fileHeaderOffset, buffer);
+
+        zipFileStream.write((char *) &buffer[0], entry.size);
+
+        if (entry.fileNameLength) {
+            zipFileStream.write((char *) &entry.fileNameStr[0], entry.fileNameLength);
+        }
+        if (entry.extraFieldLength) {
+            zipFileStream.write((char *) &entry.extraField[0], entry.extraFieldLength);
+        }
+        if (entry.fileCommentLength) {
+            zipFileStream.write((char *) &entry.fileCommentStr[0], entry.fileCommentLength);
+        }
+
+        if (zipFileStream.fail()) {
+            throw Exception("Error in writing Central Directory Local File Header record.");
+        }
+
+    }
+
+    //
+    // Put Local File Header record into buffer and write to disk.
+    //
+
+    void CFileZIPIO::writeFileHeader(std::fstream &zipFileStream, CFileZIPIO::LocalFileHeader& entry) {
+
+        std::vector<std::uint8_t> buffer;
+
+        putField(entry.signature, buffer);
+        putField(entry.creatorVersion, buffer);
+        putField(entry.bitFlag, buffer);
+        putField(entry.compression, buffer);
+        putField(entry.modificationTime, buffer);
+        putField(entry.modificationDate, buffer);
+        putField(entry.crc32, buffer);
+        putField(entry.compressedSize, buffer);
+        putField(entry.uncompressedSize, buffer);
+        putField(entry.fileNameLength, buffer);
+        putField(entry.extraFieldLength, buffer);
+
+        zipFileStream.write((char *) &buffer[0], entry.size);
+
+        if (entry.fileNameLength) {
+            zipFileStream.write((char *) &entry.fileNameStr[0], entry.fileNameLength);
+        }
+        if (entry.extraFieldLength) {
+            zipFileStream.write((char *) &entry.extraField[0], entry.extraFieldLength);
+        }
+
+        if (zipFileStream.fail()) {
+            throw Exception("Error in writing Local File Header record.");
+        }
+
+    }
+
+    //
+    // Put End Of Central Directory record into buffer and write to disk.
+    //
+
+    void CFileZIPIO::writeEOCentralDirectoryRecord(std::fstream &zipFileStream, CFileZIPIO::EOCentralDirectoryRecord& entry) {
+
+        std::vector<std::uint8_t> buffer;
+
+        putField(entry.signature, buffer);
+        putField(entry.diskNumber, buffer);
+        putField(entry.startDiskNumber, buffer);
+        putField(entry.numberOfCentralDirRecords, buffer);
+        putField(entry.totalCentralDirRecords, buffer);
+        putField(entry.sizeOfCentralDirRecords, buffer);
+        putField(entry.offsetCentralDirRecords, buffer);
+        putField(entry.commentLength, buffer);
+
+        zipFileStream.write((char *) &buffer[0], entry.size);
+
+        if (entry.commentLength) {
+            zipFileStream.write((char *) &entry.commentStr[0], entry.commentLength);
+        }
+
+        if (zipFileStream.fail()) {
+            throw Exception("Error in writing End Of Central Directory Local File Header record.");
+        }
+
+    }
+
+    //
+    // Put ZIP64 End Of Central Directory record into buffer and write to disk.
+    //
+
+    void CFileZIPIO::writeZip64EOCentralDirectoryRecord(std::fstream &zipFileStream, CFileZIPIO::Zip64EOCentralDirectoryRecord& entry) {
+
+        std::vector<std::uint8_t> buffer;
+
+        entry.totalRecordSize = entry.size - 12 +
+                entry.extensibleDataSector.size();
+                       
+        putField(entry.signature, buffer);
+        putField(entry.totalRecordSize, buffer);
+        putField(entry.creatorVersion, buffer);
+        putField(entry.extractorVersion, buffer);
+        putField(entry.diskNumber, buffer);
+        putField(entry.startDiskNumber, buffer);
+        putField(entry.numberOfCentralDirRecords, buffer);
+        putField(entry.totalCentralDirRecords, buffer);
+        putField(entry.sizeOfCentralDirRecords, buffer);
+        putField(entry.offsetCentralDirRecords, buffer);
+        zipFileStream.write((char *) &buffer[0], entry.size);
+
+        if (entry.extensibleDataSector.size()) {
+            zipFileStream.write((char *) &entry.extensibleDataSector[0], entry.extensibleDataSector.size());
+        }
+
+        if (zipFileStream.fail()) {
+            throw Exception("Error in writing ZIP64 End Of Central Directory record.");
+        }
+
+    }
+
+    //
+    // Put ZIP64 End Of Central Directory record locator into buffer and write to disk.
+    //
+
+    void CFileZIPIO::writeZip64EOCentDirRecordLocator(std::fstream &zipFileStream, CFileZIPIO::Zip64EOCentDirRecordLocator& entry) {
+
+        std::vector<std::uint8_t> buffer;
+
+        putField(entry.signature, buffer);
+        putField(entry.startDiskNumber, buffer);
+        putField(entry.offset, buffer);
+        putField(entry.numberOfDisks, buffer);
+        zipFileStream.write((char *) &buffer[0], entry.size);
+
+        if (zipFileStream.fail()) {
+            throw Exception("Error in writing ZIP64 End Of Central Directory record locator.");
+        }
+
+    }
+    
+    //
+    // Read Data Descriptor record from ZIP archive. 
+    //
+
+    void CFileZIPIO::readDataDescriptor(std::fstream &zipFileStream, CFileZIPIO::DataDescriptor& entry) {
+
+        std::vector<std::uint8_t> buffer(entry.size);
+        std::uint8_t *buffptr=&buffer[0];
+        std::uint32_t signature;
+
+        zipFileStream.read((char *) buffptr, sizeof (signature));
+        buffptr = getField(signature, buffptr);
+
+        if (signature == entry.signature) {
+
+            zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
+            
+            buffptr = getField(entry.crc32, buffptr);
+            buffptr = getField(entry.compressedSize, buffptr);
+            buffptr = getField(entry.uncompressedSize, buffptr);
+
+            if (zipFileStream.fail()) {
+                throw Exception("Error in reading Data Descriptor Record.");
+            }
+
+        } else {
+            throw Exception("No Data Descriptor record found.");
+        }
+
+    }
+
+    //
+    // Read Central Directory File Header record from ZIP archive.
+    //
+
+    void CFileZIPIO::readCentralDirectoryFileHeader(std::fstream &zipFileStream, CFileZIPIO::CentralDirectoryFileHeader& entry) {
+
+        std::vector<std::uint8_t> buffer(entry.size);
+        std::uint8_t *buffptr=&buffer[0];
+        std::uint32_t signature;
+
+        zipFileStream.read((char *) buffptr, sizeof (signature));
+        buffptr = getField(signature, buffptr);
+
+        if (signature == entry.signature) {
+
+            zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
+
+            buffptr = getField(entry.creatorVersion, buffptr);
+            buffptr = getField(entry.extractorVersion, buffptr);
+            buffptr = getField(entry.bitFlag, buffptr);
+            buffptr = getField(entry.compression, buffptr);
+            buffptr = getField(entry.modificationTime, buffptr);
+            buffptr = getField(entry.modificationDate, buffptr);
+            buffptr = getField(entry.crc32, buffptr);
+            buffptr = getField(entry.compressedSize, buffptr);
+            buffptr = getField(entry.uncompressedSize, buffptr);
+            buffptr = getField(entry.fileNameLength, buffptr);
+            buffptr = getField(entry.extraFieldLength, buffptr);
+            buffptr = getField(entry.fileCommentLength, buffptr);
+            buffptr = getField(entry.diskNoStart, buffptr);
+            buffptr = getField(entry.internalFileAttrib, buffptr);
+            buffptr = getField(entry.externalFileAttrib, buffptr);
+            buffptr = getField(entry.fileHeaderOffset, buffptr);
+
+            if ((entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength) > buffer.size()) {
+                buffer.resize(entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
+            }
+
+            zipFileStream.read((char *) &buffer[0], entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
+
+            if (entry.fileNameLength) {
+                entry.fileNameStr.append((char *) &buffer[0], entry.fileNameLength);
+            }
+            if (entry.extraFieldLength) {
+                entry.extraField.resize(entry.extraFieldLength);
+                std::memcpy(&entry.extraField[0], &buffer[entry.fileNameLength], entry.extraFieldLength);
+            }
+            if (entry.fileCommentLength) {
+                entry.fileNameStr.append((char *) &buffer[entry.fileNameLength + entry.extraFieldLength], entry.fileCommentLength);
+            }
+
+            if (zipFileStream.fail()) {
+                throw Exception("Error in reading Central Directory Local File Header record.");
+            }
+
+        } else {
+            throw Exception("No Central Directory File Header found.");
+        }
+
+    }
+
+    //
+    // Read Local File Header record from ZIP archive.
+    //
+
+    void CFileZIPIO::readLocalFileHeader(std::fstream &zipFileStream, CFileZIPIO::LocalFileHeader& entry) {
+
+        std::vector<std::uint8_t> buffer(entry.size);
+        std::uint8_t *buffptr=&buffer[0];
+        std::uint32_t signature;
+        
+        zipFileStream.read((char *) buffptr, sizeof (signature));
+        buffptr = getField(signature, buffptr);
+
+        if (signature == entry.signature) {
+
+            zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
+            
+            buffptr = getField(entry.creatorVersion, buffptr);
+            buffptr = getField(entry.bitFlag, buffptr);
+            buffptr = getField(entry.compression, buffptr);
+            buffptr = getField(entry.modificationTime, buffptr);
+            buffptr = getField(entry.modificationDate, buffptr);
+            buffptr = getField(entry.crc32, buffptr);
+            buffptr = getField(entry.compressedSize, buffptr);
+            buffptr = getField(entry.uncompressedSize, buffptr);
+            buffptr = getField(entry.fileNameLength, buffptr);
+            buffptr = getField(entry.extraFieldLength, buffptr);
+
+            if ((entry.fileNameLength + entry.extraFieldLength) > buffer.size()) {
+                buffer.resize(entry.fileNameLength + entry.extraFieldLength);
+            }
+
+            zipFileStream.read((char *) &buffer[0], entry.fileNameLength + entry.extraFieldLength);
+
+            if (entry.fileNameLength) {
+                entry.fileNameStr.append((char *) &buffer[0], entry.fileNameLength);
+            }
+
+            if (entry.extraFieldLength) {
+                entry.extraField.resize(entry.extraFieldLength);
+                std::memcpy(&entry.extraField[0], &buffer[entry.fileNameLength], entry.extraFieldLength);
+            }
+
+            if (zipFileStream.fail()) {
+                throw Exception("Error in reading Local File Header record.");
+            }
+
+
+        } else {
+            throw Exception("No Local File Header record found.");
+        }
+
+
+    }
+
+    //
+    // Read End Of Central Directory File Header record from ZIP archive.
+    //
+
+    void CFileZIPIO::readEOCentralDirectoryRecord(std::fstream &zipFileStream, CFileZIPIO::EOCentralDirectoryRecord& entry) {
+
+        zipFileStream.seekg(0, std::ios_base::end);
+        uint64_t fileLength = zipFileStream.tellg();
+        int64_t filePosition = fileLength - 1;
+        std::uint32_t signature = 0;
+
+        // Read file in reverse looking for End Of Central Directory File Header signature
+
+        while (filePosition) {
+            char nextByte;
+            zipFileStream.seekg(filePosition, std::ios_base::beg);
+            zipFileStream.get(nextByte);
+            signature <<= 8;
+            signature |= nextByte;
+            if (signature == entry.signature) {
+                break;
+            }
+            filePosition--;
+        }
+
+        // If record found then get
+
+        if (filePosition != -1) {
+
+            std::vector<std::uint8_t> buffer(entry.size);
+            std::uint8_t *buffptr=&buffer[0];
+            
+            zipFileStream.seekg(filePosition+sizeof(signature), std::ios_base::beg);
+            zipFileStream.read((char *) buffptr, entry.size-sizeof(signature));
+            
+            buffptr = getField(entry.diskNumber, buffptr);
+            buffptr = getField(entry.startDiskNumber, buffptr);
+            buffptr = getField(entry.numberOfCentralDirRecords, buffptr);
+            buffptr = getField(entry.totalCentralDirRecords, buffptr);
+            buffptr = getField(entry.sizeOfCentralDirRecords, buffptr);
+            buffptr = getField(entry.offsetCentralDirRecords, buffptr);
+            buffptr = getField(entry.commentLength, buffptr);
+            
+            if (entry.commentLength != 0) {
+                if (entry.commentLength > buffer.size()) {
+                    buffer.resize(entry.commentLength);
+                }
+                zipFileStream.read((char *) &buffer[0], entry.commentLength);
+                entry.commentStr.resize(entry.commentLength);
+                entry.commentStr.append((char *)&buffer[0], entry.commentLength);
+            }
+
+            if (zipFileStream.fail()) {
+                throw Exception("Error in reading End Of Central Directory record.");
+            }
+
+        } else {
+            throw Exception("No End Of Central Directory record found.");
+        }
+    }
+
+    //
+    // Read ZIP64 End Of Central Directory record from ZIP archive.
+    //
+
+    void CFileZIPIO::readZip64EOCentralDirectoryRecord(std::fstream &zipFileStream, CFileZIPIO::Zip64EOCentralDirectoryRecord& entry) {
+
+        std::vector<std::uint8_t> buffer(entry.size);
+        std::uint8_t *buffptr=&buffer[0];        
+        std::uint32_t signature;
+        std::uint64_t extensionSize;
+        Zip64EOCentDirRecordLocator zip64EOCentralDirLocator;
+
+        readZip64EOCentDirRecordLocator(zipFileStream, zip64EOCentralDirLocator);
+        zipFileStream.seekg(zip64EOCentralDirLocator.offset, std::ios::beg);
+
+        zipFileStream.read((char *) buffptr, sizeof (signature));
+        buffptr = getField(signature, buffptr);
+
+        if (signature == entry.signature) {
+
+            zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
+            
+            buffptr = getField(entry.totalRecordSize, buffptr);
+            buffptr = getField(entry.creatorVersion, buffptr);
+            buffptr = getField(entry.extractorVersion, buffptr);
+            buffptr = getField(entry.diskNumber, buffptr);
+            buffptr = getField(entry.startDiskNumber, buffptr);
+            buffptr = getField(entry.numberOfCentralDirRecords, buffptr);
+            buffptr = getField(entry.totalCentralDirRecords, buffptr);
+            buffptr = getField(entry.sizeOfCentralDirRecords, buffptr);
+            buffptr = getField(entry.offsetCentralDirRecords, buffptr);
+
+            extensionSize = entry.totalRecordSize - entry.size + 12;
+            if (extensionSize) {
+                entry.extensibleDataSector.resize(extensionSize);
+                zipFileStream.read((char *) &entry.extensibleDataSector[0], extensionSize);
+            }
+
+            if (zipFileStream.fail()) {
+                throw Exception("Error in reading ZIP64 End Of Central Directory record.");
+            }
+
+        } else {
+            throw Exception("No ZIP64 End Of Central Directory record found.");
+        }
+
+    }
+
+    //
+    // Read ZIP64 End Of Central Directory record locator from ZIP archive
+    //
+
+    void CFileZIPIO::readZip64EOCentDirRecordLocator(std::fstream &zipFileStream, CFileZIPIO::Zip64EOCentDirRecordLocator& entry) {
+
+        zipFileStream.seekg(0, std::ios_base::end);
+        uint64_t fileLength = zipFileStream.tellg();
+        int64_t filePosition = fileLength - 1;
+        std::uint32_t signature = 0;
+
+        // Read file in reverse looking for End Of Central Directory File Header signature
+
+        while (filePosition) {
+            char nextByte;
+            zipFileStream.seekg(filePosition, std::ios_base::beg);
+            zipFileStream.get(nextByte);
+            signature <<= 8;
+            signature |= nextByte;
+            if (signature == entry.signature) {
+                break;
+            }
+            filePosition--;
+        }
+
+        // If record found then get
+
+        if (filePosition != -1) {
+
+            std::vector<std::uint8_t> buffer(entry.size);
+            std::uint8_t *buffptr=&buffer[0];    
+                   
+            zipFileStream.seekg(filePosition+sizeof(signature), std::ios_base::beg);
+            zipFileStream.read((char *) buffptr, entry.size-sizeof(signature));
+            
+            buffptr = getField(entry.startDiskNumber, buffptr);
+            buffptr = getField(entry.offset, buffptr);
+            buffptr = getField(entry.numberOfDisks, buffptr);
+
+            if (zipFileStream.fail()) {
+                throw Exception("Error in reading ZIP64 End Of Central Directory Locator records.");
+            }
+
+        } else {
+            throw Exception("No ZIP64 End Of Central Directory Locator record found.");
+        }
+
+    }
+
     // ==============
     // PUBLIC METHODS
     // ==============
@@ -174,184 +661,62 @@ namespace Antik {
     }
     
     //
-    // Put Data Descriptor record into buffer and write to disk.
+    // Write Data Descriptor record into buffer to disk.
     //
 
     void CFileZIPIO::putDataDescriptor(CFileZIPIO::DataDescriptor& entry) {
 
-        std::vector<std::uint8_t> buffer;
-
-        this->putField(entry.signature, buffer);
-        this->putField(entry.crc32, buffer);
-        this->putField(entry.compressedSize, buffer);
-        this->putField(entry.uncompressedSize, buffer);
-
-        this->zipFileStream.write((char *) &buffer[0], entry.size);
-
-        if (this->zipFileStream.fail()) {
-            throw Exception("Error in writing Data Descriptor Record.");
-        }
+         writeDataDescriptor(this->zipFileStream, entry);
 
     }
 
     //
-    // Put Central Directory File Header record into buffer and write to disk.
+    // Write Central Directory File Header record to disk.
     //
 
     void CFileZIPIO::putCentralDirectoryFileHeader(CFileZIPIO::CentralDirectoryFileHeader& entry) {
 
-        std::vector<std::uint8_t> buffer;
-
-        this->putField(entry.signature, buffer);
-        this->putField(entry.creatorVersion, buffer);
-        this->putField(entry.extractorVersion, buffer);
-        this->putField(entry.bitFlag, buffer);
-        this->putField(entry.compression, buffer);
-        this->putField(entry.modificationTime, buffer);
-        this->putField(entry.modificationDate, buffer);
-        this->putField(entry.crc32, buffer);
-        this->putField(entry.compressedSize, buffer);
-        this->putField(entry.uncompressedSize, buffer);
-        this->putField(entry.fileNameLength, buffer);
-        this->putField(entry.extraFieldLength, buffer);
-        this->putField(entry.fileCommentLength, buffer);
-        this->putField(entry.diskNoStart, buffer);
-        this->putField(entry.internalFileAttrib, buffer);
-        this->putField(entry.externalFileAttrib, buffer);
-        this->putField(entry.fileHeaderOffset, buffer);
-
-        this->zipFileStream.write((char *) &buffer[0], entry.size);
-
-        if (entry.fileNameLength) {
-            this->zipFileStream.write((char *) &entry.fileNameStr[0], entry.fileNameLength);
-        }
-        if (entry.extraFieldLength) {
-            this->zipFileStream.write((char *) &entry.extraField[0], entry.extraFieldLength);
-        }
-        if (entry.fileCommentLength) {
-            this->zipFileStream.write((char *) &entry.fileCommentStr[0], entry.fileCommentLength);
-        }
-
-        if (this->zipFileStream.fail()) {
-            throw Exception("Error in writing Central Directory Local File Header record.");
-        }
+         writeCentralDirectoryFileHeader(this->zipFileStream, entry);
 
     }
 
     //
-    // Put Local File Header record into buffer and write to disk.
+    // Write Local File Header record to disk.
     //
 
     void CFileZIPIO::putFileHeader(CFileZIPIO::LocalFileHeader& entry) {
 
-        std::vector<std::uint8_t> buffer;
-
-        this->putField(entry.signature, buffer);
-        this->putField(entry.creatorVersion, buffer);
-        this->putField(entry.bitFlag, buffer);
-        this->putField(entry.compression, buffer);
-        this->putField(entry.modificationTime, buffer);
-        this->putField(entry.modificationDate, buffer);
-        this->putField(entry.crc32, buffer);
-        this->putField(entry.compressedSize, buffer);
-        this->putField(entry.uncompressedSize, buffer);
-        this->putField(entry.fileNameLength, buffer);
-        this->putField(entry.extraFieldLength, buffer);
-
-        this->zipFileStream.write((char *) &buffer[0], entry.size);
-
-        if (entry.fileNameLength) {
-            this->zipFileStream.write((char *) &entry.fileNameStr[0], entry.fileNameLength);
-        }
-        if (entry.extraFieldLength) {
-            this->zipFileStream.write((char *) &entry.extraField[0], entry.extraFieldLength);
-        }
-
-        if (this->zipFileStream.fail()) {
-            throw Exception("Error in writing Local File Header record.");
-        }
+        writeFileHeader(this->zipFileStream, entry);
 
     }
 
     //
-    // Put End Of Central Directory record into buffer and write to disk.
+    // Write End Of Central Directory record to disk.
     //
 
     void CFileZIPIO::putEOCentralDirectoryRecord(CFileZIPIO::EOCentralDirectoryRecord& entry) {
 
-        std::vector<std::uint8_t> buffer;
-
-        this->putField(entry.signature, buffer);
-        this->putField(entry.diskNumber, buffer);
-        this->putField(entry.startDiskNumber, buffer);
-        this->putField(entry.numberOfCentralDirRecords, buffer);
-        this->putField(entry.totalCentralDirRecords, buffer);
-        this->putField(entry.sizeOfCentralDirRecords, buffer);
-        this->putField(entry.offsetCentralDirRecords, buffer);
-        this->putField(entry.commentLength, buffer);
-
-        this->zipFileStream.write((char *) &buffer[0], entry.size);
-
-        if (entry.commentLength) {
-            this->zipFileStream.write((char *) &entry.commentStr[0], entry.commentLength);
-        }
-
-        if (this->zipFileStream.fail()) {
-            throw Exception("Error in writing End Of Central Directory Local File Header record.");
-        }
-
+        writeEOCentralDirectoryRecord(this->zipFileStream, entry);
+        
     }
 
     //
-    // Put ZIP64 End Of Central Directory record into buffer and write to disk.
+    // Write ZIP64 End Of Central Directory record to disk.
     //
 
     void CFileZIPIO::putZip64EOCentralDirectoryRecord(CFileZIPIO::Zip64EOCentralDirectoryRecord& entry) {
 
-        std::vector<std::uint8_t> buffer;
-
-        entry.totalRecordSize = entry.size - 12 +
-                entry.extensibleDataSector.size();
-                       
-        this->putField(entry.signature, buffer);
-        this->putField(entry.totalRecordSize, buffer);
-        this->putField(entry.creatorVersion, buffer);
-        this->putField(entry.extractorVersion, buffer);
-        this->putField(entry.diskNumber, buffer);
-        this->putField(entry.startDiskNumber, buffer);
-        this->putField(entry.numberOfCentralDirRecords, buffer);
-        this->putField(entry.totalCentralDirRecords, buffer);
-        this->putField(entry.sizeOfCentralDirRecords, buffer);
-        this->putField(entry.offsetCentralDirRecords, buffer);
-        this->zipFileStream.write((char *) &buffer[0], entry.size);
-
-        if (entry.extensibleDataSector.size()) {
-            this->zipFileStream.write((char *) &entry.extensibleDataSector[0], entry.extensibleDataSector.size());
-        }
-
-        if (this->zipFileStream.fail()) {
-            throw Exception("Error in writing ZIP64 End Of Central Directory record.");
-        }
+      writeZip64EOCentralDirectoryRecord(this->zipFileStream, entry);
 
     }
 
     //
-    // Put ZIP64 End Of Central Directory record locator into buffer and write to disk.
+    // Write ZIP64 End Of Central Directory record locator to disk.
     //
 
     void CFileZIPIO::putZip64EOCentDirRecordLocator(CFileZIPIO::Zip64EOCentDirRecordLocator& entry) {
 
-        std::vector<std::uint8_t> buffer;
-
-        this->putField(entry.signature, buffer);
-        this->putField(entry.startDiskNumber, buffer);
-        this->putField(entry.offset, buffer);
-        this->putField(entry.numberOfDisks, buffer);
-        this->zipFileStream.write((char *) &buffer[0], entry.size);
-
-        if (this->zipFileStream.fail()) {
-            throw Exception("Error in writing ZIP64 End Of Central Directory record locator.");
-        }
+        writeZip64EOCentDirRecordLocator(this->zipFileStream, entry);
 
     }
 
@@ -367,32 +732,32 @@ namespace Antik {
 
         info.clear();
 
-        if (this->fieldRequires64bits(extendedInfo.originalSize)) {
+        if (fieldRequires64bits(extendedInfo.originalSize)) {
             fieldSize += sizeof(std::uint64_t); // Store sizes as a pair.
             fieldSize += sizeof(std::uint64_t);
         }
         
-        if (this->fieldRequires64bits(extendedInfo.fileHeaderOffset)) {
+        if (fieldRequires64bits(extendedInfo.fileHeaderOffset)) {
             fieldSize += sizeof(std::uint64_t);
         }
         
-        if (this->fieldRequires32bits(extendedInfo.diskNo)) {
+        if (fieldRequires32bits(extendedInfo.diskNo)) {
             fieldSize += sizeof(std::uint32_t);
         }
         
-        this->putField(extendedInfo.signature, info);
-        this->putField(fieldSize, info);
+        putField(extendedInfo.signature, info);
+        putField(fieldSize, info);
         
-        if (this->fieldRequires64bits(extendedInfo.originalSize)) {
-            this->putField(extendedInfo.originalSize, info);
-            this->putField(extendedInfo.compressedSize, info);
+        if (fieldRequires64bits(extendedInfo.originalSize)) {
+            putField(extendedInfo.originalSize, info);
+            putField(extendedInfo.compressedSize, info);
         }
         
-        if (this->fieldRequires64bits(extendedInfo.fileHeaderOffset)) { 
-            this->putField(extendedInfo.fileHeaderOffset, info);
+        if (fieldRequires64bits(extendedInfo.fileHeaderOffset)) { 
+            putField(extendedInfo.fileHeaderOffset, info);
         }
-        if (this->fieldRequires32bits(extendedInfo.diskNo)) {
-            this->putField(extendedInfo.diskNo, info);
+        if (fieldRequires32bits(extendedInfo.diskNo)) {
+            putField(extendedInfo.diskNo, info);
         }
 
     }
@@ -403,28 +768,7 @@ namespace Antik {
 
     void CFileZIPIO::getDataDescriptor(CFileZIPIO::DataDescriptor& entry) {
 
-        std::vector<std::uint8_t> buffer(entry.size);
-        std::uint8_t *buffptr=&buffer[0];
-        std::uint32_t signature;
-
-        this->zipFileStream.read((char *) buffptr, sizeof (signature));
-        buffptr = this->getField(signature, buffptr);
-
-        if (signature == entry.signature) {
-
-            this->zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
-            
-            buffptr = this->getField(entry.crc32, buffptr);
-            buffptr = this->getField(entry.compressedSize, buffptr);
-            buffptr = this->getField(entry.uncompressedSize, buffptr);
-
-            if (this->zipFileStream.fail()) {
-                throw Exception("Error in reading Data Descriptor Record.");
-            }
-
-        } else {
-            throw Exception("No Data Descriptor record found.");
-        }
+        readDataDescriptor(this->zipFileStream, entry);
 
     }
 
@@ -434,59 +778,8 @@ namespace Antik {
 
     void CFileZIPIO::getCentralDirectoryFileHeader(CFileZIPIO::CentralDirectoryFileHeader& entry) {
 
-        std::vector<std::uint8_t> buffer(entry.size);
-        std::uint8_t *buffptr=&buffer[0];
-        std::uint32_t signature;
-
-        this->zipFileStream.read((char *) buffptr, sizeof (signature));
-        buffptr = this->getField(signature, buffptr);
-
-        if (signature == entry.signature) {
-
-            this->zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
-
-            buffptr = this->getField(entry.creatorVersion, buffptr);
-            buffptr = this->getField(entry.extractorVersion, buffptr);
-            buffptr = this->getField(entry.bitFlag, buffptr);
-            buffptr = this->getField(entry.compression, buffptr);
-            buffptr = this->getField(entry.modificationTime, buffptr);
-            buffptr = this->getField(entry.modificationDate, buffptr);
-            buffptr = this->getField(entry.crc32, buffptr);
-            buffptr = this->getField(entry.compressedSize, buffptr);
-            buffptr = this->getField(entry.uncompressedSize, buffptr);
-            buffptr = this->getField(entry.fileNameLength, buffptr);
-            buffptr = this->getField(entry.extraFieldLength, buffptr);
-            buffptr = this->getField(entry.fileCommentLength, buffptr);
-            buffptr = this->getField(entry.diskNoStart, buffptr);
-            buffptr = this->getField(entry.internalFileAttrib, buffptr);
-            buffptr = this->getField(entry.externalFileAttrib, buffptr);
-            buffptr = this->getField(entry.fileHeaderOffset, buffptr);
-
-            if ((entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength) > buffer.size()) {
-                buffer.resize(entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
-            }
-
-            this->zipFileStream.read((char *) &buffer[0], entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
-
-            if (entry.fileNameLength) {
-                entry.fileNameStr.append((char *) &buffer[0], entry.fileNameLength);
-            }
-            if (entry.extraFieldLength) {
-                entry.extraField.resize(entry.extraFieldLength);
-                std::memcpy(&entry.extraField[0], &buffer[entry.fileNameLength], entry.extraFieldLength);
-            }
-            if (entry.fileCommentLength) {
-                entry.fileNameStr.append((char *) &buffer[entry.fileNameLength + entry.extraFieldLength], entry.fileCommentLength);
-            }
-
-            if (this->zipFileStream.fail()) {
-                throw Exception("Error in reading Central Directory Local File Header record.");
-            }
-
-        } else {
-            throw Exception("No Central Directory File Header found.");
-        }
-
+           readCentralDirectoryFileHeader(this->zipFileStream, entry);
+           
     }
 
     //
@@ -495,52 +788,7 @@ namespace Antik {
 
     void CFileZIPIO::getLocalFileHeader(CFileZIPIO::LocalFileHeader& entry) {
 
-        std::vector<std::uint8_t> buffer(entry.size);
-        std::uint8_t *buffptr=&buffer[0];
-        std::uint32_t signature;
-        
-        this->zipFileStream.read((char *) buffptr, sizeof (signature));
-        buffptr = this->getField(signature, buffptr);
-
-        if (signature == entry.signature) {
-
-            this->zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
-            
-            buffptr = this->getField(entry.creatorVersion, buffptr);
-            buffptr = this->getField(entry.bitFlag, buffptr);
-            buffptr = this->getField(entry.compression, buffptr);
-            buffptr = this->getField(entry.modificationTime, buffptr);
-            buffptr = this->getField(entry.modificationDate, buffptr);
-            buffptr = this->getField(entry.crc32, buffptr);
-            buffptr = this->getField(entry.compressedSize, buffptr);
-            buffptr = this->getField(entry.uncompressedSize, buffptr);
-            buffptr = this->getField(entry.fileNameLength, buffptr);
-            buffptr = this->getField(entry.extraFieldLength, buffptr);
-
-            if ((entry.fileNameLength + entry.extraFieldLength) > buffer.size()) {
-                buffer.resize(entry.fileNameLength + entry.extraFieldLength);
-            }
-
-            this->zipFileStream.read((char *) &buffer[0], entry.fileNameLength + entry.extraFieldLength);
-
-            if (entry.fileNameLength) {
-                entry.fileNameStr.append((char *) &buffer[0], entry.fileNameLength);
-            }
-
-            if (entry.extraFieldLength) {
-                entry.extraField.resize(entry.extraFieldLength);
-                std::memcpy(&entry.extraField[0], &buffer[entry.fileNameLength], entry.extraFieldLength);
-            }
-
-            if (this->zipFileStream.fail()) {
-                throw Exception("Error in reading Local File Header record.");
-            }
-
-
-        } else {
-            throw Exception("No Local File Header record found.");
-        }
-
+        readLocalFileHeader(this->zipFileStream, entry);
 
     }
 
@@ -550,59 +798,8 @@ namespace Antik {
 
     void CFileZIPIO::getEOCentralDirectoryRecord(CFileZIPIO::EOCentralDirectoryRecord& entry) {
 
-        this->zipFileStream.seekg(0, std::ios_base::end);
-        uint64_t fileLength = this->zipFileStream.tellg();
-        int64_t filePosition = fileLength - 1;
-        std::uint32_t signature = 0;
-
-        // Read file in reverse looking for End Of Central Directory File Header signature
-
-        while (filePosition) {
-            char nextByte;
-            this->zipFileStream.seekg(filePosition, std::ios_base::beg);
-            this->zipFileStream.get(nextByte);
-            signature <<= 8;
-            signature |= nextByte;
-            if (signature == entry.signature) {
-                break;
-            }
-            filePosition--;
-        }
-
-        // If record found then get
-
-        if (filePosition != -1) {
-
-            std::vector<std::uint8_t> buffer(entry.size);
-            std::uint8_t *buffptr=&buffer[0];
-            
-            this->zipFileStream.seekg(filePosition+sizeof(signature), std::ios_base::beg);
-            this->zipFileStream.read((char *) buffptr, entry.size-sizeof(signature));
-            
-            buffptr = this->getField(entry.diskNumber, buffptr);
-            buffptr = this->getField(entry.startDiskNumber, buffptr);
-            buffptr = this->getField(entry.numberOfCentralDirRecords, buffptr);
-            buffptr = this->getField(entry.totalCentralDirRecords, buffptr);
-            buffptr = this->getField(entry.sizeOfCentralDirRecords, buffptr);
-            buffptr = this->getField(entry.offsetCentralDirRecords, buffptr);
-            buffptr = this->getField(entry.commentLength, buffptr);
-            
-            if (entry.commentLength != 0) {
-                if (entry.commentLength > buffer.size()) {
-                    buffer.resize(entry.commentLength);
-                }
-                this->zipFileStream.read((char *) &buffer[0], entry.commentLength);
-                entry.commentStr.resize(entry.commentLength);
-                entry.commentStr.append((char *)&buffer[0], entry.commentLength);
-            }
-
-            if (this->zipFileStream.fail()) {
-                throw Exception("Error in reading End Of Central Directory record.");
-            }
-
-        } else {
-            throw Exception("No End Of Central Directory record found.");
-        }
+        readEOCentralDirectoryRecord(this->zipFileStream, entry);
+        
     }
 
     //
@@ -611,94 +808,7 @@ namespace Antik {
 
     void CFileZIPIO::getZip64EOCentralDirectoryRecord(CFileZIPIO::Zip64EOCentralDirectoryRecord& entry) {
 
-        std::vector<std::uint8_t> buffer(entry.size);
-        std::uint8_t *buffptr=&buffer[0];        
-        std::uint32_t signature;
-        std::uint64_t extensionSize;
-        Zip64EOCentDirRecordLocator zip64EOCentralDirLocator;
-
-        this->getZip64EOCentDirRecordLocator(zip64EOCentralDirLocator);
-        this->zipFileStream.seekg(zip64EOCentralDirLocator.offset, std::ios::beg);
-
-        this->zipFileStream.read((char *) buffptr, sizeof (signature));
-        buffptr = this->getField(signature, buffptr);
-
-        if (signature == entry.signature) {
-
-            this->zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
-            
-            buffptr = this->getField(entry.totalRecordSize, buffptr);
-            buffptr = this->getField(entry.creatorVersion, buffptr);
-            buffptr = this->getField(entry.extractorVersion, buffptr);
-            buffptr = this->getField(entry.diskNumber, buffptr);
-            buffptr = this->getField(entry.startDiskNumber, buffptr);
-            buffptr = this->getField(entry.numberOfCentralDirRecords, buffptr);
-            buffptr = this->getField(entry.totalCentralDirRecords, buffptr);
-            buffptr = this->getField(entry.sizeOfCentralDirRecords, buffptr);
-            buffptr = this->getField(entry.offsetCentralDirRecords, buffptr);
-
-            extensionSize = entry.totalRecordSize - entry.size + 12;
-            if (extensionSize) {
-                entry.extensibleDataSector.resize(extensionSize);
-                this->zipFileStream.read((char *) &entry.extensibleDataSector[0], extensionSize);
-            }
-
-            if (this->zipFileStream.fail()) {
-                throw Exception("Error in reading ZIP64 End Of Central Directory record.");
-            }
-
-        } else {
-            throw Exception("No ZIP64 End Of Central Directory record found.");
-        }
-
-    }
-
-    //
-    // Get ZIP64 End Of Central Directory record locator from ZIP archive
-    //
-
-    void CFileZIPIO::getZip64EOCentDirRecordLocator(CFileZIPIO::Zip64EOCentDirRecordLocator& entry) {
-
-        this->zipFileStream.seekg(0, std::ios_base::end);
-        uint64_t fileLength = this->zipFileStream.tellg();
-        int64_t filePosition = fileLength - 1;
-        std::uint32_t signature = 0;
-
-        // Read file in reverse looking for End Of Central Directory File Header signature
-
-        while (filePosition) {
-            char nextByte;
-            this->zipFileStream.seekg(filePosition, std::ios_base::beg);
-            this->zipFileStream.get(nextByte);
-            signature <<= 8;
-            signature |= nextByte;
-            if (signature == entry.signature) {
-                break;
-            }
-            filePosition--;
-        }
-
-        // If record found then get
-
-        if (filePosition != -1) {
-
-            std::vector<std::uint8_t> buffer(entry.size);
-            std::uint8_t *buffptr=&buffer[0];    
-                   
-            this->zipFileStream.seekg(filePosition+sizeof(signature), std::ios_base::beg);
-            this->zipFileStream.read((char *) buffptr, entry.size-sizeof(signature));
-            
-            buffptr = this->getField(entry.startDiskNumber, buffptr);
-            buffptr = this->getField(entry.offset, buffptr);
-            buffptr = this->getField(entry.numberOfDisks, buffptr);
-
-            if (this->zipFileStream.fail()) {
-                throw Exception("Error in reading ZIP64 End Of Central Directory Locator records.");
-            }
-
-        } else {
-            throw Exception("No ZIP64 End Of Central Directory Locator record found.");
-        }
+         readZip64EOCentralDirectoryRecord(this->zipFileStream, entry);
 
     }
 
@@ -715,26 +825,26 @@ namespace Antik {
           
         while (fieldCount < info.size()) {
             
-            buffptr = this->getField(signature, buffptr);
-            buffptr = this->getField(fieldSize, buffptr);
+            buffptr = getField(signature, buffptr);
+            buffptr = getField(fieldSize, buffptr);
             
             if (signature == zip64ExtendedInfo.signature) {
                 if (fieldOverflow(static_cast<std::uint32_t>(zip64ExtendedInfo.originalSize))) {
-                    buffptr = this->getField(zip64ExtendedInfo.originalSize, buffptr);
+                    buffptr = getField(zip64ExtendedInfo.originalSize, buffptr);
                     fieldSize -= sizeof (std::uint64_t);
                     if (!fieldSize) break;
                 }
                 if (fieldOverflow(static_cast<std::uint32_t>(zip64ExtendedInfo.compressedSize))) {
-                    buffptr = this->getField(zip64ExtendedInfo.compressedSize, buffptr);
+                    buffptr = getField(zip64ExtendedInfo.compressedSize, buffptr);
                     fieldSize -= sizeof (std::uint64_t);
                     if (!fieldSize) break;
                 }
                 if (fieldOverflow(static_cast<std::uint32_t>(zip64ExtendedInfo.fileHeaderOffset))) {
-                    buffptr = this->getField(zip64ExtendedInfo.fileHeaderOffset, buffptr);
+                    buffptr = getField(zip64ExtendedInfo.fileHeaderOffset, buffptr);
                     fieldSize -= sizeof (std::uint64_t);
                     if (!fieldSize) break;
                 }
-                buffptr = this->getField(zip64ExtendedInfo.diskNo, buffptr);
+                buffptr = getField(zip64ExtendedInfo.diskNo, buffptr);
                 break;
             }
 

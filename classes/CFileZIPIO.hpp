@@ -219,8 +219,6 @@ namespace Antik {
         // ==============
  
         template <typename T> static bool fieldOverflow(const T& field);
-        template <typename T> static void putField(T field, std::vector<std::uint8_t>& buffer);
-        template <typename T> static std::uint8_t *getField(T& field, std::uint8_t* buffptr);
         
         static bool fieldRequires64bits(std::uint64_t field) { return(field & 0xFFFFFFFF00000000); };
         static bool fieldRequires32bits(std::uint32_t field) { return(field & 0xFFFF0000); };
@@ -229,19 +227,17 @@ namespace Antik {
         void putCentralDirectoryFileHeader(CFileZIPIO::CentralDirectoryFileHeader& entry);
         void putFileHeader(CFileZIPIO::LocalFileHeader& entry);
         void putEOCentralDirectoryRecord(CFileZIPIO::EOCentralDirectoryRecord& entry);
-
-        void putZip64ExtendedInfoExtraField(Zip64ExtendedInfoExtraField& extendedInfo, std::vector<std::uint8_t>& info);
         void putZip64EOCentralDirectoryRecord(Zip64EOCentralDirectoryRecord& entry);
         void putZip64EOCentDirRecordLocator(Zip64EOCentDirRecordLocator& entry);
-             
+        static void putZip64ExtendedInfoExtraField(Zip64ExtendedInfoExtraField& extendedInfo, std::vector<std::uint8_t>& info);
+        
         void getDataDescriptor(CFileZIPIO::DataDescriptor& entry);
         void getCentralDirectoryFileHeader(CFileZIPIO::CentralDirectoryFileHeader& entry);
         void getLocalFileHeader(CFileZIPIO::LocalFileHeader& entry);
         void getEOCentralDirectoryRecord(CFileZIPIO::EOCentralDirectoryRecord& entry);
-  
         void getZip64EOCentralDirectoryRecord(CFileZIPIO::Zip64EOCentralDirectoryRecord& entry);
         void getZip64EOCentDirRecordLocator(CFileZIPIO::Zip64EOCentDirRecordLocator& entry);
-        void getZip64ExtendedInfoExtraField(Zip64ExtendedInfoExtraField& extendedInfo, std::vector<std::uint8_t> & info);
+        static void getZip64ExtendedInfoExtraField(Zip64ExtendedInfoExtraField& extendedInfo, std::vector<std::uint8_t> & info);
 
         void openZIPFile(const std::string fileNameStr, std::ios_base::openmode mode);
         void closeZIPFile(void);
@@ -274,6 +270,23 @@ namespace Antik {
         // PRIVATE METHODS
         // ===============
 
+        template <typename T> static void putField(T field, std::vector<std::uint8_t>& buffer);
+        template <typename T> static std::uint8_t *getField(T& field, std::uint8_t* buffptr);
+ 
+        static void readDataDescriptor(std::fstream &zipFileStream, DataDescriptor& entry);
+        static void readCentralDirectoryFileHeader(std::fstream &zipFileStream, CentralDirectoryFileHeader& entry);
+        static void readLocalFileHeader(std::fstream &zipFileStream, LocalFileHeader& entry);
+        static void readEOCentralDirectoryRecord(std::fstream &zipFileStream, EOCentralDirectoryRecord& entry);
+        static void readZip64EOCentralDirectoryRecord(std::fstream &zipFileStream, Zip64EOCentralDirectoryRecord& entry);
+        static void readZip64EOCentDirRecordLocator(std::fstream &zipFileStream, Zip64EOCentDirRecordLocator& entry);
+
+        static void writeDataDescriptor(std::fstream &zipFileStream, DataDescriptor& entry);
+        static void writeCentralDirectoryFileHeader(std::fstream &zipFileStream, CentralDirectoryFileHeader& entry);
+        static void writeFileHeader(std::fstream &zipFileStream, LocalFileHeader& entry);
+        static void writeEOCentralDirectoryRecord(std::fstream &zipFileStream, EOCentralDirectoryRecord& entry);
+        static void writeZip64EOCentralDirectoryRecord(std::fstream &zipFileStream, Zip64EOCentralDirectoryRecord& entry);
+        static void writeZip64EOCentDirRecordLocator(std::fstream &zipFileStream, Zip64EOCentDirRecordLocator& entry);
+        
         // =================
         // PRIVATE VARIABLES
         // =================

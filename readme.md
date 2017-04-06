@@ -89,7 +89,11 @@ CFileMIME contains any MIME processing functionality/utilities used on projects.
 
 # [CFileZIP](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CFileZIP.cpp) #
 
-CFIleZIP is a class that enables the creation and manipulation of ZIP file archives. It supports 2.0 compatible archives at present either storing or retrieving files in deflate compressed format or a simple stored copy of a file. The current supported compression format inflate/deflate  functionality is provided through the use of [zlib](http://www.zlib.net/).
+CFIleZIP is a class that enables the creation and manipulation of ZIP file archives. It supports 2.0 compatible archives at present either storing or retrieving files in deflate compressed format or a simple stored copy of a file; ZIP64 extneions are also supported for larger format archives. The current supported compression format inflate/deflate  functionality is provided through the use of [zlib](http://www.zlib.net/).
+
+# [CFileZIPIO](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CFileZIPIO.cpp) #
+
+CFileZIPIO provides functionality to open an ZIP archive and read/write its records and also /read/write raw data (save/read away tile contents).
 
 # [CLogger](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CLogger.cpp) #
 
@@ -118,9 +122,9 @@ in any e-mail in a specific mailbox to a given local folder. The final destinati
 
 1. **[ArchiveFolder](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/ArchiveFolder.cpp)** A command line program that writes the contents of a source folder to a ZIP archive; traversing it recursively and adding any sub-folder contents. It compresses each file with deflate unless its size does not decrease in which case it simply stores the file.
 
-2. **[ExtractToFolder](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/ExtractToFolder.cpp)** A command line program that extracts the contents of a ZIP archive to a specified destination folder. Note: Any destination folders are created by the program before a file is extracted as the class will not do this. 
+1. **[ExtractToFolder](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/ExtractToFolder.cpp)** A command line program that extracts the contents of a ZIP archive to a specified destination folder. Note: Any destination folders are created by the program before a file is extracted as the class will not do this. 
 
-
+1. **[ZIPArchiveInfo](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/ZIPArchiveInfo.cpp)**  This is a command line program to scan a ZIP archive and output information about it.
 
 # To do list #
 
