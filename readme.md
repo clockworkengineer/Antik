@@ -93,7 +93,9 @@ CFIleZIP is a class that enables the creation and manipulation of ZIP file archi
 
 # [CFileZIPIO](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CFileZIPIO.cpp) #
 
-CFileZIPIO provides functionality to open an ZIP archive and read/write its records and also /read/write raw data (save/read away tile contents).
+CFileZIPIO provides functionality to open an ZIP archive and read/write its records and raw data. It
+is the base class of CFileZIP but may be used standalone as with example program ZIPArchiveInfo.
+
 
 # [CLogger](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CLogger.cpp) #
 
