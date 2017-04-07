@@ -41,7 +41,7 @@
 // Antikythera Classes
 //
 
-#include "CFileZIPIO.hpp"
+#include "CZIPIO.hpp"
 
 using namespace Antik::File;
 
@@ -172,7 +172,7 @@ void dumpBytes(std::vector<std::uint8_t>& bytes) {
 // Output End Of Central Directory record information.
 //
 
-void dumpEOCentralDirectoryRecord(CFileZIPIO::EOCentralDirectoryRecord& endOfCentralDirectory) {
+void dumpEOCentralDirectoryRecord(CZIPIO::EOCentralDirectoryRecord& endOfCentralDirectory) {
 
     std::cout << "End Of Central Directory Record" << "\n";
     std::cout << "-------------------------------\n" << "\n";
@@ -195,7 +195,7 @@ void dumpEOCentralDirectoryRecord(CFileZIPIO::EOCentralDirectoryRecord& endOfCen
 // Output Central Directory File Header record information.
 //
 
-void dumpCentralDirectoryFileHeader(CFileZIPIO& zipFile, CFileZIPIO::CentralDirectoryFileHeader& fileHeader, std::uint32_t number) {
+void dumpCentralDirectoryFileHeader(CZIPIO& zipFile, CZIPIO::CentralDirectoryFileHeader& fileHeader, std::uint32_t number) {
 
     std::cout << "Central Directory File Header No: " << number << "\n";
     std::cout << "--------------------------------\n" << "\n";
@@ -232,7 +232,7 @@ void dumpCentralDirectoryFileHeader(CFileZIPIO& zipFile, CFileZIPIO::CentralDire
     if (zipFile.fieldOverflow(fileHeader.compressedSize) ||
             zipFile.fieldOverflow(fileHeader.uncompressedSize) ||
             zipFile.fieldOverflow(fileHeader.fileHeaderOffset)) {
-        CFileZIPIO::Zip64ExtendedInfoExtraField extra;
+        CZIPIO::Zip64ExtendedInfoExtraField extra;
         extra.compressedSize = fileHeader.compressedSize;
         extra.fileHeaderOffset = fileHeader.fileHeaderOffset;
         extra.originalSize = fileHeader.uncompressedSize;
@@ -270,8 +270,8 @@ int main(int argc, char** argv) {
 
         if (!argData.zipFileNameStr.empty()) {
 
-            CFileZIPIO zipFile;
-            CFileZIPIO::EOCentralDirectoryRecord endOfCentralDirectory;
+            CZIPIO zipFile;
+            CZIPIO::EOCentralDirectoryRecord endOfCentralDirectory;
 
             //  Open zip file for read
 
@@ -287,7 +287,7 @@ int main(int argc, char** argv) {
             zipFile.positionInZIPFile(endOfCentralDirectory.offsetCentralDirRecords);
 
             for (auto entryNumber = 0; entryNumber < endOfCentralDirectory.numberOfCentralDirRecords; entryNumber++) {
-                CFileZIPIO::CentralDirectoryFileHeader fileHeader;
+                CZIPIO::CentralDirectoryFileHeader fileHeader;
                 zipFile.getCentralDirectoryFileHeader(fileHeader);
                 dumpCentralDirectoryFileHeader(zipFile, fileHeader, entryNumber);
             }
@@ -303,7 +303,7 @@ int main(int argc, char** argv) {
         // Catch any errors
         //
 
-    } catch (const CFileZIPIO::Exception & e) {
+    } catch (const CZIPIO::Exception & e) {
         exitWithError(e.what());
     } catch (const std::exception & e) {
         exitWithError(std::string("Standard exception occured: [") + e.what() + "]");

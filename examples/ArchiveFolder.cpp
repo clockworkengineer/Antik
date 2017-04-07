@@ -56,7 +56,7 @@ namespace fs = boost::filesystem;
 // Antikythera Classes
 //
 
-#include "CFileZIP.hpp"
+#include "CZIP.hpp"
 
 using namespace Antik::File;
 
@@ -172,7 +172,7 @@ int main(int argc, char** argv) {
 
         if (!argData.zipFileNameStr.empty()) {
 
-            CFileZIP zipFile(argData.zipFileNameStr);
+            CZIP zipFile(argData.zipFileNameStr);
 
             // Create Archive
             
@@ -206,7 +206,7 @@ int main(int argc, char** argv) {
     // Catch any errors
     //
 
-    } catch (const CFileZIP::Exception & e) {
+    } catch (const CZIP::Exception & e) {
         exitWithError(e.what());
     } catch (const fs::filesystem_error & e) {
         exitWithError(std::string("BOOST file system exception occured: [") + e.what() + "]");

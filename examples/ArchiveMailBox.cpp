@@ -54,11 +54,11 @@
 // Antikythera Classes
 //
 
-#include "CMailIMAP.hpp"
-#include "CMailIMAPParse.hpp"
-#include "CMailIMAPBodyStruct.hpp"
-#include "CMailSMTP.hpp"
-#include "CFileMIME.hpp"
+#include "CIMAP.hpp"
+#include "CIMAPParse.hpp"
+#include "CIMAPBodyStruct.hpp"
+#include "CSMTP.hpp"
+#include "CMIME.hpp"
 
 using namespace Antik::Mail;
 
@@ -117,7 +117,7 @@ void exitWithError(const std::string errMsgStr) {
 
     // Closedown email, display error and exit.
 
-    CMailIMAP::closedown();
+    CIMAP::closedown();
     std::cerr << errMsgStr << std::endl;
     exit(EXIT_FAILURE);
 
@@ -216,22 +216,22 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Parse command response and return pointer to parsed data.
 //
 
-CMailIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandStr, 
+CIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandStr, 
                              const std::string& commandResponseStr) {
 
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse;
+    CIMAPParse::COMMANDRESPONSE parsedResponse;
 
     try {
-        parsedResponse = CMailIMAPParse::parseResponse(commandResponseStr);
-    } catch (CMailIMAPParse::Exception &e) {
+        parsedResponse = CIMAPParse::parseResponse(commandResponseStr);
+    } catch (CIMAPParse::Exception &e) {
         std::cerr << "RESPONSE IN ERRROR: [" << commandResponseStr << "]" << std::endl;
         throw (e);
     }
 
     if (parsedResponse->bBYESent) {
-        throw CMailIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
-    } else if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
-        throw CMailIMAP::Exception(commandStr + ": " + parsedResponse->errorMessageStr);
+        throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
+    } else if (parsedResponse->status != CIMAPParse::RespCode::OK) {
+        throw CIMAP::Exception(commandStr + ": " + parsedResponse->errorMessageStr);
     }
 
     return (parsedResponse);
@@ -242,14 +242,14 @@ CMailIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandS
 // Send command to IMAP server. At present it checks for any errors and just exits.
 //
 
-std::string sendCommand(CMailIMAP& imap, const std::string& mailBoxNameStr, 
+std::string sendCommand(CIMAP& imap, const std::string& mailBoxNameStr, 
                            const std::string& commandStr) {
 
     std::string commandResponseStr;
 
     try {
         commandResponseStr = imap.sendCommand(commandStr);
-    } catch (CMailIMAP::Exception &e) {
+    } catch (CIMAP::Exception &e) {
         std::cerr << "IMAP ERROR: Need to reconnect to server" << std::endl;
         throw (e);
     }
@@ -262,11 +262,11 @@ std::string sendCommand(CMailIMAP& imap, const std::string& mailBoxNameStr,
 // Fetch a given e-mails body and subject line and create an .eml file for it.
 //
 
-void fetchEmailAndArchive(CMailIMAP& imap, const std::string& mailBoxNameStr, 
+void fetchEmailAndArchive(CIMAP& imap, const std::string& mailBoxNameStr, 
                      const fs::path& destinationFolder, std::uint64_t index) {
 
     std::string commandStr, commandResponseStr, subject, emailBody;
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse;
+    CIMAPParse::COMMANDRESPONSE parsedResponse;
 
     commandStr = "UID FETCH " + std::to_string(index) + " (BODY[] BODY[HEADER.FIELDS (SUBJECT)])";
     commandResponseStr = sendCommand(imap, mailBoxNameStr, commandStr);
@@ -282,7 +282,7 @@ void fetchEmailAndArchive(CMailIMAP& imap, const std::string& mailBoxNameStr,
                 } else if (resp.first.find("BODY[HEADER.FIELDS (SUBJECT)]") == 0) {
                     if (resp.second.find("Subject:") != std::string::npos) { // Contains "Subject:"
                         subject = resp.second.substr(8);
-                        subject = Antik::File::CFileMIME::convertMIMEStringToASCII(subject);
+                        subject = Antik::File::CMIME::convertMIMEStringToASCII(subject);
                         if (subject.length() > kMaxSubjectLine) { // Truncate for file name
                             subject = subject.substr(0, kMaxSubjectLine);
                         }
@@ -331,7 +331,7 @@ uint64_t getLowerSearchLimit(const fs::path& destinationFolder) {
 
         for (auto& entry : boost::make_iterator_range(fs::directory_iterator(destinationFolder),{})) {
             if (fs::is_regular_file(entry.status()) && (entry.path().extension().compare(kEMLFileExt) == 0)) {
-                currentUID=std::strtoull(CMailIMAPParse::stringBetween(entry.path().filename().string(),'(', ')').c_str(), nullptr, 10);
+                currentUID=std::strtoull(CIMAPParse::stringBetween(entry.path().filename().string(),'(', ')').c_str(), nullptr, 10);
                 if (currentUID > highestUID) {
                     highestUID = currentUID;
                 } 
@@ -350,12 +350,12 @@ uint64_t getLowerSearchLimit(const fs::path& destinationFolder) {
 // Convert list of comma separated mailbox names / list all mailboxes and place into vector or mailbox name strings.
 //
 
-void createMailBoxList(CMailIMAP& imap, const ParamArgData& argData, 
+void createMailBoxList(CIMAP& imap, const ParamArgData& argData, 
                        std::vector<std::string>& mailBoxList) {
 
     if (argData.bAllMailBoxes) {
         std::string commandStr, commandResponseStr;
-        CMailIMAPParse::COMMANDRESPONSE parsedResponse;
+        CIMAPParse::COMMANDRESPONSE parsedResponse;
 
         commandStr = "LIST \"\" *";
         commandResponseStr = sendCommand(imap, "", commandStr);
@@ -390,7 +390,7 @@ int main(int argc, char** argv) {
     try {
 
         ParamArgData argData;
-        CMailIMAP imap;
+        CIMAP imap;
         std::vector<std::string> mailBoxList;
 
         // Read in command line parameters and process
@@ -399,7 +399,7 @@ int main(int argc, char** argv) {
 
         // Initialise CMailIMAP internals
 
-        CMailIMAP::init();
+        CIMAP::init();
 
         // Set mail account user name and password
 
@@ -418,7 +418,7 @@ int main(int argc, char** argv) {
 
         for (std::string mailBoxStr : mailBoxList) {
 
-            CMailIMAPParse::COMMANDRESPONSE parsedResponse;
+            CIMAPParse::COMMANDRESPONSE parsedResponse;
             fs::path mailBoxPath;
             std::string commandStr, commandResponseStr;
             std::uint64_t searchUID=0;
@@ -482,9 +482,9 @@ int main(int argc, char** argv) {
     // Catch any errors
     //    
 
-    } catch (CMailIMAP::Exception &e) {
+    } catch (CIMAP::Exception &e) {
         exitWithError(e.what());
-    } catch (CMailIMAPParse::Exception &e) {
+    } catch (CIMAPParse::Exception &e) {
         exitWithError(e.what());
     } catch (const fs::filesystem_error & e) {
         exitWithError(std::string("BOOST file system exception occured: [") + e.what() + "]");
@@ -494,7 +494,7 @@ int main(int argc, char** argv) {
 
     // IMAP closedown
 
-    CMailIMAP::closedown();
+    CIMAP::closedown();
 
     exit(EXIT_SUCCESS);
 

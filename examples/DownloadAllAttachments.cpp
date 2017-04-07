@@ -47,10 +47,10 @@
 // Antikythera Classes
 //
 
-#include "CMailIMAP.hpp"
-#include "CMailIMAPParse.hpp"
-#include "CMailIMAPBodyStruct.hpp"
-#include "CMailSMTP.hpp"
+#include "CIMAP.hpp"
+#include "CIMAPParse.hpp"
+#include "CIMAPBodyStruct.hpp"
+#include "CSMTP.hpp"
 
 using namespace Antik::Mail;
 
@@ -93,7 +93,7 @@ void exitWithError(std::string errMsgStr) {
 
     // Closedown email, display error and exit.
 
-    CMailIMAP::closedown();
+    CIMAP::closedown();
     std::cerr << errMsgStr << std::endl;
     exit(EXIT_FAILURE);
 
@@ -172,15 +172,15 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Download an attachment, decode it and write to local folder.
 //
 
-void downloadAttachment(CMailIMAP& imap, fs::path& destinationFolder, CMailIMAPBodyStruct::Attachment &attachment) {
+void downloadAttachment(CIMAP& imap, fs::path& destinationFolder, CIMAPBodyStruct::Attachment &attachment) {
 
     std::string commandLineStr("FETCH " + attachment.indexStr + " BODY[" + attachment.partNoStr + "]");
     std::string parsedResponseStr(imap.sendCommand(commandLineStr));
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(parsedResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(parsedResponseStr));
 
-    if ((parsedResponse->status == CMailIMAPParse::RespCode::BAD) ||
-            (parsedResponse->status == CMailIMAPParse::RespCode::NO)) {
-        throw CMailIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessageStr);
+    if ((parsedResponse->status == CIMAPParse::RespCode::BAD) ||
+            (parsedResponse->status == CIMAPParse::RespCode::NO)) {
+        throw CIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessageStr);
     }
 
     for (auto fetchEntry : parsedResponse->fetchList) {
@@ -199,7 +199,7 @@ void downloadAttachment(CMailIMAP& imap, fs::path& destinationFolder, CMailIMAPB
                         // Encoded lines have terminating '\r\n' the getline removes '\n'
                         for (std::string lineStr; std::getline(responseStream, lineStr, '\n');) {
                             lineStr.pop_back(); // Remove '\r'
-                            CMailSMTP::decodeFromBase64(lineStr, decodedStringStr, lineStr.length());
+                            CSMTP::decodeFromBase64(lineStr, decodedStringStr, lineStr.length());
                             attachmentFileStream.write(&decodedStringStr[0], decodedStringStr.length());
                         }
                     } else {
@@ -216,19 +216,19 @@ void downloadAttachment(CMailIMAP& imap, fs::path& destinationFolder, CMailIMAPB
 // For a passed in BODTSTRUCTURE parse and download any base64 encoded attachments.
 //
 
-void getBodyStructAttachments(CMailIMAP& imap, std::uint64_t index, fs::path & destinationFolder, const std::string& bodyStructureStr) {
+void getBodyStructAttachments(CIMAP& imap, std::uint64_t index, fs::path & destinationFolder, const std::string& bodyStructureStr) {
 
-    std::unique_ptr<CMailIMAPBodyStruct::BodyNode> treeBase{ new CMailIMAPBodyStruct::BodyNode()};
-    std::shared_ptr<void> attachmentData{ new CMailIMAPBodyStruct::AttachmentData()};
+    std::unique_ptr<CIMAPBodyStruct::BodyNode> treeBase{ new CIMAPBodyStruct::BodyNode()};
+    std::shared_ptr<void> attachmentData{ new CIMAPBodyStruct::AttachmentData()};
 
-    CMailIMAPBodyStruct::consructBodyStructTree(treeBase, bodyStructureStr);
-    CMailIMAPBodyStruct::walkBodyStructTree(treeBase, CMailIMAPBodyStruct::attachmentFn, attachmentData);
+    CIMAPBodyStruct::consructBodyStructTree(treeBase, bodyStructureStr);
+    CIMAPBodyStruct::walkBodyStructTree(treeBase, CIMAPBodyStruct::attachmentFn, attachmentData);
 
-    auto attachments = static_cast<CMailIMAPBodyStruct::AttachmentData *> (attachmentData.get());
+    auto attachments = static_cast<CIMAPBodyStruct::AttachmentData *> (attachmentData.get());
 
     if (!attachments->attachmentsList.empty()) {
         for (auto attachment : attachments->attachmentsList) {
-            if (CMailIMAPParse::stringEqual(attachment.encodingStr, CMailSMTP::kEncodingBase64Str)) {
+            if (CIMAPParse::stringEqual(attachment.encodingStr, CSMTP::kEncodingBase64Str)) {
                 attachment.indexStr = std::to_string(index);
                 downloadAttachment(imap, destinationFolder, attachment);
             } else {
@@ -251,9 +251,9 @@ int main(int argc, char** argv) {
     try {
 
         ParamArgData argData;
-        CMailIMAP imap;
+        CIMAP imap;
         std::string parsedResponseStr;
-        CMailIMAPParse::COMMANDRESPONSE  parsedResponse;
+        CIMAPParse::COMMANDRESPONSE  parsedResponse;
 
         // Read in command line parameters and process
 
@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
 
         // Initialise CMailIMAP internals
 
-        CMailIMAP::init();
+        CIMAP::init();
 
         // Set mail account user name and password
         
@@ -285,31 +285,31 @@ int main(int argc, char** argv) {
         // SELECT mailbox
         
         parsedResponseStr=imap.sendCommand("SELECT "+argData.mailBoxNameStr);
-        parsedResponse = CMailIMAPParse::parseResponse(parsedResponseStr);
-        if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
-            throw CMailIMAP::Exception("IMAP SELECT "+parsedResponse->errorMessageStr);
+        parsedResponse = CIMAPParse::parseResponse(parsedResponseStr);
+        if (parsedResponse->status != CIMAPParse::RespCode::OK) {
+            throw CIMAP::Exception("IMAP SELECT "+parsedResponse->errorMessageStr);
         } else if (parsedResponse->bBYESent) {
-            throw CMailIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
+            throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
         }
 
         // FETCH BODYSTRUCTURE for all mail
         
         parsedResponseStr=imap.sendCommand("FETCH 1:* BODYSTRUCTURE");
-        parsedResponse = CMailIMAPParse::parseResponse(parsedResponseStr);
-        if (parsedResponse->status != CMailIMAPParse::RespCode::OK) {
-            throw CMailIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessageStr);
+        parsedResponse = CIMAPParse::parseResponse(parsedResponseStr);
+        if (parsedResponse->status != CIMAPParse::RespCode::OK) {
+            throw CIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessageStr);
         }  else if (parsedResponse->bBYESent) {
-            throw CMailIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
+            throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
         }
 
-        std::cout << "COMMAND = " << CMailIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
+        std::cout << "COMMAND = " << CIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
 
         //  Take decoded response and get any attachments specified in BODYSTRUCTURE.
         
         for (auto fetchEntry : parsedResponse->fetchList) {
             std::cout << "EMAIL INDEX [" << fetchEntry.index << "]" << std::endl;
             for (auto resp : fetchEntry.responseMap) {
-                if (resp.first.compare(CMailIMAP::kBODYSTRUCTUREStr) == 0) {
+                if (resp.first.compare(CIMAP::kBODYSTRUCTUREStr) == 0) {
                     getBodyStructAttachments(imap, fetchEntry.index, argData.destinationFolder,resp.second);
                 } else {
                     std::cout << resp.first << " = " << resp.second << std::endl;
@@ -326,9 +326,9 @@ int main(int argc, char** argv) {
     // Catch any errors
     //    
 
-    } catch (CMailIMAP::Exception &e) {
+    } catch (CIMAP::Exception &e) {
         exitWithError(e.what());
-    } catch (CMailIMAPParse::Exception &e) {
+    } catch (CIMAPParse::Exception &e) {
         exitWithError(e.what());
     } catch (const fs::filesystem_error & e) {
         exitWithError(std::string("BOOST file system exception occured: [") + e.what() + "]");
@@ -338,7 +338,7 @@ int main(int argc, char** argv) {
 
     // IMAP closedown
     
-    CMailIMAP::closedown();
+    CIMAP::closedown();
 
     exit(EXIT_SUCCESS);
 

@@ -28,7 +28,7 @@
 
 // CFileApprise class definitions
 
-#include "CFileApprise.hpp"
+#include "CApprise.hpp"
 
 using namespace Antik::File;
 
@@ -108,7 +108,7 @@ protected:
     
     // Collect loopCount CFileApprise events
     
-    void gatherEvents(CFileApprise& watcher , EventCounts& evtTotals, int loopCount);
+    void gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loopCount);
 
     std::string filePath = "";          // Test file path
     std::string fileName = "";          // Test file name
@@ -154,26 +154,26 @@ void CFileAppriseTests::createFile(std::string fileName) {
 // the loop not terminating is a major bug.
 //
 
-void CFileAppriseTests::gatherEvents(CFileApprise& watcher , EventCounts& evtTotals, int loopCount ){
+void CFileAppriseTests::gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loopCount ){
   
 
     while (watcher.stillWatching() && (loopCount--)) {
 
-        CFileApprise::Event evt;
+        CApprise::Event evt;
 
         watcher.getEvent(evt);
 
-        if ((evt.id == CFileApprise::Event_add) && !evt.message.empty()) {
+        if ((evt.id == CApprise::Event_add) && !evt.message.empty()) {
             evtTotals.add++;
-        } else if ((evt.id == CFileApprise::Event_addir) && !evt.message.empty()) {
+        } else if ((evt.id == CApprise::Event_addir) && !evt.message.empty()) {
             evtTotals.addir++;
-        } else if ((evt.id == CFileApprise::Event_unlinkdir) && !evt.message.empty()) {
+        } else if ((evt.id == CApprise::Event_unlinkdir) && !evt.message.empty()) {
             evtTotals.unlinkdir++;
-        } else if ((evt.id == CFileApprise::Event_unlink) && !evt.message.empty()) {
+        } else if ((evt.id == CApprise::Event_unlink) && !evt.message.empty()) {
             evtTotals.unlink++;
-        } else if ((evt.id == CFileApprise::Event_change) && !evt.message.empty()) {
+        } else if ((evt.id == CApprise::Event_change) && !evt.message.empty()) {
             evtTotals.change++;
-        } else if ((evt.id == CFileApprise::Event_error) && !evt.message.empty()) {
+        } else if ((evt.id == CApprise::Event_error) && !evt.message.empty()) {
             evtTotals.error++;
         } 
         
@@ -202,17 +202,17 @@ void CFileAppriseTests::createChanges(int updateCount) {
        
     // Setup CFileApprise options
 
-    std::shared_ptr<CFileApprise::Options> watchOptions;
-    watchOptions.reset(new CFileApprise::Options{0, false, Antik::Util::CLogger::noOp, Antik::Util::CLogger::noOp});
+    std::shared_ptr<CApprise::Options> watchOptions;
+    watchOptions.reset(new CApprise::Options{0, false, Antik::Util::CLogger::noOp, Antik::Util::CLogger::noOp});
 
     // Create CFileApprise object
 
-    CFileApprise watcher{this->watchFolder, this->watchDepth, watchOptions};
+    CApprise watcher{this->watchFolder, this->watchDepth, watchOptions};
 
     // Create CFileApprise object thread and start to watch
 
     std::unique_ptr<std::thread> watcherThread;
-    watcherThread.reset(new std::thread(&CFileApprise::watch, &watcher));
+    watcherThread.reset(new std::thread(&CApprise::watch, &watcher));
 
     this->filePath = CFileAppriseTests::kWatchFolder;
 
@@ -265,17 +265,17 @@ void CFileAppriseTests::createRemoveFiles(int fileCount) {
 
     // Setup CFileApprise options
 
-    std::shared_ptr<CFileApprise::Options> watchOptions;
-    watchOptions.reset(new CFileApprise::Options{0, false, Antik::Util::CLogger::noOp, Antik::Util::CLogger::noOp});
+    std::shared_ptr<CApprise::Options> watchOptions;
+    watchOptions.reset(new CApprise::Options{0, false, Antik::Util::CLogger::noOp, Antik::Util::CLogger::noOp});
 
     // Create CFileApprise object
 
-    CFileApprise watcher{this->watchFolder, this->watchDepth, watchOptions};
+    CApprise watcher{this->watchFolder, this->watchDepth, watchOptions};
 
     // Create CFileApprise object thread and start to watch
 
     std::unique_ptr<std::thread> watcherThread;
-    watcherThread.reset(new std::thread(&CFileApprise::watch, &watcher));
+    watcherThread.reset(new std::thread(&CApprise::watch, &watcher));
 
     this->filePath = CFileAppriseTests::kWatchFolder;
 
@@ -351,7 +351,7 @@ TEST_F(CFileAppriseTests, AssertParam1) {
 
     //  this->taskName = "Test";
 
-    EXPECT_DEATH(CFileApprise watcher(this->watchFolder, this->watchDepth), CFileAppriseTests::kParamAssertion1);
+    EXPECT_DEATH(CApprise watcher(this->watchFolder, this->watchDepth), CFileAppriseTests::kParamAssertion1);
 
 }
 
@@ -365,7 +365,7 @@ TEST_F(CFileAppriseTests,AssertParam2) {
     this->watchFolder = kWatchFolder;
     this->watchDepth = -99;
 
-    EXPECT_DEATH(CFileApprise watcher(this->watchFolder, this->watchDepth), CFileAppriseTests::kParamAssertion2);
+    EXPECT_DEATH(CApprise watcher(this->watchFolder, this->watchDepth), CFileAppriseTests::kParamAssertion2);
 
 }
 

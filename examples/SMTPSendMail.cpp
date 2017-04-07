@@ -49,8 +49,8 @@
 // Antikythera Classes
 //
 
-#include "CMailSMTP.hpp"
-#include "CFileMIME.hpp"
+#include "CSMTP.hpp"
+#include "CMIME.hpp"
 
 using namespace Antik::Mail;
 
@@ -95,7 +95,7 @@ void exitWithError(std::string errMsgStr) {
 
     // Closedown SMTP transport and display error and exit.
 
-    CMailSMTP::closedown();
+    CSMTP::closedown();
     std::cerr << errMsgStr << std::endl;
     exit(EXIT_FAILURE);
 
@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
 
     try {
 
-        CMailSMTP mail;
+        CSMTP mail;
         std::vector<std::string> mailMessage;
 
         // Read in command lien parameters and process
@@ -193,7 +193,7 @@ int main(int argc, char** argv) {
 
         // Initialise SMTP transport
         
-        CMailSMTP::init(true);
+        CSMTP::init(true);
 
         // Set server and account details
         
@@ -232,7 +232,7 @@ int main(int argc, char** argv) {
                 attachmentStr = attachmentStr.substr(0, attachmentStr.find_last_not_of(' ') + 1);
                 if (fs::exists(attachmentStr)){
                     std::cout << "Attaching file [" << attachmentStr << "]" << std::endl;
-                    mail.addFileAttachment(attachmentStr, Antik::File::CFileMIME::getFileMIMEType(attachmentStr), "base64");
+                    mail.addFileAttachment(attachmentStr, Antik::File::CMIME::getFileMIMEType(attachmentStr), "base64");
                 } else {
                     std::cout << "File does not exist [" << attachmentStr << "]" << std::endl;
                 }
@@ -248,7 +248,7 @@ int main(int argc, char** argv) {
         // Catch any errors
         //    
 
-    } catch (CMailSMTP::Exception &e) {
+    } catch (CSMTP::Exception &e) {
         exitWithError(e.what());
     } catch (const fs::filesystem_error & e) {
         exitWithError(std::string("BOOST file system exception occured: [") + e.what() + "]");
@@ -258,7 +258,7 @@ int main(int argc, char** argv) {
 
     // Closedown SMTP transport
     
-    CMailSMTP::closedown();
+    CSMTP::closedown();
 
     exit(EXIT_SUCCESS);
 

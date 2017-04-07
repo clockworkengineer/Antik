@@ -26,7 +26,7 @@
 
 // CFileTask class definitions
 
-#include "CFileTask.hpp" 
+#include "CTask.hpp" 
 
 using namespace Antik::File;
 
@@ -70,7 +70,7 @@ protected:
         fnData.reset(new TestActFnData{0});
         funcData = static_cast<TestActFnData *> (fnData.get());
 
-        this->taskOptions.reset(new CFileTask::TaskOptions{0, nullptr, nullptr});
+        this->taskOptions.reset(new CTask::TaskOptions{0, nullptr, nullptr});
 
         // Create watch folder.
 
@@ -115,8 +115,8 @@ protected:
     std::string taskName = "";      // Task Name
     std::string watchFolder = "";   // Watch Folder
 
-    CFileTask::TaskActionFcn taskActFcn; // Task Action Function Data
-    std::shared_ptr<CFileTask::TaskOptions> taskOptions; // Task options
+    CTask::TaskActionFcn taskActFcn; // Task Action Function Data
+    std::shared_ptr<CTask::TaskOptions> taskOptions; // Task options
 
     static const std::string kWatchFolder; // Test Watch Folder
     static const std::string kDestinationFolder; // Test Destination folder
@@ -182,13 +182,13 @@ void CFileTaskTests::createFiles(int fileCount) {
 
     // Create task object
     
-    CFileTask task{this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth, this->taskOptions};
+    CTask task{this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth, this->taskOptions};
 
     // Create task object thread and start to watch
 
     std::unique_ptr<std::thread> taskThread;
 
-    taskThread.reset(new std::thread(&CFileTask::monitor, &task));
+    taskThread.reset(new std::thread(&CTask::monitor, &task));
      
     this->filePath = CFileTaskTests::kWatchFolder;
 
@@ -232,7 +232,7 @@ void CFileTaskTests::generateException(std::exception_ptr e) {
 
 TEST_F(CFileTaskTests, AssertParam1) {
 
-    EXPECT_DEATH(CFileTask task(this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth), CFileTaskTests::kParamAssertion1);
+    EXPECT_DEATH(CTask task(this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth), CFileTaskTests::kParamAssertion1);
 
 }
 
@@ -244,7 +244,7 @@ TEST_F(CFileTaskTests, AssertParam2) {
 
     this->taskName = "Test";
 
-    EXPECT_DEATH(CFileTask task(this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth), CFileTaskTests::kParamAssertion2);
+    EXPECT_DEATH(CTask task(this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth), CFileTaskTests::kParamAssertion2);
 
 }
 
@@ -258,7 +258,7 @@ TEST_F(CFileTaskTests, AssertParam3) {
     this->watchFolder = kWatchFolder;
     this->watchDepth = -1;
 
-    EXPECT_DEATH(CFileTask task(this->taskName, this->watchFolder, nullptr, this->fnData, this->watchDepth), CFileTaskTests::kParamAssertion3);
+    EXPECT_DEATH(CTask task(this->taskName, this->watchFolder, nullptr, this->fnData, this->watchDepth), CFileTaskTests::kParamAssertion3);
 
 }
 
@@ -272,7 +272,7 @@ TEST_F(CFileTaskTests, AssertParam4) {
     this->watchFolder = kWatchFolder;
     this->watchDepth = -1;
 
-    EXPECT_DEATH(CFileTask task(this->taskName, this->watchFolder, this->taskActFcn, nullptr, this->watchDepth), CFileTaskTests::kParamAssertion4);
+    EXPECT_DEATH(CTask task(this->taskName, this->watchFolder, this->taskActFcn, nullptr, this->watchDepth), CFileTaskTests::kParamAssertion4);
 
 }
 
@@ -286,7 +286,7 @@ TEST_F(CFileTaskTests, AssertParam5) {
     this->watchFolder = kWatchFolder;
     this->watchDepth = -99;
 
-    EXPECT_DEATH(CFileTask task(this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth), CFileTaskTests::kParamAssertion5);
+    EXPECT_DEATH(CTask task(this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth), CFileTaskTests::kParamAssertion5);
 
 }
 
@@ -369,7 +369,7 @@ TEST_F(CFileTaskTests, NoWatchFolder) {
 
     // Create task object
 
-    EXPECT_THROW(CFileTask task(this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth, this->taskOptions), std::system_error);
+    EXPECT_THROW(CTask task(this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth, this->taskOptions), std::system_error);
 
 }
 
@@ -398,13 +398,13 @@ TEST_F(CFileTaskTests, ActionFunctionException) {
     
     // Create task object
 
-    CFileTask task{this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth, this->taskOptions};
+    CTask task{this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth, this->taskOptions};
 
     // Create task object thread and start to watch
 
     std::unique_ptr<std::thread> taskThread;
 
-    taskThread.reset(new std::thread(&CFileTask::monitor, &task));
+    taskThread.reset(new std::thread(&CTask::monitor, &task));
     
     // Create one file to trigger action function
 

@@ -26,8 +26,8 @@
 
 // CMailIMAP/CMailIMAPParse class definitions
 
-#include "CMailIMAP.hpp" 
-#include "CMailIMAPParse.hpp"
+#include "CIMAP.hpp" 
+#include "CIMAPParse.hpp"
 
 using namespace Antik::Mail;
 
@@ -54,7 +54,7 @@ protected:
     virtual void TearDown() {
     }
     
-    static void checkListRespData(CMailIMAPParse::ListRespData &respData, uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr);
+    static void checkListRespData(CIMAPParse::ListRespData &respData, uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr);
 
 
 };
@@ -67,7 +67,7 @@ protected:
 // FIXTURE METHODS
 // ===============
 
-void CMailIMAPParseTests::checkListRespData(CMailIMAPParse::ListRespData &respData, uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr) {
+void CMailIMAPParseTests::checkListRespData(CIMAPParse::ListRespData &respData, uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr) {
 
     EXPECT_EQ(hierDel, respData.hierDel);
     ASSERT_STREQ(attributesStr.c_str(), respData.attributesStr.c_str());
@@ -95,12 +95,12 @@ TEST_F(CMailIMAPParseTests, SELECTValid) {
     std::string commandResponseStr;
  
     for (auto str : selectResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
   
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
     EXPECT_EQ(8, parsedResponse->responseMap.size());
     EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS")!=parsedResponse->responseMap.end());
     EXPECT_TRUE(parsedResponse->responseMap.find("RECENT")!=parsedResponse->responseMap.end());
@@ -111,7 +111,7 @@ TEST_F(CMailIMAPParseTests, SELECTValid) {
     EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-NAME")!=parsedResponse->responseMap.end());
     EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-ACCESS")!=parsedResponse->responseMap.end());
 
-    ASSERT_STREQ("INBOX", CMailIMAPParse::stringToUpper(parsedResponse->responseMap["MAILBOX-NAME"]).c_str());
+    ASSERT_STREQ("INBOX", CIMAPParse::stringToUpper(parsedResponse->responseMap["MAILBOX-NAME"]).c_str());
     ASSERT_STREQ( "READ-WRITE", parsedResponse->responseMap["MAILBOX-ACCESS"].c_str());
     ASSERT_STREQ("1", parsedResponse->responseMap["EXISTS"].c_str());
     ASSERT_STREQ("0", parsedResponse->responseMap["RECENT"].c_str());    
@@ -134,12 +134,12 @@ TEST_F(CMailIMAPParseTests, SELECTInvalidMailBox) {
     std::string commandResponseStr;
  
     for (auto str : selectResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::NO);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::NO);
     ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessageStr.c_str());
 
     EXPECT_FALSE(parsedResponse->bBYESent);
@@ -163,12 +163,12 @@ TEST_F(CMailIMAPParseTests, EXAMINEValid) {
     std::string commandResponseStr;
  
     for (auto str : examineResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
        
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
     EXPECT_EQ(9, parsedResponse->responseMap.size());
     EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS")!=parsedResponse->responseMap.end());
     EXPECT_TRUE(parsedResponse->responseMap.find("RECENT")!=parsedResponse->responseMap.end());
@@ -180,7 +180,7 @@ TEST_F(CMailIMAPParseTests, EXAMINEValid) {
     EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-NAME")!=parsedResponse->responseMap.end());
     EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-ACCESS")!=parsedResponse->responseMap.end());
 
-    ASSERT_STREQ("INBOX", CMailIMAPParse::stringToUpper(parsedResponse->responseMap["MAILBOX-NAME"]).c_str());
+    ASSERT_STREQ("INBOX", CIMAPParse::stringToUpper(parsedResponse->responseMap["MAILBOX-NAME"]).c_str());
     ASSERT_STREQ( "READ-ONLY", parsedResponse->responseMap["MAILBOX-ACCESS"].c_str());
     ASSERT_STREQ("11", parsedResponse->responseMap["EXISTS"].c_str());
     ASSERT_STREQ("0", parsedResponse->responseMap["RECENT"].c_str());    
@@ -204,12 +204,12 @@ TEST_F(CMailIMAPParseTests, EXAMINEInvalidMailBox) {
     std::string commandResponseStr;
  
     for (auto str : examineResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::NO);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::NO);
     ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessageStr.c_str());
 
     EXPECT_FALSE(parsedResponse->bBYESent);
@@ -227,12 +227,12 @@ TEST_F(CMailIMAPParseTests, STATUSValid) {
     std::string commandResponseStr;
  
     for (auto str : statusResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
 
-    EXPECT_TRUE(parsedResponse->status == CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
     EXPECT_EQ(6, parsedResponse->responseMap.size());
     EXPECT_TRUE(parsedResponse->responseMap.find("UIDNEXT") != parsedResponse->responseMap.end());
     EXPECT_TRUE(parsedResponse->responseMap.find("MESSAGES") != parsedResponse->responseMap.end());
@@ -241,7 +241,7 @@ TEST_F(CMailIMAPParseTests, STATUSValid) {
     EXPECT_TRUE(parsedResponse->responseMap.find("UNSEEN") != parsedResponse->responseMap.end());
     EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-NAME") != parsedResponse->responseMap.end());
 
-    ASSERT_STREQ("INBOX", CMailIMAPParse::stringToUpper(parsedResponse->responseMap["MAILBOX-NAME"]).c_str());
+    ASSERT_STREQ("INBOX", CIMAPParse::stringToUpper(parsedResponse->responseMap["MAILBOX-NAME"]).c_str());
     ASSERT_STREQ("4584", parsedResponse->responseMap["UIDNEXT"].c_str());
     ASSERT_STREQ("11", parsedResponse->responseMap["MESSAGES"].c_str());
     ASSERT_STREQ("0", parsedResponse->responseMap["RECENT"].c_str());
@@ -262,12 +262,12 @@ TEST_F(CMailIMAPParseTests, STATUSInvalidMailBox) {
     std::string commandResponseStr;
  
     for (auto str : statusResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::NO);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::NO);
     ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessageStr.c_str());
 
     EXPECT_FALSE(parsedResponse->bBYESent);
@@ -302,12 +302,12 @@ TEST_F(CMailIMAPParseTests, LISTValid) {
     std::string commandResponseStr;
  
     for (auto str : listResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
     EXPECT_EQ(18, parsedResponse->mailBoxList.size());
 
     if (parsedResponse->mailBoxList.size() == 18) {
@@ -346,12 +346,12 @@ TEST_F(CMailIMAPParseTests, SEARCHValid) {
     std::string commandResponseStr;
  
     for (auto str : searchResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
     EXPECT_EQ (10, parsedResponse->indexes.size());
 
     if (parsedResponse->indexes.size() == 10) {
@@ -382,12 +382,12 @@ TEST_F(CMailIMAPParseTests, UIDSEARCHValid) {
     std::string commandResponseStr;
  
     for (auto str : searchResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
 
-    EXPECT_TRUE(parsedResponse->status == CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
     EXPECT_EQ(10, parsedResponse->indexes.size());
 
     if (parsedResponse->indexes.size() == 10) {
@@ -435,12 +435,12 @@ TEST_F(CMailIMAPParseTests, LSUBValid) {
     std::string commandResponseStr;
  
     for (auto str : LSubResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
     EXPECT_EQ(18, parsedResponse->mailBoxList.size());
 
     if (parsedResponse->mailBoxList.size() == 18) {
@@ -483,12 +483,12 @@ TEST_F(CMailIMAPParseTests, EXPUNGEValid) {
     std::string commandResponseStr;
  
     for (auto str : ExpungeResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
     
     ASSERT_STREQ("3 3 3 8", parsedResponse->responseMap["EXPUNGE"].c_str());
             
@@ -516,12 +516,12 @@ TEST_F(CMailIMAPParseTests, STOREValid) {
     std::string commandResponseStr;
  
     for (auto str : StoreResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
     EXPECT_EQ(10, parsedResponse->storeList.size());
     
     if (parsedResponse->storeList.size() == 10) {
@@ -567,12 +567,12 @@ TEST_F(CMailIMAPParseTests, CAPABILITYValid) {
     std::string commandResponseStr;
  
     for (auto str : capabilityResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
     ASSERT_STREQ("IMAP4rev1 UNSELECT IDLE NAMESPACE QUOTA ID XLIST CHILDREN X-GM-EXT-1 "
          "UIDPLUS COMPRESS=DEFLATE ENABLE MOVE CONDSTORE ESEARCH UTF8=ACCEPT LIST-EXTENDED "
          "LIST-STATUS LITERAL- APPENDLIMIT=35651584 SPECIAL-USE", parsedResponse->responseMap["CAPABILITY"].c_str());
@@ -592,12 +592,12 @@ TEST_F(CMailIMAPParseTests, NOOPValid) {
     std::string commandResponseStr;
  
     for (auto str : noOpResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
     EXPECT_EQ(1, parsedResponse->responseMap.size());
     EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS") != parsedResponse->responseMap.end());
  
@@ -619,12 +619,12 @@ TEST_F(CMailIMAPParseTests, IDLEValid) {
     std::string commandResponseStr;
  
     for (auto str : idleResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
     EXPECT_EQ(1, parsedResponse->responseMap.size());
     EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS") != parsedResponse->responseMap.end());
  
@@ -647,12 +647,12 @@ TEST_F(CMailIMAPParseTests, LOGOUTValid) {
     std::string commandResponseStr;
  
     for (auto str : logOutResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
 
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
 
-    EXPECT_TRUE(parsedResponse->status == CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
     
     EXPECT_TRUE(parsedResponse->bBYESent);
     
@@ -672,12 +672,12 @@ TEST_F(CMailIMAPParseTests, FETCHValid) {
     std::string commandResponseStr;
  
     for (auto str : fetchResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
 
     EXPECT_EQ(1, parsedResponse->fetchList.size());
 
@@ -715,12 +715,12 @@ TEST_F(CMailIMAPParseTests, FETCHValidWithBYE) {
     std::string commandResponseStr;
  
     for (auto str : fetchResponseStr) {
-        commandResponseStr.append( str + CMailIMAP::kEOLStr);
+        commandResponseStr.append( str + CIMAP::kEOLStr);
     }
     
-    CMailIMAPParse::COMMANDRESPONSE parsedResponse(CMailIMAPParse::parseResponse(commandResponseStr));
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
-    EXPECT_TRUE(parsedResponse->status==CMailIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
 
     EXPECT_EQ(1, parsedResponse->fetchList.size());
 
