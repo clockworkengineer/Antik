@@ -4,9 +4,9 @@
 
 This repository contains the master copies of the C++ based utility classes that I use in my projects.  Copies of these classes in other repositories while working will not usually be up to date. The classes com wrapped in a namespace called Antik though this may change in future.
 
-# [CFileTask](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CFileTask.cpp) #
+# [CTask](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CTask.cpp) #
 
-The core for the file processing engine is provided by the CFileTask class whose constructor takes five arguments, 
+The core for the file processing engine is provided by the CTask class whose constructor takes five arguments, 
 
 - **taskName:** The task name (std::string).
 - **watchFolder:** The folder to be watched (std::string).
@@ -17,15 +17,15 @@ The core for the file processing engine is provided by the CFileTask class whose
 
  To start watching/processing files call this classes monitor function; the code within FPE.cpp creates a separate thread for this but it can be run in the main programs thread by just calling task.monitor() without any thread creation wrappper code (--single  option).
 
-At the center of the class is an event loop which waits for CFileApprise events and calls the passed action function to process any file name passed through as part of an add event. The CFileApprise class is new and is basically an encapsulation of all of the inotify file event handling  code that used to reside in the Task class with an abstraction layer to hide any platform specifics. In the future new platform specific versions of this class may be implemented for say MacOS or Windows; in creating this class the one last non portable component of the FPE has been isolated thus aiding porting in future. As a result of this new class the task class is a lot simpler and smaller with all of the functionality being offloaded. The idea of making Task a child of the CFileApprise base class had been thought about but for present a task just creates and uses an private CFileApprise watcher object.
+At the center of the class is an event loop which waits for CApprise events and calls the passed action function to process any file name passed through as part of an add event. The CApprise class is new and is basically an encapsulation of all of the inotify file event handling  code that used to reside in the Task class with an abstraction layer to hide any platform specifics. In the future new platform specific versions of this class may be implemented for say MacOS or Windows; in creating this class the one last non portable component of the FPE has been isolated thus aiding porting in future. As a result of this new class the task class is a lot simpler and smaller with all of the functionality being offloaded. The idea of making Task a child of the CApprise base class had been thought about but for present a task just creates and uses an private CApprise watcher object.
 
-It should be noted that a basic shutdown protocol is provided to close down any threads that the task class uses by calling task.stop(). This now in turn calls the CFileApprise objects stop method which stops its internal event reading loop and performs any closedown of the CFileApprise object and thread.  This is just to give some control over thread termination which the C++ STL doesn't really provide; well in a subtle manner anyways. The shutdown can be actuated as well by either deleting the watch folder or by specifying a kill count in the optional task options structure parameter that can be passed in the classes constructor.
+It should be noted that a basic shutdown protocol is provided to close down any threads that the task class uses by calling task.stop(). This now in turn calls the CApprise objects stop method which stops its internal event reading loop and performs any closedown of the CApprise object and thread.  This is just to give some control over thread termination which the C++ STL doesn't really provide; well in a subtle manner anyways. The shutdown can be actuated as well by either deleting the watch folder or by specifying a kill count in the optional task options structure parameter that can be passed in the classes constructor.
 
 The task options structure parameter also has two other members which are pointers to functions that handle all cout/cerr output from the class. These take as a parameter a vector of strings to output and if the option parameter is omitted or the pointers are nullptr then no output occurs. The FPE provides these two functions in the form of coutstr/coutstr which are passed in if --quiet is not specified nullptrs otherwise. All output is modeled this way was it enables the two functions in the FPE to use a mutex to control access to the output streams which are not thread safe and also to provide a --quiet mode and when it is implemented a output to log file option.
 
-# [CFileApprise](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CFileApprise.cpp) #
+# [CApprise](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CApprise.cpp) #
 
-This is class was created to be a standalone class / abstraction of the inotify file event handling code that used to be contained in CFileTask. 
+This is class was created to be a standalone class / abstraction of the inotify file event handling code that used to be contained in CTask. 
 
 Its constructor has 3 parameters:
 
@@ -33,7 +33,7 @@ Its constructor has 3 parameters:
 - **watchDepth:**  The watch depth is how far down the directory hierarchy that will be watched (-1 the whole tree, 0 just the watcher folder, 1 the next level down etc).
 - **options:**(optional) This structure passes in values used in any low level functionality and can be implementation specific such as providing a trace routine for low level inotify events or  pointers to the generic coutsr/coutstr trace functions.
 
-Once the object is created then its core method CFileApprise::watch() is run on a separate thread that is used to generate events from actions on files using inotify. While this is happening the main application loops  waiting on events returned by method CFileApprise::getEvent().
+Once the object is created then its core method CApprise::watch() is run on a separate thread that is used to generate events from actions on files using inotify. While this is happening the main application loops  waiting on events returned by method CApprise::getEvent().
 
 The current supported event types being
 
@@ -60,41 +60,41 @@ Notes:
 
 # *Exceptions* #
 
-Both the CFileTask and CFileApprise classes are designed to run in a separate thread although the former can run in the main thread quite happily. As such any exceptions thrown by them could be lost and so that they are not a copy is taken inside each objects main catch clause and stored away in a std::exception_ptr. This value can then by retrieved with method getThrownException() and either re-thrown if the and of the chain has been reached or stored away again to retrieved by another getThrownException() when the enclosing object closes down (as in the case CFileTask and CFileApprise class having thrown the exception).
+Both the CTask and CApprise classes are designed to run in a separate thread although the former can run in the main thread quite happily. As such any exceptions thrown by them could be lost and so that they are not a copy is taken inside each objects main catch clause and stored away in a std::exception_ptr. This value can then by retrieved with method getThrownException() and either re-thrown if the and of the chain has been reached or stored away again to retrieved by another getThrownException() when the enclosing object closes down (as in the case CTask and CApprise class having thrown the exception).
 
-# [Redirect Class](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CRedirect.cpp) #
+# [CRedirect](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CRedirect.cpp) #
 
 This is a small self contained utility class designed for FPE logging output. Its prime functionality is to provide a wrapper for pretty generic code that saves away an output streams read buffer, creates a file stream and redirects the output stream to it. The code to restore the original output streams is called from the objects destructor thus providing convenient for restoring the original stream. Its primary use within the FPE is to redirect std::cout to a log file.
  
-# [CMailSMTP](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CMailSMTP.cpp) #
+# [CSMTP](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CSMTP.cpp) #
 
-CMailSMTP provides the ability to create an email, add file attachments (encoded either as 7-bit or base64) and then send the created email to a given recipient(s). It provides methods for setting various parameters required to send the email, attach files and post the resulting email. It is state based so it is quite possible to create an email and send but then just change say the recipients and re-post. Library [libcurl](https://curl.haxx.se/libcurl/) is used to provide the SMTP server connect and message sending transport.
+CSMTP provides the ability to create an email, add file attachments (encoded either as 7-bit or base64) and then send the created email to a given recipient(s). It provides methods for setting various parameters required to send the email, attach files and post the resulting email. It is state based so it is quite possible to create an email and send but then just change say the recipients and re-post. Library [libcurl](https://curl.haxx.se/libcurl/) is used to provide the SMTP server connect and message sending transport.
 
-# [CMailIMAP](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CMailIMAP.cpp) #
+# [CIMAP](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CIMAP.cpp) #
 
-CMailIMAP provides a way to connect to an IMAP server, send commands and receive responses. It supports most of [rfc3501](https://tools.ietf.org/html/rfc3501) IMAP standard including the ability the ability to FETCH messages and also APPEND them to a mailbox. Library [libcurl](https://curl.haxx.se/libcurl/) is used to provide the IMAP server connect and command send / receive transport. The string returned responses containing status and other such possible values can either be parsed by third party code or by use of the class CMailIMAPParse.
+CIMAP provides a way to connect to an IMAP server, send commands and receive responses. It supports most of [rfc3501](https://tools.ietf.org/html/rfc3501) IMAP standard including the ability the ability to FETCH messages and also APPEND them to a mailbox. Library [libcurl](https://curl.haxx.se/libcurl/) is used to provide the IMAP server connect and command send / receive transport. The string returned responses containing status and other such possible values can either be parsed by third party code or by use of the class CIMAPParse.
 
-# [CMailIMAPParse](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CMailIMAPParse.cpp) #
+# [CIMAPParse](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CIMAPParse.cpp) #
 
-CMailIMAPParse is used to take any responses returned from IMAP commands, parse them and a return 
+CIMAPParse is used to take any responses returned from IMAP commands, parse them and a return 
 pointer to a suitable structure representation. This structure includes a return status and also error message field for when an error occurs.
 
-# [CMailIMAPBodyStruct](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CMailIMAPBodyStruct.cpp) #
+# [CIMAPBodyStruct](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CIMAPBodyStruct.cpp) #
 
-CMailIMAPBodyStruct is used to parse any bodystructures returned by CMailIMAPParse and convert them into a tree structure that may then be traversed and a user supplied function called for each body part found. This may be used to extract information or perform searches within the tree for say the finding of any file attachments; this example is provided as an built in for the class.
+CIMAPBodyStruct is used to parse any bodystructures returned by CIMAPParse and convert them into a tree structure that may then be traversed and a user supplied function called for each body part found. This may be used to extract information or perform searches within the tree for say the finding of any file attachments; this example is provided as an built in for the class.
 
-# [CFileMIME](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CFileMIME.cpp) #
+# [CMIME](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CMIME.cpp) #
 
-CFileMIME contains any MIME processing functionality/utilities used on projects. It is still quite small with just a file extension to MIME type mapping function, a parser for MIME word encoded strings and a function to convert such a string to a best possible 7-bit ASCII mapping.
+CMIME contains any MIME processing functionality/utilities used on projects. It is still quite small with just a file extension to MIME type mapping function, a parser for MIME word encoded strings and a function to convert such a string to a best possible 7-bit ASCII mapping.
 
-# [CFileZIP](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CFileZIP.cpp) #
+# [CZIP](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CZIP.cpp) #
 
 CFIleZIP is a class that enables the creation and manipulation of ZIP file archives. It supports 2.0 compatible archives at present either storing or retrieving files in deflate compressed format or a simple stored copy of a file; ZIP64 extneions are also supported for larger format archives. The current supported compression format inflate/deflate  functionality is provided through the use of [zlib](http://www.zlib.net/).
 
-# [CFileZIPIO](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CFileZIPIO.cpp) #
+# [CZIPIO](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CZIPIO.cpp) #
 
-CFileZIPIO provides functionality to open an ZIP archive and read/write its records and raw data. It
-is the base class of CFileZIP but may be used standalone as with example program ZIPArchiveInfo.
+CZIPIO provides functionality to open an ZIP archive and read/write its records and raw data. It
+is the base class of CZIP but may be used standalone as with example program ZIPArchiveInfo.
 
 
 # [CLogger](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/classes/CLogger.cpp) #
@@ -131,5 +131,5 @@ in any e-mail in a specific mailbox to a given local folder. The final destinati
 # To do list #
 
 1. Increase list of example programs.
-2. CMailIMAPEnvelope to parse envelope response ( need to find a use for this before i start).
+2. CIMAPEnvelope to parse envelope response ( need to find a use for this before i start).
 4. Extend existing unit tests and add more for classes which there are none.
