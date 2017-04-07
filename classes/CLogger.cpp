@@ -44,6 +44,7 @@
 // =========
 
 namespace Antik {
+    namespace Util {
 
     // ===========================
     // PRIVATE TYPES AND CONSTANTS
@@ -170,4 +171,5 @@ namespace Antik {
         return ss.str();
     }
 
+    } // snamespace Util
 } // namespace Antik

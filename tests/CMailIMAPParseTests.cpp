@@ -24,12 +24,12 @@
 
 #include <stdexcept>
 
-// CMailIMAPParse class definitions
+// CMailIMAP/CMailIMAPParse class definitions
 
 #include "CMailIMAP.hpp" 
 #include "CMailIMAPParse.hpp"
 
-using namespace Antik;
+using namespace Antik::Mail;
 
 // =======================
 // UNIT TEST FIXTURE CLASS

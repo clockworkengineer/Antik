@@ -29,7 +29,8 @@
 // CFileApprise class definitions
 
 #include "CFileApprise.hpp"
-using namespace Antik;
+
+using namespace Antik::File;
 
 // Boost file system and format libraries definitions
 
@@ -202,7 +203,7 @@ void CFileAppriseTests::createChanges(int updateCount) {
     // Setup CFileApprise options
 
     std::shared_ptr<CFileApprise::Options> watchOptions;
-    watchOptions.reset(new CFileApprise::Options{0, false, CLogger::noOp, CLogger::noOp});
+    watchOptions.reset(new CFileApprise::Options{0, false, Antik::Util::CLogger::noOp, Antik::Util::CLogger::noOp});
 
     // Create CFileApprise object
 
@@ -265,7 +266,7 @@ void CFileAppriseTests::createRemoveFiles(int fileCount) {
     // Setup CFileApprise options
 
     std::shared_ptr<CFileApprise::Options> watchOptions;
-    watchOptions.reset(new CFileApprise::Options{0, false, CLogger::noOp, CLogger::noOp});
+    watchOptions.reset(new CFileApprise::Options{0, false, Antik::Util::CLogger::noOp, Antik::Util::CLogger::noOp});
 
     // Create CFileApprise object
 

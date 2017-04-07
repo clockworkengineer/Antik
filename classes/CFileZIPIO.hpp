@@ -26,7 +26,8 @@
 // =========
 
 namespace Antik {
-
+    namespace File {
+        
     // ================
     // CLASS DEFINITION
     // ================
@@ -336,6 +337,7 @@ namespace Antik {
        return(buffptr + sizeof(T));
     }
 
+    } // namespace File
 } // namespace Antik
 
 #endif /* CFILEZIP_HPP */

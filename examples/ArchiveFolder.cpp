@@ -58,7 +58,7 @@ namespace fs = boost::filesystem;
 
 #include "CFileZIP.hpp"
 
-using namespace Antik;
+using namespace Antik::File;
 
 // ======================
 // LOCAL TYES/DEFINITIONS
@@ -96,7 +96,7 @@ void exitWithError(std::string errMsgStr) {
 void addCommonOptions(po::options_description& commonOptions, ParamArgData &argData) {
 
     commonOptions.add_options()
-            ("Source,s", po::value<std::string>(&argData.sourceFolderNameStr)->required(), "Source Folder To ZIP")
+            ("source,s", po::value<std::string>(&argData.sourceFolderNameStr)->required(), "Source Folder To ZIP")
             ("zip,z", po::value<std::string>(&argData.zipFileNameStr)->required(), "ZIP File Name");
 
 }

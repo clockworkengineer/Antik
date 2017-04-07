@@ -41,6 +41,7 @@
 // =========
 
 namespace Antik {
+    namespace File {
 
     // ===========================
     // PRIVATE TYPES AND CONSTANTS
@@ -745,7 +746,7 @@ namespace Antik {
 
             } else if (parsedEntry.type == kEncodedWordTypeBase64) {
                 std::string decodedStr;
-                CMailSMTP::decodeFromBase64(parsedEntry.contents, decodedStr, parsedEntry.contents.length());
+                Antik::Mail::CMailSMTP::decodeFromBase64(parsedEntry.contents, decodedStr, parsedEntry.contents.length());
                 convertedMIMEStr += decodedStr;
             }
 
@@ -771,4 +772,5 @@ namespace Antik {
 
     }
 
+    } // namespace File
 } // namespace Antik

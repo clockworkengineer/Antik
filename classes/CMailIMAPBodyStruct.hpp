@@ -26,7 +26,8 @@
 // =========
 
 namespace Antik {
-
+    namespace Mail {
+        
     // ================
     // CLASS DEFINITION
     // ================
@@ -201,6 +202,7 @@ namespace Antik {
 
     };
 
+   } // namespace Mail
 } // namespace Antik
 
 #endif /* CMAILIMAPBODYSTRUCT_HPP */

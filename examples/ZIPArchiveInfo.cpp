@@ -38,6 +38,14 @@
 #include <iomanip>
 
 //
+// Antikythera Classes
+//
+
+#include "CFileZIPIO.hpp"
+
+using namespace Antik::File;
+
+//
 // BOOST file system, program options processing definitions
 //
 
@@ -46,14 +54,6 @@
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
-
-//
-// Antikythera Classes
-//
-
-#include "CFileZIPIO.hpp"
-
-using namespace Antik;
 
 // ======================
 // LOCAL TYES/DEFINITIONS

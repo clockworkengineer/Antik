@@ -28,7 +28,7 @@
 
 #include "CFileTask.hpp" 
 
-using namespace Antik;
+using namespace Antik::File;
 
 // Boost file system and format libraries definitions
 

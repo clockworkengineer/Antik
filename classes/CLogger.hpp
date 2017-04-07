@@ -25,7 +25,8 @@
 // =========
 
 namespace Antik {
-
+    namespace Util {
+        
     // ================
     // CLASS DEFINITION
     // ================
@@ -128,6 +129,7 @@ namespace Antik {
         return ss.str();
     }
 
+    } // nmespace Util
 } // namespace Antik
 
 #endif /* CLOGGER_HPP */

@@ -37,6 +37,7 @@
 // =========
 
 namespace Antik {
+    namespace Util {
 
     // ===========================
     // PRIVATE TYPES AND CONSTANTS
@@ -146,4 +147,5 @@ namespace Antik {
         }
     }
 
+    } // namespace Util
 } // namespace Antik

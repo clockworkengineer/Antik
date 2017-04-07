@@ -45,6 +45,7 @@
 // =========
 
 namespace Antik {
+    namespace Mail {
 
     // ===========================
     // PRIVATE TYPES AND CONSTANTS
@@ -570,5 +571,6 @@ namespace Antik {
         curl_global_cleanup();
 
     }
-
+    
+   } // namespace Mail
 } // namespace Antik

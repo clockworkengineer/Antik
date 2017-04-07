@@ -52,7 +52,7 @@
 #include "CMailSMTP.hpp"
 #include "CFileMIME.hpp"
 
-using namespace Antik;
+using namespace Antik::Mail;
 
 //
 // Boost program options  & file system library definitions
@@ -232,7 +232,7 @@ int main(int argc, char** argv) {
                 attachmentStr = attachmentStr.substr(0, attachmentStr.find_last_not_of(' ') + 1);
                 if (fs::exists(attachmentStr)){
                     std::cout << "Attaching file [" << attachmentStr << "]" << std::endl;
-                    mail.addFileAttachment(attachmentStr, CFileMIME::getFileMIMEType(attachmentStr), "base64");
+                    mail.addFileAttachment(attachmentStr, Antik::File::CFileMIME::getFileMIMEType(attachmentStr), "base64");
                 } else {
                     std::cout << "File does not exist [" << attachmentStr << "]" << std::endl;
                 }

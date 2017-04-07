@@ -60,7 +60,7 @@
 #include "CMailSMTP.hpp"
 #include "CFileMIME.hpp"
 
-using namespace Antik;
+using namespace Antik::Mail;
 
 //
 // Boost program options  & file system library definitions
@@ -282,7 +282,7 @@ void fetchEmailAndArchive(CMailIMAP& imap, const std::string& mailBoxNameStr,
                 } else if (resp.first.find("BODY[HEADER.FIELDS (SUBJECT)]") == 0) {
                     if (resp.second.find("Subject:") != std::string::npos) { // Contains "Subject:"
                         subject = resp.second.substr(8);
-                        subject = CFileMIME::convertMIMEStringToASCII(subject);
+                        subject = Antik::File::CFileMIME::convertMIMEStringToASCII(subject);
                         if (subject.length() > kMaxSubjectLine) { // Truncate for file name
                             subject = subject.substr(0, kMaxSubjectLine);
                         }

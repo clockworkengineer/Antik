@@ -58,7 +58,7 @@ namespace fs = boost::filesystem;
 
 #include "CFileZIP.hpp"
 
-using namespace Antik;
+using namespace Antik::File;
 
 // ======================
 // LOCAL TYES/DEFINITIONS

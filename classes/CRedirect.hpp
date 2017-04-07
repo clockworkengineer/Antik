@@ -25,6 +25,7 @@
 // =========
 
 namespace Antik {
+    namespace Util {
 
     // ================
     // CLASS DEFINITION
@@ -108,6 +109,7 @@ namespace Antik {
 
     };
 
+    } // namespace Util
 } // namespace Antik
 
 #endif /* REDIRECT_HPP */

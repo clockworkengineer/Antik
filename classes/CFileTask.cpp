@@ -37,170 +37,173 @@
 // =========
 
 namespace Antik {
+    namespace File {
 
-    // ===========================
-    // PRIVATE TYPES AND CONSTANTS
-    // ===========================
 
-    // ==========================
-    // PUBLIC TYPES AND CONSTANTS
-    // ==========================
+        // ===========================
+        // PRIVATE TYPES AND CONSTANTS
+        // ===========================
 
-    // ========================
-    // PRIVATE STATIC VARIABLES
-    // ========================
+        // ==========================
+        // PUBLIC TYPES AND CONSTANTS
+        // ==========================
 
-    // =======================
-    // PUBLIC STATIC VARIABLES
-    // =======================
+        // ========================
+        // PRIVATE STATIC VARIABLES
+        // ========================
 
-    // ===============
-    // PRIVATE METHODS
-    // ===============
+        // =======================
+        // PUBLIC STATIC VARIABLES
+        // =======================
 
-    // ==============
-    // PUBLIC METHODS
-    // ==============
+        // ===============
+        // PRIVATE METHODS
+        // ===============
 
-    //
-    // Task object constructor. 
-    //
+        // ==============
+        // PUBLIC METHODS
+        // ==============
 
-    CFileTask::CFileTask
-    (
-            const std::string& taskName, // Task name
-            const std::string& watchFolder, // Watch folder path
-            TaskActionFcn taskActFcn, // Task action function
-            std::shared_ptr<void> fnData, // Task file process function data
-            int watchDepth, // Watch depth -1= all, 0=just watch folder
-            std::shared_ptr<TaskOptions> options // Task options. 
-            )
-    : taskName{taskName}, taskActFcn{taskActFcn}, fnData{fnData}
+        //
+        // Task object constructor. 
+        //
 
-    {
+        CFileTask::CFileTask
+        (
+                const std::string& taskName, // Task name
+                const std::string& watchFolder, // Watch folder path
+                TaskActionFcn taskActFcn, // Task action function
+                std::shared_ptr<void> fnData, // Task file process function data
+                int watchDepth, // Watch depth -1= all, 0=just watch folder
+                std::shared_ptr<TaskOptions> options // Task options. 
+                )
+        : taskName{taskName}, taskActFcn{taskActFcn}, fnData{fnData}
 
-        // ASSERT if passed parameters invalid
+        {
 
-        assert(taskName.length() != 0); // Length == 0
-        assert(watchFolder.length() != 0); // Length == 0
-        assert(watchDepth >= -1); // < -1
-        assert(taskActFcn != nullptr); // nullptr
-        assert(fnData != nullptr); // nullptr
+            // ASSERT if passed parameters invalid
 
-        // If options passed then setup trace functions and  kill count
+            assert(taskName.length() != 0); // Length == 0
+            assert(watchFolder.length() != 0); // Length == 0
+            assert(watchDepth >= -1); // < -1
+            assert(taskActFcn != nullptr); // nullptr
+            assert(fnData != nullptr); // nullptr
 
-        if (options) {
-            if (options->coutstr) {
-                this->coutstr = options->coutstr;
+            // If options passed then setup trace functions and  kill count
+
+            if (options) {
+                if (options->coutstr) {
+                    this->coutstr = options->coutstr;
+                }
+                if (options->cerrstr) {
+                    this->cerrstr = options->cerrstr;
+                }
+                this->killCount = options->killCount;
             }
-            if (options->cerrstr) {
-                this->cerrstr = options->cerrstr;
-            }
-            this->killCount = options->killCount;
+
+            // Task prefix
+
+            this->prefix = "[TASK " + this->taskName + "] ";
+
+            // Create CFileApprise watcher object. Use same cout/cerr functions as Task.
+
+            this->watcherOptions.reset(new CFileApprise::Options{0, false, this->coutstr, this->cerrstr});
+            this->watcher.reset(new CFileApprise{watchFolder, watchDepth, watcherOptions});
+
+            // Create CFileApprise object thread and start to watch
+
+            this->watcherThread.reset(new std::thread(&CFileApprise::watch, this->watcher));
+
         }
 
-        // Task prefix
+        //
+        // Destructor
+        //
 
-        this->prefix = "[TASK " + this->taskName + "] ";
+        CFileTask::~CFileTask() {
 
-        // Create CFileApprise watcher object. Use same cout/cerr functions as Task.
+            this->coutstr({this->prefix, "CFileTask DESTRUCTOR CALLED."});
 
-        this->watcherOptions.reset(new CFileApprise::Options{0, false, this->coutstr, this->cerrstr});
-        this->watcher.reset(new CFileApprise{watchFolder, watchDepth, watcherOptions});
+        }
 
-        // Create CFileApprise object thread and start to watch
+        //
+        // Check whether termination of CFileTask was the result of any thrown exception
+        //
 
-        this->watcherThread.reset(new std::thread(&CFileApprise::watch, this->watcher));
+        std::exception_ptr CFileTask::getThrownException(void) {
 
-    }
+            return (this->thrownException);
 
-    //
-    // Destructor
-    //
+        }
 
-    CFileTask::~CFileTask() {
+        //
+        // Flag watcher and task loops to stop.
+        //
 
-        this->coutstr({this->prefix, "CFileTask DESTRUCTOR CALLED."});
+        void CFileTask::stop(void) {
 
-    }
+            this->coutstr({this->prefix, "Stop task."});
+            this->watcher->stop();
 
-    //
-    // Check whether termination of CFileTask was the result of any thrown exception
-    //
+        }
 
-    std::exception_ptr CFileTask::getThrownException(void) {
+        //
+        // Loop calling the task action function for each add file event.
+        //
 
-        return (this->thrownException);
+        void CFileTask::monitor(void) {
 
-    }
+            try {
 
-    //
-    // Flag watcher and task loops to stop.
-    //
+                this->coutstr({this->prefix, "CFileTask monitor started."});
 
-    void CFileTask::stop(void) {
+                // Loop until watcher stopped
 
-        this->coutstr({this->prefix, "Stop task."});
-        this->watcher->stop();
+                while (this->watcher->stillWatching()) {
 
-    }
+                    CFileApprise::Event evt;
 
-    //
-    // Loop calling the task action function for each add file event.
-    //
+                    this->watcher->getEvent(evt);
 
-    void CFileTask::monitor(void) {
+                    if ((evt.id == CFileApprise::Event_add) && !evt.message.empty()) {
 
-        try {
+                        this->taskActFcn(evt.message, this->fnData);
 
-            this->coutstr({this->prefix, "CFileTask monitor started."});
+                        if ((this->killCount != 0) && (--(this->killCount) == 0)) {
+                            this->coutstr({this->prefix, "CFileTask kill count reached."});
+                            break;
+                        }
 
-            // Loop until watcher stopped
-
-            while (this->watcher->stillWatching()) {
-
-                CFileApprise::Event evt;
-
-                this->watcher->getEvent(evt);
-
-                if ((evt.id == CFileApprise::Event_add) && !evt.message.empty()) {
-
-                    this->taskActFcn(evt.message, this->fnData);
-
-                    if ((this->killCount != 0) && (--(this->killCount) == 0)) {
-                        this->coutstr({this->prefix, "CFileTask kill count reached."});
-                        break;
+                    } else if ((evt.id == CFileApprise::Event_error) && !evt.message.empty()) {
+                        this->coutstr({evt.message});
                     }
 
-                } else if ((evt.id == CFileApprise::Event_error) && !evt.message.empty()) {
-                    this->coutstr({evt.message});
                 }
 
+                // Pass any CFileApprise exceptions up chain
+
+                if (this->watcher->getThrownException()) {
+                    this->thrownException = this->watcher->getThrownException();
+                }
+
+            } catch (...) {
+                // Pass any CFileTask thrown exceptions up chain
+                this->thrownException = std::current_exception();
             }
 
-            // Pass any CFileApprise exceptions up chain
+            // CFileApprise still flagged as running so close down 
 
-            if (this->watcher->getThrownException()) {
-                this->thrownException = this->watcher->getThrownException();
+            if (this->watcher->stillWatching()) {
+                this->watcher->stop();
             }
 
-        } catch (...) {
-            // Pass any CFileTask thrown exceptions up chain
-            this->thrownException = std::current_exception();
+            // Wait for CFileApprise thread
+
+            this->watcherThread->join();
+
+            this->coutstr({this->prefix, "CFileTask monitor on stopped."});
+
         }
 
-        // CFileApprise still flagged as running so close down 
-
-        if (this->watcher->stillWatching()) {
-            this->watcher->stop();
-        }
-
-        // Wait for CFileApprise thread
-
-        this->watcherThread->join();
-
-        this->coutstr({this->prefix, "CFileTask monitor on stopped."});
-
-    }
-
+    } // namespace File
 } // namespace Antik
