@@ -88,7 +88,7 @@ namespace Antik {
         // Put Data Descriptor record into buffer and write to disk.
         //
 
-        void CZIPIO::writeDataDescriptor(std::fstream &zipFileStream, CZIPIO::DataDescriptor& entry) {
+        void CZIPIO::writeZIPRecord(std::fstream &zipFileStream, CZIPIO::DataDescriptor& entry) {
 
             std::vector<std::uint8_t> buffer;
 
@@ -109,7 +109,7 @@ namespace Antik {
         // Put Central Directory File Header record into buffer and write to disk.
         //
 
-        void CZIPIO::writeCentralDirectoryFileHeader(std::fstream &zipFileStream, CZIPIO::CentralDirectoryFileHeader& entry) {
+        void CZIPIO::writeZIPRecord(std::fstream &zipFileStream, CZIPIO::CentralDirectoryFileHeader& entry) {
 
             std::vector<std::uint8_t> buffer;
 
@@ -153,7 +153,7 @@ namespace Antik {
         // Put Local File Header record into buffer and write to disk.
         //
 
-        void CZIPIO::writeFileHeader(std::fstream &zipFileStream, CZIPIO::LocalFileHeader& entry) {
+        void CZIPIO::writeZIPRecord(std::fstream &zipFileStream, CZIPIO::LocalFileHeader& entry) {
 
             std::vector<std::uint8_t> buffer;
 
@@ -188,7 +188,7 @@ namespace Antik {
         // Put End Of Central Directory record into buffer and write to disk.
         //
 
-        void CZIPIO::writeEOCentralDirectoryRecord(std::fstream &zipFileStream, CZIPIO::EOCentralDirectoryRecord& entry) {
+        void CZIPIO::writeZIPRecord(std::fstream &zipFileStream, CZIPIO::EOCentralDirectoryRecord& entry) {
 
             std::vector<std::uint8_t> buffer;
 
@@ -217,7 +217,7 @@ namespace Antik {
         // Put ZIP64 End Of Central Directory record into buffer and write to disk.
         //
 
-        void CZIPIO::writeZip64EOCentralDirectoryRecord(std::fstream &zipFileStream, CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
+        void CZIPIO::writeZIPRecord(std::fstream &zipFileStream, CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
 
             std::vector<std::uint8_t> buffer;
 
@@ -250,7 +250,7 @@ namespace Antik {
         // Put ZIP64 End Of Central Directory record locator into buffer and write to disk.
         //
 
-        void CZIPIO::writeZip64EOCentDirRecordLocator(std::fstream &zipFileStream, CZIPIO::Zip64EOCentDirRecordLocator& entry) {
+        void CZIPIO::writeZIPRecord(std::fstream &zipFileStream, CZIPIO::Zip64EOCentDirRecordLocator& entry) {
 
             std::vector<std::uint8_t> buffer;
 
@@ -270,7 +270,7 @@ namespace Antik {
         // Read Data Descriptor record from ZIP archive. 
         //
 
-        void CZIPIO::readDataDescriptor(std::fstream &zipFileStream, CZIPIO::DataDescriptor& entry) {
+        void CZIPIO::readZIPRecord(std::fstream &zipFileStream, CZIPIO::DataDescriptor& entry) {
 
             std::vector<std::uint8_t> buffer(entry.size);
             std::uint8_t *buffptr = &buffer[0];
@@ -301,7 +301,7 @@ namespace Antik {
         // Read Central Directory File Header record from ZIP archive.
         //
 
-        void CZIPIO::readCentralDirectoryFileHeader(std::fstream &zipFileStream, CZIPIO::CentralDirectoryFileHeader& entry) {
+        void CZIPIO::readZIPRecord(std::fstream &zipFileStream, CZIPIO::CentralDirectoryFileHeader& entry) {
 
             std::vector<std::uint8_t> buffer(entry.size);
             std::uint8_t *buffptr = &buffer[0];
@@ -362,7 +362,7 @@ namespace Antik {
         // Read Local File Header record from ZIP archive.
         //
 
-        void CZIPIO::readLocalFileHeader(std::fstream &zipFileStream, CZIPIO::LocalFileHeader& entry) {
+        void CZIPIO::readZIPRecord(std::fstream &zipFileStream, CZIPIO::LocalFileHeader& entry) {
 
             std::vector<std::uint8_t> buffer(entry.size);
             std::uint8_t *buffptr = &buffer[0];
@@ -417,7 +417,7 @@ namespace Antik {
         // Read End Of Central Directory File Header record from ZIP archive.
         //
 
-        void CZIPIO::readEOCentralDirectoryRecord(std::fstream &zipFileStream, CZIPIO::EOCentralDirectoryRecord& entry) {
+        void CZIPIO::readZIPRecord(std::fstream &zipFileStream, CZIPIO::EOCentralDirectoryRecord& entry) {
 
             zipFileStream.seekg(0, std::ios_base::end);
             uint64_t fileLength = zipFileStream.tellg();
@@ -478,7 +478,7 @@ namespace Antik {
         // Read ZIP64 End Of Central Directory record from ZIP archive.
         //
 
-        void CZIPIO::readZip64EOCentralDirectoryRecord(std::fstream &zipFileStream, CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
+        void CZIPIO::readZIPRecord(std::fstream &zipFileStream, CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
 
             std::vector<std::uint8_t> buffer(entry.size);
             std::uint8_t *buffptr = &buffer[0];
@@ -486,7 +486,7 @@ namespace Antik {
             std::uint64_t extensionSize;
             Zip64EOCentDirRecordLocator zip64EOCentralDirLocator;
 
-            readZip64EOCentDirRecordLocator(zipFileStream, zip64EOCentralDirLocator);
+            readZIPRecord(zipFileStream, zip64EOCentralDirLocator);
             zipFileStream.seekg(zip64EOCentralDirLocator.offset, std::ios::beg);
 
             zipFileStream.read((char *) buffptr, sizeof (signature));
@@ -526,7 +526,7 @@ namespace Antik {
         // Read ZIP64 End Of Central Directory record locator from ZIP archive
         //
 
-        void CZIPIO::readZip64EOCentDirRecordLocator(std::fstream &zipFileStream, CZIPIO::Zip64EOCentDirRecordLocator& entry) {
+        void CZIPIO::readZIPRecord(std::fstream &zipFileStream, CZIPIO::Zip64EOCentDirRecordLocator& entry) {
 
             zipFileStream.seekg(0, std::ios_base::end);
             uint64_t fileLength = zipFileStream.tellg();
@@ -665,9 +665,9 @@ namespace Antik {
         // Write Data Descriptor record into buffer to disk.
         //
 
-        void CZIPIO::putDataDescriptor(CZIPIO::DataDescriptor& entry) {
+        void CZIPIO::putZIPRecord(CZIPIO::DataDescriptor& entry) {
 
-            writeDataDescriptor(this->zipFileStream, entry);
+            writeZIPRecord(this->zipFileStream, entry);
 
         }
 
@@ -675,9 +675,9 @@ namespace Antik {
         // Write Central Directory File Header record to disk.
         //
 
-        void CZIPIO::putCentralDirectoryFileHeader(CZIPIO::CentralDirectoryFileHeader& entry) {
+        void CZIPIO::putZIPRecord(CZIPIO::CentralDirectoryFileHeader& entry) {
 
-            writeCentralDirectoryFileHeader(this->zipFileStream, entry);
+            writeZIPRecord(this->zipFileStream, entry);
 
         }
 
@@ -685,9 +685,9 @@ namespace Antik {
         // Write Local File Header record to disk.
         //
 
-        void CZIPIO::putFileHeader(CZIPIO::LocalFileHeader& entry) {
+        void CZIPIO::putZIPRecord(CZIPIO::LocalFileHeader& entry) {
 
-            writeFileHeader(this->zipFileStream, entry);
+            writeZIPRecord(this->zipFileStream, entry);
 
         }
 
@@ -695,9 +695,9 @@ namespace Antik {
         // Write End Of Central Directory record to disk.
         //
 
-        void CZIPIO::putEOCentralDirectoryRecord(CZIPIO::EOCentralDirectoryRecord& entry) {
+        void CZIPIO::putZIPRecord(CZIPIO::EOCentralDirectoryRecord& entry) {
 
-            writeEOCentralDirectoryRecord(this->zipFileStream, entry);
+            writeZIPRecord(this->zipFileStream, entry);
 
         }
 
@@ -705,9 +705,9 @@ namespace Antik {
         // Write ZIP64 End Of Central Directory record to disk.
         //
 
-        void CZIPIO::putZip64EOCentralDirectoryRecord(CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
+        void CZIPIO::putZIPRecord(CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
 
-            writeZip64EOCentralDirectoryRecord(this->zipFileStream, entry);
+            writeZIPRecord(this->zipFileStream, entry);
 
         }
 
@@ -715,9 +715,9 @@ namespace Antik {
         // Write ZIP64 End Of Central Directory record locator to disk.
         //
 
-        void CZIPIO::putZip64EOCentDirRecordLocator(CZIPIO::Zip64EOCentDirRecordLocator& entry) {
+        void CZIPIO::putZIPRecord(CZIPIO::Zip64EOCentDirRecordLocator& entry) {
 
-            writeZip64EOCentDirRecordLocator(this->zipFileStream, entry);
+            writeZIPRecord(this->zipFileStream, entry);
 
         }
 
@@ -767,9 +767,9 @@ namespace Antik {
         // Get Data Descriptor record from ZIP archive. 
         //
 
-        void CZIPIO::getDataDescriptor(CZIPIO::DataDescriptor& entry) {
+        void CZIPIO::getZIPRecord(CZIPIO::DataDescriptor& entry) {
 
-            readDataDescriptor(this->zipFileStream, entry);
+            readZIPRecord(this->zipFileStream, entry);
 
         }
 
@@ -777,9 +777,9 @@ namespace Antik {
         // Get Central Directory File Header record from ZIP archive.
         //
 
-        void CZIPIO::getCentralDirectoryFileHeader(CZIPIO::CentralDirectoryFileHeader& entry) {
+        void CZIPIO::getZIPRecord(CZIPIO::CentralDirectoryFileHeader& entry) {
 
-            readCentralDirectoryFileHeader(this->zipFileStream, entry);
+            readZIPRecord(this->zipFileStream, entry);
 
         }
 
@@ -787,9 +787,9 @@ namespace Antik {
         // Get Local File Header record from ZIP archive.
         //
 
-        void CZIPIO::getLocalFileHeader(CZIPIO::LocalFileHeader& entry) {
+        void CZIPIO::getZIPRecord(CZIPIO::LocalFileHeader& entry) {
 
-            readLocalFileHeader(this->zipFileStream, entry);
+            readZIPRecord(this->zipFileStream, entry);
 
         }
 
@@ -797,9 +797,9 @@ namespace Antik {
         // Get End Of Central Directory File Header record from ZIP archive.
         //
 
-        void CZIPIO::getEOCentralDirectoryRecord(CZIPIO::EOCentralDirectoryRecord& entry) {
+        void CZIPIO::getZIPRecord(CZIPIO::EOCentralDirectoryRecord& entry) {
 
-            readEOCentralDirectoryRecord(this->zipFileStream, entry);
+            readZIPRecord(this->zipFileStream, entry);
 
         }
 
@@ -807,9 +807,9 @@ namespace Antik {
         // Get ZIP64 End Of Central Directory record from ZIP archive
         //
 
-        void CZIPIO::getZip64EOCentralDirectoryRecord(CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
+        void CZIPIO::getZIPRecord(CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
 
-            readZip64EOCentralDirectoryRecord(this->zipFileStream, entry);
+            readZIPRecord(this->zipFileStream, entry);
 
         }
 

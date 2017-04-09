@@ -232,7 +232,9 @@ void dumpCentralDirectoryFileHeader(CZIPIO& zipFile, CZIPIO::CentralDirectoryFil
     if (zipFile.fieldOverflow(fileHeader.compressedSize) ||
             zipFile.fieldOverflow(fileHeader.uncompressedSize) ||
             zipFile.fieldOverflow(fileHeader.fileHeaderOffset)) {
+        
         CZIPIO::Zip64ExtendedInfoExtraField extra;
+        
         extra.compressedSize = fileHeader.compressedSize;
         extra.fileHeaderOffset = fileHeader.fileHeaderOffset;
         extra.originalSize = fileHeader.uncompressedSize;
@@ -248,6 +250,7 @@ void dumpCentralDirectoryFileHeader(CZIPIO& zipFile, CZIPIO::CentralDirectoryFil
         if (zipFile.fieldOverflow(fileHeader.fileHeaderOffset)) {
             std::cout << "File HeaderOffset       : " << extra.fileHeaderOffset << "\n";
         }
+        
     }
 
     std::cout << std::endl;
@@ -279,7 +282,7 @@ int main(int argc, char** argv) {
 
             // Read End Of Central Directory and display info
 
-            zipFile.getEOCentralDirectoryRecord(endOfCentralDirectory);
+            zipFile.getZIPRecord(endOfCentralDirectory);
             dumpEOCentralDirectoryRecord(endOfCentralDirectory);
 
             // Move to start of Central Directory and loop displaying entries.
@@ -288,7 +291,7 @@ int main(int argc, char** argv) {
 
             for (auto entryNumber = 0; entryNumber < endOfCentralDirectory.numberOfCentralDirRecords; entryNumber++) {
                 CZIPIO::CentralDirectoryFileHeader fileHeader;
-                zipFile.getCentralDirectoryFileHeader(fileHeader);
+                zipFile.getZIPRecord(fileHeader);
                 dumpCentralDirectoryFileHeader(zipFile, fileHeader, entryNumber);
             }
 

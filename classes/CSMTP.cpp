@@ -136,7 +136,7 @@ namespace Antik {
     // Encode a specified file in either 7bit or base64.
     //
 
-    void CSMTP::encodeAttachment(CSMTP::emailAttachment& attachment) {
+    void CSMTP::encodeAttachment(CSMTP::EmailAttachment& attachment) {
 
         std::string line;
 

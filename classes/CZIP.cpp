@@ -505,7 +505,7 @@ namespace Antik {
             fileHeader.extraField = directoryEntry.extraField;
 
             this->positionInZIPFile(this->offsetToEndOfLocalFileHeaders);
-            this->putFileHeader(fileHeader);
+            this->putZIPRecord(fileHeader);
 
             // Write any file contents next
 
@@ -539,14 +539,14 @@ namespace Antik {
                     } else {
                         fileHeader.compressedSize = directoryEntry.compressedSize = info.compressedSize;
                     }
-                    this->putFileHeader(fileHeader);
+                    this->putZIPRecord(fileHeader);
                 } else {
                     // Store non-compressed file.
                     directoryEntry.extractorVersion = CZIP::kZIPVersion10;
                     fileHeader.creatorVersion = (CZIP::kZIPCreatorUnix << 8) | CZIP::kZIPVersion10;
                     fileHeader.compression = directoryEntry.compression = CZIP::kZIPCompressionStore;
                     fileHeader.compressedSize = directoryEntry.compressedSize = info.originalSize;
-                    this->putFileHeader(fileHeader);
+                    this->putZIPRecord(fileHeader);
                     this->storeFile(fileNameStr, info.originalSize);
                     this->offsetToEndOfLocalFileHeaders = this->currentPositionZIPFile();
                 }
@@ -588,7 +588,7 @@ namespace Antik {
                 // Write Central Directory to ZIP archive
 
                 for (auto& directoryEntry : this->zipCentralDirectory) {
-                    this->putCentralDirectoryFileHeader(directoryEntry);
+                    this->putZIPRecord(directoryEntry);
                 }
 
                 // Calculate Central Directory size in byes.
@@ -656,13 +656,13 @@ namespace Antik {
                 if (bZIP64) {
                     Zip64EOCentDirRecordLocator locator;
                     locator.offset = this->currentPositionZIPFile();
-                    this->putZip64EOCentralDirectoryRecord(zip64EOCentralDirectory);
-                    this->putZip64EOCentDirRecordLocator(locator);
+                    this->putZIPRecord(zip64EOCentralDirectory);
+                    this->putZIPRecord(locator);
                 }
 
                 // Write End Of Central Directory record
 
-                this->putEOCentralDirectoryRecord(zipEOCentralDirectory);
+                this->putZIPRecord(zipEOCentralDirectory);
 
             }
 
@@ -719,7 +719,7 @@ namespace Antik {
 
             std::int64_t noOfFileRecords = 0;
 
-            this->getEOCentralDirectoryRecord(zipEOCentralDirectory);
+            this->getZIPRecord(zipEOCentralDirectory);
 
             // If one of the central directory fields is to large to store so ZIP64
 
@@ -732,7 +732,7 @@ namespace Antik {
                     this->fieldOverflow(zipEOCentralDirectory.offsetCentralDirRecords)) {
 
                 this->bZIP64 = true;
-                this->getZip64EOCentralDirectoryRecord(zip64EOCentralDirectory);
+                this->getZIPRecord(zip64EOCentralDirectory);
                 this->positionInZIPFile(zip64EOCentralDirectory.offsetCentralDirRecords);
                 noOfFileRecords = zip64EOCentralDirectory.numberOfCentralDirRecords;
                 this->offsetToEndOfLocalFileHeaders = zip64EOCentralDirectory.offsetCentralDirRecords;
@@ -748,7 +748,7 @@ namespace Antik {
 
             for (auto cnt01 = 0; cnt01 < noOfFileRecords; cnt01++) {
                 CZIP::CentralDirectoryFileHeader directoryEntry;
-                this->getCentralDirectoryFileHeader(directoryEntry);
+                this->getZIPRecord(directoryEntry);
                 this->zipCentralDirectory.push_back(directoryEntry);
                 this->bZIP64 = this->fieldOverflow(directoryEntry.compressedSize) ||
                         this->fieldOverflow(directoryEntry.uncompressedSize) ||
@@ -848,7 +848,7 @@ namespace Antik {
                     // Move to and read file header
 
                     this->positionInZIPFile(extendedInfo.fileHeaderOffset);
-                    this->getLocalFileHeader(fileHeader);
+                    this->getZIPRecord(fileHeader);
 
                     // Now positioned at file contents so extract
 
@@ -892,7 +892,7 @@ namespace Antik {
 
             this->openZIPFile(this->zipFileNameStr, std::ios::binary | std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
-            this->putEOCentralDirectoryRecord(zipEOCentralDirectory);
+            this->putZIPRecord(zipEOCentralDirectory);
 
             this->closeZIPFile();
 

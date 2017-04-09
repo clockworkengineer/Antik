@@ -140,7 +140,7 @@ namespace Antik {
 
             // Attachments
 
-            struct emailAttachment {
+            struct EmailAttachment {
                 std::string fileName; // Attached file name
                 std::string contentTypes; // Attached file MIME content type
                 std::string contentTransferEncoding; // Attached file content encoding 
@@ -149,7 +149,7 @@ namespace Antik {
 
             static const char *kMimeBoundaryStr; // Text string used for MIME boundary
 
-            static constexpr const int kBase64EncodeBufferSize = 54; // Optimum encode buffer size (since encoded max 76 bytes)
+            static const int kBase64EncodeBufferSize = 54; // Optimum encode buffer size (since encoded max 76 bytes)
 
             static const char *kEOLStr; // End of line
 
@@ -169,7 +169,7 @@ namespace Antik {
 
             // Encode email attachment
 
-            void encodeAttachment(CSMTP::emailAttachment& attachment);
+            void encodeAttachment(CSMTP::EmailAttachment& attachment);
 
             // Add attachments to payload
 
@@ -220,7 +220,7 @@ namespace Antik {
 
             std::deque<std::string> mailPayload; // Email payload
 
-            std::vector<CSMTP::emailAttachment> attachedFiles; // Attached files
+            std::vector<CSMTP::EmailAttachment> attachedFiles; // Attached files
 
         };
 

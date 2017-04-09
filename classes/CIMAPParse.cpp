@@ -13,7 +13,7 @@
 //
 // Class: CIMAPParse
 // 
-// Description: A class to parse CMailIMAP command responses. It is designed 
+// Description: A class to parse CIMAP command responses. It is designed 
 // to expect syntactically correct commands from any server and not report any
 // specific errors; but if any occur to report so through an exception exit 
 // processing gracefully.
