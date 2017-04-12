@@ -14,12 +14,12 @@
 // Class: CIMAPParse
 // 
 // Description: A class to parse CIMAP command responses. It is designed 
-// to expect syntactically correct commands from any server and not report any
-// specific errors; but if any occur to report so through an exception exit 
-// processing gracefully.
+// to expect syntactically correct command responses from a server and 
+// not report specific errors; but if any occur to report so through 
+// an exception.
 //
-// NOTE: IMAP commands sent can be any in combination of case and this 
-// is mirrored back in the response. So perform case-insensitive compares 
+// NOTE: IMAP commands sent can be in any combination of case (upper/lower) and 
+// this is mirrored back in the response. So perform case-insensitive compares 
 // for any commands in responses.
 //
 // Dependencies:   C11++     - Language standard features used.

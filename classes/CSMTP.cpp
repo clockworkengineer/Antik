@@ -142,7 +142,7 @@ namespace Antik {
 
         // 7bit just copy
 
-        if ((attachment.contentTransferEncoding.compare(CSMTP::kEncodingBase64Str) != 0)) {
+        if ((attachment.contentTransferEncoding.compare(kEncodingBase64Str) != 0)) {
 
             std::ifstream attachmentFile(attachment.fileName);
 
@@ -159,11 +159,11 @@ namespace Antik {
         } else {
 
             std::ifstream ifs(attachment.fileName, std::ios::binary);
-            std::string buffer(CSMTP::kBase64EncodeBufferSize, ' ');
+            std::string buffer(kBase64EncodeBufferSize, ' ');
 
             ifs.seekg(0, std::ios::beg);
             while (ifs.good()) {
-                ifs.read(&buffer[0], CSMTP::kBase64EncodeBufferSize);
+                ifs.read(&buffer[0], kBase64EncodeBufferSize);
                 this->encodeToBase64(buffer, line, ifs.gcount());
                 attachment.encodedContents.push_back(line + kEOLStr);
                 line.clear();
@@ -185,7 +185,7 @@ namespace Antik {
 
             this->encodeAttachment(attachment);
 
-            this->mailPayload.push_back(std::string("--") + CSMTP::kMimeBoundaryStr + kEOLStr);
+            this->mailPayload.push_back(std::string("--") + kMimeBoundaryStr + kEOLStr);
             this->mailPayload.push_back("Content-Type: " + attachment.contentTypes + ";" + kEOLStr);
             this->mailPayload.push_back("Content-transfer-encoding: " + attachment.contentTransferEncoding + kEOLStr);
             this->mailPayload.push_back(std::string("Content-Disposition: attachment;") + kEOLStr);
@@ -215,7 +215,7 @@ namespace Antik {
 
         // Email header.
 
-        this->mailPayload.push_back("Date: " + CSMTP::currentDateAndTime() + kEOLStr);
+        this->mailPayload.push_back("Date: " + currentDateAndTime() + kEOLStr);
         this->mailPayload.push_back("To: " + this->addressTo + kEOLStr);
         this->mailPayload.push_back("From: " + this->addressFrom + kEOLStr);
 
@@ -231,13 +231,13 @@ namespace Antik {
             this->mailPayload.push_back(std::string("Content-Transfer-Encoding: 7bit") + kEOLStr);
         } else {
             this->mailPayload.push_back(std::string("Content-Type: multipart/mixed;") + kEOLStr);
-            this->mailPayload.push_back(std::string("     boundary=\"") + CSMTP::kMimeBoundaryStr + "\"" + kEOLStr);
+            this->mailPayload.push_back(std::string("     boundary=\"") + kMimeBoundaryStr + "\"" + kEOLStr);
         }
 
         this->mailPayload.push_back(kEOLStr); // EMPTY LINE 
 
         if (bAttachments) {
-            this->mailPayload.push_back(std::string("--") + CSMTP::kMimeBoundaryStr + kEOLStr);
+            this->mailPayload.push_back(std::string("--") + kMimeBoundaryStr + kEOLStr);
             this->mailPayload.push_back(std::string("Content-Type: text/plain") + kEOLStr);
             this->mailPayload.push_back(std::string("Content-Transfer-Encoding: 7bit") + kEOLStr);
             this->mailPayload.push_back(kEOLStr); // EMPTY LINE 
@@ -253,7 +253,7 @@ namespace Antik {
         if (bAttachments) {
             this->mailPayload.push_back(kEOLStr); // EMPTY LINE 
             this->buildAttachments();
-            this->mailPayload.push_back(std::string("--") + CSMTP::kMimeBoundaryStr + "--" + kEOLStr);
+            this->mailPayload.push_back(std::string("--") + kMimeBoundaryStr + "--" + kEOLStr);
         }
 
     }
@@ -266,8 +266,8 @@ namespace Antik {
 
         int index = 0;
         do {
-            if (ch == CSMTP::kCB64[index]) return (index);
-        } while (CSMTP::kCB64[index++]);
+            if (ch == kCB64[index]) return (index);
+        } while (kCB64[index++]);
 
         return (0);
 
@@ -470,11 +470,11 @@ namespace Antik {
 
             this->buildMailPayload();
 
-            curl_easy_setopt(this->curlHandle, CURLOPT_READFUNCTION, CSMTP::payloadSource);
+            curl_easy_setopt(this->curlHandle, CURLOPT_READFUNCTION, payloadSource);
             curl_easy_setopt(this->curlHandle, CURLOPT_READDATA, &this->mailPayload);
             curl_easy_setopt(this->curlHandle, CURLOPT_UPLOAD, 1L);
 
-            curl_easy_setopt(this->curlHandle, CURLOPT_VERBOSE, CSMTP::bCurlVerbosity);
+            curl_easy_setopt(this->curlHandle, CURLOPT_VERBOSE, bCurlVerbosity);
 
             curlErrMsgBuffer[0] = 0;
             this->curlResult = curl_easy_perform(this->curlHandle);
@@ -488,7 +488,7 @@ namespace Antik {
                 } else {
                     errMsg = curl_easy_strerror(curlResult);
                 }
-                throw CSMTP::Exception("curl_easy_perform() failed: " + errMsg);
+                throw Exception("curl_easy_perform() failed: " + errMsg);
             }
 
             // Clear sent email
@@ -532,10 +532,10 @@ namespace Antik {
             byte2 = decodedString[byteIndex++];
             byte3 = decodedString[byteIndex++];
 
-            encodedString += CSMTP::kCB64[(byte1 & 0xfc) >> 2];
-            encodedString += CSMTP::kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
-            encodedString += CSMTP::kCB64[((byte2 & 0x0f) << 2) + ((byte3 & 0xc0) >> 6)];
-            encodedString += CSMTP::kCB64[byte3 & 0x3f];
+            encodedString += kCB64[(byte1 & 0xfc) >> 2];
+            encodedString += kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
+            encodedString += kCB64[((byte2 & 0x0f) << 2) + ((byte3 & 0xc0) >> 6)];
+            encodedString += kCB64[byte3 & 0x3f];
 
         }
 
@@ -543,8 +543,8 @@ namespace Antik {
 
         if (trailing == 1) {
             byte1 = decodedString[byteIndex++];
-            encodedString += CSMTP::kCB64[(byte1 & 0xfc) >> 2];
-            encodedString += CSMTP::kCB64[((byte1 & 0x03) << 4)];
+            encodedString += kCB64[(byte1 & 0xfc) >> 2];
+            encodedString += kCB64[((byte1 & 0x03) << 4)];
             encodedString += '=';
             encodedString += '=';
 
@@ -553,9 +553,9 @@ namespace Antik {
         } else if (trailing == 2) {
             byte1 = decodedString[byteIndex++];
             byte2 = decodedString[byteIndex++];
-            encodedString += CSMTP::kCB64[(byte1 & 0xfc) >> 2];
-            encodedString += CSMTP::kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
-            encodedString += CSMTP::kCB64[((byte2 & 0x0f) << 2)];
+            encodedString += kCB64[(byte1 & 0xfc) >> 2];
+            encodedString += kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
+            encodedString += kCB64[((byte2 & 0x0f) << 2)];
             encodedString += '=';
         }
 
@@ -650,10 +650,10 @@ namespace Antik {
     void CSMTP::init(bool bCurlVerbosity) {
 
         if (curl_global_init(CURL_GLOBAL_ALL)) {
-            throw CSMTP::Exception("curl_global_init() : failure to initialize libcurl.");
+            throw Exception("curl_global_init() : failure to initialize libcurl.");
         }
 
-        CSMTP::bCurlVerbosity = bCurlVerbosity;
+        bCurlVerbosity = bCurlVerbosity;
 
     }
 

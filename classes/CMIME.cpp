@@ -651,8 +651,8 @@ namespace Antik {
 
         if (fullStop != std::string::npos) {
 
-            auto foundMapping = CMIME::extToMimeType.find(baseFileName.substr(fullStop + 1));
-            if (foundMapping != CMIME::extToMimeType.end()) {
+            auto foundMapping = extToMimeType.find(baseFileName.substr(fullStop + 1));
+            if (foundMapping != extToMimeType.end()) {
                 return (foundMapping->second);
             }
 

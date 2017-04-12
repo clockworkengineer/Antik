@@ -101,7 +101,7 @@ namespace Antik {
             valueStr = kNILStr;
             partStr = partStr.substr(valueStr.length() + 1);
         } else {
-            throw CIMAPBodyStruct::Exception("error while parsing body structure [" + partStr + "]");
+            throw Exception("error while parsing body structure [" + partStr + "]");
         }
 
     }

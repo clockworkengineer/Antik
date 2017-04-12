@@ -167,7 +167,7 @@ namespace Antik {
         } else {
             errMsgStr = curl_easy_strerror(this->curlResult);
         }
-        throw CIMAP::Exception(baseMessageStr + errMsgStr);
+        throw Exception(baseMessageStr + errMsgStr);
     }
 
     //
@@ -270,7 +270,7 @@ namespace Antik {
                     // Find the previous end of line and search for tag from there.
                     // This cuts down search time on large buffered responses ie.
                     // encoded attachments.
-                    size_t prevNewLinePos = commandResponseStr.rfind(CIMAP::kEOLStr, recvLength - 3);
+                    size_t prevNewLinePos = commandResponseStr.rfind(kEOLStr, recvLength - 3);
                     if (prevNewLinePos == std::string::npos) {
                         prevNewLinePos = 0;
                     }
@@ -429,7 +429,7 @@ namespace Antik {
     void CIMAP::connect(void) {
 
         if (this->bConnected) {
-            CIMAP::Exception("Already connected to a server.");
+            Exception("Already connected to a server.");
         }
 
         if (this->curlHandle) {
@@ -437,7 +437,7 @@ namespace Antik {
             curl_easy_setopt(this->curlHandle, CURLOPT_USERNAME, this->userNameStr.c_str());
             curl_easy_setopt(this->curlHandle, CURLOPT_PASSWORD, this->userPasswordStr.c_str());
 
-            curl_easy_setopt(this->curlHandle, CURLOPT_VERBOSE, CIMAP::bCurlVerbosity);
+            curl_easy_setopt(this->curlHandle, CURLOPT_VERBOSE, bCurlVerbosity);
             curl_easy_setopt(this->curlHandle, CURLOPT_URL, this->serverURLStr.c_str());
 
             curl_easy_setopt(this->curlHandle, CURLOPT_USE_SSL, (long) CURLUSESSL_ALL);
@@ -478,7 +478,7 @@ namespace Antik {
     void CIMAP::disconnect(void) {
 
         if (!this->bConnected) {
-            throw CIMAP::Exception("Not connected to server.");
+            throw Exception("Not connected to server.");
         }
 
         if (this->curlHandle) {
@@ -497,7 +497,7 @@ namespace Antik {
     std::string CIMAP::sendCommand(const std::string& commandLineStr) {
 
         if (!this->bConnected) {
-            throw CIMAP::Exception("Not connected to server.");
+            throw Exception("Not connected to server.");
         }
 
         this->generateTag();
@@ -515,7 +515,7 @@ namespace Antik {
 
         if (this->commandResponseStr.empty()) {
             disconnect();
-            throw CIMAP::Exception("Server Disconnect without BYE.");
+            throw Exception("Server Disconnect without BYE.");
         }
 
         return (this->currentTagStr + " " + commandLineStr + kEOLStr + this->commandResponseStr);
@@ -551,14 +551,14 @@ namespace Antik {
     void CIMAP::init(bool bCurlVerbosity) {
 
         //
-        //  CIMAP initialization.. Globally init curl.
+        //  CIMAP initialization. Globally init curl.
         //
 
         if (curl_global_init(CURL_GLOBAL_ALL)) {
-            throw CIMAP::Exception("curl_global_init() : could not initialize libcurl.");
+            throw Exception("curl_global_init() : could not initialize libcurl.");
         }
 
-        CIMAP::bCurlVerbosity = bCurlVerbosity;
+        bCurlVerbosity = bCurlVerbosity;
 
     }
 

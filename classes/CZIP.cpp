@@ -473,9 +473,9 @@ namespace Antik {
                     directoryEntry.fileNameStr.push_back('/');
                     directoryEntry.fileNameLength++;
                 }
-                directoryEntry.extractorVersion = CZIP::kZIPVersion10;
-                directoryEntry.creatorVersion = (CZIP::kZIPCreatorUnix << 8) | CZIP::kZIPVersion10;
-                directoryEntry.compression = CZIP::kZIPCompressionStore;
+                directoryEntry.extractorVersion = kZIPVersion10;
+                directoryEntry.creatorVersion = (kZIPCreatorUnix << 8) | kZIPVersion10;
+                directoryEntry.compression = kZIPCompressionStore;
             }
 
             // > 4 GB Files so ZIP64. Values not able to be stored in 32 bits have
@@ -484,8 +484,8 @@ namespace Antik {
 
             if (bZIP64) {
                 this->bZIP64 = true;
-                directoryEntry.extractorVersion = CZIP::kZIPVersion45;
-                directoryEntry.creatorVersion = (CZIP::kZIPCreatorUnix << 8) | (CZIP::kZIPVersion45);
+                directoryEntry.extractorVersion = kZIPVersion45;
+                directoryEntry.creatorVersion = (kZIPCreatorUnix << 8) | (kZIPVersion45);
                 this->putZip64ExtendedInfoExtraField(info, directoryEntry.extraField);
                 directoryEntry.extraFieldLength = directoryEntry.extraField.size();
             }
@@ -542,9 +542,9 @@ namespace Antik {
                     this->putZIPRecord(fileHeader);
                 } else {
                     // Store non-compressed file.
-                    directoryEntry.extractorVersion = CZIP::kZIPVersion10;
-                    fileHeader.creatorVersion = (CZIP::kZIPCreatorUnix << 8) | CZIP::kZIPVersion10;
-                    fileHeader.compression = directoryEntry.compression = CZIP::kZIPCompressionStore;
+                    directoryEntry.extractorVersion = kZIPVersion10;
+                    fileHeader.creatorVersion = (kZIPCreatorUnix << 8) | kZIPVersion10;
+                    fileHeader.compression = directoryEntry.compression = kZIPCompressionStore;
                     fileHeader.compressedSize = directoryEntry.compressedSize = info.originalSize;
                     this->putZIPRecord(fileHeader);
                     this->storeFile(fileNameStr, info.originalSize);
@@ -747,7 +747,7 @@ namespace Antik {
             // Read in Central Directory
 
             for (auto cnt01 = 0; cnt01 < noOfFileRecords; cnt01++) {
-                CZIP::CentralDirectoryFileHeader directoryEntry;
+                CentralDirectoryFileHeader directoryEntry;
                 this->getZIPRecord(directoryEntry);
                 this->zipCentralDirectory.push_back(directoryEntry);
                 this->bZIP64 = this->fieldOverflow(directoryEntry.compressedSize) ||
@@ -765,7 +765,7 @@ namespace Antik {
 
         std::vector<CZIP::FileDetail> CZIP::contents(void) {
 
-            std::vector<CZIP::FileDetail> fileDetailList;
+            std::vector<FileDetail> fileDetailList;
 
             if (!this->bOpen) {
                 throw Exception("ZIP archive has not been opened.");
@@ -852,10 +852,10 @@ namespace Antik {
 
                     // Now positioned at file contents so extract
 
-                    if (directoryEntry.compression == CZIP::kZIPCompressionDeflate) {
+                    if (directoryEntry.compression == kZIPCompressionDeflate) {
                         crc32 = this->inflateFile(destFileNameStr, extendedInfo.compressedSize);
                         fileExtracted = true;
-                    } else if (directoryEntry.compression == CZIP::kZIPCompressionStore) {
+                    } else if (directoryEntry.compression == kZIPCompressionStore) {
                         crc32 = this->extractFile(destFileNameStr, extendedInfo.originalSize);
                         fileExtracted = true;
                     } else {
