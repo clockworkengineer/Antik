@@ -102,10 +102,10 @@ namespace Antik {
         // PRIVATE VARIABLES
         // =================
 
-        std::unique_ptr<std::ofstream> fileStream = nullptr; // New file stream
-        std::ostream *outStream = nullptr;                   // saved stream
-        std::streambuf *outBuffer = nullptr;                 // Saved readbuffer
-        std::FILE *stdStream = nullptr;                      // Saved stdout/stderr
+        std::unique_ptr<std::ofstream> fileStream { nullptr }; // New file stream
+        std::ostream *outStream { nullptr };                   // saved stream
+        std::streambuf *outBuffer { nullptr };                 // Saved readbuffer
+        std::FILE *stdStream { nullptr };                      // Saved stdout/stderr
 
     };
 

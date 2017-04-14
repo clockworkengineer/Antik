@@ -244,13 +244,13 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
 
-            bool bConnected = false; // == true then connected to server
-            std::string userNameStr = ""; // Email account user name
-            std::string userPasswordStr = ""; // Email account user name password
-            std::string serverURLStr = ""; // IMAP server URL
+            bool bConnected { false }; // == true then connected to server
+            std::string userNameStr; // Email account user name
+            std::string userPasswordStr; // Email account user name password
+            std::string serverURLStr; // IMAP server URL
 
-            CURL *curlHandle = nullptr; // curl handle
-            CURLcode curlResult = CURLE_OK; // curl status
+            CURL *curlHandle { nullptr }; // curl handle
+            CURLcode curlResult { CURLE_OK }; // curl status
             curl_socket_t curlSocketFD; // curl socket
             static bool bCurlVerbosity; // curl verbosity setting 
             char curlRxBuffer[CURL_MAX_WRITE_SIZE]; // curl rx buffer
@@ -258,7 +258,7 @@ namespace Antik {
 
             std::string commandResponseStr; // IMAP command response
 
-            uint64_t tagCount = 1; // Current command tag count
+            uint64_t tagCount { 1 }; // Current command tag count
             std::string currentTagStr; // Current command tag
             std::string tagPrefixStr{ kDefaultTagPrefixStr}; // Current command tag prefixes
 

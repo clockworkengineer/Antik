@@ -67,7 +67,7 @@ namespace Antik {
             //
 
             struct ParsedMIMEString {
-                unsigned char type; // Type Q (Quoted Printable), B (base64), ' ' None.
+                unsigned char type  { ' ' }; // Type Q (Quoted Printable), B (base64), ' ' None.
                 std::string encoding; // Encoding used
                 std::string contents; // Contents
             };

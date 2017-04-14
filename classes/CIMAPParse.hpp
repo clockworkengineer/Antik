@@ -108,7 +108,7 @@ namespace Antik {
         //
 
         struct FetchRespData {
-            uint64_t index = 0; // EMail Index/UID
+            uint64_t index { 0 }; // EMail Index/UID
             CommandResponseMap responseMap; // Fetch command response map
         };
 
@@ -117,7 +117,7 @@ namespace Antik {
         //
 
         struct ListRespData {
-            uint8_t hierDel = ' '; // Hierarchy Delimeter
+            uint8_t hierDel { ' ' }; // Hierarchy Delimeter
             std::string attributesStr; // Mailbox attributes
             std::string mailBoxNameStr; // Mailbox name
         };
@@ -127,7 +127,7 @@ namespace Antik {
         //
 
         struct StoreRespData {
-            uint64_t index = 0; // EMail Index/UID
+            uint64_t index { 0 }; // EMail Index/UID
             std::string flagsListStr; // EMail flags list
         };
 
@@ -140,10 +140,10 @@ namespace Antik {
             {
             }
 
-            Commands command = Commands::NONE; // Command enum code
-            RespCode status = RespCode::NONE; // Command enum status
+            Commands command { Commands::NONE }; // Command enum code
+            RespCode status { RespCode::NONE }; // Command enum status
             std::string errorMessageStr; // Command error string
-            bool bBYESent = false; // ==true then BYE sent as part of response
+            bool bBYESent { false } ; // ==true then BYE sent as part of response
             CommandResponseMap responseMap; // Command response map 
 
             std::vector<uint64_t> indexes; // Vector of SEARCH index(s)/UID(s)

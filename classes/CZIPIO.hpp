@@ -51,22 +51,22 @@ namespace Antik {
         // ZIP archive compression methods.
         //
  
-        static const std::uint16_t kZIPCompressionStore = 0;
-        static const std::uint16_t kZIPCompressionDeflate = 8;
+        static const std::uint16_t kZIPCompressionStore { 0 };
+        static const std::uint16_t kZIPCompressionDeflate { 8 };
         
         //
         // ZIP archive versions
         //
         
-        static const std::uint8_t kZIPVersion10 = 0x0a;
-        static const std::uint8_t kZIPVersion20 = 0x14;
-        static const std::uint8_t kZIPVersion45 = 0x2d;
+        static const std::uint8_t kZIPVersion10 { 0x0a };
+        static const std::uint8_t kZIPVersion20 { 0x14 };
+        static const std::uint8_t kZIPVersion45 { 0x2d };
         
         //
         // ZIP archive creator
         //
    
-        static const std::uint8_t kZIPCreatorUnix = 0x03;
+        static const std::uint8_t kZIPCreatorUnix { 0x03 };
 
         //
         // Class exception
@@ -85,18 +85,18 @@ namespace Antik {
         //
         
         struct LocalFileHeader {
-            const std::uint32_t size = 30;
-            const std::uint32_t signature = 0x04034b50;
-            std::uint16_t creatorVersion = 0;
-            std::uint16_t bitFlag = 0;
-            std::uint16_t compression = 0;
-            std::uint16_t modificationTime = 0;
-            std::uint16_t modificationDate = 0;
-            std::uint32_t crc32 = 0;
-            std::uint32_t compressedSize = 0;
-            std::uint32_t uncompressedSize = 0;
-            std::uint16_t fileNameLength = 0;
-            std::uint16_t extraFieldLength = 0;
+            const std::uint32_t size { 30 };
+            const std::uint32_t signature { 0x04034b50 } ;
+            std::uint16_t creatorVersion { 0 };
+            std::uint16_t bitFlag { 0 };
+            std::uint16_t compression { 0 };
+            std::uint16_t modificationTime { 0 };
+            std::uint16_t modificationDate { 0 };
+            std::uint32_t crc32 { 0 };
+            std::uint32_t compressedSize { 0 };
+            std::uint32_t uncompressedSize { 0 };
+            std::uint16_t fileNameLength { 0 };
+            std::uint16_t extraFieldLength { 0 };
             std::string fileNameStr;
             std::vector<std::uint8_t> extraField;
         };
@@ -106,11 +106,11 @@ namespace Antik {
         //
 
         struct DataDescriptor {
-            const std::uint32_t size = 12;
-            const std::uint32_t signature = 0x08074b50;
-            std::uint32_t crc32 = 0;
-            std::uint32_t compressedSize = 0;
-            std::uint32_t uncompressedSize = 0;
+            const std::uint32_t size { 12 };
+            const std::uint32_t signature { 0x08074b50};
+            std::uint32_t crc32 { 0 };
+            std::uint32_t compressedSize { 0 };
+            std::uint32_t uncompressedSize { 0 };
         };
 
         //
@@ -118,24 +118,24 @@ namespace Antik {
         //
 
         struct CentralDirectoryFileHeader {
-            const std::uint32_t size = 46;            
-            const std::uint32_t signature = 0x02014b50;
-            std::uint16_t creatorVersion = (kZIPCreatorUnix<<8)|kZIPVersion20;
-            std::uint16_t extractorVersion = kZIPVersion20;
-            std::uint16_t bitFlag = 0;
-            std::uint16_t compression = kZIPCompressionDeflate;
-            std::uint16_t modificationTime = 0;
-            std::uint16_t modificationDate = 0;
-            std::uint32_t crc32 = 0;
-            std::uint32_t compressedSize = 0;
-            std::uint32_t uncompressedSize = 0;
-            std::uint16_t fileNameLength = 0;
-            std::uint16_t extraFieldLength = 0;
-            std::uint16_t fileCommentLength = 0;
-            std::uint16_t diskNoStart = 0;
-            std::uint16_t internalFileAttrib = 0;
-            std::uint32_t externalFileAttrib = 0;
-            std::uint32_t fileHeaderOffset = 0;
+            const std::uint32_t size { 46 };            
+            const std::uint32_t signature { 0x02014b50 };
+            std::uint16_t creatorVersion { (kZIPCreatorUnix<<8)|kZIPVersion20 } ;
+            std::uint16_t extractorVersion { kZIPVersion20 };
+            std::uint16_t bitFlag { 0 };
+            std::uint16_t compression { kZIPCompressionDeflate };
+            std::uint16_t modificationTime { 0 };
+            std::uint16_t modificationDate { 0 };
+            std::uint32_t crc32 { 0 };
+            std::uint32_t compressedSize { 0 };
+            std::uint32_t uncompressedSize { 0 };
+            std::uint16_t fileNameLength { 0 };
+            std::uint16_t extraFieldLength { 0 };
+            std::uint16_t fileCommentLength { 0 };
+            std::uint16_t diskNoStart { 0 };
+            std::uint16_t internalFileAttrib { 0 };
+            std::uint32_t externalFileAttrib { 0 };
+            std::uint32_t fileHeaderOffset { 0 };
             std::string fileNameStr;
             std::vector<std::uint8_t>extraField;
             std::string fileCommentStr;
@@ -146,15 +146,15 @@ namespace Antik {
         //
 
         struct EOCentralDirectoryRecord {
-            const std::uint32_t size = 22;
-            const std::uint32_t signature = 0x06054b50;
-            std::uint16_t diskNumber = 0;
-            std::uint16_t startDiskNumber = 0;
-            std::uint16_t numberOfCentralDirRecords = 0;
-            std::uint16_t totalCentralDirRecords = 0;
-            std::uint32_t sizeOfCentralDirRecords = 0;
-            std::uint32_t offsetCentralDirRecords = 0;
-            std::uint16_t commentLength = 0;
+            const std::uint32_t size { 22 };
+            const std::uint32_t signature { 0x06054b50 };
+            std::uint16_t diskNumber { 0 };
+            std::uint16_t startDiskNumber { 0 };
+            std::uint16_t numberOfCentralDirRecords { 0 };
+            std::uint16_t totalCentralDirRecords { 0 };
+            std::uint32_t sizeOfCentralDirRecords { 0 };
+            std::uint32_t offsetCentralDirRecords { 0 };
+            std::uint16_t commentLength { 0 };
             std::string commentStr;
         };
               
@@ -163,17 +163,17 @@ namespace Antik {
         //
 
         struct Zip64EOCentralDirectoryRecord {
-            const std::uint32_t size = 56;
-            const std::uint32_t signature = 0x06064b50;
-            std::uint64_t  totalRecordSize = 0;
-            std::uint16_t creatorVersion = (kZIPCreatorUnix<<8)|kZIPVersion45;
-            std::uint16_t extractorVersion = kZIPVersion45;
-            std::uint32_t diskNumber = 0;
-            std::uint32_t startDiskNumber = 0;
-            std::uint64_t numberOfCentralDirRecords = 0;
-            std::uint64_t  totalCentralDirRecords = 0;
-            std::uint64_t sizeOfCentralDirRecords = 0;
-            std::uint64_t offsetCentralDirRecords = 0;
+            const std::uint32_t size { 56 };
+            const std::uint32_t signature { 0x06064b50 };
+            std::uint64_t  totalRecordSize { 0 };
+            std::uint16_t creatorVersion { (kZIPCreatorUnix<<8)|kZIPVersion45 };
+            std::uint16_t extractorVersion { kZIPVersion45 };
+            std::uint32_t diskNumber { 0 };
+            std::uint32_t startDiskNumber { 0 };
+            std::uint64_t numberOfCentralDirRecords { 0 };
+            std::uint64_t  totalCentralDirRecords { 0 };
+            std::uint64_t sizeOfCentralDirRecords { 0 };
+            std::uint64_t offsetCentralDirRecords { 0 };
             std::vector<std::uint8_t> extensibleDataSector;
  
         };
@@ -183,11 +183,11 @@ namespace Antik {
         //
 
         struct Zip64EOCentDirRecordLocator {
-            const std::uint32_t size = 20;
-            const std::uint32_t signature = 0x07064b50;
-            std::uint32_t startDiskNumber = 0;
-            std::uint64_t offset = 0;
-            std::uint32_t numberOfDisks = 0;
+            const std::uint32_t size { 20 };
+            const std::uint32_t signature { 0x07064b50 };
+            std::uint32_t startDiskNumber { 0 };
+            std::uint64_t offset { 0 };
+            std::uint32_t numberOfDisks { 0 };
         };
 
         //
@@ -195,12 +195,12 @@ namespace Antik {
         //
 
         struct Zip64ExtendedInfoExtraField {
-            const std::uint16_t signature = 0x0001;
-            std::uint16_t size = 0;
-            std::uint64_t originalSize = 0;
-            std::uint64_t compressedSize = 0;
-            std::uint64_t fileHeaderOffset = 0;
-            std::uint32_t diskNo = 0;
+            const std::uint16_t signature { 0x0001 };
+            std::uint16_t size { 0 };
+            std::uint64_t originalSize { 0 };
+            std::uint64_t compressedSize { 0 };
+            std::uint64_t fileHeaderOffset { 0 };
+            std::uint32_t diskNo { 0 };
         };
 
         // ============

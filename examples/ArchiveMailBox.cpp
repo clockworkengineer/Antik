@@ -56,8 +56,6 @@
 
 #include "CIMAP.hpp"
 #include "CIMAPParse.hpp"
-#include "CIMAPBodyStruct.hpp"
-#include "CSMTP.hpp"
 #include "CMIME.hpp"
 
 using namespace Antik::Mail;
@@ -323,7 +321,7 @@ void fetchEmailAndArchive(CIMAP& imap, const std::string& mailBoxNameStr,
 // prefix; get the UID from this.
 //
 
-uint64_t getLowerSearchLimit(const fs::path& destinationFolder) {
+std::uint64_t getLowerSearchLimit(const fs::path& destinationFolder) {
 
     if (fs::exists(destinationFolder) && fs::is_directory(destinationFolder)) {
 

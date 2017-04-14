@@ -109,10 +109,10 @@ namespace Antik {
 
             CApprise
             (
-                    const std::string& watchFolder, // Watch folder path
-                    int watchDepth, // Watch depth -1=all,0=just watch folder,1=next level down etc.
-                    std::shared_ptr<CApprise::Options> options = nullptr // CFileApprise Options (OPTIONAL)
-                    );
+                const std::string& watchFolder, // Watch folder path
+                int watchDepth, // Watch depth -1=all,0=just watch folder,1=next level down etc.
+                std::shared_ptr<CApprise::Options> options = nullptr // CFileApprise Options (OPTIONAL)
+            );
 
             //
             // Need to add/remove watches manually
@@ -120,8 +120,8 @@ namespace Antik {
 
             CApprise
             (
-                    std::shared_ptr<CApprise::Options> options = nullptr // CFileApprise Options (OPTIONAL)
-                    );
+                std::shared_ptr<CApprise::Options> options = nullptr // CFileApprise Options (OPTIONAL)
+            );
 
 
             // ==========
@@ -218,9 +218,9 @@ namespace Antik {
             //
 
             void sendEvent(
-                    CApprise::EventId id, // Event id
-                    const std::string& message // Filename/message
-                    );
+                CApprise::EventId id, // Event id
+                const std::string& message // Filename/message
+            );
 
             // =================
             // PRIVATE VARIABLES
@@ -231,24 +231,24 @@ namespace Antik {
             //
 
             std::string watchFolder; // Watch Folder
-            int watchDepth = -1; // Watch depth -1=all,0=just watch folder,1=next level down etc.
+            int watchDepth { -1 }; // Watch depth -1=all,0=just watch folder,1=next level down etc.
 
             //
             // Inotify
             //
 
-            int inotifyFd = 0; // file descriptor for read
-            uint32_t inotifyWatchMask = CApprise::kInofityEvents; // watch event mask
+            int inotifyFd { 0 }; // file descriptor for read
+            uint32_t inotifyWatchMask { CApprise::kInofityEvents }; // watch event mask
             std::unique_ptr<std::uint8_t> inotifyBuffer; // read buffer
             std::unordered_map<int32_t, std::string> watchMap; // Watch table indexed by watch variable
             std::set<std::string> inProcessOfCreation; // Set to hold files being created.
-            bool bDisplayInotifyEvent = false; // ==true then display inotify event to coutstr
+            bool bDisplayInotifyEvent { false }; // ==true then display inotify event to coutstr
 
             //
             // Publicly accessed via accessors
             //
 
-            std::exception_ptr thrownException = nullptr; // Pointer to any exception thrown
+            std::exception_ptr thrownException { nullptr }; // Pointer to any exception thrown
             std::atomic<bool> bDoWork; // doWork=true (run watcher loop) false=(stop watcher loop)
 
             //
@@ -261,8 +261,8 @@ namespace Antik {
 
             // Trace functions default (do nothing).
 
-            Antik::Util::CLogger::LogStringsFn coutstr = Antik::Util::CLogger::noOp;
-            Antik::Util::CLogger::LogStringsFn cerrstr = Antik::Util::CLogger::noOp;
+            Antik::Util::CLogger::LogStringsFn coutstr { Antik::Util::CLogger::noOp };
+            Antik::Util::CLogger::LogStringsFn cerrstr { Antik::Util::CLogger::noOp };
 
         };
 

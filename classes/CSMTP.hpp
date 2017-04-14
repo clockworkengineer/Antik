@@ -199,22 +199,22 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
 
-            std::string userName = ""; // Email account user name
-            std::string userPassword = ""; // Email account user name password
-            std::string serverURL = ""; // SMTP server URL
+            std::string userName;       // Email account user name
+            std::string userPassword;   // Email account user name password
+            std::string serverURL;      // SMTP server URL
 
-            std::string addressFrom = ""; // Email Sender
-            std::string addressTo = ""; // Main recipients addresses
-            std::string addressCC = ""; // CC recipients addresses
+            std::string addressFrom;    // Email Sender
+            std::string addressTo;      // Main recipients addresses
+            std::string addressCC;      // CC recipients addresses
 
-            std::string mailSubject = ""; // Email subject
+            std::string mailSubject; // Email subject
             std::vector<std::string> mailMessage; // Email body
 
-            std::string mailCABundle = ""; // Path to CA bundle (Untested at present)
+            std::string mailCABundle; // Path to CA bundle (Untested at present)
 
-            CURL *curlHandle = nullptr; // curl handle
-            struct curl_slist *curlRecipients = nullptr; // curl email recipients list
-            CURLcode curlResult = CURLE_OK; // curl status
+            CURL *curlHandle { nullptr }; // curl handle
+            struct curl_slist *curlRecipients { nullptr }; // curl email recipients list
+            CURLcode curlResult { CURLE_OK }; // curl status
             char curlErrMsgBuffer[CURL_ERROR_SIZE]; // curl error string buffer  
             static bool bCurlVerbosity; // curl verbosity setting
 

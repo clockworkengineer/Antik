@@ -84,13 +84,13 @@ namespace Antik {
 
             CTask
             (
-                    const std::string& taskName, // Task name
-                    const std::string& watchFolder, // Watch folder path
-                    TaskActionFcn taskActFcn, // Task action function
-                    std::shared_ptr<void> fnData, // Task file process function data
-                    int watchDepth, // Watch depth -1= all, 0=just watch folder
-                    std::shared_ptr<TaskOptions> options = nullptr // Task options. 
-                    );
+                const std::string& taskName, // Task name
+                const std::string& watchFolder, // Watch folder path
+                TaskActionFcn taskActFcn, // Task action function
+                std::shared_ptr<void> fnData, // Task file process function data
+                int watchDepth, // Watch depth -1= all, 0=just watch folder
+                std::shared_ptr<TaskOptions> options = nullptr // Task options. 
+            );
 
             // ==========
             // DESTRUCTOR
@@ -146,7 +146,7 @@ namespace Antik {
             std::string watchFolder; // Watch Folder
             TaskActionFcn taskActFcn; // Task action function 
             std::shared_ptr<void> fnData; // Task action function data   
-            int killCount = 0; // Task Kill Count
+            int killCount { 0 }; // Task Kill Count
 
             //
             // CFileApprise file watcher
@@ -160,14 +160,14 @@ namespace Antik {
             // Publicly accessed via accessors
             //
 
-            std::exception_ptr thrownException = nullptr; // Pointer to any exception thrown
+            std::exception_ptr thrownException { nullptr }; // Pointer to any exception thrown
 
             //
             // Trace functions default do nothing
             //
 
-            Antik::Util::CLogger::LogStringsFn coutstr = Antik::Util::CLogger::noOp;
-            Antik::Util::CLogger::LogStringsFn cerrstr = Antik::Util::CLogger::noOp;
+            Antik::Util::CLogger::LogStringsFn coutstr { Antik::Util::CLogger::noOp };
+            Antik::Util::CLogger::LogStringsFn cerrstr { Antik::Util::CLogger::noOp };
 
             std::string prefix; // Task trace prefix
 
