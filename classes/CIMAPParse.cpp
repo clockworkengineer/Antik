@@ -148,7 +148,7 @@ namespace Antik {
         //
 
         void CIMAPParse::parseNumber(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr) {
-            int numberPos = 0;
+            int numberPos { 0 };
             std::string numberStr;
             lineStr = lineStr.substr(itemStr.length() + 1);
             while (std::isdigit(lineStr[numberPos])) {
@@ -200,8 +200,10 @@ namespace Antik {
 
         void CIMAPParse::parseOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr, std::istringstream& responseStream) {
 
-            std::string octetStr, octectBuffer, commandLabel{lineStr};
-            int numberOfOctets;
+            std::string octetStr;
+            std::string octectBuffer;
+            std::string commandLabel { lineStr };
+            int numberOfOctets { 0 };
 
             octetStr = stringBetween(lineStr, '{', '}');
             numberOfOctets = std::strtoull(octetStr.c_str(), nullptr, 10);
@@ -286,7 +288,7 @@ namespace Antik {
 
             // Extract mailbox name from command (stripping any quotes).
 
-            std::string mailBoxNameStr = commandData.commandLineStr.substr(commandData.commandLineStr.find_last_of(' ') + 1);
+            std::string mailBoxNameStr { commandData.commandLineStr.substr(commandData.commandLineStr.find_last_of(' ') + 1) };
             if (mailBoxNameStr.back() == '\"') mailBoxNameStr.pop_back();
             if (mailBoxNameStr.front() == '\"') mailBoxNameStr = mailBoxNameStr.substr(1);
 
@@ -600,7 +602,7 @@ namespace Antik {
 
         std::string CIMAPParse::stringToUpper(const std::string& lineStr) {
 
-            std::string upperCaseStr(lineStr);
+            std::string upperCaseStr { lineStr };
             for (auto &c : upperCaseStr) c = std::toupper(c);
             return (upperCaseStr);
 
@@ -612,7 +614,7 @@ namespace Antik {
 
         bool CIMAPParse::stringEqual(const std::string& lineStr, const std::string& compareStr) {
 
-            int cnt01 = 0;
+            int cnt01 { 0 };
             if (lineStr.length() < compareStr.length()) return (false);
             for (auto &c : compareStr) if (std::toupper(c) != std::toupper(lineStr[cnt01++])) return (false);
             return (true);
@@ -624,8 +626,8 @@ namespace Antik {
         //
 
         std::string CIMAPParse::stringBetween(const std::string& lineStr, const char first, const char last) {
-            int firstDel = lineStr.find_first_of(first);
-            int lastDel = lineStr.find_first_of(last, firstDel + 1);
+            std::size_t firstDel { lineStr.find_first_of(first) };
+            std::size_t lastDel  { lineStr.find_first_of(last, firstDel + 1) };
             return (lineStr.substr(firstDel + 1, (lastDel - firstDel - 1)));
         }
 
@@ -635,8 +637,8 @@ namespace Antik {
 
         std::string CIMAPParse::stringUntaggedNumber(const std::string& lineStr) {
 
-            int startNumber = lineStr.find_first_not_of(' ', 1);
-            int endNumber = lineStr.find_first_of(' ', startNumber);
+            std::size_t startNumber { lineStr.find_first_not_of(' ', 1) };
+            std::size_t endNumber { lineStr.find_first_of(' ', startNumber) };
             return (lineStr.substr(startNumber, endNumber - startNumber));
 
         }
@@ -656,8 +658,8 @@ namespace Antik {
 
         std::string CIMAPParse::stringCommand(const std::string& lineStr) {
 
-            int startOfCommand = lineStr.find_first_of(' ') + 1;
-            int endOfCommand = lineStr.find_first_of(' ', startOfCommand);
+            std::size_t startOfCommand { lineStr.find_first_of(' ') + 1 };
+            std::size_t endOfCommand { lineStr.find_first_of(' ', startOfCommand) };
 
             if (stringEqual(lineStr.substr(startOfCommand, endOfCommand - startOfCommand), CIMAP::kUIDStr)) {
                 startOfCommand = lineStr.find_first_of(' ', startOfCommand) + 1;
@@ -676,7 +678,10 @@ namespace Antik {
 
         std::string CIMAPParse::stringList(const std::string& lineStr) {
 
-            int bracketCount = 0, startPosition = 0, currentIndex = 0, lineLength = lineStr.length();
+            int bracketCount { 0 };
+            int startPosition { 0 };
+            std::size_t currentIndex { 0 };
+            std::size_t lineLength { lineStr.length() };
 
             startPosition = lineStr.find_first_of('(');
             lineLength -= startPosition;
@@ -701,7 +706,7 @@ namespace Antik {
 
         CIMAPParse::COMMANDRESPONSE CIMAPParse::parseResponse(const std::string & commandResponseStr) {
 
-            std::istringstream responseStream(commandResponseStr);
+            std::istringstream responseStream { commandResponseStr };
             std::string commandLineStr;
 
             parseGetNextLine(responseStream, commandLineStr);

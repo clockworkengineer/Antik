@@ -54,14 +54,14 @@ namespace Antik {
     // BODYSTRUCTURE constants
     //
 
-    const char *CIMAPBodyStruct::kNILStr = "NIL";
-    const char *CIMAPBodyStruct::kTEXTStr = "TEXT";
-    const char *CIMAPBodyStruct::kATTACHMENTStr = "ATTACHMENT";
-    const char *CIMAPBodyStruct::kINLINEStr = "INLINE";
-    const char *CIMAPBodyStruct::kCREATIONDATEStr = "CREATION-DATE";
-    const char *CIMAPBodyStruct::kFILENAMEStr = "FILENAME";
-    const char *CIMAPBodyStruct::kMODIFICATIONDATEStr = "MODIFICATION-DATE";
-    const char *CIMAPBodyStruct::kSIZEStr = "SIZE";
+    const char *CIMAPBodyStruct::kNILStr { "NIL" };
+    const char *CIMAPBodyStruct::kTEXTStr { "TEXT" };
+    const char *CIMAPBodyStruct::kATTACHMENTStr { "ATTACHMENT" };
+    const char *CIMAPBodyStruct::kINLINEStr { "INLINE" };
+    const char *CIMAPBodyStruct::kCREATIONDATEStr { "CREATION-DATE" };
+    const char *CIMAPBodyStruct::kFILENAMEStr { "FILENAME" };
+    const char *CIMAPBodyStruct::kMODIFICATIONDATEStr { "MODIFICATION-DATE" };
+    const char *CIMAPBodyStruct::kSIZEStr { "SIZE" };
 
 
     // ==========================
@@ -157,7 +157,7 @@ namespace Antik {
 
     void CIMAPBodyStruct::createBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPartStr) {
 
-        uint32_t partNo = 1;
+        uint32_t partNo { 1 };
         std::string bodyStructureStr(bodyPartStr.substr(1));
         std::vector<std::string> bodyParts;
 
@@ -200,9 +200,9 @@ namespace Antik {
 
     void CIMAPBodyStruct::attachmentFn(std::unique_ptr<BodyNode>& bodyNode, BodyPart& bodyPart, std::shared_ptr<void>& attachmentData) {
 
-        AttachmentData *attachments = static_cast<AttachmentData *> (attachmentData.get());
+        AttachmentData *attachments { static_cast<AttachmentData *> (attachmentData.get()) };
         std::unordered_map<std::string, std::string> dispositionMap;
-        std::string dispositionStr{bodyPart.parsedPart->dispositionStr};
+        std::string dispositionStr {bodyPart.parsedPart->dispositionStr };
 
         if (!CIMAPParse::stringEqual(dispositionStr, kNILStr)) {
             dispositionStr = dispositionStr.substr(1);
@@ -269,22 +269,6 @@ namespace Antik {
                 walkFn(bodyNode, bodyPart, walkData);
             }
         }
-
-    }
-
-    //
-    // Main CIMAPBodyStruct object constructor. 
-    //
-
-    CIMAPBodyStruct::CIMAPBodyStruct() {
-
-    }
-
-    //
-    // CIMAPBodyStruct Destructor
-    //
-
-    CIMAPBodyStruct::~CIMAPBodyStruct() {
 
     }
 

@@ -70,21 +70,21 @@ namespace Antik {
 
         CTask::CTask
         (
-                const std::string& taskName, // Task name
-                const std::string& watchFolder, // Watch folder path
+                const std::string& taskNameStr, // Task name
+                const std::string& watchFolderStr, // Watch folder path
                 TaskActionFcn taskActFcn, // Task action function
                 std::shared_ptr<void> fnData, // Task file process function data
                 int watchDepth, // Watch depth -1= all, 0=just watch folder
                 std::shared_ptr<TaskOptions> options // Task options. 
                 )
-        : taskName{taskName}, taskActFcn{taskActFcn}, fnData{fnData}
+        : taskNameStr{taskNameStr}, taskActFcn{taskActFcn}, fnData{fnData}
 
         {
 
             // ASSERT if passed parameters invalid
 
-            assert(taskName.length() != 0); // Length == 0
-            assert(watchFolder.length() != 0); // Length == 0
+            assert(taskNameStr.length() != 0); // Length == 0
+            assert(watchFolderStr.length() != 0); // Length == 0
             assert(watchDepth >= -1); // < -1
             assert(taskActFcn != nullptr); // nullptr
             assert(fnData != nullptr); // nullptr
@@ -103,12 +103,12 @@ namespace Antik {
 
             // Task prefix
 
-            this->prefix = "[TASK " + this->taskName + "] ";
+            this->prefix = "[TASK " + this->taskNameStr + "] ";
 
             // Create CFileApprise watcher object. Use same cout/cerr functions as Task.
 
             this->watcherOptions.reset(new CApprise::Options{0, false, this->coutstr, this->cerrstr});
-            this->watcher.reset(new CApprise{watchFolder, watchDepth, watcherOptions});
+            this->watcher.reset(new CApprise{watchFolderStr, watchDepth, watcherOptions});
 
             // Create CFileApprise object thread and start to watch
 
@@ -165,17 +165,17 @@ namespace Antik {
 
                     this->watcher->getEvent(evt);
 
-                    if ((evt.id == CApprise::Event_add) && !evt.message.empty()) {
+                    if ((evt.id == CApprise::Event_add) && !evt.messageStr.empty()) {
 
-                        this->taskActFcn(evt.message, this->fnData);
+                        this->taskActFcn(evt.messageStr, this->fnData);
 
                         if ((this->killCount != 0) && (--(this->killCount) == 0)) {
                             this->coutstr({this->prefix, "CTask kill count reached."});
                             break;
                         }
 
-                    } else if ((evt.id == CApprise::Event_error) && !evt.message.empty()) {
-                        this->coutstr({evt.message});
+                    } else if ((evt.id == CApprise::Event_error) && !evt.messageStr.empty()) {
+                        this->coutstr({evt.messageStr});
                     }
 
                 }

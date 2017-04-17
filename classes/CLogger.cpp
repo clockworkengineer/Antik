@@ -64,7 +64,7 @@ namespace Antik {
     // ========================
 
     std::mutex CLogger::mOutput; // Mutex to control access to cout/cerr
-    bool CLogger::bDateTimeStamped = false; // ==true then output timetamped
+    bool CLogger::bDateTimeStamped { false }; // ==true then output timetamped
 
     // =======================
     // PUBLIC STATIC VARIABLES
@@ -80,8 +80,8 @@ namespace Antik {
 
     const std::string CLogger::currentDateAndTime(void) {
 
-        std::time_t rawtime;
-        struct std::tm *info;
+        std::time_t rawtime { 0 };
+        struct std::tm *info { nullptr };
         std::string buffer(80, ' ');
 
         std::time(&rawtime);
@@ -95,20 +95,6 @@ namespace Antik {
     // PUBLIC METHODS
     // ==============
     //
-
-    //
-    // CLogger object constructor. 
-    //
-
-    CLogger::CLogger() {
-    }
-
-    //
-    // CLogger Destructor
-    //
-
-    CLogger::~CLogger() {
-    }
 
     //
     // Set whether log output is to have a date and time stamp.

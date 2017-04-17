@@ -59,44 +59,44 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& message)
-                : std::runtime_error("CFileApprise Failure: " + message) {
+                Exception(std::string const& messageStr)
+                : std::runtime_error("CApprise Failure: " + messageStr) {
                 }
 
             };
 
             //
-            // CFileApprise options structure (optionally passed to CFileApprise constructor)
+            // CApprise options structure (optionally passed to CApprise constructor)
             //
 
             struct Options {
-                uint32_t inotifyWatchMask; // inotify watch event mask
-                bool bDisplayInotifyEvent; // ==true then display inotify event to coutstr
+                uint32_t inotifyWatchMask;                  // inotify watch event mask
+                bool bDisplayInotifyEvent;                  // ==true then display inotify event to coutstr
                 Antik::Util::CLogger::LogStringsFn coutstr; // coutstr output
                 Antik::Util::CLogger::LogStringsFn cerrstr; // cerrstr output
             };
 
             //
-            // CFileApprise event identifiers
+            // CApprise event identifiers
             //
 
             enum EventId {
-                Event_none = 0, // None
-                Event_add, // File added to watched folder hierarchy
-                Event_change, // File changed
-                Event_unlink, // File deleted from watched folder hierarchy
-                Event_addir, // Directory added to watched folder hierarchy
+                Event_none = 0,  // None
+                Event_add,       // File added to watched folder hierarchy
+                Event_change,    // File changed
+                Event_unlink,    // File deleted from watched folder hierarchy
+                Event_addir,     // Directory added to watched folder hierarchy
                 Event_unlinkdir, // Directory deleted from watched folder hierarchy
-                Event_error // Exception error
+                Event_error      // Exception error
             };
 
             //
-            // CFileApprise event structure
+            // CApprise event structure
             //
 
             struct Event {
-                CApprise::EventId id; // Event id
-                std::string message; // Event file name / error message string
+                EventId id;                 // Event id
+                std::string messageStr;     // Event file name / error message string
             };
 
             // ============
@@ -109,9 +109,9 @@ namespace Antik {
 
             CApprise
             (
-                const std::string& watchFolder, // Watch folder path
+                const std::string& watchFolderStr, // Watch folder path
                 int watchDepth, // Watch depth -1=all,0=just watch folder,1=next level down etc.
-                std::shared_ptr<CApprise::Options> options = nullptr // CFileApprise Options (OPTIONAL)
+                std::shared_ptr<CApprise::Options> options = nullptr // CApprise Options (OPTIONAL)
             );
 
             //
@@ -120,7 +120,7 @@ namespace Antik {
 
             CApprise
             (
-                std::shared_ptr<CApprise::Options> options = nullptr // CFileApprise Options (OPTIONAL)
+                std::shared_ptr<CApprise::Options> options = nullptr // CApprise Options (OPTIONAL)
             );
 
 
@@ -138,21 +138,21 @@ namespace Antik {
             // Control
             //
 
-            void watch(void); // Watch folder(s) for file events to convert for CFileApprise.
+            void watch(void); // Watch folder(s) for file events to convert for CApprise.
             void stop(void); // Stop watch loop/thread
 
             //
             // Queue access
             //
 
-            void getEvent(CApprise::Event& message); // Get CFileApprise event (waiting if necessary)
+            void getEvent(CApprise::Event& message); // Get CApprise event (waiting if necessary)
 
             //
             // Watch handling
             //
 
-            void addWatchFile(const std::string& filePath); // Add directory/file to be watched
-            void removeWatchFile(const std::string& filePath); // Remove directory/file being watched
+            void addWatchFile(const std::string& filePathStr); // Add directory/file to be watched
+            void removeWatchFile(const std::string& filePathStr); // Remove directory/file being watched
 
             //
             // Private data accessors
@@ -175,7 +175,7 @@ namespace Antik {
             // Logging prefix
             //
 
-            static const std::string kLogPrefix; // Logging output prefix 
+            static const std::string kLogPrefixStr; // Logging output prefix 
 
             //
             // inotify
@@ -208,18 +208,18 @@ namespace Antik {
             // Watch processing
             //
 
-            void addWatch(const std::string& filePath); // Add path to be watched
-            void removeWatch(const std::string& filePath); // Remove path being watched
+            void addWatch(const std::string& filePathStr); // Add path to be watched
+            void removeWatch(const std::string& filePathStr); // Remove path being watched
             void initWatchTable(void); // Initialise table for watched folders
             void destroyWatchTable(void); // Tare down watch table
 
             //
-            // Queue CFileApprise event
+            // Queue CApprise event
             //
 
             void sendEvent(
-                CApprise::EventId id, // Event id
-                const std::string& message // Filename/message
+                CApprise::EventId id,           // Event id
+                const std::string& messageStr   // Filename/message
             );
 
             // =================
@@ -230,7 +230,7 @@ namespace Antik {
             // Constructor passed in and intialised
             //
 
-            std::string watchFolder; // Watch Folder
+            std::string watchFolderStr; // Watch Folder
             int watchDepth { -1 }; // Watch depth -1=all,0=just watch folder,1=next level down etc.
 
             //
@@ -249,7 +249,7 @@ namespace Antik {
             //
 
             std::exception_ptr thrownException { nullptr }; // Pointer to any exception thrown
-            std::atomic<bool> bDoWork; // doWork=true (run watcher loop) false=(stop watcher loop)
+            std::atomic<bool> bDoWork { false }; // doWork=true (run watcher loop) false=(stop watcher loop)
 
             //
             // Event queue
@@ -257,7 +257,7 @@ namespace Antik {
 
             std::condition_variable queuedEventsWaiting; // Queued events conditional
             std::mutex queuedEventsMutex; // Queued events mutex
-            std::queue <CApprise::Event> queuedEvents; // Queue of CFileApprise events
+            std::queue <CApprise::Event> queuedEvents; // Queue of CApprise events
 
             // Trace functions default (do nothing).
 

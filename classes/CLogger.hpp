@@ -48,19 +48,11 @@ namespace Antik {
         // NoOp output function
         //
 
-        static const LogStringsFn noOp;
+        static const LogStringsFn  noOp;
 
         // ============
         // CONSTRUCTORS
         // ============
-
-        CLogger();
-
-        // ==========
-        // DESTRUCTOR
-        // ==========
-
-        virtual ~CLogger();
 
         // ==============
         // PUBLIC METHODS
@@ -93,6 +85,8 @@ namespace Antik {
         // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
         // ===========================================
 
+        CLogger() = delete;
+        virtual ~CLogger() = delete;
         CLogger(const CLogger & orig) = delete;
         CLogger(const CLogger && orig) = delete;
         CLogger& operator=(CLogger other) = delete;

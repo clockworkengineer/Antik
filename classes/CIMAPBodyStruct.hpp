@@ -129,13 +129,9 @@ namespace Antik {
         // CONSTRUCTORS
         // ============
 
-        CIMAPBodyStruct();
-
         // ==========
         // DESTRUCTOR
         // ==========
-
-        virtual ~CIMAPBodyStruct();
 
         // ==============
         // PUBLIC METHODS
@@ -174,10 +170,12 @@ namespace Antik {
         // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
         // ===========================================
 
+        CIMAPBodyStruct() = delete;
+        virtual ~CIMAPBodyStruct() = delete;
         CIMAPBodyStruct(const CIMAPBodyStruct & orig) = delete;
         CIMAPBodyStruct(const CIMAPBodyStruct && orig) = delete;
         CIMAPBodyStruct& operator=(CIMAPBodyStruct other) = delete;
-
+        
         // ===============
         // PRIVATE METHODS
         // ===============

@@ -56,8 +56,8 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& message)
-                : std::runtime_error("CMIME Failure: " + message) {
+                Exception(std::string const& messageStr)
+                : std::runtime_error("CMIME Failure: " + messageStr) {
                 }
 
             };
@@ -68,28 +68,24 @@ namespace Antik {
 
             struct ParsedMIMEString {
                 unsigned char type  { ' ' }; // Type Q (Quoted Printable), B (base64), ' ' None.
-                std::string encoding; // Encoding used
-                std::string contents; // Contents
+                std::string encodingStr; // Encoding used
+                std::string contentsStr; // Contents
             };
 
             // ============
             // CONSTRUCTORS
             // ============
 
-            CMIME();
-
             // ==========
             // DESTRUCTOR
             // ==========
-
-            virtual ~CMIME();
 
             // ==============
             // PUBLIC METHODS
             // ==============
 
-            static std::string getFileMIMEType(const std::string& fileName);
-            static std::string convertMIMEStringToASCII(const std::string& mimeString);
+            static std::string getFileMIMEType(const std::string& fileNameStr);
+            static std::string convertMIMEStringToASCII(const std::string& mimeStr);
 
             // ================
             // PUBLIC VARIABLES
@@ -120,10 +116,12 @@ namespace Antik {
             // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
             // ===========================================
 
+            CMIME() = delete;
+            virtual ~CMIME() = delete;
             CMIME(const CMIME & orig) = delete;
             CMIME(const CMIME && orig) = delete;
             CMIME& operator=(CMIME other) = delete;
-
+            
             // ===============
             // PRIVATE METHODS
             // ===============

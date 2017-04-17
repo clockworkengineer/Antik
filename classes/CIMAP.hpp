@@ -194,7 +194,7 @@ namespace Antik {
             // Wait on socket timeout in milliseconds
             //
 
-            static const long kWaitOnSocketTimeOut = 60000;
+            static const long kWaitOnSocketTimeOut { 60000 };
 
             //
             // Default command prefix tag

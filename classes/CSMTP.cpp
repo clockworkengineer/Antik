@@ -55,15 +55,15 @@ namespace Antik {
 
     // MIME multi-part text boundary string 
 
-    const char *CSMTP::kMimeBoundaryStr = "xxxxCSMTPBoundaryText";
+    const char *CSMTP::kMimeBoundaryStr { "xxxxCSMTPBoundaryText" };
 
     // Line terminator
 
-    const char *CSMTP::kEOLStr = "\r\n";
+    const char *CSMTP::kEOLStr { "\r\n" };
 
     // Valid characters for base64 encode/decode.
 
-    const char CSMTP::kCB64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    const char CSMTP::kCB64[] { "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" };
 
     // ==========================
     // PUBLIC TYPES AND CONSTANTS
@@ -71,8 +71,8 @@ namespace Antik {
 
     // Supported encoding methods
 
-    const char *CSMTP::kEncoding7BitStr = "7Bit";
-    const char *CSMTP::kEncodingBase64Str = "base64";
+    const char *CSMTP::kEncoding7BitStr { "7Bit" };
+    const char *CSMTP::kEncodingBase64Str { "base64" };
 
     // ========================
     // PRIVATE STATIC VARIABLES
@@ -80,7 +80,7 @@ namespace Antik {
 
     // curl verbosity setting
 
-    bool CSMTP::bCurlVerbosity = false;
+    bool CSMTP::bCurlVerbosity { false };
 
     // =======================
     // PUBLIC STATIC VARIABLES
@@ -97,8 +97,8 @@ namespace Antik {
 
     const std::string CSMTP::currentDateAndTime(void) {
 
-        std::time_t rawtime;
-        struct std::tm *info;
+        std::time_t rawtime { 0 };
+        struct std::tm *info { 0 };
         std::string buffer(80, ' ');
 
         std::time(&rawtime);
@@ -115,7 +115,7 @@ namespace Antik {
     size_t CSMTP::payloadSource(void *ptr, size_t size, size_t nmemb,
             std::deque<std::string> *mailPayload) {
 
-        size_t bytesCopied = 0;
+        size_t bytesCopied { 0 };
 
         if ((size == 0) || (nmemb == 0) || ((size * nmemb) < 1)) {
             return 0;
@@ -138,35 +138,35 @@ namespace Antik {
 
     void CSMTP::encodeAttachment(CSMTP::EmailAttachment& attachment) {
 
-        std::string line;
+        std::string lineStr;
 
         // 7bit just copy
 
-        if ((attachment.contentTransferEncoding.compare(kEncodingBase64Str) != 0)) {
+        if ((attachment.contentTransferEncodingStr.compare(kEncodingBase64Str) != 0)) {
 
-            std::ifstream attachmentFile(attachment.fileName);
+            std::ifstream attachmentFile(attachment.fileNameStr);
 
             // As sending text file via email strip any host specific end of line and replace with <cr><lf>
 
-            while (std::getline(attachmentFile, line)) {
-                if (line.back() == '\n') line.pop_back();
-                if (line.back() == '\r') line.pop_back();
-                attachment.encodedContents.push_back(line + kEOLStr);
+            while (std::getline(attachmentFile, lineStr)) {
+                if (lineStr.back() == '\n') lineStr.pop_back();
+                if (lineStr.back() == '\r') lineStr.pop_back();
+                attachment.encodedContents.push_back(lineStr + kEOLStr);
             }
 
             // Base64
 
         } else {
 
-            std::ifstream ifs(attachment.fileName, std::ios::binary);
+            std::ifstream ifs { attachment.fileNameStr, std::ios::binary };
             std::string buffer(kBase64EncodeBufferSize, ' ');
 
             ifs.seekg(0, std::ios::beg);
             while (ifs.good()) {
                 ifs.read(&buffer[0], kBase64EncodeBufferSize);
-                this->encodeToBase64(buffer, line, ifs.gcount());
-                attachment.encodedContents.push_back(line + kEOLStr);
-                line.clear();
+                this->encodeToBase64(buffer, lineStr, ifs.gcount());
+                attachment.encodedContents.push_back(lineStr + kEOLStr);
+                lineStr.clear();
             }
 
         }
@@ -181,15 +181,15 @@ namespace Antik {
 
         for (auto attachment : this->attachedFiles) {
 
-            std::string baseFileName = attachment.fileName.substr(attachment.fileName.find_last_of("/\\") + 1);
+            std::string baseFileNameStr { attachment.fileNameStr.substr(attachment.fileNameStr.find_last_of("/\\") + 1) };
 
             this->encodeAttachment(attachment);
 
             this->mailPayload.push_back(std::string("--") + kMimeBoundaryStr + kEOLStr);
-            this->mailPayload.push_back("Content-Type: " + attachment.contentTypes + ";" + kEOLStr);
-            this->mailPayload.push_back("Content-transfer-encoding: " + attachment.contentTransferEncoding + kEOLStr);
+            this->mailPayload.push_back("Content-Type: " + attachment.contentTypesStr + ";" + kEOLStr);
+            this->mailPayload.push_back("Content-transfer-encoding: " + attachment.contentTransferEncodingStr + kEOLStr);
             this->mailPayload.push_back(std::string("Content-Disposition: attachment;") + kEOLStr);
-            this->mailPayload.push_back("     filename=\"" + baseFileName + "\"" + kEOLStr);
+            this->mailPayload.push_back("     filename=\"" + baseFileNameStr + "\"" + kEOLStr);
             this->mailPayload.push_back(kEOLStr);
 
             // Encoded file
@@ -211,19 +211,19 @@ namespace Antik {
 
     void CSMTP::buildMailPayload(void) {
 
-        bool bAttachments = !this->attachedFiles.empty();
+        bool bAttachments { !this->attachedFiles.empty() };
 
         // Email header.
 
         this->mailPayload.push_back("Date: " + currentDateAndTime() + kEOLStr);
-        this->mailPayload.push_back("To: " + this->addressTo + kEOLStr);
-        this->mailPayload.push_back("From: " + this->addressFrom + kEOLStr);
+        this->mailPayload.push_back("To: " + this->addressToStr + kEOLStr);
+        this->mailPayload.push_back("From: " + this->addressFromStr + kEOLStr);
 
-        if (!this->addressCC.empty()) {
-            this->mailPayload.push_back("cc: " + this->addressCC + kEOLStr);
+        if (!this->addressCCStr.empty()) {
+            this->mailPayload.push_back("cc: " + this->addressCCStr + kEOLStr);
         }
 
-        this->mailPayload.push_back("Subject: " + this->mailSubject + kEOLStr);
+        this->mailPayload.push_back("Subject: " + this->mailSubjectStr + kEOLStr);
         this->mailPayload.push_back(std::string("MIME-Version: 1.0") + kEOLStr);
 
         if (!bAttachments) {
@@ -281,9 +281,9 @@ namespace Antik {
     // Set STMP server URL
     // 
 
-    void CSMTP::setServer(const std::string& serverURL) {
+    void CSMTP::setServer(const std::string& serverURLStr) {
 
-        this->serverURL = serverURL;
+        this->serverURLStr = serverURLStr;
 
     }
 
@@ -293,7 +293,7 @@ namespace Antik {
 
     std::string CSMTP::getServer(void) const {
 
-        return (this->serverURL);
+        return (this->serverURLStr);
 
     }
 
@@ -302,11 +302,11 @@ namespace Antik {
     // Set email account details
     //
 
-    void CSMTP::setUserAndPassword(const std::string& userName,
-            const std::string& userPassword) {
+    void CSMTP::setUserAndPassword(const std::string& userNameStr,
+            const std::string& userPasswordStr) {
 
-        this->userName = userName;
-        this->userPassword = userPassword;
+        this->userNameStr = userNameStr;
+        this->userPasswordStr = userPasswordStr;
 
     }
 
@@ -316,7 +316,7 @@ namespace Antik {
 
     std::string CSMTP::getUser(void) const {
 
-        return (this->userName);
+        return (this->userNameStr);
 
     }
 
@@ -324,9 +324,9 @@ namespace Antik {
     // Set From address
     //
 
-    void CSMTP::setFromAddress(const std::string& addressFrom) {
+    void CSMTP::setFromAddress(const std::string& addressFromStr) {
 
-        this->addressFrom = addressFrom;
+        this->addressFromStr = addressFromStr;
     }
 
     //
@@ -335,7 +335,7 @@ namespace Antik {
 
     std::string CSMTP::getFromAddress(void) const {
 
-        return (this->addressFrom);
+        return (this->addressFromStr);
 
     }
 
@@ -343,9 +343,9 @@ namespace Antik {
     // Set To address
     //
 
-    void CSMTP::setToAddress(const std::string& addressTo) {
+    void CSMTP::setToAddress(const std::string& addressToStr) {
 
-        this->addressTo = addressTo;
+        this->addressToStr = addressToStr;
 
     }
 
@@ -355,7 +355,7 @@ namespace Antik {
 
     std::string CSMTP::getToAddress(void) const {
 
-        return (this->addressTo);
+        return (this->addressToStr);
 
     }
 
@@ -363,9 +363,9 @@ namespace Antik {
     // Set CC recipient address
     //
 
-    void CSMTP::setCCAddress(const std::string& addressCC) {
+    void CSMTP::setCCAddress(const std::string& addressCCStr) {
 
-        this->addressCC = addressCC;
+        this->addressCCStr = addressCCStr;
     }
 
     //
@@ -374,7 +374,7 @@ namespace Antik {
 
     std::string CSMTP::getCCAddress(void) const {
 
-        return (this->addressCC);
+        return (this->addressCCStr);
 
     }
 
@@ -382,9 +382,9 @@ namespace Antik {
     // Set email subject
     //
 
-    void CSMTP::setMailSubject(const std::string& mailSubject) {
+    void CSMTP::setMailSubject(const std::string& mailSubjectStr) {
 
-        this->mailSubject = mailSubject;
+        this->mailSubjectStr = mailSubjectStr;
 
     }
 
@@ -394,7 +394,7 @@ namespace Antik {
 
     std::string CSMTP::getMailSubject(void) const {
 
-        return (this->mailSubject);
+        return (this->mailSubjectStr);
 
     }
 
@@ -412,13 +412,13 @@ namespace Antik {
 
     std::string CSMTP::getMailMessage(void) const {
 
-        std::string mailMessage;
+        std::string mailMessageStr;
 
         for (auto line : this->mailMessage) {
-            mailMessage.append(line);
+            mailMessageStr.append(line);
         }
 
-        return (mailMessage);
+        return (mailMessageStr);
 
     }
 
@@ -426,11 +426,11 @@ namespace Antik {
     // Add file attachment.
     // 
 
-    void CSMTP::addFileAttachment(const std::string& fileName,
-            const std::string& contentType,
-            const std::string& contentTransferEncoding) {
+    void CSMTP::addFileAttachment(const std::string& fileNameStr,
+            const std::string& contentTypeStr,
+            const std::string& contentTransferEncodingStr) {
 
-        this->attachedFiles.push_back({fileName, contentType, contentTransferEncoding});
+        this->attachedFiles.push_back({fileNameStr, contentTypeStr, contentTransferEncodingStr});
 
     }
 
@@ -446,24 +446,24 @@ namespace Antik {
 
             curl_easy_setopt(curlHandle, CURLOPT_PROTOCOLS, CURLPROTO_SMTP | CURLPROTO_SMTPS);
 
-            curl_easy_setopt(this->curlHandle, CURLOPT_USERNAME, this->userName.c_str());
-            curl_easy_setopt(this->curlHandle, CURLOPT_PASSWORD, this->userPassword.c_str());
-            curl_easy_setopt(this->curlHandle, CURLOPT_URL, this->serverURL.c_str());
+            curl_easy_setopt(this->curlHandle, CURLOPT_USERNAME, this->userNameStr.c_str());
+            curl_easy_setopt(this->curlHandle, CURLOPT_PASSWORD, this->userPasswordStr.c_str());
+            curl_easy_setopt(this->curlHandle, CURLOPT_URL, this->serverURLStr.c_str());
 
             curl_easy_setopt(this->curlHandle, CURLOPT_USE_SSL, (long) CURLUSESSL_ALL);
 
             curl_easy_setopt(this->curlHandle, CURLOPT_ERRORBUFFER, this->curlErrMsgBuffer);
 
-            if (!this->mailCABundle.empty()) {
-                curl_easy_setopt(this->curlHandle, CURLOPT_CAINFO, this->mailCABundle.c_str());
+            if (!this->mailCABundleStr.empty()) {
+                curl_easy_setopt(this->curlHandle, CURLOPT_CAINFO, this->mailCABundleStr.c_str());
             }
 
-            curl_easy_setopt(this->curlHandle, CURLOPT_MAIL_FROM, this->addressFrom.c_str());
+            curl_easy_setopt(this->curlHandle, CURLOPT_MAIL_FROM, this->addressFromStr.c_str());
 
-            this->curlRecipients = curl_slist_append(this->curlRecipients, this->addressTo.c_str());
+            this->curlRecipients = curl_slist_append(this->curlRecipients, this->addressToStr.c_str());
 
-            if (!this->addressCC.empty()) {
-                this->curlRecipients = curl_slist_append(this->curlRecipients, this->addressCC.c_str());
+            if (!this->addressCCStr.empty()) {
+                this->curlRecipients = curl_slist_append(this->curlRecipients, this->addressCCStr.c_str());
             }
 
             curl_easy_setopt(this->curlHandle, CURLOPT_MAIL_RCPT, this->curlRecipients);
@@ -482,13 +482,13 @@ namespace Antik {
             // Check for errors
 
             if (this->curlResult != CURLE_OK) {
-                std::string errMsg;
+                std::string errMsgStr;
                 if (std::strlen(this->curlErrMsgBuffer) != 0) {
-                    errMsg = this->curlErrMsgBuffer;
+                    errMsgStr = this->curlErrMsgBuffer;
                 } else {
-                    errMsg = curl_easy_strerror(curlResult);
+                    errMsgStr = curl_easy_strerror(curlResult);
                 }
-                throw Exception("curl_easy_perform() failed: " + errMsg);
+                throw Exception("curl_easy_perform() failed: " + errMsgStr);
             }
 
             // Clear sent email
@@ -511,8 +511,8 @@ namespace Antik {
     // Encode string to base64 string.
     //
 
-    void CSMTP::encodeToBase64(const std::string& decodedString,
-            std::string& encodedString, uint32_t numberOfBytes) {
+    void CSMTP::encodeToBase64(const std::string& decodedStringStr,
+            std::string& encodedStringStr, uint32_t numberOfBytes) {
 
         int trailing, byteIndex = 0;
         register uint8_t byte1, byte2, byte3;
@@ -521,42 +521,42 @@ namespace Antik {
             return;
         }
 
-        encodedString.clear();
+        encodedStringStr.clear();
 
         trailing = (numberOfBytes % 3); // Trailing bytes
         numberOfBytes /= 3; // No of 3 byte values to encode
 
         while (numberOfBytes--) {
 
-            byte1 = decodedString[byteIndex++];
-            byte2 = decodedString[byteIndex++];
-            byte3 = decodedString[byteIndex++];
+            byte1 = decodedStringStr[byteIndex++];
+            byte2 = decodedStringStr[byteIndex++];
+            byte3 = decodedStringStr[byteIndex++];
 
-            encodedString += kCB64[(byte1 & 0xfc) >> 2];
-            encodedString += kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
-            encodedString += kCB64[((byte2 & 0x0f) << 2) + ((byte3 & 0xc0) >> 6)];
-            encodedString += kCB64[byte3 & 0x3f];
+            encodedStringStr += kCB64[(byte1 & 0xfc) >> 2];
+            encodedStringStr += kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
+            encodedStringStr += kCB64[((byte2 & 0x0f) << 2) + ((byte3 & 0xc0) >> 6)];
+            encodedStringStr += kCB64[byte3 & 0x3f];
 
         }
 
         // One trailing byte
 
         if (trailing == 1) {
-            byte1 = decodedString[byteIndex++];
-            encodedString += kCB64[(byte1 & 0xfc) >> 2];
-            encodedString += kCB64[((byte1 & 0x03) << 4)];
-            encodedString += '=';
-            encodedString += '=';
+            byte1 = decodedStringStr[byteIndex++];
+            encodedStringStr += kCB64[(byte1 & 0xfc) >> 2];
+            encodedStringStr += kCB64[((byte1 & 0x03) << 4)];
+            encodedStringStr += '=';
+            encodedStringStr += '=';
 
             // Two trailing bytes
 
         } else if (trailing == 2) {
-            byte1 = decodedString[byteIndex++];
-            byte2 = decodedString[byteIndex++];
-            encodedString += kCB64[(byte1 & 0xfc) >> 2];
-            encodedString += kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
-            encodedString += kCB64[((byte2 & 0x0f) << 2)];
-            encodedString += '=';
+            byte1 = decodedStringStr[byteIndex++];
+            byte2 = decodedStringStr[byteIndex++];
+            encodedStringStr += kCB64[(byte1 & 0xfc) >> 2];
+            encodedStringStr += kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
+            encodedStringStr += kCB64[((byte2 & 0x0f) << 2)];
+            encodedStringStr += '=';
         }
 
     }
@@ -565,25 +565,25 @@ namespace Antik {
     // Decode string from base64 encoded string.
     //
 
-    void CSMTP::decodeFromBase64(const std::string& encodedString,
-            std::string& decodedString, uint32_t numberOfBytes) {
+    void CSMTP::decodeFromBase64(const std::string& encodedStr,
+            std::string& decodedStr, uint32_t numberOfBytes) {
 
-        int byteIndex = 0;
+        int byteIndex { 0 };
         register uint8_t byte1, byte2, byte3, byte4;
 
         if ((numberOfBytes == 0) || (numberOfBytes % 4)) {
             return;
         }
 
-        decodedString.clear();
+        decodedStr.clear();
 
         numberOfBytes = (numberOfBytes / 4);
         while (numberOfBytes--) {
 
-            byte1 = encodedString[byteIndex++];
-            byte2 = encodedString[byteIndex++];
-            byte3 = encodedString[byteIndex++];
-            byte4 = encodedString[byteIndex++];
+            byte1 = encodedStr[byteIndex++];
+            byte2 = encodedStr[byteIndex++];
+            byte3 = encodedStr[byteIndex++];
+            byte4 = encodedStr[byteIndex++];
 
             byte1 = decodeChar(byte1);
             byte2 = decodeChar(byte2);
@@ -599,9 +599,9 @@ namespace Antik {
                 byte4 = decodeChar(byte4);
             }
 
-            decodedString += ((byte1 << 2) + ((byte2 & 0x30) >> 4));
-            decodedString += (((byte2 & 0xf) << 4) + ((byte3 & 0x3c) >> 2));
-            decodedString += (((byte3 & 0x3) << 6) + byte4);
+            decodedStr += ((byte1 << 2) + ((byte2 & 0x30) >> 4));
+            decodedStr += (((byte2 & 0xf) << 4) + ((byte3 & 0x3c) >> 2));
+            decodedStr += (((byte3 & 0x3) << 6) + byte4);
 
         }
 
@@ -613,17 +613,17 @@ namespace Antik {
 
     std::string CSMTP::getMailFull(void) {
 
-        std::string mailMessage;
+        std::string mailMessageStr;
 
         this->buildMailPayload();
 
         for (auto line : this->mailPayload) {
-            mailMessage.append(line);
+            mailMessageStr.append(line);
         }
 
         this->mailPayload.clear();
 
-        return (mailMessage);
+        return (mailMessageStr);
 
     }
 

@@ -59,73 +59,73 @@ namespace Antik {
     // End Of Line terminator
     //
 
-    const char *CIMAP::kEOLStr = "\r\n";
+    const char *CIMAP::kEOLStr { "\r\n" };
 
     //
     // IMAP Command strings
     //
 
-    const char *CIMAP::kSTARTTLSStr = "STARTTLS";
-    const char *CIMAP::kAUTHENTICATEStr{"AUTHENTICATE"};
-    const char *CIMAP::kSEARCHStr = "SEARCH";
-    const char *CIMAP::kSELECTStr = "SELECT";
-    const char *CIMAP::kEXAMINEStr = "EXAMINE";
-    const char *CIMAP::kCREATEStr = "CREATE";
-    const char *CIMAP::kDELETEStr = "DELETE";
-    const char *CIMAP::kRENAMEStr = "RENAME";
-    const char *CIMAP::kLOGINStr = "LOGIN";
-    const char *CIMAP::kSUBSCRIBEStr = "SUBSCRIBE";
-    const char *CIMAP::kUNSUBSCRIBEStr = "UNSUBSCRIBE";
-    const char *CIMAP::kLISTStr = "LIST";
-    const char *CIMAP::kLSUBStr = "LSUB";
-    const char *CIMAP::kSTATUSStr = "STATUS";
-    const char *CIMAP::kAPPENDStr = "APPEND";
-    const char *CIMAP::kCHECKStr = "CHECK";
-    const char *CIMAP::kCLOSEStr = "CLOSE";
-    const char *CIMAP::kEXPUNGEStr = "EXPUNGE";
-    const char *CIMAP::kFETCHStr = "FETCH";
-    const char *CIMAP::kSTOREStr = "STORE";
-    const char *CIMAP::kCOPYStr = "COPY";
-    const char *CIMAP::kNOOPStr = "NOOP";
-    const char *CIMAP::kLOGOUTStr = "LOGOUT";
-    const char *CIMAP::kIDLEStr = "IDLE";
-    const char *CIMAP::kCAPABILITYStr = "CAPABILITY";
-    const char *CIMAP::kUIDStr = "UID";
+    const char *CIMAP::kSTARTTLSStr { "STARTTLS" };
+    const char *CIMAP::kAUTHENTICATEStr { "AUTHENTICATE" };
+    const char *CIMAP::kSEARCHStr { "SEARCH" };
+    const char *CIMAP::kSELECTStr { "SELECT" };
+    const char *CIMAP::kEXAMINEStr { "EXAMINE" };
+    const char *CIMAP::kCREATEStr { "CREATE" };
+    const char *CIMAP::kDELETEStr { "DELETE" };
+    const char *CIMAP::kRENAMEStr { "RENAME" };
+    const char *CIMAP::kLOGINStr { "LOGIN" };
+    const char *CIMAP::kSUBSCRIBEStr { "SUBSCRIBE" };
+    const char *CIMAP::kUNSUBSCRIBEStr { "UNSUBSCRIBE" };
+    const char *CIMAP::kLISTStr { "LIST" };
+    const char *CIMAP::kLSUBStr { "LSUB" };
+    const char *CIMAP::kSTATUSStr { "STATUS" };
+    const char *CIMAP::kAPPENDStr { "APPEND" };
+    const char *CIMAP::kCHECKStr { "CHECK" };
+    const char *CIMAP::kCLOSEStr { "CLOSE" };
+    const char *CIMAP::kEXPUNGEStr { "EXPUNGE" };
+    const char *CIMAP::kFETCHStr { "FETCH" };
+    const char *CIMAP::kSTOREStr { "STORE" };
+    const char *CIMAP::kCOPYStr { "COPY" };
+    const char *CIMAP::kNOOPStr { "NOOP" };
+    const char *CIMAP::kLOGOUTStr { "LOGOUT" };
+    const char *CIMAP::kIDLEStr { "IDLE" };
+    const char *CIMAP::kCAPABILITYStr { "CAPABILITY" };
+    const char *CIMAP::kUIDStr { "UID" };
 
     //
     // IMAP Response strings
     //
 
-    const char *CIMAP::kUntaggedStr = "*";
-    const char *CIMAP::kOKStr = "OK";
-    const char *CIMAP::kBADStr = "BAD";
-    const char *CIMAP::kNOStr = "NO";
-    const char *CIMAP::kFLAGSStr = "FLAGS";
-    const char *CIMAP::kPERMANENTFLAGSStr = "PERMANENTFLAGS";
-    const char *CIMAP::kUIDVALIDITYStr = "UIDVALIDITY";
-    const char *CIMAP::kUIDNEXTStr = "UIDNEXT";
-    const char *CIMAP::kHIGHESTMODSEQStr = "HIGHESTMODSEQ";
-    const char *CIMAP::kUNSEENStr = "UNSEEN";
-    const char *CIMAP::kEXISTSStr = "EXISTS";
-    const char *CIMAP::kRECENTStr = "RECENT";
-    const char *CIMAP::kDONEStr = "DONE";
-    const char *CIMAP::kContinuationStr = "+";
-    const char *CIMAP::kENVELOPEStr = "ENVELOPE";
-    const char *CIMAP::kBODYSTRUCTUREStr = "BODYSTRUCTURE";
-    const char *CIMAP::kBODYStr = "BODY";
-    const char *CIMAP::kRFC822Str = "RFC822";
-    const char *CIMAP::kINTERNALDATEStr = "INTERNALDATE";
-    const char *CIMAP::kRFC822HEADERStr = "RFC822.HEADER";
-    const char *CIMAP::kRFC822SIZEStr = "RFC822.SIZE";
-    const char *CIMAP::kRFC822TEXTStr = "RFC822.TEXT";
-    const char *CIMAP::kBYEStr = "BYE";
+    const char *CIMAP::kUntaggedStr { "*" };
+    const char *CIMAP::kOKStr { "OK" };
+    const char *CIMAP::kBADStr { "BAD" };
+    const char *CIMAP::kNOStr { "NO" };
+    const char *CIMAP::kFLAGSStr { "FLAGS" };
+    const char *CIMAP::kPERMANENTFLAGSStr { "PERMANENTFLAGS" };
+    const char *CIMAP::kUIDVALIDITYStr { "UIDVALIDITY" };
+    const char *CIMAP::kUIDNEXTStr { "UIDNEXT" };
+    const char *CIMAP::kHIGHESTMODSEQStr { "HIGHESTMODSEQ" };
+    const char *CIMAP::kUNSEENStr { "UNSEEN" };
+    const char *CIMAP::kEXISTSStr { "EXISTS" };
+    const char *CIMAP::kRECENTStr { "RECENT" };
+    const char *CIMAP::kDONEStr { "DONE" };
+    const char *CIMAP::kContinuationStr { "+" };
+    const char *CIMAP::kENVELOPEStr { "ENVELOPE" };
+    const char *CIMAP::kBODYSTRUCTUREStr { "BODYSTRUCTURE" };
+    const char *CIMAP::kBODYStr { "BODY" };
+    const char *CIMAP::kRFC822Str { "RFC822" };
+    const char *CIMAP::kINTERNALDATEStr { "INTERNALDATE" };
+    const char *CIMAP::kRFC822HEADERStr { "RFC822.HEADER" };
+    const char *CIMAP::kRFC822SIZEStr { "RFC822.SIZE" };
+    const char *CIMAP::kRFC822TEXTStr { "RFC822.TEXT" };
+    const char *CIMAP::kBYEStr { "BYE" };
 
     //
     // Response MAP generated entries.
     //
 
-    const char *CIMAP::kMAILBOXNAMEStr = "MAILBOX-NAME";
-    const char *CIMAP::kMAILBOXACCESSStr = "MAILBOX-ACCESS";
+    const char *CIMAP::kMAILBOXNAMEStr { "MAILBOX-NAME" };
+    const char *CIMAP::kMAILBOXACCESSStr { "MAILBOX-ACCESS" };
 
 
     // ========================
@@ -136,9 +136,9 @@ namespace Antik {
     // curl verbosity setting
     //
     
-    bool CIMAP::bCurlVerbosity = false;
+    bool CIMAP::bCurlVerbosity { false };
     
-    const char *CIMAP::kDefaultTagPrefixStr = "A";
+    const char *CIMAP::kDefaultTagPrefixStr { "A" };
 
     // =======================
     // PUBLIC STATIC VARIABLES
@@ -176,9 +176,11 @@ namespace Antik {
 
     int CIMAP::waitOnSocket(bool bRecv, long timeoutMS) {
 
-        struct timeval timeoutValue;
-        fd_set recvfd, sendfd, errorfd;
-        int res;
+        struct timeval timeoutValue { 0 };
+        fd_set recvfd { 0 };
+        fd_set sendfd { 0 };
+        fd_set errorfd { 0 };
+        int res { 0 };
 
         timeoutValue.tv_sec = timeoutMS / 1000;
         timeoutValue.tv_usec = (timeoutMS % 1000) * 1000;
@@ -209,8 +211,8 @@ namespace Antik {
 
     void CIMAP::sendIMAPCommand(const std::string& commandStr) {
 
-        size_t bytesSent = 0;
-        int bytesCopied = 0;
+        size_t bytesSent { 0 };
+        int bytesCopied { 0 };
 
         do {
 
@@ -242,8 +244,8 @@ namespace Antik {
 
     void CIMAP::waitForIMAPCommandResponse(const std::string& commandTagStr, std::string& commandResponseStr) {
 
-        std::string searchTagStr{ commandTagStr + " "};
-        size_t recvLength = 0;
+        std::string searchTagStr { commandTagStr + " " };
+        size_t recvLength { 0 };
 
         commandResponseStr.clear();
 

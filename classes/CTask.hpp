@@ -51,8 +51,8 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& message)
-                : std::runtime_error("CTask Failure: " + message) {
+                Exception(std::string const& messageStr)
+                : std::runtime_error("CTask Failure: " + messageStr) {
                 }
 
             };
@@ -84,8 +84,8 @@ namespace Antik {
 
             CTask
             (
-                const std::string& taskName, // Task name
-                const std::string& watchFolder, // Watch folder path
+                const std::string& taskNameStr, // Task name
+                const std::string& watchFolderStr, // Watch folder path
                 TaskActionFcn taskActFcn, // Task action function
                 std::shared_ptr<void> fnData, // Task file process function data
                 int watchDepth, // Watch depth -1= all, 0=just watch folder
@@ -142,8 +142,8 @@ namespace Antik {
             // Constructor passed in and intialized
             //
 
-            std::string taskName; // Task name
-            std::string watchFolder; // Watch Folder
+            std::string taskNameStr; // Task name
+            std::string watchFolderStr; // Watch Folder
             TaskActionFcn taskActFcn; // Task action function 
             std::shared_ptr<void> fnData; // Task action function data   
             int killCount { 0 }; // Task Kill Count
