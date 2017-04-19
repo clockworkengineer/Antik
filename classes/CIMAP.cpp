@@ -434,6 +434,8 @@ namespace Antik {
             Exception("Already connected to a server.");
         }
 
+        this->curlHandle = curl_easy_init();
+        
         if (this->curlHandle) {
 
             curl_easy_setopt(this->curlHandle, CURLOPT_USERNAME, this->userNameStr.c_str());
@@ -529,8 +531,6 @@ namespace Antik {
     //
 
     CIMAP::CIMAP() {
-
-        this->curlHandle = curl_easy_init();
 
     }
 
