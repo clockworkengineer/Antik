@@ -379,7 +379,7 @@ namespace Antik {
                     mailBoxEntry.attributesStr = stringList(lineStr);
                     mailBoxEntry.hierDel = stringBetween(lineStr, '\"', '\"').front();
                     if (lineStr.back() != '\"') {
-                        mailBoxEntry.mailBoxNameStr = lineStr.substr(lineStr.find_last_of(' '));
+                        mailBoxEntry.mailBoxNameStr = lineStr.substr(lineStr.find_last_of(' ')+1);
                     } else {
                         lineStr.pop_back();
                         mailBoxEntry.mailBoxNameStr = lineStr.substr(lineStr.find_last_of('\"'));

@@ -298,7 +298,7 @@ namespace Antik {
     // the next call. Note: The numeric component has leading zeros.
     //
 
-    inline void CIMAP::generateTag() {
+    void CIMAP::generateTag() {
         std::ostringstream ss;
         ss << this->tagPrefixStr << std::setw(6) << std::setfill('0') << std::to_string(this->tagCount++);
         this->currentTagStr = ss.str();

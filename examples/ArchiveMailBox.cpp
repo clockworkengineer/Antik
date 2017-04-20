@@ -84,7 +84,7 @@ struct ParamArgData {
     std::string userPasswordStr;    // Email account user name password
     std::string serverURLStr;       // SMTP server URL
     std::string mailBoxNameStr;     // Mailbox name
-    fs::path destinationFolder;     // Destination folder for attachments
+    fs::path destinationFolder;     // Destination folder for e-mail archive
     std::string configFileNameStr;  // Configuration file name
     bool bOnlyUpdates;              // = true search date since last .eml archived
     bool bAllMailBoxes;             // = true archive all mailboxes
@@ -132,7 +132,7 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
             ("user,u", po::value<std::string>(&argData.userNameStr)->required(), "Account username")
             ("password,p", po::value<std::string>(&argData.userPasswordStr)->required(), "User password")
             ("mailbox,m", po::value<std::string>(&argData.mailBoxNameStr)->required(), "Mailbox name")
-            ("destination,d", po::value<fs::path>(&argData.destinationFolder)->required(), "Destination for attachments")
+            ("destination,d", po::value<fs::path>(&argData.destinationFolder)->required(), "Destination for e-mail archive")
             ("updates,u", "Search since last file archived.")
             ("all,a", "Download files for all mailboxes.");
 
