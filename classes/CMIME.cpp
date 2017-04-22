@@ -746,7 +746,7 @@ namespace Antik {
 
             } else if (parsedEntry.type == kEncodedWordTypeBase64) {
                 std::string decodedStr;
-                Antik::Mail::CSMTP::decodeFromBase64(parsedEntry.contentsStr, decodedStr, parsedEntry.contentsStr.length());
+                Antik::SMTP::CSMTP::decodeFromBase64(parsedEntry.contentsStr, decodedStr, parsedEntry.contentsStr.length());
                 convertedMIMEStr += decodedStr;
             }
 

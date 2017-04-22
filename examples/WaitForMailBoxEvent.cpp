@@ -54,7 +54,7 @@
 #include "CIMAP.hpp"
 #include "CIMAPParse.hpp"
 
-using namespace Antik::Mail;
+using namespace Antik::IMAP;
 
 //
 // Boost program options  & file system library definitions

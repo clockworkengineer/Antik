@@ -33,7 +33,7 @@
 // =========
 
 namespace Antik {
-    namespace File {
+    namespace ZIP {
 
         // ================
         // CLASS DEFINITION
@@ -230,7 +230,7 @@ namespace Antik {
 
         };
 
-    } // namespace File
+    } // namespace ZIP
 } // namespace Antik
 
 #endif /* CZIP_HPP */

@@ -43,7 +43,7 @@
 
 #include "CZIPIO.hpp"
 
-using namespace Antik::File;
+using namespace Antik::ZIP;
 
 //
 // BOOST file system, program options processing definitions

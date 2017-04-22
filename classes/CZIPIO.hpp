@@ -26,7 +26,7 @@
 // =========
 
 namespace Antik {
-    namespace File {
+    namespace ZIP {
         
     // ================
     // CLASS DEFINITION
@@ -375,7 +375,7 @@ namespace Antik {
        return(buffptr + sizeof(T));
     }
 
-    } // namespace File
+    } // namespace ZIP
 } // namespace Antik
 
 #endif /* CZIPIO_HPP */

@@ -28,7 +28,7 @@
 
 #include "CSMTP.hpp" 
 
-using namespace Antik::Mail;
+using namespace Antik::SMTP;
 
 // =======================
 // UNIT TEST FIXTURE CLASS

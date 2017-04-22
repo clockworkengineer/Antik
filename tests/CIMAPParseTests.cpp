@@ -29,7 +29,7 @@
 #include "CIMAP.hpp" 
 #include "CIMAPParse.hpp"
 
-using namespace Antik::Mail;
+using namespace Antik::IMAP;
 
 // =======================
 // UNIT TEST FIXTURE CLASS

@@ -31,7 +31,7 @@
 // =========
 
 namespace Antik {
-    namespace Mail {
+    namespace IMAP {
 
 
         // ================
@@ -264,7 +264,7 @@ namespace Antik {
 
         };
 
-    } // namespace Mail
+    } // namespace IMAP
 } // namespace Antik
 
 #endif /* CIMAP_HPP */

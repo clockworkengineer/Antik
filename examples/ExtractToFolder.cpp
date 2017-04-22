@@ -47,7 +47,7 @@
 
 #include "CZIP.hpp"
 
-using namespace Antik::File;
+using namespace Antik::ZIP;
 
 //
 // BOOST file system, program options processing and iterator definitions

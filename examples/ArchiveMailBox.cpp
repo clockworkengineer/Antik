@@ -58,7 +58,7 @@
 #include "CIMAPParse.hpp"
 #include "CMIME.hpp"
 
-using namespace Antik::Mail;
+using namespace Antik::IMAP;
 
 //
 // Boost program options  & file system library definitions

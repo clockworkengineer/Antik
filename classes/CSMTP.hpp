@@ -32,7 +32,7 @@
 // =========
 
 namespace Antik {
-    namespace Mail {
+    namespace SMTP {
 
         // ================
         // CLASS DEFINITION
@@ -224,7 +224,7 @@ namespace Antik {
 
         };
 
-    } // namespace Mail
+    } // namespace SMTP
 } // namespace Antik
 
 #endif /* CSMTP_HPP */

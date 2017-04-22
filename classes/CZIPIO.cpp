@@ -41,7 +41,7 @@
 // =========
 
 namespace Antik {
-    namespace File {
+    namespace ZIP {
 
         // ===========================
         // PRIVATE TYPES AND CONSTANTS
@@ -856,5 +856,5 @@ namespace Antik {
 
         }
 
-    } // namespace File
+    } // namespace ZIP
 } // namespace Antik

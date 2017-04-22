@@ -52,7 +52,8 @@
 #include "CIMAPBodyStruct.hpp"
 #include "CSMTP.hpp"
 
-using namespace Antik::Mail;
+using namespace Antik::IMAP;
+using namespace Antik::SMTP;
 
 //
 // Boost program options  & file system library definitions

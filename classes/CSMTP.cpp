@@ -46,7 +46,7 @@
 // =========
 
 namespace Antik {
-    namespace Mail {
+    namespace SMTP {
 
     // ===========================
     // PRIVATE TYPES AND CONSTANTS
@@ -667,5 +667,5 @@ namespace Antik {
 
     }
 
-   } // namespace Mail
+   } // namespace SMTP
 } // namespace Antik

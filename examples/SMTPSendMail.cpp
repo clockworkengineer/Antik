@@ -52,7 +52,7 @@
 #include "CSMTP.hpp"
 #include "CMIME.hpp"
 
-using namespace Antik::Mail;
+using namespace Antik::SMTP;
 
 //
 // Boost program options  & file system library definitions

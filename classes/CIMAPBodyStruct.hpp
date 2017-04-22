@@ -26,7 +26,7 @@
 // =========
 
 namespace Antik {
-    namespace Mail {
+    namespace IMAP {
         
     // ================
     // CLASS DEFINITION
@@ -200,7 +200,7 @@ namespace Antik {
 
     };
 
-   } // namespace Mail
+   } // namespace IMAP
 } // namespace Antik
 
 #endif /* CIMAPBODYSTRUCT_HPP */
