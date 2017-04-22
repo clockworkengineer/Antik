@@ -65,14 +65,14 @@ namespace Antik {
             struct FileDetail {
                 std::string fileNameStr; // Name
                 std::string fileCommentStr; // Comment
-                std::tm modificationDateTime {0}; // Last modified date/time
-                std::uint64_t uncompressedSize {0}; // Uncompressed size
-                std::uint64_t compressedSize {0}; // Compressed size
-                std::uint16_t compression {0}; // Compression stored as
-                std::uint16_t creatorVersion {0}; // Archive creator
-                std::uint32_t externalFileAttrib {0}; // Attributes
+                std::tm modificationDateTime{0}; // Last modified date/time
+                std::uint64_t uncompressedSize{0}; // Uncompressed size
+                std::uint64_t compressedSize{0}; // Compressed size
+                std::uint16_t compression{0}; // Compression stored as
+                std::uint16_t creatorVersion{0}; // Archive creator
+                std::uint32_t externalFileAttrib{0}; // Attributes
                 std::vector<std::uint8_t>extraField; // Extra data field
-                bool bZIP64 { false }; // true then in ZIP64 format
+                bool bZIP64{ false}; // true then in ZIP64 format
             };
 
             // ============
@@ -153,7 +153,7 @@ namespace Antik {
             // ZIP inflate/deflate buffer size.
             //
 
-            static const std::uint64_t kZIPDefaultBufferSize { 16384 };
+            static const std::uint64_t kZIPDefaultBufferSize{ 16384};
 
 
             // ===========================================
@@ -192,9 +192,9 @@ namespace Antik {
             // ZIP archive status
             //
 
-            bool bOpen { false };
-            bool bModified { false };
-            bool bZIP64 { true };
+            bool bOpen{ false};
+            bool bModified{ false};
+            bool bZIP64{ true};
 
             //
             // ZIP archive filename and added contents list
@@ -219,14 +219,14 @@ namespace Antik {
             // Offset in ZIP archive to put next File Header added.
             //
 
-            std::uint64_t offsetToEndOfLocalFileHeaders { 0 };
+            std::uint64_t offsetToEndOfLocalFileHeaders{ 0};
 
 
             //
             // Offset in ZIP archive to put next File Header added.
             //
 
-            std::uint64_t zipIOBufferSize { kZIPDefaultBufferSize };
+            std::uint64_t zipIOBufferSize{ kZIPDefaultBufferSize};
 
         };
 

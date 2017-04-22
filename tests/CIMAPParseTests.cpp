@@ -95,7 +95,7 @@ TEST_F(CIMAPParseTests, SELECTValid) {
     std::string commandResponseStr;
  
     for (auto str : selectResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -134,7 +134,7 @@ TEST_F(CIMAPParseTests, SELECTInvalidMailBox) {
     std::string commandResponseStr;
  
     for (auto str : selectResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -163,7 +163,7 @@ TEST_F(CIMAPParseTests, EXAMINEValid) {
     std::string commandResponseStr;
  
     for (auto str : examineResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -204,7 +204,7 @@ TEST_F(CIMAPParseTests, EXAMINEInvalidMailBox) {
     std::string commandResponseStr;
  
     for (auto str : examineResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -227,7 +227,7 @@ TEST_F(CIMAPParseTests, STATUSValid) {
     std::string commandResponseStr;
  
     for (auto str : statusResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -262,7 +262,7 @@ TEST_F(CIMAPParseTests, STATUSInvalidMailBox) {
     std::string commandResponseStr;
  
     for (auto str : statusResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -302,7 +302,7 @@ TEST_F(CIMAPParseTests, LISTValid) {
     std::string commandResponseStr;
  
     for (auto str : listResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -346,7 +346,7 @@ TEST_F(CIMAPParseTests, SEARCHValid) {
     std::string commandResponseStr;
  
     for (auto str : searchResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -382,7 +382,7 @@ TEST_F(CIMAPParseTests, UIDSEARCHValid) {
     std::string commandResponseStr;
  
     for (auto str : searchResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -435,7 +435,7 @@ TEST_F(CIMAPParseTests, LSUBValid) {
     std::string commandResponseStr;
  
     for (auto str : LSubResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -483,7 +483,7 @@ TEST_F(CIMAPParseTests, EXPUNGEValid) {
     std::string commandResponseStr;
  
     for (auto str : ExpungeResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -516,7 +516,7 @@ TEST_F(CIMAPParseTests, STOREValid) {
     std::string commandResponseStr;
  
     for (auto str : StoreResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -567,7 +567,7 @@ TEST_F(CIMAPParseTests, CAPABILITYValid) {
     std::string commandResponseStr;
  
     for (auto str : capabilityResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -592,7 +592,7 @@ TEST_F(CIMAPParseTests, NOOPValid) {
     std::string commandResponseStr;
  
     for (auto str : noOpResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -619,7 +619,7 @@ TEST_F(CIMAPParseTests, IDLEValid) {
     std::string commandResponseStr;
  
     for (auto str : idleResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -647,7 +647,7 @@ TEST_F(CIMAPParseTests, LOGOUTValid) {
     std::string commandResponseStr;
  
     for (auto str : logOutResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
 
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -672,7 +672,7 @@ TEST_F(CIMAPParseTests, FETCHValid) {
     std::string commandResponseStr;
  
     for (auto str : fetchResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -715,7 +715,7 @@ TEST_F(CIMAPParseTests, FETCHValidWithBYE) {
     std::string commandResponseStr;
  
     for (auto str : fetchResponseStr) {
-        commandResponseStr.append( str + CIMAP::kEOLStr);
+        commandResponseStr.append( str + kEOLStr);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));

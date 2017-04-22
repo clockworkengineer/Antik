@@ -286,8 +286,8 @@ void processIMAPResponse(CIMAP& imap, CIMAPParse::COMMANDRESPONSE& parsedRespons
         case CIMAPParse::Commands::EXPUNGE:
         {
             std::cout << "COMMAND {" << CIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
-            std::cout << "EXISTS = " << parsedResponse->responseMap[CIMAP::kEXISTSStr] << std::endl;
-            std::cout << "EXPUNGED = "<< parsedResponse->responseMap[CIMAP::kEXPUNGEStr] << std::endl;
+            std::cout << "EXISTS = " << parsedResponse->responseMap[kEXISTSStr] << std::endl;
+            std::cout << "EXPUNGED = "<< parsedResponse->responseMap[kEXPUNGEStr] << std::endl;
             break;
         }
 
@@ -304,7 +304,7 @@ void processIMAPResponse(CIMAP& imap, CIMAPParse::COMMANDRESPONSE& parsedRespons
         case CIMAPParse::Commands::CAPABILITY:
         {
             std::cout << "COMMAND {" << CIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
-            std::cout << "CAPABILITIES = " << parsedResponse->responseMap[CIMAP::kCAPABILITYStr] << std::endl;
+            std::cout << "CAPABILITIES = " << parsedResponse->responseMap[kCAPABILITYStr] << std::endl;
             break;
         }
 
@@ -315,7 +315,7 @@ void processIMAPResponse(CIMAP& imap, CIMAPParse::COMMANDRESPONSE& parsedRespons
             for (auto fetchEntry : parsedResponse->fetchList) {
                 std::cout << "INDEX = " << fetchEntry.index << std::endl;
                 for (auto resp : fetchEntry.responseMap) {
-                    if (resp.first.compare(CIMAP::kBODYSTRUCTUREStr) == 0) {
+                    if (resp.first.compare(kBODYSTRUCTUREStr) == 0) {
                         std::unique_ptr<CIMAPBodyStruct::BodyNode> treeBase{ new CIMAPBodyStruct::BodyNode()};
                         std::shared_ptr<void> walkData{ new WalkData()};
                         CIMAPBodyStruct::consructBodyStructTree(treeBase, resp.second);

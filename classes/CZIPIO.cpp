@@ -47,27 +47,6 @@ namespace Antik {
         // PRIVATE TYPES AND CONSTANTS
         // ===========================
 
-        //
-        // ZIP archive compression methods.
-        //
-
-        const std::uint16_t CZIPIO::kZIPCompressionStore;
-        const std::uint16_t CZIPIO::kZIPCompressionDeflate;
-
-        //
-        // ZIP archive versions
-        //
-
-        const std::uint8_t CZIPIO::kZIPVersion10;
-        const std::uint8_t CZIPIO::kZIPVersion20;
-        const std::uint8_t CZIPIO::kZIPVersion45;
-
-        //
-        // ZIP archive creator
-        //
-
-        const std::uint8_t CZIPIO::kZIPCreatorUnix;
-
         // ==========================
         // PUBLIC TYPES AND CONSTANTS
         // ==========================

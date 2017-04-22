@@ -50,20 +50,6 @@ namespace Antik {
     // PRIVATE TYPES AND CONSTANTS
     // ===========================
 
-    //
-    // BODYSTRUCTURE constants
-    //
-
-    const char *CIMAPBodyStruct::kNILStr { "NIL" };
-    const char *CIMAPBodyStruct::kTEXTStr { "TEXT" };
-    const char *CIMAPBodyStruct::kATTACHMENTStr { "ATTACHMENT" };
-    const char *CIMAPBodyStruct::kINLINEStr { "INLINE" };
-    const char *CIMAPBodyStruct::kCREATIONDATEStr { "CREATION-DATE" };
-    const char *CIMAPBodyStruct::kFILENAMEStr { "FILENAME" };
-    const char *CIMAPBodyStruct::kMODIFICATIONDATEStr { "MODIFICATION-DATE" };
-    const char *CIMAPBodyStruct::kSIZEStr { "SIZE" };
-
-
     // ==========================
     // PUBLIC TYPES AND CONSTANTS
     // ==========================

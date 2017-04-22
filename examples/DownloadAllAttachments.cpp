@@ -310,7 +310,7 @@ int main(int argc, char** argv) {
         for (auto fetchEntry : parsedResponse->fetchList) {
             std::cout << "EMAIL INDEX [" << fetchEntry.index << "]" << std::endl;
             for (auto resp : fetchEntry.responseMap) {
-                if (resp.first.compare(CIMAP::kBODYSTRUCTUREStr) == 0) {
+                if (resp.first.compare(kBODYSTRUCTUREStr) == 0) {
                     getBodyStructAttachments(imap, fetchEntry.index, argData.destinationFolder,resp.second);
                 } else {
                     std::cout << resp.first << " = " << resp.second << std::endl;
