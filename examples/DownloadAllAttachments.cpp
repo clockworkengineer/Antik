@@ -90,7 +90,7 @@ struct ParamArgData {
 // Exit with error message/status
 //
 
-void exitWithError(std::string errMsgStr) {
+static void exitWithError(std::string errMsgStr) {
 
     // Closedown email, display error and exit.
 
@@ -104,7 +104,7 @@ void exitWithError(std::string errMsgStr) {
 // Add options common to both command line and config file
 //
 
-void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
+static void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
     
     commonOptions.add_options()
             ("server,s", po::value<std::string>(&argData.serverURLStr)->required(), "IMAP Server URL and port")
@@ -118,7 +118,7 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
 // Read in and process command line arguments using boost.
 //
 
-void procCmdLine(int argc, char** argv, ParamArgData &argData) {
+static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
     // Define and parse the program options
 
@@ -173,7 +173,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Download an attachment, decode it and write to local folder.
 //
 
-void downloadAttachment(CIMAP& imap, fs::path& destinationFolder, CIMAPBodyStruct::Attachment &attachment) {
+static void downloadAttachment(CIMAP& imap, fs::path& destinationFolder, CIMAPBodyStruct::Attachment &attachment) {
 
     std::string commandLineStr("FETCH " + attachment.indexStr + " BODY[" + attachment.partNoStr + "]");
     std::string parsedResponseStr(imap.sendCommand(commandLineStr));
@@ -217,7 +217,7 @@ void downloadAttachment(CIMAP& imap, fs::path& destinationFolder, CIMAPBodyStruc
 // For a passed in BODTSTRUCTURE parse and download any base64 encoded attachments.
 //
 
-void getBodyStructAttachments(CIMAP& imap, std::uint64_t index, fs::path & destinationFolder, const std::string& bodyStructureStr) {
+static void getBodyStructAttachments(CIMAP& imap, std::uint64_t index, fs::path & destinationFolder, const std::string& bodyStructureStr) {
 
     std::unique_ptr<CIMAPBodyStruct::BodyNode> treeBase{ new CIMAPBodyStruct::BodyNode()};
     std::shared_ptr<void> attachmentData{ new CIMAPBodyStruct::AttachmentData()};

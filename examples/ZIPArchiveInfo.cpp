@@ -76,7 +76,7 @@ struct ParamArgData {
 // Exit with error message/status
 //
 
-void exitWithError(std::string errMsgStr) {
+static void exitWithError(std::string errMsgStr) {
 
     std::cerr << errMsgStr << std::endl;
     exit(EXIT_FAILURE);
@@ -87,7 +87,7 @@ void exitWithError(std::string errMsgStr) {
 // Add options common to both command line and config file
 //
 
-void addCommonOptions(po::options_description& commonOptions, ParamArgData &argData) {
+static void addCommonOptions(po::options_description& commonOptions, ParamArgData &argData) {
 
     commonOptions.add_options()
             ("zip,z", po::value<std::string>(&argData.zipFileNameStr)->required(), "ZIP Archive Name");
@@ -98,7 +98,7 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData &argD
 // Read in and process command line arguments using boost. 
 //
 
-void procCmdLine(int argc, char** argv, ParamArgData &argData) {
+static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
     // Define and parse the program options
 
@@ -157,7 +157,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Output byte array (in hex).
 //
 
-void dumpBytes(std::vector<std::uint8_t>& bytes) {
+static void dumpBytes(std::vector<std::uint8_t>& bytes) {
 
     std::uint32_t byteCount = 1;
     std::cout << std::hex;
@@ -172,7 +172,7 @@ void dumpBytes(std::vector<std::uint8_t>& bytes) {
 // Output End Of Central Directory record information.
 //
 
-void dumpEOCentralDirectoryRecord(CZIPIO::EOCentralDirectoryRecord& endOfCentralDirectory) {
+static void dumpEOCentralDirectoryRecord(CZIPIO::EOCentralDirectoryRecord& endOfCentralDirectory) {
 
     std::cout << "End Of Central Directory Record" << "\n";
     std::cout << "-------------------------------\n" << "\n";
@@ -195,7 +195,7 @@ void dumpEOCentralDirectoryRecord(CZIPIO::EOCentralDirectoryRecord& endOfCentral
 // Output Central Directory File Header record information.
 //
 
-void dumpCentralDirectoryFileHeader(CZIPIO& zipFile, CZIPIO::CentralDirectoryFileHeader& fileHeader, std::uint32_t number) {
+static void dumpCentralDirectoryFileHeader(CZIPIO& zipFile, CZIPIO::CentralDirectoryFileHeader& fileHeader, std::uint32_t number) {
 
     std::cout << "Central Directory File Header No: " << number << "\n";
     std::cout << "--------------------------------\n" << "\n";

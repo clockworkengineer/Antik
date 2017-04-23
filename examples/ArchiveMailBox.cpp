@@ -86,8 +86,8 @@ struct ParamArgData {
     std::string mailBoxNameStr;     // Mailbox name
     fs::path destinationFolder;     // Destination folder for e-mail archive
     std::string configFileNameStr;  // Configuration file name
-    bool bOnlyUpdates;              // = true search date since last .eml archived
-    bool bAllMailBoxes;             // = true archive all mailboxes
+    bool bOnlyUpdates {false };     // = true search date since last .eml archived
+    bool bAllMailBoxes {false };    // = true archive all mailboxes
 
 };
 
@@ -95,13 +95,13 @@ struct ParamArgData {
 // Maximum subject line to take in file name
 //
 
-const int kMaxSubjectLine = 80;
+constexpr int kMaxSubjectLine = 80;
 
 //
 // .eml file extention
 //
 
-const std::string kEMLFileExt(".eml");
+constexpr const  char *kEMLFileExt { ".eml" };
 
 // ===============
 // LOCAL FUNCTIONS
@@ -111,7 +111,7 @@ const std::string kEMLFileExt(".eml");
 // Exit with error message/status
 //
 
-void exitWithError(const std::string errMsgStr) {
+static void exitWithError(const std::string errMsgStr) {
 
     // Closedown email, display error and exit.
 
@@ -125,7 +125,7 @@ void exitWithError(const std::string errMsgStr) {
 // Add options common to both command line and config file
 //
 
-void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
+static void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
 
     commonOptions.add_options()
             ("server,s", po::value<std::string>(&argData.serverURLStr)->required(), "IMAP Server URL and port")
@@ -142,12 +142,7 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
 // Read in and process command line arguments using boost.
 //
 
-void procCmdLine(int argc, char** argv, ParamArgData &argData) {
-
-    // Default values
-
-    argData.bOnlyUpdates = false;
-    argData.bAllMailBoxes = false;
+static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
     // Define and parse the program options
 
@@ -214,7 +209,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Parse command response and return pointer to parsed data.
 //
 
-CIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandStr, 
+static CIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandStr, 
                              const std::string& commandResponseStr) {
 
     CIMAPParse::COMMANDRESPONSE parsedResponse;
@@ -240,7 +235,7 @@ CIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandStr,
 // Send command to IMAP server. At present it checks for any errors and just exits.
 //
 
-std::string sendCommand(CIMAP& imap, const std::string& mailBoxNameStr, 
+static std::string sendCommand(CIMAP& imap, const std::string& mailBoxNameStr, 
                            const std::string& commandStr) {
 
     std::string commandResponseStr;
@@ -260,7 +255,7 @@ std::string sendCommand(CIMAP& imap, const std::string& mailBoxNameStr,
 // Fetch a given e-mails body and subject line and create an .eml file for it.
 //
 
-void fetchEmailAndArchive(CIMAP& imap, const std::string& mailBoxNameStr, 
+static void fetchEmailAndArchive(CIMAP& imap, const std::string& mailBoxNameStr, 
                      const fs::path& destinationFolder, std::uint64_t index) {
 
     std::string commandStr, commandResponseStr, subject, emailBody;
@@ -321,7 +316,7 @@ void fetchEmailAndArchive(CIMAP& imap, const std::string& mailBoxNameStr,
 // prefix; get the UID from this.
 //
 
-std::uint64_t getLowerSearchLimit(const fs::path& destinationFolder) {
+static std::uint64_t getLowerSearchLimit(const fs::path& destinationFolder) {
 
     if (fs::exists(destinationFolder) && fs::is_directory(destinationFolder)) {
 
@@ -348,7 +343,7 @@ std::uint64_t getLowerSearchLimit(const fs::path& destinationFolder) {
 // Convert list of comma separated mailbox names / list all mailboxes and place into vector or mailbox name strings.
 //
 
-void createMailBoxList(CIMAP& imap, const ParamArgData& argData, 
+static void createMailBoxList(CIMAP& imap, const ParamArgData& argData, 
                        std::vector<std::string>& mailBoxList) {
 
     if (argData.bAllMailBoxes) {

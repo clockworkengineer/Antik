@@ -71,8 +71,8 @@ struct ParamArgData {
     std::string userPasswordStr;    // Email account user name password
     std::string serverURLStr;       // SMTP server URL
     std::string configFileNameStr;  // Configuration file name
-    bool bParsed=false;             // true output parsed
-    bool bBodystruct=false;         // Parsed output includes BODYSTRUCTS
+    bool bParsed { false };         // true output parsed
+    bool bBodystruct { false };     // Parsed output includes BODYSTRUCTS
 };
 
 // ===============

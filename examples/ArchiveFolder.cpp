@@ -82,7 +82,7 @@ struct ParamArgData {
 // Exit with error message/status
 //
 
-void exitWithError(std::string errMsgStr) {
+static void exitWithError(std::string errMsgStr) {
 
     std::cerr << errMsgStr << std::endl;
     exit(EXIT_FAILURE);
@@ -93,7 +93,7 @@ void exitWithError(std::string errMsgStr) {
 // Add options common to both command line and config file
 //
 
-void addCommonOptions(po::options_description& commonOptions, ParamArgData &argData) {
+static void addCommonOptions(po::options_description& commonOptions, ParamArgData &argData) {
 
     commonOptions.add_options()
             ("source,s", po::value<std::string>(&argData.sourceFolderNameStr)->required(), "Source Folder To ZIP")
@@ -105,7 +105,7 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData &argD
 // Read in and process command line arguments using boost. 
 //
 
-void procCmdLine(int argc, char** argv, ParamArgData &argData) {
+static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
     // Define and parse the program options
 

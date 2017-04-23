@@ -75,20 +75,20 @@ namespace fs = boost::filesystem;
 //
 
 struct ParamArgData {
-    std::string userNameStr; // Email account user name
-    std::string userPasswordStr; // Email account user name password
-    std::string serverURLStr; // SMTP server URL
-    std::string mailBoxNameStr; // Mailbox name
-    std::string configFileNameStr; // Configuration file name
-    bool bPolls = false; // ==true then use NOOP
-    bool bWaitForNewMail = false; // ==true wait for a new message to arrive
+    std::string userNameStr;        // Email account user name
+    std::string userPasswordStr;    // Email account user name password
+    std::string serverURLStr;       // SMTP server URL
+    std::string mailBoxNameStr;     // Mailbox name
+    std::string configFileNameStr;  // Configuration file name
+    bool bPolls { false };          // ==true then use NOOP
+    bool bWaitForNewMail { false }; // ==true wait for a new message to arrive
 };
 
 //
 // Polling period between NOOP in seconds;
 //
 
-const int kPollPeriod = 15;
+constexpr int kPollPeriod = 15;
 
 // ===============
 // LOCAL FUNCTIONS
@@ -99,7 +99,7 @@ const int kPollPeriod = 15;
 // Exit with error message/status
 //
 
-void exitWithError(std::string errMsgStr) {
+static void exitWithError(std::string errMsgStr) {
 
     // Closedown email, display error and exit.
 
@@ -113,7 +113,7 @@ void exitWithError(std::string errMsgStr) {
 // Add options common to both command line and config file
 //
 
-void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
+static void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
 
     commonOptions.add_options()
             ("server,s", po::value<std::string>(&argData.serverURLStr)->required(), "IMAP Server URL and port")
@@ -129,7 +129,7 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
 // Read in and process command line arguments using boost.
 //
 
-void procCmdLine(int argc, char** argv, ParamArgData &argData) {
+static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
     // Define and parse the program options
 
@@ -197,7 +197,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Parse command response and return pointer to parsed data.
 //
 
-CIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandStr,
+static CIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandStr,
         const std::string& commandResponseStr) {
 
     CIMAPParse::COMMANDRESPONSE parsedResponse;
@@ -227,7 +227,7 @@ CIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandStr,
 // Send command to IMAP server. At present it checks for any errors and just exits.
 //
 
-std::string sendCommand(CIMAP& imap, const std::string& mailBoxNameStr,
+static std::string sendCommand(CIMAP& imap, const std::string& mailBoxNameStr,
         const std::string& commandStr) {
 
     std::string commandResponseStr;
