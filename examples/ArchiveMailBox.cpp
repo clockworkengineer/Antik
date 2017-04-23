@@ -452,19 +452,16 @@ int main(int argc, char** argv) {
 
             if (searchUID!=0) {
                 std::cout << "Searching from [" << std::to_string(searchUID) << "]" << std::endl;
-                commandStr = "UID SEARCH "+std::to_string(searchUID)+":*";
+                commandStr = "UID SEARCH UID "+std::to_string(searchUID)+":*";
             } else {
-                commandStr = "UID SEARCH 1:*";
+                commandStr = "UID SEARCH UID 1:*";
             }
 
             commandResponseStr = sendCommand(imap, mailBoxStr, commandStr);
             parsedResponse = parseCommandResponse(commandStr, commandResponseStr);
             if (parsedResponse) {
-                if ((parsedResponse->indexes.size() == 1) && (parsedResponse->indexes[0] == searchUID)) {
-                    std::cout << "Messages found = " << 0 << std::endl;
-                } else {
-                    std::cout << "Messages found = " << parsedResponse->indexes.size() << std::endl;
-                    for (auto index : parsedResponse->indexes) {
+                for (auto index : parsedResponse->indexes) {
+                    if (index != searchUID) {
                         fetchEmailAndArchive(imap, mailBoxStr, mailBoxPath, index);
                     }
                 }
