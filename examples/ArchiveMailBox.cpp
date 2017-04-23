@@ -442,22 +442,25 @@ int main(int argc, char** argv) {
                 fs::create_directories(mailBoxPath);
             }
 
-            // Get newest file creation date for search
+            // Get UID of newest archived message and search from that for updates
 
             if (argData.bOnlyUpdates) {
                 searchUID = getLowerSearchLimit(mailBoxPath);
             }
 
-            // SEARCH for all present email and then create an archive for them.
+            // SEARCH for email.
 
-            if (searchUID!=0) {
+            if (searchUID!=0) { // Updates
                 std::cout << "Searching from [" << std::to_string(searchUID) << "]" << std::endl;
                 commandStr = "UID SEARCH UID "+std::to_string(searchUID)+":*";
-            } else {
+            } else {            // All
                 commandStr = "UID SEARCH UID 1:*";
             }
 
             commandResponseStr = sendCommand(imap, mailBoxStr, commandStr);
+            
+            // Archive any email returned from search
+            
             parsedResponse = parseCommandResponse(commandStr, commandResponseStr);
             if (parsedResponse) {
                 for (auto index : parsedResponse->indexes) {
