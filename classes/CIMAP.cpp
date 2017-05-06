@@ -366,7 +366,7 @@ namespace Antik {
             curl_easy_setopt(this->curlHandle, CURLOPT_USERNAME, this->userNameStr.c_str());
             curl_easy_setopt(this->curlHandle, CURLOPT_PASSWORD, this->userPasswordStr.c_str());
 
-            curl_easy_setopt(this->curlHandle, CURLOPT_VERBOSE, bCurlVerbosity);
+            curl_easy_setopt(this->curlHandle, CURLOPT_VERBOSE, this->bCurlVerbosity);
             curl_easy_setopt(this->curlHandle, CURLOPT_URL, this->serverURLStr.c_str());
 
             curl_easy_setopt(this->curlHandle, CURLOPT_USE_SSL, (long) CURLUSESSL_ALL);
@@ -485,7 +485,7 @@ namespace Antik {
             throw Exception("curl_global_init() : could not initialize libcurl.");
         }
 
-        bCurlVerbosity = bCurlVerbosity;
+        CIMAP::bCurlVerbosity = bCurlVerbosity;
 
     }
 
