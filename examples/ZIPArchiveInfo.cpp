@@ -139,7 +139,9 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
             }
         }
 
-        if (!fs::exists(vm["zip"].as<std::string>().c_str())) {
+        // Check ZIP archive exists
+
+        if (vm.count("zip") && !fs::exists(vm["zip"].as<std::string>().c_str())) {
             throw po::error("Specified ZIP archive file does not exist.");
         }
 
@@ -228,13 +230,13 @@ static void dumpCentralDirectoryFileHeader(CZIPIO& zipFile, CZIPIO::CentralDirec
     }
 
     // For file header data > 32 bits display ZIP64 values.
-    
+
     if (zipFile.fieldOverflow(fileHeader.compressedSize) ||
             zipFile.fieldOverflow(fileHeader.uncompressedSize) ||
             zipFile.fieldOverflow(fileHeader.fileHeaderOffset)) {
-        
+
         CZIPIO::Zip64ExtendedInfoExtraField extra;
-        
+
         extra.compressedSize = fileHeader.compressedSize;
         extra.fileHeaderOffset = fileHeader.fileHeaderOffset;
         extra.originalSize = fileHeader.uncompressedSize;
@@ -250,7 +252,7 @@ static void dumpCentralDirectoryFileHeader(CZIPIO& zipFile, CZIPIO::CentralDirec
         if (zipFile.fieldOverflow(fileHeader.fileHeaderOffset)) {
             std::cout << "File HeaderOffset       : " << extra.fileHeaderOffset << "\n";
         }
-        
+
     }
 
     std::cout << std::endl;
