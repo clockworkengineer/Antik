@@ -13,7 +13,7 @@
 #define CMIME_HPP
 
 //
-// C++ STL definitions
+// C++ STL
 //
 
 #include <string>
@@ -29,7 +29,7 @@
 #include <CSMTP.hpp>
 
 //
-// libcurl definitions
+// libcurl
 //
 
 // =========

@@ -36,7 +36,7 @@
 // ====================
 
 //
-// C++ STL definitions
+// C++ STL
 //
 
 #include <thread>

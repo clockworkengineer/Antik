@@ -31,7 +31,7 @@
 // =============
 
 //
-// C++ STL definitions
+// C++ STL
 //
 
 #include <iostream>
@@ -46,7 +46,7 @@
 using namespace Antik::ZIP;
 
 //
-// BOOST file system, program options processing definitions
+// BOOST file system, program options processing
 //
 
 #include <boost/program_options.hpp>

@@ -31,7 +31,7 @@
 #include "CZIPIO.hpp"
 
 //
-// C++ STL definitions
+// C++ STL
 //
 
 #include <cstring>

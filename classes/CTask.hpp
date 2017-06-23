@@ -13,7 +13,7 @@
 #define CTASK_HPP
 
 //
-// C++ STL definitions
+// C++ STL
 //
 
 #include <cassert>

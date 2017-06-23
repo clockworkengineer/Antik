@@ -13,7 +13,7 @@
 #define CIMAPBODYSTRUCT_HPP
 
 //
-// C++ STL definitions
+// C++ STL
 //
 
 #include <vector>

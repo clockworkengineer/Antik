@@ -13,7 +13,7 @@
 #define CSMTP_HPP
 
 //
-// C++ STL definitions
+// C++ STL
 //
 
 #include <string>
@@ -22,7 +22,7 @@
 #include <deque>
 
 //
-// libcurl definitions
+// libcurl
 //
 
 #include <curl/curl.h>

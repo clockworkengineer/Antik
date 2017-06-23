@@ -13,7 +13,7 @@
 #define IAPPRISE_HPP
 
 //
-// C++ STL definitions
+// C++ STL
 //
 
 #include <unordered_map>
@@ -30,7 +30,7 @@
 #include "CLogger.hpp"
 
 //
-// inotify definitions
+// inotify
 //
 
 #include <sys/inotify.h>

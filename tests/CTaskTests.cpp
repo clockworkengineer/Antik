@@ -16,21 +16,21 @@
 // INCLUDE FILES
 // =============
 
-// Google test definitions
+// Google test
 
 #include "gtest/gtest.h"
 
-// C++ STL definitions
+// C++ STL
 
 #include <stdexcept>
 
-// CTask class definitions
+// CTask class
 
 #include "CTask.hpp" 
 
 using namespace Antik::File;
 
-// Boost file system and format libraries definitions
+// Boost file system and format libraries
 
 #include <boost/filesystem.hpp> 
 #include <boost/format.hpp>

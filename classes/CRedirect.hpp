@@ -13,7 +13,7 @@
 #define REDIRECT_HPP
 
 //
-// C++ STL definitions
+// C++ STL
 //
 
 #include <iostream>

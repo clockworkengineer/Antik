@@ -31,7 +31,7 @@
 // ====================
 
 //
-// C++ STL definitions
+// C++ STL
 //
 
 #include <cstring>

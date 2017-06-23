@@ -36,7 +36,7 @@
 #include "CZIP.hpp"
 
 //
-// C++ STL definitions
+// C++ STL
 //
 
 #include <iostream>

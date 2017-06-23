@@ -13,7 +13,7 @@
 #define CIMAP_HPP
 
 //
-// C++ STL definitions
+// C++ STL
 //
 
 #include <vector>
@@ -21,7 +21,7 @@
 #include <stdexcept>
 
 //
-// libcurl definitions
+// libcurl
 //
 
 #include <curl/curl.h>

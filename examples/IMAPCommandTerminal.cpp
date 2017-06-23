@@ -35,7 +35,7 @@
 // =============
 
 //
-// C++ STL definitions
+// C++ STL
 //
 
 #include <iostream>
@@ -51,7 +51,7 @@
 using namespace Antik::IMAP;
 
 //
-// Boost program options  & file system library definitions
+// Boost program options  & file system library
 //
 
 #include <boost/program_options.hpp>  

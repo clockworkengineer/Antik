@@ -16,15 +16,15 @@
 // INCLUDE FILES
 // =============
 
-// Google test definitions
+// Google test
 
 #include "gtest/gtest.h"
 
-// C++ STL definitions
+// C++ STL
 
 #include <stdexcept>
 
-// CIMAP/CIMAPParse class definitions
+// CIMAP/CIMAPParse class
 
 #include "CIMAP.hpp" 
 #include "CIMAPParse.hpp"

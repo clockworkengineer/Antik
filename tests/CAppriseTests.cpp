@@ -16,23 +16,23 @@
 // INCLUDE FILES
 // =============
 
-// Google test definitions
+// Google test
 
 #include "gtest/gtest.h"
 
-// C++ STL definitions
+// C++ STL
 
 #include <stdexcept>
 #include <fstream>
 #include <thread>
 
-// CApprise class definitions
+// CApprise class
 
 #include "CApprise.hpp"
 
 using namespace Antik::File;
 
-// Boost file system and format libraries definitions
+// Boost file system and format libraries
 
 #include <boost/filesystem.hpp> 
 #include <boost/format.hpp>
