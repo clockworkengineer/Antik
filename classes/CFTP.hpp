@@ -20,6 +20,8 @@
 #include <string>
 #include <stdexcept>
 #include <fstream>
+#include <thread>
+#include <memory>
 
 //
 // Boost ASIO
@@ -97,24 +99,25 @@ namespace Antik {
             std::string getUser(void) const;
 
             //
-            // FTP connect, send command, disconnect and connection status
+            // FTP connect, disconnect and connection status
             //
 
             void connect(void);
-            std::uint16_t sendCommand(const std::string& commandLine);
             void disconnect(void);
             bool getConnectedStatus(void) const;
             
-            // FTP passive/active mode on/off
+            // Set FTP passive transfer mode 
+            // == true passive mode otherwise active
             
-            std::uint16_t setPassiveMode(bool enable);
-            std::uint16_t setActiveMode(bool enable);
+            std::uint16_t setPassiveTrasnferMode(bool passiveEnabled);
             
             // FTP get and put file
             
             std::uint16_t getFile(const std::string &remoteFilePath, const std::string &localFilePath);
             std::uint16_t putFile(const std::string &remoteFilePath, const std::string &localFilePath);
 
+            std::string listDirectory(std::string directoryPath);
+            
             // ================
             // PUBLIC VARIABLES
             // ================
@@ -141,23 +144,21 @@ namespace Antik {
                    
             void sendFTPCommand(const std::string& commandLine);
             void waitForFTPCommandResponse(std::string& commandResponse);
-     
-            void readReponse(tcp::socket &socket, std::string &buffer);
             
-            void listenOnDataChannelAndReadResponse(std::string &buffer);
-            void connectOnDataChannelAndReadResponse(std::string &buffer);
+            void readCommandResponse(std::string &buffer);
 
-            void listenOnDataChannelAndDownloadFile(const std::string &file);
-            void connectOnDataChannelAndDownloadFile(const std::string &file);
-            void listenOnDataChannelAndUploadFile(const std::string &file);
-            void connectOnDataChannelAndUploadFile(const std::string &file);
+            void downloadingFile(const std::string &file);
+            void uploadingFile(const std::string &file);
             
-            void downloadFile(tcp::socket &socket, const std::string &file);
-            void uploadFile(tcp::socket &socket, const std::string &file);
+            void downloadFileWrite(tcp::socket &socket, const std::string &file);
+            void uploadFileRead(tcp::socket &socket, const std::string &file);
                   
-            void setPassiveAddressPort(std::string &pasvResponse);
+            void extractPassiveAddressPort(std::string &pasvResponse);
+            
             std::string createPortCommand(); 
             std::uint16_t extractStatusCode(const std::string &commandResponse);
+            
+            void dataChannelLisenter();
             
             // =================
             // PRIVATE VARIABLES
@@ -173,9 +174,12 @@ namespace Antik {
             std::string commandResponse; // FTP command response
 
             boost::asio::io_service ioService;
-            boost::array<char, 1024> ioBuffer;
+            boost::array<char, 32*1024> ioBuffer;
             boost::system::error_code socketError;
             tcp::socket controlChannelSocket { ioService };
+            tcp::socket dataChannelSocket { ioService };
+            tcp::resolver queryResolver { ioService };
+            std::shared_ptr<std::thread> dataChannelListenThread;
                 
             std::string dataChannelPassiveAddresss;
             std::string dataChannelPassivePort;
@@ -184,7 +188,6 @@ namespace Antik {
             std::string dataChannelActivePort;
             
             bool passiveMode=false;
-            bool activeMode=false;
 
         };
 

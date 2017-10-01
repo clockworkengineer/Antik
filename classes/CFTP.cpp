@@ -77,8 +77,7 @@ namespace Antik {
                 boost::asio::ip::udp::endpoint ep = *endpoints;
                 boost::asio::ip::udp::socket socket(netService);
                 socket.connect(ep);
-                boost::asio::ip::address addr = socket.local_endpoint().address();
-                localIPAddress = addr.to_string();
+                localIPAddress = socket.local_endpoint().address().to_string();
             } catch (std::exception& e) {
                 return (localIPAddress);
             }
@@ -91,13 +90,14 @@ namespace Antik {
 
             std::uint16_t statusCode = std::stoi(commandResponse.substr(0, commandResponse.find(' ')));
 
-            // std::cout << "STATUS CODE : " << statusCode << std::endl;
+            //   std::cout << "STATUS CODE : " << statusCode << std::endl;
+            //   std::cout << "MESSAGE : " << commandResponse.substr(commandResponse.find(' ') + 1);
 
             return (statusCode);
 
         }
 
-        void CFTP::setPassiveAddressPort(std::string &pasvResponse) {
+        void CFTP::extractPassiveAddressPort(std::string &pasvResponse) {
 
             std::string passiveParams = pasvResponse.substr(pasvResponse.find('(') + 1);
             passiveParams = passiveParams.substr(0, passiveParams.find(')'));
@@ -131,11 +131,12 @@ namespace Antik {
                 if (byte == '.') byte = ',';
             }
             portCommand += "," + std::to_string((port & 0xFF00) >> 8) + "," + std::to_string(port & 0xFF);
+
             return (portCommand);
 
         }
 
-        void CFTP::downloadFile(tcp::socket &socket, const std::string &file) {
+        void CFTP::downloadFileWrite(tcp::socket &socket, const std::string &file) {
 
             fs::path localFilePath{ file};
 
@@ -143,7 +144,7 @@ namespace Antik {
                 fs::remove(localFilePath);
             }
 
-            std::ofstream localFile{ localFilePath.string(), std::ofstream::app | std::ofstream::binary};
+            std::ofstream localFile{ localFilePath.string(), std::ofstream::binary};
 
             for (;;) {
 
@@ -163,7 +164,7 @@ namespace Antik {
 
         }
 
-        void CFTP::uploadFile(tcp::socket &socket, const std::string &file) {
+        void CFTP::uploadFileRead(tcp::socket &socket, const std::string &file) {
 
             fs::path localFilePath{ file};
 
@@ -195,133 +196,108 @@ namespace Antik {
 
         }
 
-        void CFTP::readReponse(tcp::socket &socket, std::string &buffer) {
+        void CFTP::dataChannelLisenter() {
 
-            for (;;) {
+            this->sendFTPCommand(this->createPortCommand() + "\r\n");
+            tcp::acceptor acceptor(this->ioService, tcp::endpoint(tcp::v4(), std::stoi(this->dataChannelActivePort)));
+            acceptor.accept(this->dataChannelSocket);
 
-                size_t len = socket.read_some(boost::asio::buffer(this->ioBuffer), this->socketError);
+        }
 
-                if (this->socketError == boost::asio::error::eof) {
-                    break; // Connection closed cleanly by peer.
-                } else if (this->socketError) {
-                    throw Exception(this->socketError.message());
+        void CFTP::readCommandResponse(std::string &buffer) {
+
+
+            try {
+
+                if (this->passiveMode) {
+                    tcp::resolver::query query(this->dataChannelPassiveAddresss, this->dataChannelPassivePort);
+                    boost::asio::connect(this->dataChannelSocket, this->queryResolver.resolve(query));
+                } else {
+                    this->dataChannelListenThread->join();
                 }
 
-                for (auto byte : this->ioBuffer) {
-                    if (len == 0) break;
-                    buffer.append(1, byte);
-                    len--;
+                for (;;) {
+
+                    size_t len = this->dataChannelSocket.read_some(boost::asio::buffer(this->ioBuffer), this->socketError);
+
+                    if (this->socketError == boost::asio::error::eof) {
+                        break; // Connection closed cleanly by peer.
+                    } else if (this->socketError) {
+                        throw Exception(this->socketError.message());
+                    }
+
+                    for (auto byte : this->ioBuffer) {
+                        if (len == 0) break;
+                        buffer.append(1, byte);
+                        len--;
+                    }
+
                 }
 
+            } catch (CFTP::Exception& e) {
+                if (this->dataChannelSocket.is_open()) {
+                    this->dataChannelSocket.close();
+                }
+                throw;
+            } catch (std::exception& e) {
+                if (this->dataChannelSocket.is_open()) {
+                    this->dataChannelSocket.close();
+                }
+                throw Exception(e.what());
+            }
+
+            if (this->dataChannelSocket.is_open()) {
+                this->dataChannelSocket.close();
             }
 
         }
 
-        void CFTP::listenOnDataChannelAndReadResponse(std::string &buffer) {
+        void CFTP::downloadingFile(const std::string &file) {
 
             try {
 
-                tcp::acceptor acceptor(this->ioService, tcp::endpoint(tcp::v4(), std::stoi(this->dataChannelActivePort)));
+                if (this->passiveMode) {
+                    tcp::resolver::query query(this->dataChannelPassiveAddresss, this->dataChannelPassivePort);
+                    boost::asio::connect(this->dataChannelSocket, this->queryResolver.resolve(query));
+                } else {
+                    this->dataChannelListenThread->join();
+                }
 
-                tcp::socket socket(this->ioService);
-                acceptor.accept(socket);
-
-                this->readReponse(socket, buffer);
+                this->downloadFileWrite(this->dataChannelSocket, file);
 
             } catch (std::exception& e) {
+                if (this->dataChannelSocket.is_open()) {
+                    this->dataChannelSocket.close();
+                }
+                throw Exception(e.what());
+            }
+            if (this->dataChannelSocket.is_open()) {
+                this->dataChannelSocket.close();
+            }
+        }
+
+        void CFTP::uploadingFile(const std::string &file) {
+
+            try {
+
+                if (this->passiveMode) {
+                    tcp::resolver::query query(this->dataChannelPassiveAddresss, this->dataChannelPassivePort);
+                    boost::asio::connect(this->dataChannelSocket, this->queryResolver.resolve(query));
+                } else {
+                    this->dataChannelListenThread->join();
+                }
+
+                this->uploadFileRead(this->dataChannelSocket, file);
+
+            } catch (std::exception& e) {
+                if (this->dataChannelSocket.is_open()) {
+                    this->dataChannelSocket.close();
+                }
                 throw Exception(e.what());
             }
 
-        }
-
-        void CFTP::connectOnDataChannelAndReadResponse(std::string &buffer) {
-
-
-            try {
-
-                tcp::resolver resolver(this->ioService);
-                tcp::resolver::query query(this->dataChannelPassiveAddresss, this->dataChannelPassivePort);
-                tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-
-                tcp::socket socket(this->ioService);
-                boost::asio::connect(socket, endpoint_iterator);
-
-                this->readReponse(socket, buffer);
-
-            } catch (std::exception& e) {
-                throw Exception(e.what());
-            }
-
-        }
-
-        void CFTP::listenOnDataChannelAndDownloadFile(const std::string &file) {
-
-            try {
-
-                tcp::acceptor acceptor(this->ioService, tcp::endpoint(tcp::v4(), std::stoi(this->dataChannelActivePort)));
-
-                tcp::socket socket(this->ioService);
-                acceptor.accept(socket);
-
-                this->downloadFile(socket, file);
-
-            } catch (std::exception& e) {
-                throw Exception(e.what());
-            }
-
-        }
-
-        void CFTP::connectOnDataChannelAndDownloadFile(const std::string &file) {
-
-            try {
-
-                tcp::resolver resolver(this->ioService);
-                tcp::resolver::query query(this->dataChannelPassiveAddresss, this->dataChannelPassivePort);
-                tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-
-                tcp::socket socket(this->ioService);
-                boost::asio::connect(socket, endpoint_iterator);
-
-                this->downloadFile(socket, file);
-
-            } catch (std::exception& e) {
-                throw Exception(e.what());
-            }
-
-        }
-
-        void CFTP::listenOnDataChannelAndUploadFile(const std::string &file) {
-
-            try {
-
-                tcp::acceptor acceptor(this->ioService, tcp::endpoint(tcp::v4(), std::stoi(this->dataChannelActivePort)));
-
-                tcp::socket socket(this->ioService);
-                acceptor.accept(socket);
-
-                this->uploadFile(socket, file);
-
-            } catch (std::exception& e) {
-                throw Exception(e.what());
-            }
-
-        }
-
-        void CFTP::connectOnDataChannelAndUploadFile(const std::string &file) {
-
-            try {
-
-                tcp::resolver resolver(this->ioService);
-                tcp::resolver::query query(this->dataChannelPassiveAddresss, this->dataChannelPassivePort);
-                tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-
-                tcp::socket socket(this->ioService);
-                boost::asio::connect(socket, endpoint_iterator);
-
-                this->uploadFile(socket, file);
-
-            } catch (std::exception& e) {
-                throw Exception(e.what());
+            if (this->dataChannelSocket.is_open()) {
+                this->dataChannelSocket.close();
             }
 
         }
@@ -416,11 +392,9 @@ namespace Antik {
                 Exception("Already connected to a server.");
             }
 
-            tcp::resolver resolver(this->ioService);
             tcp::resolver::query query(this->serverName, this->serverPort);
-            tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
-            boost::asio::connect(this->controlChannelSocket, endpoint_iterator, this->socketError);
+            boost::asio::connect(this->controlChannelSocket, this->queryResolver.resolve(query), this->socketError);
 
             if (this->socketError) {
                 throw Exception(this->socketError.message());
@@ -454,24 +428,6 @@ namespace Antik {
 
         }
 
-        //
-        // Send single FTP command and return response including tagged command line.
-        //
-
-        std::uint16_t CFTP::sendCommand(const std::string& commandLine) {
-
-            if (!this->bConnected) {
-                throw Exception("Not connected to server.");
-            }
-
-            this->sendFTPCommand(commandLine);
-
-            this->waitForFTPCommandResponse(this->commandResponse);
-
-            return (this->extractStatusCode(this->commandResponse));
-
-        }
-
         std::uint16_t CFTP::getFile(const std::string &remoteFilePath, const std::string &localFilePath) {
 
             if (!this->bConnected) {
@@ -481,13 +437,12 @@ namespace Antik {
             this->sendFTPCommand("RETR " + remoteFilePath + "\r\n");
             this->waitForFTPCommandResponse(this->commandResponse);
 
-            if (!this->passiveMode) {
-                this->listenOnDataChannelAndDownloadFile(localFilePath);
-            } else {
-                this->connectOnDataChannelAndDownloadFile(localFilePath);
-            }
+            std::uint16_t returnedStatus = this->extractStatusCode(this->commandResponse);
 
-            this->waitForFTPCommandResponse(this->commandResponse);
+            if (returnedStatus == 125 || returnedStatus == 150) {
+                this->downloadingFile(localFilePath);
+                this->waitForFTPCommandResponse(this->commandResponse);
+            }
 
             return (this->extractStatusCode(this->commandResponse));
 
@@ -503,57 +458,62 @@ namespace Antik {
             this->sendFTPCommand("STOR " + remoteFilePath + "\r\n");
             this->waitForFTPCommandResponse(this->commandResponse);
 
-            if (!this->passiveMode) {
-                this->listenOnDataChannelAndUploadFile(localFilePath);
-            } else {
-                this->connectOnDataChannelAndUploadFile(localFilePath);
-            }
+            std::uint16_t returnedStatus = this->extractStatusCode(this->commandResponse);
 
-            this->waitForFTPCommandResponse(this->commandResponse);
+            if (returnedStatus == 150) {
+                this->uploadingFile(localFilePath);
+                this->waitForFTPCommandResponse(this->commandResponse);
+            }
 
             return (this->extractStatusCode(this->commandResponse));
 
         }
 
-        std::uint16_t CFTP::setPassiveMode(bool enable) {
+        std::uint16_t CFTP::setPassiveTrasnferMode(bool passiveEnabled) {
 
             if (!this->bConnected) {
                 throw Exception("Not connected to server.");
             }
 
-            this->passiveMode = enable;
-
-            if (enable) {
-                this->activeMode = false;
+            if (passiveEnabled) {
+                this->passiveMode = true;
                 this->sendFTPCommand("PASV\r\n");
                 this->waitForFTPCommandResponse(this->commandResponse);
-                setPassiveAddressPort(this->commandResponse);
+                extractPassiveAddressPort(this->commandResponse);
+                return (this->extractStatusCode(this->commandResponse));
+            } else {
+                this->passiveMode = false;
+                this->dataChannelListenThread.reset(new std::thread(&CFTP::dataChannelLisenter, this));
+                this->waitForFTPCommandResponse(this->commandResponse);
                 return (this->extractStatusCode(this->commandResponse));
             }
 
-            return (200);
+            return (-1);
 
         }
 
-        std::uint16_t CFTP::setActiveMode(bool enable) {
+        std::string CFTP::listDirectory(std::string directoryPath) {
+
+            std::string listing;
 
             if (!this->bConnected) {
                 throw Exception("Not connected to server.");
             }
 
-            this->activeMode = enable;
+            this->sendFTPCommand("LIST " + directoryPath + "\r\n");
+            this->waitForFTPCommandResponse(this->commandResponse);
 
-            if (enable) {
-                this->passiveMode = false;
-                this->sendFTPCommand(this->createPortCommand() + "\r\n");
+            std::uint16_t returnedStatus = this->extractStatusCode(this->commandResponse);
+
+            if (returnedStatus == 150) {
+                this->readCommandResponse(listing);
                 this->waitForFTPCommandResponse(this->commandResponse);
-                return (this->extractStatusCode(this->commandResponse));
+                this->extractStatusCode(this->commandResponse);
             }
 
-            return (200);
+            return (listing);
 
         }
-
         //
         // Main CFTP object constructor. 
         //
