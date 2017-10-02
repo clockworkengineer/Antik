@@ -109,15 +109,18 @@ namespace Antik {
             // Set FTP passive transfer mode 
             // == true passive mode otherwise active
             
-            std::uint16_t setPassiveTrasnferMode(bool passiveEnabled);
+            void setPassiveTransferMode(bool passiveEnabled);
             
             // FTP get and put file
             
             std::uint16_t getFile(const std::string &remoteFilePath, const std::string &localFilePath);
             std::uint16_t putFile(const std::string &remoteFilePath, const std::string &localFilePath);
 
-            std::string listDirectory(std::string directoryPath);
-            
+            std::uint16_t list(const std::string &directoryPath, std::string &listOutput);
+            std::uint16_t listFiles(const std::string &directoryPath, std::string &listOutput);
+            std::uint16_t changeWorkingDirectory(const std::string &workingDirectoryPath);
+            std::uint16_t getCurrentWoringDirectory(std::string &currentWoringDirectory);
+        
             // ================
             // PUBLIC VARIABLES
             // ================
@@ -141,17 +144,18 @@ namespace Antik {
             // ===============
 
             std::string determineLocalIPAddress();
-                   
+            
+            bool sendTransferMode();
+            
             void sendFTPCommand(const std::string& commandLine);
             void waitForFTPCommandResponse(std::string& commandResponse);
             
-            void readCommandResponse(std::string &buffer);
+            void readDataChannelCommandResponse(std::string &commandResponse);
 
-            void downloadingFile(const std::string &file);
-            void uploadingFile(const std::string &file);
+            void transferFile(const std::string &file, bool downloading);
             
-            void downloadFileWrite(tcp::socket &socket, const std::string &file);
-            void uploadFileRead(tcp::socket &socket, const std::string &file);
+            void downloadFile(tcp::socket &socket, const std::string &file);
+            void uploadFile(tcp::socket &socket, const std::string &file);
                   
             void extractPassiveAddressPort(std::string &pasvResponse);
             
