@@ -4,16 +4,17 @@
  * 
  * Author: Robert Tizzard
  * 
- * Created on January 24, 2017, 2:33 PM
+ * Created on September 23, 2017, 2:33 PM
  *
- * Copyright 2016.
+ * Copyright 2017.
  *
  */
 
 //
 // Class: CFTP
 // 
-// Description: A class to connect to an FTP server.
+// Description: A class to connect to an FTP server using provided credentials
+// and enable the uploading/downloading of files along with assorted other commands.
 //
 // Dependencies:   C11++        - Language standard features used.
 //                 BOOST ASIO   - Used to talk to FTP server.
@@ -72,6 +73,12 @@ namespace Antik {
         // ===============
         // PRIVATE METHODS
         // ===============
+        
+        //
+        // Work out ip address for local machine. This is quite difficult to achieve but
+        // this is the best code i have seen for doing it. Note: Fall back of localhost
+        // on failure,
+        // 
 
         std::string CFTP::determineLocalIPAddress() {
 
@@ -93,6 +100,10 @@ namespace Antik {
 
         }
 
+        //
+        // Extract status code from FTP command reply.
+        //
+        
         std::uint16_t CFTP::extractStatusCode(const std::string &commandResponse) {
 
             std::uint16_t statusCode = std::stoi(commandResponse.substr(0, commandResponse.find(' ')));
@@ -103,6 +114,10 @@ namespace Antik {
             return (statusCode);
 
         }
+        
+        //
+        // Extract host ip address and port information from passive command reply.
+        //
 
         void CFTP::extractPassiveAddressPort(std::string &pasvResponse) {
 
@@ -123,7 +138,11 @@ namespace Antik {
 
 
         }
-
+        
+        //
+        // Create PORT command to send over control channel.
+        //
+        
         std::string CFTP::createPortCommand() {
 
             std::string portCommand{ "PORT "};
@@ -142,6 +161,10 @@ namespace Antik {
             return (portCommand);
 
         }
+        
+        //
+        // Download a file from FTP server to local system.
+        //
 
         void CFTP::downloadFile(const std::string &file) {
 
@@ -170,6 +193,10 @@ namespace Antik {
             localFile.close();
 
         }
+        
+        //
+        // Upload file from local system to FTP server,
+        //
 
         void CFTP::uploadFile(const std::string &file) {
 
@@ -205,6 +232,11 @@ namespace Antik {
 
         }
 
+        //
+        // Data channel socket listener thread function for incoming data 
+        // channel connections.
+        //
+        
         void CFTP::dataChannelTransferListener() {
 
             this->isListenThreadRunning = true;
@@ -222,6 +254,11 @@ namespace Antik {
 
         }
 
+        //
+        // Cleanup after data channel transfer. This includes stopping any unused listener
+        // thread and closing the socket if still open.
+        //
+        
         void CFTP::dataChannelTransferCleanup() {
 
             if (this->isListenThreadRunning) {
@@ -237,8 +274,11 @@ namespace Antik {
 
         }
 
+        //
+        // Read any response to command on data channel (ie.LIST).
+        //
+        
         void CFTP::readDataChannelCommandResponse(std::string &commandResponse) {
-
 
             try {
 
@@ -295,6 +335,10 @@ namespace Antik {
 
         }
 
+        //
+        // Transfer (upload/download) file over data channel.
+        //
+        
         void CFTP::transferFile(const std::string &file, bool downloading) {
 
             try {
@@ -337,6 +381,10 @@ namespace Antik {
 
         }
 
+        //
+        // Send FTP over control channel
+        //
+        
         void CFTP::sendFTPCommand(const std::string& command) {
 
             asio::write(this->controlChannelSocket, asio::buffer(&command[0], command.size()), this->socketError);
@@ -346,10 +394,14 @@ namespace Antik {
             }
 
         }
+        
+        //
+        // Read FTP command response fromconrol channel.
+        //
 
         void CFTP::waitForFTPCommandResponse(std::string& commandResponse) {
 
-            size_t recvLength{ 0};
+            size_t recvLength { 0 };
 
             commandResponse.clear();
 
@@ -366,7 +418,7 @@ namespace Antik {
                 commandResponse.append(&this->ioBuffer[0]);
 
                 recvLength = commandResponse.length();
-                if ((commandResponse[recvLength - 2] == '\r') &&(commandResponse[recvLength - 1] == '\n')) {
+                if ((commandResponse[recvLength - 2] == '\r') && (commandResponse[recvLength - 1] == '\n')) {
                     break;
                 }
 
@@ -462,6 +514,11 @@ namespace Antik {
             this->bConnected = false;
 
         }
+        
+        //
+        // Set passive transfer mode.
+        // == true passive enabled, == false active mode
+        //
 
         void CFTP::setPassiveTransferMode(bool passiveEnabled) {
 
@@ -473,6 +530,10 @@ namespace Antik {
 
         }
 
+        //
+        // Send transfer mode to used over data channel.
+        //
+        
         bool CFTP::sendTransferMode() {
             if (this->passiveMode) {
                 this->sendFTPCommand("PASV\r\n");
@@ -486,6 +547,10 @@ namespace Antik {
             }
         }
 
+        //
+        // Transfer a file from the server to a local file.
+        //
+        
         std::uint16_t CFTP::getFile(const std::string &remoteFilePath, const std::string &localFilePath) {
 
             if (!this->bConnected) {
@@ -502,6 +567,10 @@ namespace Antik {
 
         }
 
+        //
+        // Transfer a file to the server from a local file.
+        //
+        
         std::uint16_t CFTP::putFile(const std::string &remoteFilePath, const std::string &localFilePath) {
 
             if (!this->bConnected) {
@@ -517,6 +586,11 @@ namespace Antik {
 
         }
 
+        //
+        // Produce a directory listing for the file/directory passed in or for the current
+        // working directory if none is.
+        //
+        
         std::uint16_t CFTP::list(const std::string &directoryPath, std::string &listOutput) {
 
             if (!this->bConnected) {
@@ -534,6 +608,11 @@ namespace Antik {
 
         }
 
+        //
+        // Produce a file list for the file/directory passed in or for the current
+        // working directory if none is.
+        //
+        
         std::uint16_t CFTP::listFiles(const std::string &directoryPath, std::string &listOutput) {
 
             if (!this->bConnected) {
@@ -552,6 +631,10 @@ namespace Antik {
 
         }
 
+        //
+        // Change current working directory on server.
+        //
+        
         std::uint16_t CFTP::changeWorkingDirectory(const std::string &workingDirectoryPath) {
 
             if (!this->bConnected) {
@@ -565,6 +648,10 @@ namespace Antik {
 
         }
 
+        //
+        // Fetch current working directory on server and return path as string.
+        //
+        
         std::uint16_t CFTP::getCurrentWoringDirectory(std::string &currentWoringDirectoryPath) {
 
             if (!this->bConnected) {
