@@ -38,6 +38,14 @@
 #include <iomanip>
 #include <iostream>
 
+// =======
+// IMPORTS
+// =======
+
+namespace asio = boost::asio;
+namespace ip = asio::ip;
+namespace fs = boost::filesystem;
+
 // =========
 // NAMESPACE
 // =========
@@ -70,10 +78,10 @@ namespace Antik {
             std::string localIPAddress{ "127.0.0.1"};
 
             try {
-                boost::asio::ip::udp::resolver resolver(this->ioService);
-                boost::asio::ip::udp::resolver::query query(boost::asio::ip::udp::v4(), "google.com", "");
-                boost::asio::ip::udp::resolver::iterator endpoints = resolver.resolve(query);
-                boost::asio::ip::udp::socket socket(this->ioService);
+                ip::udp::resolver resolver(this->ioService);
+                ip::udp::resolver::query query(ip::udp::v4(), "google.com", "");
+                ip::udp::resolver::iterator endpoints = resolver.resolve(query);
+                ip::udp::socket socket(this->ioService);
                 socket.connect(*endpoints);
                 localIPAddress = socket.local_endpoint().address().to_string();
                 socket.close();
@@ -89,8 +97,8 @@ namespace Antik {
 
             std::uint16_t statusCode = std::stoi(commandResponse.substr(0, commandResponse.find(' ')));
 
-           // std::cout << "STATUS CODE : " << statusCode << std::endl;
-           // std::cout << "MESSAGE : " << commandResponse.substr(commandResponse.find(' ') + 1);
+            // std::cout << "STATUS CODE : " << statusCode << std::endl;
+            // std::cout << "MESSAGE : " << commandResponse.substr(commandResponse.find(' ') + 1);
 
             return (statusCode);
 
@@ -120,7 +128,7 @@ namespace Antik {
 
             std::string portCommand{ "PORT "};
 
-            tcp::acceptor acceptor(this->ioService, tcp::endpoint(tcp::v4(), 0));
+            ip::tcp::acceptor acceptor(this->ioService, ip::tcp::endpoint(ip::tcp::v4(), 0));
             unsigned short port = acceptor.local_endpoint().port();
             auto address = acceptor.local_endpoint().address();
 
@@ -135,7 +143,7 @@ namespace Antik {
 
         }
 
-        void CFTP::downloadFile(tcp::socket &socket, const std::string &file) {
+        void CFTP::downloadFile(const std::string &file) {
 
             fs::path localFilePath{ file};
 
@@ -147,9 +155,9 @@ namespace Antik {
 
             for (;;) {
 
-                size_t len = socket.read_some(boost::asio::buffer(this->ioBuffer), this->socketError);
+                size_t len = this->dataChannelSocket.read_some(asio::buffer(this->ioBuffer), this->socketError);
 
-                if (this->socketError == boost::asio::error::eof) {
+                if (this->socketError == asio::error::eof) {
                     break; // Connection closed cleanly by peer.
                 } else if (this->socketError) {
                     throw Exception(this->socketError.message());
@@ -161,13 +169,9 @@ namespace Antik {
 
             localFile.close();
 
-            if (this->dataChannelSocket.is_open()) {
-                this->dataChannelSocket.close();
-            }
-
         }
 
-        void CFTP::uploadFile(tcp::socket &socket, const std::string &file) {
+        void CFTP::uploadFile(const std::string &file) {
 
             fs::path localFilePath{ file};
 
@@ -182,14 +186,14 @@ namespace Antik {
                 localFile.read(&this->ioBuffer[0], this->ioBuffer.size());
 
                 if (localFileLength < this->ioBuffer.size()) {
-                    boost::asio::write(socket, boost::asio::buffer(this->ioBuffer, localFileLength), this->socketError);
+                    asio::write(this->dataChannelSocket, asio::buffer(this->ioBuffer, localFileLength), this->socketError);
                 } else {
-                    boost::asio::write(socket, boost::asio::buffer(this->ioBuffer, this->ioBuffer.size()), this->socketError);
+                    asio::write(this->dataChannelSocket, asio::buffer(this->ioBuffer, this->ioBuffer.size()), this->socketError);
                 }
 
                 localFileLength -= this->ioBuffer.size();
 
-                if (this->socketError == boost::asio::error::eof) {
+                if (this->socketError == asio::error::eof) {
                     break; // Connection closed cleanly by peer.
                 } else if (this->socketError) {
                     throw Exception(this->socketError.message());
@@ -199,25 +203,37 @@ namespace Antik {
 
             localFile.close();
 
-            if (this->dataChannelSocket.is_open()) {
-                this->dataChannelSocket.close();
-            }
-
         }
 
-        void CFTP::dataChannelLisenter() {
+        void CFTP::dataChannelTransferListener() {
 
-            std::cout << "dataChannelLisenter in " << std::endl;
+            this->isListenThreadRunning = true;
+
             if (this->dataChannelSocket.is_open()) {
                 this->dataChannelSocket.close();
             }
 
             this->sendFTPCommand(this->createPortCommand() + "\r\n");
 
-            tcp::acceptor acceptor(this->ioService, tcp::endpoint(tcp::v4(), std::stoi(this->dataChannelActivePort)));
+            ip::tcp::acceptor acceptor(this->ioService, ip::tcp::endpoint(ip::tcp::v4(), std::stoi(this->dataChannelActivePort)));
             acceptor.accept(this->dataChannelSocket);
 
-            std::cout << "dataChannelLisenter out " << std::endl;
+            this->isListenThreadRunning = false;
+
+        }
+
+        void CFTP::dataChannelTransferCleanup() {
+
+            if (this->isListenThreadRunning) {
+                ip::tcp::socket socket{ this->ioService};
+                ip::tcp::resolver::query query(this->dataChannelActiveAddresss, this->dataChannelActivePort);
+                asio::connect(socket, this->queryResolver.resolve(query));
+                this->dataChannelListenThread->join();
+            }
+
+            if (this->dataChannelSocket.is_open()) {
+                this->dataChannelSocket.close();
+            }
 
         }
 
@@ -227,8 +243,8 @@ namespace Antik {
             try {
 
                 if (this->passiveMode) {
-                    tcp::resolver::query query(this->dataChannelPassiveAddresss, this->dataChannelPassivePort);
-                    boost::asio::connect(this->dataChannelSocket, this->queryResolver.resolve(query));
+                    ip::tcp::resolver::query query(this->dataChannelPassiveAddresss, this->dataChannelPassivePort);
+                    asio::connect(this->dataChannelSocket, this->queryResolver.resolve(query));
                 }
 
                 this->waitForFTPCommandResponse(this->commandResponse);
@@ -243,9 +259,9 @@ namespace Antik {
 
                     for (;;) {
 
-                        size_t len = this->dataChannelSocket.read_some(boost::asio::buffer(this->ioBuffer), this->socketError);
+                        size_t len = this->dataChannelSocket.read_some(asio::buffer(this->ioBuffer), this->socketError);
 
-                        if (this->socketError == boost::asio::error::eof) {
+                        if (this->socketError == asio::error::eof) {
                             break; // Connection closed cleanly by peer.
                         } else if (this->socketError) {
                             throw Exception(this->socketError.message());
@@ -258,31 +274,24 @@ namespace Antik {
                         }
 
                     }
-                    
+
                     if (this->dataChannelSocket.is_open()) {
                         this->dataChannelSocket.close();
                     }
-                    
+
                     this->waitForFTPCommandResponse(this->commandResponse);
-                    
-                } else if (!this->passiveMode) {
-                    tcp::socket socket{ this->ioService};
-                    tcp::resolver::query query(this->dataChannelActiveAddresss, this->dataChannelActivePort);
-                    boost::asio::connect(socket, this->queryResolver.resolve(query));
-                    this->dataChannelListenThread->join();
+
                 }
 
             } catch (CFTP::Exception& e) {
-                if (this->dataChannelSocket.is_open()) {
-                    this->dataChannelSocket.close();
-                }
+                dataChannelTransferCleanup();
                 throw;
             } catch (std::exception& e) {
-                if (this->dataChannelSocket.is_open()) {
-                    this->dataChannelSocket.close();
-                }
+                dataChannelTransferCleanup();
                 throw Exception(e.what());
             }
+
+            dataChannelTransferCleanup();
 
         }
 
@@ -291,46 +300,47 @@ namespace Antik {
             try {
 
                 if (this->passiveMode) {
-                    tcp::resolver::query query(this->dataChannelPassiveAddresss, this->dataChannelPassivePort);
-                    boost::asio::connect(this->dataChannelSocket, this->queryResolver.resolve(query));
+                    ip::tcp::resolver::query query(this->dataChannelPassiveAddresss, this->dataChannelPassivePort);
+                    asio::connect(this->dataChannelSocket, this->queryResolver.resolve(query));
                 }
 
                 this->waitForFTPCommandResponse(this->commandResponse);
                 std::uint16_t statusCode = this->extractStatusCode(this->commandResponse);
 
                 if ((statusCode == 125) || (statusCode == 150)) {
+
                     if (!this->passiveMode) {
                         this->dataChannelListenThread->join();
                     }
+
                     if (downloading) {
-                        this->downloadFile(this->dataChannelSocket, file);
+                        this->downloadFile(file);
                     } else {
-                        this->uploadFile(this->dataChannelSocket, file);
+                        this->uploadFile(file);
                     }
+
+                    if (this->dataChannelSocket.is_open()) {
+                        this->dataChannelSocket.close();
+                    }
+
                     this->waitForFTPCommandResponse(this->commandResponse);
-                } else if (!this->passiveMode) {
-                    tcp::socket socket{ this->ioService};
-                    tcp::resolver::query query(this->dataChannelActiveAddresss, this->dataChannelActivePort);
-                    boost::asio::connect(socket, this->queryResolver.resolve(query));
-                    this->dataChannelListenThread->join();
+
                 }
+
             } catch (std::exception& e) {
-                if (this->dataChannelSocket.is_open()) {
-                    this->dataChannelSocket.close();
-                }
+                dataChannelTransferCleanup();
                 throw Exception(e.what());
             }
 
-            if (this->dataChannelSocket.is_open()) {
-                this->dataChannelSocket.close();
-            }
+            dataChannelTransferCleanup();
+
 
         }
 
         void CFTP::sendFTPCommand(const std::string& command) {
 
-            boost::asio::write(this->controlChannelSocket, boost::asio::buffer(&command[0], command.size()), this->socketError);
-            std::cout << command;
+            asio::write(this->controlChannelSocket, asio::buffer(&command[0], command.size()), this->socketError);
+
             if (this->socketError) {
                 throw Exception(this->socketError.message());
             }
@@ -339,13 +349,13 @@ namespace Antik {
 
         void CFTP::waitForFTPCommandResponse(std::string& commandResponse) {
 
-            size_t recvLength{ 0 };
-          
+            size_t recvLength{ 0};
+
             commandResponse.clear();
 
             for (;;) {
 
-                recvLength = this->controlChannelSocket.read_some(boost::asio::buffer(this->ioBuffer, this->ioBuffer.size()), this->socketError);
+                recvLength = this->controlChannelSocket.read_some(asio::buffer(this->ioBuffer, this->ioBuffer.size()), this->socketError);
 
                 if (recvLength == 0) {
                     commandResponse.clear();
@@ -360,7 +370,7 @@ namespace Antik {
                     break;
                 }
 
-                if (this->socketError == boost::asio::error::eof) {
+                if (this->socketError == asio::error::eof) {
                     break; // Connection closed cleanly by peer.
                 } else if (this->socketError) {
                     throw Exception(this->socketError.message());
@@ -417,9 +427,9 @@ namespace Antik {
                 Exception("Already connected to a server.");
             }
 
-            tcp::resolver::query query(this->serverName, this->serverPort);
+            ip::tcp::resolver::query query(this->serverName, this->serverPort);
 
-            boost::asio::connect(this->controlChannelSocket, this->queryResolver.resolve(query), this->socketError);
+            asio::connect(this->controlChannelSocket, this->queryResolver.resolve(query), this->socketError);
 
             if (this->socketError) {
                 throw Exception(this->socketError.message());
@@ -470,7 +480,7 @@ namespace Antik {
                 extractPassiveAddressPort(this->commandResponse);
                 return (this->extractStatusCode(this->commandResponse) == 227);
             } else {
-                this->dataChannelListenThread.reset(new std::thread(&CFTP::dataChannelLisenter, this));
+                this->dataChannelListenThread.reset(new std::thread(&CFTP::dataChannelTransferListener, this));
                 this->waitForFTPCommandResponse(this->commandResponse);
                 return (this->extractStatusCode(this->commandResponse) == 200);
             }
@@ -513,6 +523,8 @@ namespace Antik {
                 throw Exception("Not connected to server.");
             }
 
+            listOutput.clear();
+
             if (sendTransferMode()) {
                 this->sendFTPCommand("LIST " + directoryPath + "\r\n");
                 this->readDataChannelCommandResponse(listOutput);
@@ -527,6 +539,8 @@ namespace Antik {
             if (!this->bConnected) {
                 throw Exception("Not connected to server.");
             }
+
+            listOutput.clear();
 
             if (sendTransferMode()) {
                 this->sendFTPCommand("NLST " + directoryPath + "\r\n");
@@ -553,11 +567,11 @@ namespace Antik {
 
         std::uint16_t CFTP::getCurrentWoringDirectory(std::string &currentWoringDirectoryPath) {
 
-            std::string listing;
-
             if (!this->bConnected) {
                 throw Exception("Not connected to server.");
             }
+
+            currentWoringDirectoryPath.clear();
 
             this->sendFTPCommand("PWD\r\n");
             this->waitForFTPCommandResponse(this->commandResponse);

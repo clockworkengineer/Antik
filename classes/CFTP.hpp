@@ -22,6 +22,7 @@
 #include <fstream>
 #include <thread>
 #include <memory>
+#include <mutex>
 
 //
 // Boost ASIO
@@ -30,9 +31,6 @@
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
 #include <boost/filesystem.hpp>
-
-using boost::asio::ip::tcp;
-namespace fs = boost::filesystem;
 
 // =========
 // NAMESPACE
@@ -154,15 +152,16 @@ namespace Antik {
 
             void transferFile(const std::string &file, bool downloading);
             
-            void downloadFile(tcp::socket &socket, const std::string &file);
-            void uploadFile(tcp::socket &socket, const std::string &file);
+            void downloadFile(const std::string &file);
+            void uploadFile(const std::string &file);
                   
             void extractPassiveAddressPort(std::string &pasvResponse);
             
             std::string createPortCommand(); 
             std::uint16_t extractStatusCode(const std::string &commandResponse);
             
-            void dataChannelLisenter();
+            void dataChannelTransferListener();
+            void dataChannelTransferCleanup();
             
             // =================
             // PRIVATE VARIABLES
@@ -180,9 +179,11 @@ namespace Antik {
             boost::asio::io_service ioService;
             boost::array<char, 32*1024> ioBuffer;
             boost::system::error_code socketError;
-            tcp::socket controlChannelSocket { ioService };
-            tcp::socket dataChannelSocket { ioService };
-            tcp::resolver queryResolver { ioService };
+            boost::asio::ip::tcp::socket controlChannelSocket { ioService };
+            boost::asio::ip::tcp::socket dataChannelSocket { ioService };
+            boost::asio::ip::tcp::resolver queryResolver { ioService };
+            std::atomic<bool> isListenThreadRunning { false };
+          //  std::mutex listenThreadRunning;
             std::shared_ptr<std::thread> dataChannelListenThread;
                 
             std::string dataChannelPassiveAddresss;
