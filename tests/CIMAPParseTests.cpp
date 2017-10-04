@@ -70,8 +70,8 @@ protected:
 void CIMAPParseTests::checkListRespData(CIMAPParse::ListRespData &respData, uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr) {
 
     EXPECT_EQ(hierDel, respData.hierDel);
-    ASSERT_STREQ(attributesStr.c_str(), respData.attributesStr.c_str());
-    ASSERT_STREQ(mailBoxNameStr.c_str(), respData.mailBoxNameStr.c_str());
+    ASSERT_STREQ(attributesStr.c_str(), respData.attributes.c_str());
+    ASSERT_STREQ(mailBoxNameStr.c_str(), respData.mailBoxName.c_str());
 
 }
 
@@ -95,7 +95,7 @@ TEST_F(CIMAPParseTests, SELECTValid) {
     std::string commandResponseStr;
  
     for (auto str : selectResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -134,13 +134,13 @@ TEST_F(CIMAPParseTests, SELECTInvalidMailBox) {
     std::string commandResponseStr;
  
     for (auto str : selectResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
     EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::NO);
-    ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessageStr.c_str());
+    ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessage.c_str());
 
     EXPECT_FALSE(parsedResponse->bBYESent);
     
@@ -163,7 +163,7 @@ TEST_F(CIMAPParseTests, EXAMINEValid) {
     std::string commandResponseStr;
  
     for (auto str : examineResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -204,13 +204,13 @@ TEST_F(CIMAPParseTests, EXAMINEInvalidMailBox) {
     std::string commandResponseStr;
  
     for (auto str : examineResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
     EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::NO);
-    ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessageStr.c_str());
+    ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessage.c_str());
 
     EXPECT_FALSE(parsedResponse->bBYESent);
        
@@ -227,7 +227,7 @@ TEST_F(CIMAPParseTests, STATUSValid) {
     std::string commandResponseStr;
  
     for (auto str : statusResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -262,13 +262,13 @@ TEST_F(CIMAPParseTests, STATUSInvalidMailBox) {
     std::string commandResponseStr;
  
     for (auto str : statusResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
     
     EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::NO);
-    ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessageStr.c_str());
+    ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessage.c_str());
 
     EXPECT_FALSE(parsedResponse->bBYESent);
        
@@ -302,7 +302,7 @@ TEST_F(CIMAPParseTests, LISTValid) {
     std::string commandResponseStr;
  
     for (auto str : listResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -346,7 +346,7 @@ TEST_F(CIMAPParseTests, SEARCHValid) {
     std::string commandResponseStr;
  
     for (auto str : searchResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -382,7 +382,7 @@ TEST_F(CIMAPParseTests, UIDSEARCHValid) {
     std::string commandResponseStr;
  
     for (auto str : searchResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -435,7 +435,7 @@ TEST_F(CIMAPParseTests, LSUBValid) {
     std::string commandResponseStr;
  
     for (auto str : LSubResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -483,7 +483,7 @@ TEST_F(CIMAPParseTests, EXPUNGEValid) {
     std::string commandResponseStr;
  
     for (auto str : ExpungeResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -516,7 +516,7 @@ TEST_F(CIMAPParseTests, STOREValid) {
     std::string commandResponseStr;
  
     for (auto str : StoreResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -537,16 +537,16 @@ TEST_F(CIMAPParseTests, STOREValid) {
         EXPECT_EQ(9, parsedResponse->storeList[8].index);
         EXPECT_EQ(10, parsedResponse->storeList[9].index);
 
-        ASSERT_STREQ("(\\Seen \\Deleted)", parsedResponse->storeList[0].flagsListStr.c_str());
-        ASSERT_STREQ("(\\Seen \\Deleted)", parsedResponse->storeList[1].flagsListStr.c_str());
-        ASSERT_STREQ("(\\Seen \\Deleted)", parsedResponse->storeList[2].flagsListStr.c_str());
-        ASSERT_STREQ("(\\Seen \\Deleted)", parsedResponse->storeList[3].flagsListStr.c_str());
-        ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[4].flagsListStr.c_str());
-        ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[5].flagsListStr.c_str());
-        ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[6].flagsListStr.c_str());
-        ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[7].flagsListStr.c_str());
-        ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[8].flagsListStr.c_str());
-        ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[9].flagsListStr.c_str());
+        ASSERT_STREQ("(\\Seen \\Deleted)", parsedResponse->storeList[0].flagsList.c_str());
+        ASSERT_STREQ("(\\Seen \\Deleted)", parsedResponse->storeList[1].flagsList.c_str());
+        ASSERT_STREQ("(\\Seen \\Deleted)", parsedResponse->storeList[2].flagsList.c_str());
+        ASSERT_STREQ("(\\Seen \\Deleted)", parsedResponse->storeList[3].flagsList.c_str());
+        ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[4].flagsList.c_str());
+        ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[5].flagsList.c_str());
+        ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[6].flagsList.c_str());
+        ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[7].flagsList.c_str());
+        ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[8].flagsList.c_str());
+        ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[9].flagsList.c_str());
 
     }
 
@@ -567,7 +567,7 @@ TEST_F(CIMAPParseTests, CAPABILITYValid) {
     std::string commandResponseStr;
  
     for (auto str : capabilityResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -592,7 +592,7 @@ TEST_F(CIMAPParseTests, NOOPValid) {
     std::string commandResponseStr;
  
     for (auto str : noOpResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -619,7 +619,7 @@ TEST_F(CIMAPParseTests, IDLEValid) {
     std::string commandResponseStr;
  
     for (auto str : idleResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -647,7 +647,7 @@ TEST_F(CIMAPParseTests, LOGOUTValid) {
     std::string commandResponseStr;
  
     for (auto str : logOutResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
 
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -672,7 +672,7 @@ TEST_F(CIMAPParseTests, FETCHValid) {
     std::string commandResponseStr;
  
     for (auto str : fetchResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
@@ -715,7 +715,7 @@ TEST_F(CIMAPParseTests, FETCHValidWithBYE) {
     std::string commandResponseStr;
  
     for (auto str : fetchResponseStr) {
-        commandResponseStr.append( str + kEOLStr);
+        commandResponseStr.append( str + kEOL);
     }
     
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));

@@ -163,17 +163,17 @@ void CAppriseTests::gatherEvents(CApprise& watcher , EventCounts& evtTotals, int
 
         watcher.getEvent(evt);
 
-        if ((evt.id == CApprise::Event_add) && !evt.messageStr.empty()) {
+        if ((evt.id == CApprise::Event_add) && !evt.message.empty()) {
             evtTotals.add++;
-        } else if ((evt.id == CApprise::Event_addir) && !evt.messageStr.empty()) {
+        } else if ((evt.id == CApprise::Event_addir) && !evt.message.empty()) {
             evtTotals.addir++;
-        } else if ((evt.id == CApprise::Event_unlinkdir) && !evt.messageStr.empty()) {
+        } else if ((evt.id == CApprise::Event_unlinkdir) && !evt.message.empty()) {
             evtTotals.unlinkdir++;
-        } else if ((evt.id == CApprise::Event_unlink) && !evt.messageStr.empty()) {
+        } else if ((evt.id == CApprise::Event_unlink) && !evt.message.empty()) {
             evtTotals.unlink++;
-        } else if ((evt.id == CApprise::Event_change) && !evt.messageStr.empty()) {
+        } else if ((evt.id == CApprise::Event_change) && !evt.message.empty()) {
             evtTotals.change++;
-        } else if ((evt.id == CApprise::Event_error) && !evt.messageStr.empty()) {
+        } else if ((evt.id == CApprise::Event_error) && !evt.message.empty()) {
             evtTotals.error++;
         } 
         
