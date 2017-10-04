@@ -69,9 +69,9 @@ namespace fs = boost::filesystem;
 //
 
 struct ParamArgData {
-    std::string configFileNameStr; // Configuration file name
-    std::string zipFileNameStr; // ZIP Archive File Name
-    std::string sourceFolderNameStr;    // Source folder
+    std::string configFileName;      // Configuration file name
+    std::string zipFileName;         // ZIP Archive File Name
+    std::string sourceFolderName;    // Source folder
 };
 
 // ===============
@@ -82,9 +82,9 @@ struct ParamArgData {
 // Exit with error message/status
 //
 
-static void exitWithError(std::string errMsgStr) {
+static void exitWithError(std::string errMsg) {
 
-    std::cerr << errMsgStr << std::endl;
+    std::cerr << errMsg << std::endl;
     exit(EXIT_FAILURE);
 
 }
@@ -96,8 +96,8 @@ static void exitWithError(std::string errMsgStr) {
 static void addCommonOptions(po::options_description& commonOptions, ParamArgData &argData) {
 
     commonOptions.add_options()
-            ("source,s", po::value<std::string>(&argData.sourceFolderNameStr)->required(), "Source Folder To ZIP")
-            ("zip,z", po::value<std::string>(&argData.zipFileNameStr)->required(), "ZIP File Name");
+            ("source,s", po::value<std::string>(&argData.sourceFolderName)->required(), "Source Folder To ZIP")
+            ("zip,z", po::value<std::string>(&argData.zipFileName)->required(), "ZIP File Name");
 
 }
 
@@ -112,7 +112,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
     po::options_description commandLine("Command Line Options");
     commandLine.add_options()
             ("help", "Display help message")
-            ("config,c", po::value<std::string>(&argData.configFileNameStr), "Config File Name");
+            ("config,c", po::value<std::string>(&argData.configFileName), "Config File Name");
 
     addCommonOptions(commandLine, argData);
 
@@ -170,9 +170,9 @@ int main(int argc, char** argv) {
 
         procCmdLine(argc, argv, argData);
 
-        if (!argData.zipFileNameStr.empty()) {
+        if (!argData.zipFileName.empty()) {
 
-            CZIP zipFile(argData.zipFileNameStr);
+            CZIP zipFile(argData.zipFileName);
 
             // Create Archive
             
@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
             
             // Iterate recursively through folder hierarchy creating file list
             
-            fs::path zipFolder(argData.sourceFolderNameStr);
+            fs::path zipFolder(argData.sourceFolderName);
             fs::recursive_directory_iterator begin(zipFolder), end;
             std::vector<fs::directory_entry> fileNameList(begin, end);
             
@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
             
             // Save archive
             
-            std::cout << "Creating Archive " << argData.zipFileNameStr << "." << std::endl;           
+            std::cout << "Creating Archive " << argData.zipFileName  << "." << std::endl;           
             zipFile.close();
       
         }

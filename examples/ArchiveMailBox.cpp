@@ -80,14 +80,14 @@ namespace fs = boost::filesystem;
 //
 
 struct ParamArgData {
-    std::string userNameStr;        // Email account user name
-    std::string userPasswordStr;    // Email account user name password
-    std::string serverURLStr;       // SMTP server URL
-    std::string mailBoxNameStr;     // Mailbox name
-    fs::path destinationFolder;     // Destination folder for e-mail archive
-    std::string configFileNameStr;  // Configuration file name
-    bool bOnlyUpdates {false };     // = true search date since last .eml archived
-    bool bAllMailBoxes {false };    // = true archive all mailboxes
+    std::string userName;        // Email account user name
+    std::string userPassword;    // Email account user name password
+    std::string serverURL;       // SMTP server URL
+    std::string mailBoxName;     // Mailbox name
+    fs::path destinationFolder;  // Destination folder for e-mail archive
+    std::string configFileName;  // Configuration file name
+    bool bOnlyUpdates {false };  // = true search date since last .eml archived
+    bool bAllMailBoxes {false }; // = true archive all mailboxes
 
 };
 
@@ -111,12 +111,12 @@ constexpr const  char *kEMLFileExt { ".eml" };
 // Exit with error message/status
 //
 
-static void exitWithError(const std::string errMsgStr) {
+static void exitWithError(const std::string errMsg) {
 
     // Closedown email, display error and exit.
 
     CIMAP::closedown();
-    std::cerr << errMsgStr << std::endl;
+    std::cerr << errMsg << std::endl;
     exit(EXIT_FAILURE);
 
 }
@@ -128,10 +128,10 @@ static void exitWithError(const std::string errMsgStr) {
 static void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
 
     commonOptions.add_options()
-            ("server,s", po::value<std::string>(&argData.serverURLStr)->required(), "IMAP Server URL and port")
-            ("user,u", po::value<std::string>(&argData.userNameStr)->required(), "Account username")
-            ("password,p", po::value<std::string>(&argData.userPasswordStr)->required(), "User password")
-            ("mailbox,m", po::value<std::string>(&argData.mailBoxNameStr)->required(), "Mailbox name")
+            ("server,s", po::value<std::string>(&argData.serverURL)->required(), "IMAP Server URL and port")
+            ("user,u", po::value<std::string>(&argData.userName)->required(), "Account username")
+            ("password,p", po::value<std::string>(&argData.userPassword)->required(), "User password")
+            ("mailbox,m", po::value<std::string>(&argData.mailBoxName)->required(), "Mailbox name")
             ("destination,d", po::value<fs::path>(&argData.destinationFolder)->required(), "Destination for e-mail archive")
             ("updates,u", "Search since last file archived.")
             ("all,a", "Download files for all mailboxes.");
@@ -149,7 +149,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
     po::options_description commandLine("Program Options");
     commandLine.add_options()
             ("help", "Print help messages")
-            ("config,c", po::value<std::string>(&argData.configFileNameStr)->required(), "Config File Name");
+            ("config,c", po::value<std::string>(&argData.configFileName)->required(), "Config File Name");
 
     addCommonOptions(commandLine, argData);
 
@@ -209,22 +209,22 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Parse command response and return pointer to parsed data.
 //
 
-static CIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& commandStr, 
-                             const std::string& commandResponseStr) {
+static CIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& command, 
+                             const std::string& commandResponse) {
 
     CIMAPParse::COMMANDRESPONSE parsedResponse;
 
     try {
-        parsedResponse = CIMAPParse::parseResponse(commandResponseStr);
+        parsedResponse = CIMAPParse::parseResponse(commandResponse);
     } catch (CIMAPParse::Exception &e) {
-        std::cerr << "RESPONSE IN ERRROR: [" << commandResponseStr << "]" << std::endl;
+        std::cerr << "RESPONSE IN ERRROR: [" << commandResponse << "]" << std::endl;
         throw (e);
     }
 
     if (parsedResponse->bBYESent) {
         throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessage);
     } else if (parsedResponse->status != CIMAPParse::RespCode::OK) {
-        throw CIMAP::Exception(commandStr + ": " + parsedResponse->errorMessage);
+        throw CIMAP::Exception(command + ": " + parsedResponse->errorMessage);
     }
 
     return (parsedResponse);
@@ -235,19 +235,19 @@ static CIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& comma
 // Send command to IMAP server. At present it checks for any errors and just exits.
 //
 
-static std::string sendCommand(CIMAP& imap, const std::string& mailBoxNameStr, 
-                           const std::string& commandStr) {
+static std::string sendCommand(CIMAP& imap, const std::string& mailBoxName, 
+                           const std::string& command) {
 
-    std::string commandResponseStr;
+    std::string commandResponse;
 
     try {
-        commandResponseStr = imap.sendCommand(commandStr);
+        commandResponse = imap.sendCommand(command);
     } catch (CIMAP::Exception &e) {
         std::cerr << "IMAP ERROR: Need to reconnect to server" << std::endl;
         throw (e);
     }
 
-    return (commandResponseStr);
+    return (commandResponse);
 
 }
 
@@ -255,15 +255,15 @@ static std::string sendCommand(CIMAP& imap, const std::string& mailBoxNameStr,
 // Fetch a given e-mails body and subject line and create an .eml file for it.
 //
 
-static void fetchEmailAndArchive(CIMAP& imap, const std::string& mailBoxNameStr, 
+static void fetchEmailAndArchive(CIMAP& imap, const std::string& mailBoxName, 
                      const fs::path& destinationFolder, std::uint64_t index) {
 
-    std::string commandStr, commandResponseStr, subject, emailBody;
+    std::string command, commandResponse, subject, emailBody;
     CIMAPParse::COMMANDRESPONSE parsedResponse;
 
-    commandStr = "UID FETCH " + std::to_string(index) + " (BODY[] BODY[HEADER.FIELDS (SUBJECT)])";
-    commandResponseStr = sendCommand(imap, mailBoxNameStr, commandStr);
-    parsedResponse = parseCommandResponse(commandStr, commandResponseStr);
+    command = "UID FETCH " + std::to_string(index) + " (BODY[] BODY[HEADER.FIELDS (SUBJECT)])";
+    commandResponse = sendCommand(imap, mailBoxName, command);
+    parsedResponse = parseCommandResponse(command, commandResponse);
 
     if (parsedResponse) {
 
@@ -297,9 +297,9 @@ static void fetchEmailAndArchive(CIMAP& imap, const std::string& mailBoxNameStr,
                 std::ofstream emlFileStream(fullFilePath.string(), std::ios::binary);
                 if (emlFileStream.is_open()) {
                     std::cout << "Creating [" << fullFilePath.native() << "]" << std::endl;
-                    for (std::string lineStr; std::getline(emailBodyStream, lineStr, '\n');) {
-                        lineStr.push_back('\n');
-                        emlFileStream.write(&lineStr[0], lineStr.length());
+                    for (std::string line; std::getline(emailBodyStream, line, '\n');) {
+                        line.push_back('\n');
+                        emlFileStream.write(&line[0], line.length());
                     }
                 } else {
                     std::cerr << "Failed to create file [" << fullFilePath << "]" << std::endl;
@@ -347,12 +347,12 @@ static void createMailBoxList(CIMAP& imap, const ParamArgData& argData,
                        std::vector<std::string>& mailBoxList) {
 
     if (argData.bAllMailBoxes) {
-        std::string commandStr, commandResponseStr;
+        std::string command, commandResponse;
         CIMAPParse::COMMANDRESPONSE parsedResponse;
 
-        commandStr = "LIST \"\" *";
-        commandResponseStr = sendCommand(imap, "", commandStr);
-        parsedResponse = parseCommandResponse(commandStr, commandResponseStr);
+        command = "LIST \"\" *";
+        commandResponse = sendCommand(imap, "", command);
+        parsedResponse = parseCommandResponse(command, commandResponse);
 
         if (parsedResponse) {
 
@@ -365,11 +365,11 @@ static void createMailBoxList(CIMAP& imap, const ParamArgData& argData,
 
         }
     } else {
-        std::istringstream mailBoxStream(argData.mailBoxNameStr);
-        for (std::string mailBoxStr; std::getline(mailBoxStream, mailBoxStr, ',');) {
-            mailBoxStr = mailBoxStr.substr(mailBoxStr.find_first_not_of(' '));
-            mailBoxStr = mailBoxStr.substr(0, mailBoxStr.find_last_not_of(' ') + 1);
-            mailBoxList.push_back(mailBoxStr);
+        std::istringstream mailBoxStream(argData.mailBoxName);
+        for (std::string mailBox; std::getline(mailBoxStream, mailBox, ',');) {
+            mailBox = mailBox.substr(mailBox.find_first_not_of(' '));
+            mailBox = mailBox.substr(0, mailBox.find_last_not_of(' ') + 1);
+            mailBoxList.push_back(mailBox);
         }
     }
 }
@@ -396,12 +396,12 @@ int main(int argc, char** argv) {
 
         // Set mail account user name and password
 
-        imap.setServer(argData.serverURLStr);
-        imap.setUserAndPassword(argData.userNameStr, argData.userPasswordStr);
+        imap.setServer(argData.serverURL);
+        imap.setUserAndPassword(argData.userName, argData.userPassword);
 
         // Connect
 
-        std::cout << "Connecting to server [" << argData.serverURLStr << "]" << std::endl;
+        std::cout << "Connecting to server [" << argData.serverURL << "]" << std::endl;
 
         imap.connect();
 
@@ -409,29 +409,29 @@ int main(int argc, char** argv) {
 
         createMailBoxList(imap, argData, mailBoxList);
 
-        for (std::string mailBoxStr : mailBoxList) {
+        for (std::string mailBox : mailBoxList) {
 
             CIMAPParse::COMMANDRESPONSE parsedResponse;
             fs::path mailBoxPath;
-            std::string commandStr, commandResponseStr;
+            std::string command, commandResponse;
             std::uint64_t searchUID=0;
             
-            std::cout << "MAIL BOX [" << mailBoxStr << "]" << std::endl;
+            std::cout << "MAIL BOX [" << mailBox << "]" << std::endl;
 
             // SELECT mailbox
 
-            commandStr = "SELECT " + mailBoxStr;
-            commandResponseStr = sendCommand(imap, mailBoxStr, commandStr);
-            parsedResponse = parseCommandResponse(commandStr, commandResponseStr);
+            command = "SELECT " + mailBox;
+            commandResponse = sendCommand(imap, mailBox, command);
+            parsedResponse = parseCommandResponse(command, commandResponse);
 
             // Clear any quotes from mailbox name for folder name
 
-            if (mailBoxStr.front() == '\"') mailBoxStr = mailBoxStr.substr(1);
-            if (mailBoxStr.back() == '\"') mailBoxStr.pop_back();
+            if (mailBox.front() == '\"') mailBox = mailBox.substr(1);
+            if (mailBox.back() == '\"') mailBox.pop_back();
 
             // Create destination folder
 
-            mailBoxPath = argData.destinationFolder / mailBoxStr;
+            mailBoxPath = argData.destinationFolder / mailBox;
             if (!argData.destinationFolder.string().empty() && !fs::exists(mailBoxPath)) {
                 std::cout << "Creating destination folder = [" << mailBoxPath.native() << "]" << std::endl;
                 fs::create_directories(mailBoxPath);
@@ -447,27 +447,27 @@ int main(int argc, char** argv) {
 
             if (searchUID!=0) { // Updates
                 std::cout << "Searching from [" << std::to_string(searchUID) << "]" << std::endl;
-                commandStr = "UID SEARCH UID "+std::to_string(searchUID)+":*";
+                command = "UID SEARCH UID "+std::to_string(searchUID)+":*";
             } else {            // All
-                commandStr = "UID SEARCH UID 1:*";
+                command = "UID SEARCH UID 1:*";
             }
 
-            commandResponseStr = sendCommand(imap, mailBoxStr, commandStr);
+            commandResponse = sendCommand(imap, mailBox, command);
             
             // Archive any email returned from search
             
-            parsedResponse = parseCommandResponse(commandStr, commandResponseStr);
+            parsedResponse = parseCommandResponse(command, commandResponse);
             if (parsedResponse) {
                 for (auto index : parsedResponse->indexes) {
                     if (index != searchUID) {
-                        fetchEmailAndArchive(imap, mailBoxStr, mailBoxPath, index);
+                        fetchEmailAndArchive(imap, mailBox, mailBoxPath, index);
                     }
                 }
             }
 
         }
 
-        std::cout << "Disconnecting from server [" << argData.serverURLStr << "]" << std::endl;
+        std::cout << "Disconnecting from server [" << argData.serverURL << "]" << std::endl;
 
         imap.disconnect();
 

@@ -72,8 +72,8 @@ namespace Antik {
             struct Options {
                 uint32_t inotifyWatchMask;                  // inotify watch event mask
                 bool bDisplayInotifyEvent;                  // ==true then display inotify event to coutstr
-                Antik::Util::CLogger::LogingsFn coutstr; // coutstr output
-                Antik::Util::CLogger::LogingsFn cerrstr; // cerrstr output
+                Antik::Util::CLogger::LogStringsFn coutstr; // coutstr output
+                Antik::Util::CLogger::LogStringsFn cerrstr; // cerrstr output
             };
 
             //
@@ -261,8 +261,8 @@ namespace Antik {
 
             // Trace functions default (do nothing).
 
-            Antik::Util::CLogger::LogingsFn m_coutstr { Antik::Util::CLogger::noOp };
-            Antik::Util::CLogger::LogingsFn m_cerrstr { Antik::Util::CLogger::noOp };
+            Antik::Util::CLogger::LogStringsFn m_coutstr { Antik::Util::CLogger::noOp };
+            Antik::Util::CLogger::LogStringsFn m_cerrstr { Antik::Util::CLogger::noOp };
 
         };
 

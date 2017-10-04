@@ -70,8 +70,8 @@ namespace Antik {
 
             struct TaskOptions {
                 int killCount; // file kill count
-                Antik::Util::CLogger::LogingsFn coutstr; // coutstr output
-                Antik::Util::CLogger::LogingsFn cerrstr; // cerrstr output
+                Antik::Util::CLogger::LogStringsFn coutstr; // coutstr output
+                Antik::Util::CLogger::LogStringsFn cerrstr; // cerrstr output
             };
 
             // ===========
@@ -166,8 +166,8 @@ namespace Antik {
             // Trace functions default do nothing
             //
 
-            Antik::Util::CLogger::LogingsFn m_coutstr { Antik::Util::CLogger::noOp };
-            Antik::Util::CLogger::LogingsFn m_cerrstr { Antik::Util::CLogger::noOp };
+            Antik::Util::CLogger::LogStringsFn m_coutstr { Antik::Util::CLogger::noOp };
+            Antik::Util::CLogger::LogStringsFn m_cerrstr { Antik::Util::CLogger::noOp };
 
             std::string m_prefix; // Task trace prefix
 

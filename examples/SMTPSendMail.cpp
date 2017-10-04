@@ -73,14 +73,14 @@ namespace fs = boost::filesystem;
 //
 
 struct ParamArgData {
-    std::string userNameStr; // Email account user name
-    std::string userPasswordStr; // Email account user name password
-    std::string serverURLStr; // SMTP server URL
-    std::string configFileNameStr;  // Configuration file name
-    std::string recipientsStr;  // List of recipeints
-    std::string subjectStr; // Email subject
-    std::string mailContentsFileStr;    // File containing email contents
-    std::string attachmentListStr;  // List of attachments
+    std::string userName;          // Email account user name
+    std::string userPassword;      // Email account user name password
+    std::string serverURL;         // SMTP server URL
+    std::string configFileName;    // Configuration file name
+    std::string recipients;        // List of recipeints
+    std::string subject;           // Email subject
+    std::string mailContentsFile;  // File containing email contents
+    std::string attachmentList;    // List of attachments
 };
 
 // ===============
@@ -91,12 +91,12 @@ struct ParamArgData {
 // Exit with error message/status
 //
 
-static void exitWithError(std::string errMsgStr) {
+static void exitWithError(std::string errMsg) {
 
     // Closedown SMTP transport and display error and exit.
 
     CSMTP::closedown();
-    std::cerr << errMsgStr << std::endl;
+    std::cerr << errMsg << std::endl;
     exit(EXIT_FAILURE);
 
 }
@@ -108,13 +108,13 @@ static void exitWithError(std::string errMsgStr) {
 static void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
 
     commonOptions.add_options()
-            ("server,s", po::value<std::string>(&argData.serverURLStr)->required(), "SMTP Server URL and port")
-            ("user,u", po::value<std::string>(&argData.userNameStr)->required(), "Account username")
-            ("password,p", po::value<std::string>(&argData.userPasswordStr)->required(), "User password")
-            ("recipients,r", po::value<std::string>(&argData.recipientsStr)->required(), "Recipients list")
-            ("subject,s", po::value<std::string>(&argData.subjectStr)->required(), "Email subject")
-            ("contents,c", po::value<std::string>(&argData.mailContentsFileStr)->required(), "File containing email contents")
-            ("attachments,a", po::value<std::string>(&argData.attachmentListStr)->required(), "File Attachments List");
+            ("server,s", po::value<std::string>(&argData.serverURL)->required(), "SMTP Server URL and port")
+            ("user,u", po::value<std::string>(&argData.userName)->required(), "Account username")
+            ("password,p", po::value<std::string>(&argData.userPassword)->required(), "User password")
+            ("recipients,r", po::value<std::string>(&argData.recipients)->required(), "Recipients list")
+            ("subject,s", po::value<std::string>(&argData.subject)->required(), "Email subject")
+            ("contents,c", po::value<std::string>(&argData.mailContentsFile)->required(), "File containing email contents")
+            ("attachments,a", po::value<std::string>(&argData.attachmentList)->required(), "File Attachments List");
 
 }
 
@@ -132,7 +132,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
     po::options_description commandLine("Program Options");
     commandLine.add_options()
             ("help", "Print help messages")
-            ("config,c", po::value<std::string>(&argData.configFileNameStr)->required(), "Config File Name");
+            ("config,c", po::value<std::string>(&argData.configFileName)->required(), "Config File Name");
 
     addCommonOptions(commandLine, argData);
 
@@ -197,26 +197,26 @@ int main(int argc, char** argv) {
 
         // Set server and account details
         
-        mail.setServer(argData.serverURLStr);
-        mail.setUserAndPassword(argData.userNameStr, argData.userPasswordStr);
+        mail.setServer(argData.serverURL);
+        mail.setUserAndPassword(argData.userName, argData.userPassword);
 
         // Set Sender and recipients
         
-        mail.setFromAddress("<" + argData.userNameStr + ">");
-        mail.setToAddress(argData.recipientsStr);
+        mail.setFromAddress("<" + argData.userName + ">");
+        mail.setToAddress(argData.recipients);
 
         // Set mail subject
         
-        mail.setMailSubject(argData.subjectStr);
+        mail.setMailSubject(argData.subject);
 
         // Set mail contents
         
-        if (!argData.configFileNameStr.empty()) {
-            if (fs::exists(argData.mailContentsFileStr)) {
-                std::ifstream mailContentsStream(argData.mailContentsFileStr);
+        if (!argData.configFileName.empty()) {
+            if (fs::exists(argData.mailContentsFile)) {
+                std::ifstream mailContentsStream(argData.mailContentsFile);
                 if (mailContentsStream.is_open()) {
-                    for (std::string lineStr; std::getline(mailContentsStream, lineStr, '\n');) {
-                        mailMessage.push_back(lineStr);
+                    for (std::string line; std::getline(mailContentsStream, line, '\n');) {
+                        mailMessage.push_back(line);
                     }
                     mail.setMailMessage(mailMessage);
                 }
@@ -225,16 +225,16 @@ int main(int argc, char** argv) {
 
         // Add any attachments. Note all base64 encoded.
         
-        if (!argData.attachmentListStr.empty()) {
-            std::istringstream attachListStream(argData.attachmentListStr);
-            for (std::string attachmentStr; std::getline(attachListStream, attachmentStr, ',');) {
-                attachmentStr = attachmentStr.substr(attachmentStr.find_first_not_of(' '));
-                attachmentStr = attachmentStr.substr(0, attachmentStr.find_last_not_of(' ') + 1);
-                if (fs::exists(attachmentStr)){
-                    std::cout << "Attaching file [" << attachmentStr << "]" << std::endl;
-                    mail.addFileAttachment(attachmentStr, Antik::File::CMIME::getFileMIMEType(attachmentStr), "base64");
+        if (!argData.attachmentList.empty()) {
+            std::istringstream attachListStream(argData.attachmentList);
+            for (std::string attachment; std::getline(attachListStream, attachment, ',');) {
+                attachment = attachment.substr(attachment.find_first_not_of(' '));
+                attachment = attachment.substr(0, attachment.find_last_not_of(' ') + 1);
+                if (fs::exists(attachment)){
+                    std::cout << "Attaching file [" << attachment << "]" << std::endl;
+                    mail.addFileAttachment(attachment, Antik::File::CMIME::getFileMIMEType(attachment), "base64");
                 } else {
-                    std::cout << "File does not exist [" << attachmentStr << "]" << std::endl;
+                    std::cout << "File does not exist [" << attachment << "]" << std::endl;
                 }
 
             }

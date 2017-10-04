@@ -74,12 +74,12 @@ namespace fs = boost::filesystem;
 //
 
 struct ParamArgData {
-    std::string userNameStr;            // Email account user name
-    std::string userPasswordStr;        // Email account user name password
-    std::string serverURLStr;           // SMTP server URL
-    std::string mailBoxNameStr;         // Mailbox name
-    fs::path destinationFolder;         // Destination folder for attachments
-    std::string configFileNameStr;      // Configuration file name
+    std::string userName;            // Email account user name
+    std::string userPassword;        // Email account user name password
+    std::string serverURL;           // SMTP server URL
+    std::string mailBoxName;         // Mailbox name
+    fs::path destinationFolder;      // Destination folder for attachments
+    std::string configFileName;      // Configuration file name
 };
 
 // ===============
@@ -90,12 +90,12 @@ struct ParamArgData {
 // Exit with error message/status
 //
 
-static void exitWithError(std::string errMsgStr) {
+static void exitWithError(std::string errMsg) {
 
     // Closedown email, display error and exit.
 
     CIMAP::closedown();
-    std::cerr << errMsgStr << std::endl;
+    std::cerr << errMsg << std::endl;
     exit(EXIT_FAILURE);
 
 }
@@ -107,10 +107,10 @@ static void exitWithError(std::string errMsgStr) {
 static void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
     
     commonOptions.add_options()
-            ("server,s", po::value<std::string>(&argData.serverURLStr)->required(), "IMAP Server URL and port")
-            ("user,u", po::value<std::string>(&argData.userNameStr)->required(), "Account username")
-            ("password,p", po::value<std::string>(&argData.userPasswordStr)->required(), "User password")
-            ("mailbox,m", po::value<std::string>(&argData.mailBoxNameStr)->required(), "Mailbox name")
+            ("server,s", po::value<std::string>(&argData.serverURL)->required(), "IMAP Server URL and port")
+            ("user,u", po::value<std::string>(&argData.userName)->required(), "Account username")
+            ("password,p", po::value<std::string>(&argData.userPassword)->required(), "User password")
+            ("mailbox,m", po::value<std::string>(&argData.mailBoxName)->required(), "Mailbox name")
             ("destination,d", po::value<fs::path>(&argData.destinationFolder)->required(), "Destination for attachments");
 
 }
@@ -125,7 +125,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
     po::options_description commandLine("Program Options");
     commandLine.add_options()
             ("help", "Print help messages")
-            ("config,c", po::value<std::string>(&argData.configFileNameStr)->required(), "Config File Name");
+            ("config,c", po::value<std::string>(&argData.configFileName)->required(), "Config File Name");
 
     addCommonOptions(commandLine, argData);
     
@@ -175,8 +175,8 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
 static void downloadAttachment(CIMAP& imap, fs::path& destinationFolder, CIMAPBodyStruct::Attachment &attachment) {
 
-    std::string commandLineStr("FETCH " + attachment.index + " BODY[" + attachment.partNo + "]");
-    std::string parsedResponseStr(imap.sendCommand(commandLineStr));
+    std::string commandLine("FETCH " + attachment.index + " BODY[" + attachment.partNo + "]");
+    std::string parsedResponseStr(imap.sendCommand(commandLine));
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(parsedResponseStr));
 
     if ((parsedResponse->status == CIMAPParse::RespCode::BAD) ||
@@ -192,16 +192,16 @@ static void downloadAttachment(CIMAP& imap, fs::path& destinationFolder, CIMAPBo
                 fs::path fullFilePath = destinationFolder / attachment.fileName;
 
                 if (!fs::exists(fullFilePath)) {
-                    std::string decodedStringStr;
+                    std::string decodedString;
                     std::istringstream responseStream(resp.second);
                     std::ofstream attachmentFileStream(fullFilePath.string(), std::ios::binary);
                     if (attachmentFileStream.is_open()) {
                         std::cout << "Creating [" << fullFilePath.native() << "]" << std::endl;
                         // Encoded lines have terminating '\r\n' the getline removes '\n'
-                        for (std::string lineStr; std::getline(responseStream, lineStr, '\n');) {
-                            lineStr.pop_back(); // Remove '\r'
-                            CSMTP::decodeFromBase64(lineStr, decodedStringStr, lineStr.length());
-                            attachmentFileStream.write(&decodedStringStr[0], decodedStringStr.length());
+                        for (std::string line; std::getline(responseStream, line, '\n');) {
+                            line.pop_back(); // Remove '\r'
+                            CSMTP::decodeFromBase64(line, decodedString, line.length());
+                            attachmentFileStream.write(&decodedString[0], decodedString.length());
                         }
                     } else {
                         std::cout << "Failed to create file [" << fullFilePath.native() << "]" << std::endl;
@@ -217,12 +217,12 @@ static void downloadAttachment(CIMAP& imap, fs::path& destinationFolder, CIMAPBo
 // For a passed in BODTSTRUCTURE parse and download any base64 encoded attachments.
 //
 
-static void getBodyStructAttachments(CIMAP& imap, std::uint64_t index, fs::path & destinationFolder, const std::string& bodyStructureStr) {
+static void getBodyStructAttachments(CIMAP& imap, std::uint64_t index, fs::path & destinationFolder, const std::string& bodyStructure) {
 
     std::unique_ptr<CIMAPBodyStruct::BodyNode> treeBase{ new CIMAPBodyStruct::BodyNode()};
     std::shared_ptr<void> attachmentData{ new CIMAPBodyStruct::AttachmentData()};
 
-    CIMAPBodyStruct::consructBodyStructTree(treeBase, bodyStructureStr);
+    CIMAPBodyStruct::consructBodyStructTree(treeBase, bodyStructure);
     CIMAPBodyStruct::walkBodyStructTree(treeBase, CIMAPBodyStruct::attachmentFn, attachmentData);
 
     auto attachments = static_cast<CIMAPBodyStruct::AttachmentData *> (attachmentData.get());
@@ -253,7 +253,7 @@ int main(int argc, char** argv) {
 
         ParamArgData argData;
         CIMAP imap;
-        std::string parsedResponseStr;
+        std::string comandResponse;
         CIMAPParse::COMMANDRESPONSE  parsedResponse;
 
         // Read in command line parameters and process
@@ -266,12 +266,12 @@ int main(int argc, char** argv) {
 
         // Set mail account user name and password
         
-        imap.setServer(argData.serverURLStr);
-        imap.setUserAndPassword(argData.userNameStr, argData.userPasswordStr);
+        imap.setServer(argData.serverURL);
+        imap.setUserAndPassword(argData.userName, argData.userPassword);
 
        // Create destination folder
 
-        argData.destinationFolder += argData.mailBoxNameStr;
+        argData.destinationFolder += argData.mailBoxName;
         if (!argData.destinationFolder.string().empty() && !fs::exists(argData.destinationFolder)) {
             std::cout << "Creating destination folder = [" << argData.destinationFolder.native() << "]" << std::endl;
             fs::create_directories(argData.destinationFolder);
@@ -279,14 +279,14 @@ int main(int argc, char** argv) {
         
         // Connect
  
-        std::cout << "Connecting to server [" << argData.serverURLStr << "]" << std::endl;
+        std::cout << "Connecting to server [" << argData.serverURL << "]" << std::endl;
                
         imap.connect();
 
         // SELECT mailbox
         
-        parsedResponseStr=imap.sendCommand("SELECT "+argData.mailBoxNameStr);
-        parsedResponse = CIMAPParse::parseResponse(parsedResponseStr);
+        comandResponse=imap.sendCommand("SELECT "+argData.mailBoxName);
+        parsedResponse = CIMAPParse::parseResponse(comandResponse);
         if (parsedResponse->status != CIMAPParse::RespCode::OK) {
             throw CIMAP::Exception("IMAP SELECT "+parsedResponse->errorMessage);
         } else if (parsedResponse->bBYESent) {
@@ -295,8 +295,8 @@ int main(int argc, char** argv) {
 
         // FETCH BODYSTRUCTURE for all mail
         
-        parsedResponseStr=imap.sendCommand("FETCH 1:* BODYSTRUCTURE");
-        parsedResponse = CIMAPParse::parseResponse(parsedResponseStr);
+        comandResponse=imap.sendCommand("FETCH 1:* BODYSTRUCTURE");
+        parsedResponse = CIMAPParse::parseResponse(comandResponse);
         if (parsedResponse->status != CIMAPParse::RespCode::OK) {
             throw CIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessage);
         }  else if (parsedResponse->bBYESent) {
@@ -318,7 +318,7 @@ int main(int argc, char** argv) {
             }
         }
          
-        std::cout << "Disconnecting from server [" << argData.serverURLStr << "]" << std::endl;
+        std::cout << "Disconnecting from server [" << argData.serverURL << "]" << std::endl;
 
         imap.disconnect();
 

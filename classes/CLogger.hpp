@@ -42,13 +42,13 @@ namespace Antik {
         // Logging output function
         //
 
-        typedef std::function<void (const std::initializer_list<std::string>&) > LogingsFn;
+        typedef std::function<void (const std::initializer_list<std::string>&) > LogStringsFn;
 
         //
         // NoOp output function
         //
 
-        static const LogingsFn  noOp;
+        static const LogStringsFn  noOp;
 
         // ============
         // CONSTRUCTORS

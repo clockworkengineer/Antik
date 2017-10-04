@@ -69,9 +69,9 @@ namespace fs = boost::filesystem;
 //
 
 struct ParamArgData {
-    std::string configFileNameStr; // Configuration file name
-    std::string zipFileNameStr; // ZIP Archive File Name
-    std::string destinationFolderNameStr; // Destination folder
+    std::string configFileName;        // Configuration file name
+    std::string zipFileName;           // ZIP Archive File Name
+    std::string destinationFolderName; // Destination folder
 };
 
 // ===============
@@ -82,9 +82,9 @@ struct ParamArgData {
 // Exit with error message/status
 //
 
-static void exitWithError(std::string errMsgStr) {
+static void exitWithError(std::string errMsg) {
 
-    std::cerr << errMsgStr << std::endl;
+    std::cerr << errMsg << std::endl;
     exit(EXIT_FAILURE);
 
 }
@@ -96,8 +96,8 @@ static void exitWithError(std::string errMsgStr) {
 static void addCommonOptions(po::options_description& commonOptions, ParamArgData &argData) {
 
     commonOptions.add_options()
-            ("destination,d", po::value<std::string>(&argData.destinationFolderNameStr)->required(), "Destination folder for extract")
-            ("zip,z", po::value<std::string>(&argData.zipFileNameStr)->required(), "ZIP Archive Name");
+            ("destination,d", po::value<std::string>(&argData.destinationFolderName)->required(), "Destination folder for extract")
+            ("zip,z", po::value<std::string>(&argData.zipFileName)->required(), "ZIP Archive Name");
 
 }
 
@@ -112,7 +112,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
     po::options_description commandLine("Command Line Options");
     commandLine.add_options()
             ("help", "Display help message")
-            ("config,c", po::value<std::string>(&argData.configFileNameStr), "Config File Name");
+            ("config,c", po::value<std::string>(&argData.configFileName), "Config File Name");
 
     addCommonOptions(commandLine, argData);
 
@@ -174,14 +174,14 @@ int main(int argc, char** argv) {
 
         procCmdLine(argc, argv, argData);
 
-        if (!argData.zipFileNameStr.empty()) {
+        if (!argData.zipFileName.empty()) {
 
-            CZIP zipFile(argData.zipFileNameStr);
+            CZIP zipFile(argData.zipFileName);
 
             // Create destination folder
             
-            if (!fs::exists(argData.destinationFolderNameStr)) {
-                fs::create_directories(argData.destinationFolderNameStr);
+            if (!fs::exists(argData.destinationFolderName)) {
+                fs::create_directories(argData.destinationFolderName);
             }
 
             // Open archive and extract a content list
@@ -193,7 +193,7 @@ int main(int argc, char** argv) {
             // For each file create any directory hierarchy needed and extract file.
             
             for (auto & file : zipContents) {
-                fs::path destinationPath(argData.destinationFolderNameStr + file.fileName);
+                fs::path destinationPath(argData.destinationFolderName + file.fileName);
                 if (!fs::exists(destinationPath.parent_path())) {
                     fs::create_directories(destinationPath.parent_path());
                 }

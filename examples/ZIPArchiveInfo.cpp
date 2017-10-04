@@ -64,8 +64,8 @@ namespace fs = boost::filesystem;
 //
 
 struct ParamArgData {
-    std::string configFileNameStr; // Configuration file name
-    std::string zipFileNameStr; // ZIP Archive File Name
+    std::string configFileName; // Configuration file name
+    std::string zipFileName;    // ZIP Archive File Name
 };
 
 // ===============
@@ -76,9 +76,9 @@ struct ParamArgData {
 // Exit with error message/status
 //
 
-static void exitWithError(std::string errMsgStr) {
+static void exitWithError(std::string errMsg) {
 
-    std::cerr << errMsgStr << std::endl;
+    std::cerr << errMsg << std::endl;
     exit(EXIT_FAILURE);
 
 }
@@ -90,7 +90,7 @@ static void exitWithError(std::string errMsgStr) {
 static void addCommonOptions(po::options_description& commonOptions, ParamArgData &argData) {
 
     commonOptions.add_options()
-            ("zip,z", po::value<std::string>(&argData.zipFileNameStr)->required(), "ZIP Archive Name");
+            ("zip,z", po::value<std::string>(&argData.zipFileName)->required(), "ZIP Archive Name");
 
 }
 
@@ -105,7 +105,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
     po::options_description commandLine("Command Line Options");
     commandLine.add_options()
             ("help", "Display help message")
-            ("config,c", po::value<std::string>(&argData.configFileNameStr), "Config File Name");
+            ("config,c", po::value<std::string>(&argData.configFileName), "Config File Name");
 
     addCommonOptions(commandLine, argData);
 
@@ -273,14 +273,14 @@ int main(int argc, char** argv) {
 
         procCmdLine(argc, argv, argData);
 
-        if (!argData.zipFileNameStr.empty()) {
+        if (!argData.zipFileName.empty()) {
 
             CZIPIO zipFile;
             CZIPIO::EOCentralDirectoryRecord endOfCentralDirectory;
 
             //  Open zip file for read
 
-            zipFile.openZIPFile(argData.zipFileNameStr, std::ios::in);
+            zipFile.openZIPFile(argData.zipFileName, std::ios::in);
 
             // Read End Of Central Directory and display info
 

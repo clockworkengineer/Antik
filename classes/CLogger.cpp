@@ -56,7 +56,7 @@ namespace Antik {
 
     // Log output no op
 
-    const CLogger::LogingsFn CLogger::noOp = [] (const std::initializer_list<std::string>& outstr) {
+    const CLogger::LogStringsFn CLogger::noOp = [] (const std::initializer_list<std::string>& outstr) {
     };
 
     // ========================
