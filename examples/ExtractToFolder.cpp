@@ -193,11 +193,11 @@ int main(int argc, char** argv) {
             // For each file create any directory hierarchy needed and extract file.
             
             for (auto & file : zipContents) {
-                fs::path destinationPath(argData.destinationFolderNameStr + file.fileNameStr);
+                fs::path destinationPath(argData.destinationFolderNameStr + file.fileName);
                 if (!fs::exists(destinationPath.parent_path())) {
                     fs::create_directories(destinationPath.parent_path());
                 }
-                if (zipFile.extract(file.fileNameStr, destinationPath.string())) {
+                if (zipFile.extract(file.fileName, destinationPath.string())) {
                     std::cout << "Extracted [" << destinationPath.native() << "]" << std::endl;
                 }
             }

@@ -125,11 +125,11 @@ namespace Antik {
     // Parse basic body structure filling in data
     //
 
-    void CIMAPBodyStruct::parseBodyuctTree(std::unique_ptr<BodyNode>& bodyNode) {
+    void CIMAPBodyStruct::parseBodyStructTree(std::unique_ptr<BodyNode>& bodyNode) {
 
         for (auto &bodyPart : bodyNode->bodyParts) {
             if (bodyPart.child) {
-                parseBodyuctTree(bodyPart.child);
+                parseBodyStructTree(bodyPart.child);
             } else {
                 parseBodyPart(bodyPart);
             }
@@ -141,7 +141,7 @@ namespace Antik {
     // Create body structure tree from body part list
     //
 
-    void CIMAPBodyStruct::createBodyuctTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart) {
+    void CIMAPBodyStruct::createBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart) {
 
         uint32_t partNo { 1 };
         std::string bodyucture(bodyPart.substr(1));
@@ -167,7 +167,7 @@ namespace Antik {
                 bodyNode->bodyParts.push_back({"", "", nullptr});
                 bodyNode->bodyParts.back().child.reset(new BodyNode());
                 bodyNode->bodyParts.back().child->partLevel = bodyNode->partLevel + std::to_string(partNo);
-                createBodyuctTree(bodyNode->bodyParts.back().child, part);
+                createBodyStructTree(bodyNode->bodyParts.back().child, part);
             } else {
                 bodyNode->extended = part;
             }
@@ -235,10 +235,10 @@ namespace Antik {
     // Construct body structure tree
     //
 
-    void CIMAPBodyStruct::consructBodyuctTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart) {
+    void CIMAPBodyStruct::consructBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart) {
 
-        createBodyuctTree(bodyNode, bodyPart);
-        parseBodyuctTree(bodyNode);
+        createBodyStructTree(bodyNode, bodyPart);
+        parseBodyStructTree(bodyNode);
 
     }
 
@@ -246,11 +246,11 @@ namespace Antik {
     // Walk body structure tree calling user supplied function for each body part.
     //
 
-    void CIMAPBodyStruct::walkBodyuctTree(std::unique_ptr<BodyNode>& bodyNode, BodyPartFn walkFn, std::shared_ptr<void>& walkData) {
+    void CIMAPBodyStruct::walkBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, BodyPartFn walkFn, std::shared_ptr<void>& walkData) {
 
         for (auto &bodyPart : bodyNode->bodyParts) {
             if (bodyPart.child) {
-                walkBodyuctTree(bodyPart.child, walkFn, walkData);
+                walkBodyStructTree(bodyPart.child, walkFn, walkData);
             } else {
                 walkFn(bodyNode, bodyPart, walkData);
             }

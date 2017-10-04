@@ -222,9 +222,9 @@ static CIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& comma
     }
 
     if (parsedResponse->bBYESent) {
-        throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
+        throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessage);
     } else if (parsedResponse->status != CIMAPParse::RespCode::OK) {
-        throw CIMAP::Exception(commandStr + ": " + parsedResponse->errorMessageStr);
+        throw CIMAP::Exception(commandStr + ": " + parsedResponse->errorMessage);
     }
 
     return (parsedResponse);
@@ -357,9 +357,9 @@ static void createMailBoxList(CIMAP& imap, const ParamArgData& argData,
         if (parsedResponse) {
 
             for (auto mailBoxEntry : parsedResponse->mailBoxList) {
-                if (mailBoxEntry.mailBoxNameStr.front() == ' ') mailBoxEntry.mailBoxNameStr = mailBoxEntry.mailBoxNameStr.substr(1);
-                if (mailBoxEntry.attributesStr.find("\\Noselect") == std::string::npos) {
-                    mailBoxList.push_back(mailBoxEntry.mailBoxNameStr);
+                if (mailBoxEntry.mailBoxName.front() == ' ') mailBoxEntry.mailBoxName = mailBoxEntry.mailBoxName.substr(1);
+                if (mailBoxEntry.attributes.find("\\Noselect") == std::string::npos) {
+                    mailBoxList.push_back(mailBoxEntry.mailBoxName);
                 }
             }
 

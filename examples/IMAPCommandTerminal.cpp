@@ -193,38 +193,38 @@ void walkFn(std::unique_ptr<CIMAPBodyStruct::BodyNode>& bodyNode, CIMAPBodyStruc
 
     std::cout << std::string(120, '#') << std::endl;
 
-    std::cout << "PART NO = [" << bodyPart.partNoStr << "]" << std::endl;
-    std::cout << "TYPE= [" << bodyPart.parsedPart->typeStr << "]" << std::endl;
-    std::cout << "SUBTYPE= [" << bodyPart.parsedPart->subtypeStr << "]" << std::endl;
-    std::cout << "PARAMETER LIST = [" << bodyPart.parsedPart->parameterListStr << "]" << std::endl;
-    std::cout << "ID = [" << bodyPart.parsedPart->idStr << "]" << std::endl;
-    std::cout << "DESCRIPTION = [" << bodyPart.parsedPart->descriptionStr << "]" << std::endl;
-    std::cout << "ENCODING = [" << bodyPart.parsedPart->encodingStr << "]" << std::endl;
-    std::cout << "SIZE = [" << bodyPart.parsedPart->sizeStr << "]" << std::endl;
+    std::cout << "PART NO = [" << bodyPart.partNo << "]" << std::endl;
+    std::cout << "TYPE= [" << bodyPart.parsedPart->type << "]" << std::endl;
+    std::cout << "SUBTYPE= [" << bodyPart.parsedPart->subtype << "]" << std::endl;
+    std::cout << "PARAMETER LIST = [" << bodyPart.parsedPart->parameterList << "]" << std::endl;
+    std::cout << "ID = [" << bodyPart.parsedPart->id << "]" << std::endl;
+    std::cout << "DESCRIPTION = [" << bodyPart.parsedPart->description << "]" << std::endl;
+    std::cout << "ENCODING = [" << bodyPart.parsedPart->encoding << "]" << std::endl;
+    std::cout << "SIZE = [" << bodyPart.parsedPart->size << "]" << std::endl;
 
-    if (!bodyPart.parsedPart->textLinesStr.empty()) {
-        std::cout << "TEXTLINES = [" << bodyPart.parsedPart->textLinesStr << "]" << std::endl;
+    if (!bodyPart.parsedPart->textLines.empty()) {
+        std::cout << "TEXTLINES = [" << bodyPart.parsedPart->textLines << "]" << std::endl;
     }
 
-    if (!bodyPart.parsedPart->md5Str.empty()) {
-        std::cout << "MD5 = [" << bodyPart.parsedPart->md5Str << "]" << std::endl;
+    if (!bodyPart.parsedPart->md5.empty()) {
+        std::cout << "MD5 = [" << bodyPart.parsedPart->md5 << "]" << std::endl;
     }
 
-    if (!bodyPart.parsedPart->dispositionStr.empty()) {
-        std::cout << "DISPOSITION = [" << bodyPart.parsedPart->dispositionStr << "]" << std::endl;
+    if (!bodyPart.parsedPart->disposition.empty()) {
+        std::cout << "DISPOSITION = [" << bodyPart.parsedPart->disposition << "]" << std::endl;
     }
 
-    if (!bodyPart.parsedPart->languageStr.empty()) {
-        std::cout << "LANGUAGE = [" << bodyPart.parsedPart->languageStr << "]" << std::endl;
+    if (!bodyPart.parsedPart->language.empty()) {
+        std::cout << "LANGUAGE = [" << bodyPart.parsedPart->language << "]" << std::endl;
     }
 
-    if (!bodyPart.parsedPart->locationStr.empty()) {
-        std::cout << "LOCATION = [" << bodyPart.parsedPart->locationStr << "]" << std::endl;
+    if (!bodyPart.parsedPart->location.empty()) {
+        std::cout << "LOCATION = [" << bodyPart.parsedPart->location << "]" << std::endl;
     }
 
-    std::cout << "EXTENDED = [" << bodyPart.parsedPart->extendedStr << "]" << std::endl;
+    std::cout << "EXTENDED = [" << bodyPart.parsedPart->extended << "]" << std::endl;
 
-    std::cout << "MULTI-EXTENDED = [" << bodyNode->extendedStr << "]" << std::endl;
+    std::cout << "MULTI-EXTENDED = [" << bodyNode->extended << "]" << std::endl;
 
 }
 
@@ -237,12 +237,12 @@ void processIMAPResponse(CIMAP& imap, CIMAPParse::COMMANDRESPONSE& parsedRespons
     std::cout << std::string(120, '*') << std::endl;
 
     if (parsedResponse->bBYESent) {
-        std::cout << "BYE RECIEVED {" << parsedResponse->errorMessageStr << "}" << std::endl;
+        std::cout << "BYE RECIEVED {" << parsedResponse->errorMessage << "}" << std::endl;
         return;
 
     } else if (parsedResponse->status != CIMAPParse::RespCode::OK) {
         std::cout << "COMMAND = {" << CIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
-        std::cout << "ERROR = {" << parsedResponse->errorMessageStr << "}" << std::endl;
+        std::cout << "ERROR = {" << parsedResponse->errorMessage << "}" << std::endl;
         std::cout << std::string(120, '!') << std::endl;
         return;
     }
@@ -276,8 +276,8 @@ void processIMAPResponse(CIMAP& imap, CIMAPParse::COMMANDRESPONSE& parsedRespons
         {
             std::cout << "COMMAND {" << CIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
             for (auto mailboxEntry : parsedResponse->mailBoxList) {
-                std::cout << "NAME = " << mailboxEntry.mailBoxNameStr << std::endl;
-                std::cout << "ATTRIB = " << mailboxEntry.attributesStr << std::endl;
+                std::cout << "NAME = " << mailboxEntry.mailBoxName << std::endl;
+                std::cout << "ATTRIB = " << mailboxEntry.attributes << std::endl;
                 std::cout << "DEL = " << mailboxEntry.hierDel << std::endl;
             }
             break;
@@ -286,8 +286,8 @@ void processIMAPResponse(CIMAP& imap, CIMAPParse::COMMANDRESPONSE& parsedRespons
         case CIMAPParse::Commands::EXPUNGE:
         {
             std::cout << "COMMAND {" << CIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
-            std::cout << "EXISTS = " << parsedResponse->responseMap[kEXISTSStr] << std::endl;
-            std::cout << "EXPUNGED = "<< parsedResponse->responseMap[kEXPUNGEStr] << std::endl;
+            std::cout << "EXISTS = " << parsedResponse->responseMap[kEXISTS] << std::endl;
+            std::cout << "EXPUNGED = "<< parsedResponse->responseMap[kEXPUNGE] << std::endl;
             break;
         }
 
@@ -296,7 +296,7 @@ void processIMAPResponse(CIMAP& imap, CIMAPParse::COMMANDRESPONSE& parsedRespons
             std::cout << "COMMAND {" << CIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
             for (auto storeEntry : parsedResponse->storeList) {
                 std::cout << "INDEX = " << storeEntry.index << std::endl;
-                std::cout << "FLAGS = " << storeEntry.flagsListStr << std::endl;
+                std::cout << "FLAGS = " << storeEntry.flagsList << std::endl;
             }
             break;
         }
@@ -304,7 +304,7 @@ void processIMAPResponse(CIMAP& imap, CIMAPParse::COMMANDRESPONSE& parsedRespons
         case CIMAPParse::Commands::CAPABILITY:
         {
             std::cout << "COMMAND {" << CIMAPParse::commandCodeString(parsedResponse->command) << "}" << std::endl;
-            std::cout << "CAPABILITIES = " << parsedResponse->responseMap[kCAPABILITYStr] << std::endl;
+            std::cout << "CAPABILITIES = " << parsedResponse->responseMap[kCAPABILITY] << std::endl;
             break;
         }
 
@@ -315,7 +315,7 @@ void processIMAPResponse(CIMAP& imap, CIMAPParse::COMMANDRESPONSE& parsedRespons
             for (auto fetchEntry : parsedResponse->fetchList) {
                 std::cout << "INDEX = " << fetchEntry.index << std::endl;
                 for (auto resp : fetchEntry.responseMap) {
-                    if (resp.first.compare(kBODYSTRUCTUREStr) == 0) {
+                    if (resp.first.compare(kBODYSTRUCTURE) == 0) {
                         std::unique_ptr<CIMAPBodyStruct::BodyNode> treeBase{ new CIMAPBodyStruct::BodyNode()};
                         std::shared_ptr<void> walkData{ new WalkData()};
                         CIMAPBodyStruct::consructBodyStructTree(treeBase, resp.second);

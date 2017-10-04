@@ -85,7 +85,7 @@ namespace Antik {
             // ==============
 
             static std::string getFileMIMEType(const std::string& fileName);
-            static std::string convertMIMEingToASCII(const std::string& mime);
+            static std::string convertMIMEStringToASCII(const std::string& mime);
 
             // ================
             // PUBLIC VARIABLES

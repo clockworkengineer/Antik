@@ -186,7 +186,7 @@ static void dumpEOCentralDirectoryRecord(CZIPIO::EOCentralDirectoryRecord& endOf
     std::cout << "Comment length                            : " << endOfCentralDirectory.commentLength << "\n";
 
     if (endOfCentralDirectory.commentLength) {
-        std::cout << "Comment                                   : " << endOfCentralDirectory.commentStr << "\n";
+        std::cout << "Comment                                   : " << endOfCentralDirectory.comment << "\n";
     }
 
     std::cout << std::endl;
@@ -203,7 +203,7 @@ static void dumpCentralDirectoryFileHeader(CZIPIO& zipFile, CZIPIO::CentralDirec
     std::cout << "--------------------------------\n" << "\n";
 
     std::cout << "File Name Length        : " << fileHeader.fileNameLength << "\n";
-    std::cout << "File Name               : " << fileHeader.fileNameStr << "\n";
+    std::cout << "File Name               : " << fileHeader.fileName << "\n";
     std::cout << "General Bit Flag        : " << fileHeader.bitFlag << "\n";
     std::cout << "Compressed Size         : " << fileHeader.compressedSize << "\n";
     std::cout << "Compression Method      : " << fileHeader.compression << "\n";
@@ -221,7 +221,7 @@ static void dumpCentralDirectoryFileHeader(CZIPIO& zipFile, CZIPIO::CentralDirec
     std::cout << "Extra Field Length      : " << fileHeader.extraFieldLength << "\n";
 
     if (fileHeader.fileCommentLength) {
-        std::cout << "Comment                 : " << fileHeader.fileCommentStr << "\n";
+        std::cout << "Comment                 : " << fileHeader.fileComment << "\n";
     }
 
     if (fileHeader.extraFieldLength) {

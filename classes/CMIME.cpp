@@ -720,7 +720,7 @@ namespace Antik {
     // Parse MIME string passed in and convert it to ASCII as best can.
     //
 
-    std::string CMIME::convertMIMEingToASCII(const std::string& mime) {
+    std::string CMIME::convertMIMEStringToASCII(const std::string& mime) {
 
         std::vector<ParsedMIMEing> parseding { parseMIMEing(mime) };
         std::string convertedMIME;

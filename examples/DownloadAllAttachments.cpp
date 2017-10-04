@@ -175,21 +175,21 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
 static void downloadAttachment(CIMAP& imap, fs::path& destinationFolder, CIMAPBodyStruct::Attachment &attachment) {
 
-    std::string commandLineStr("FETCH " + attachment.indexStr + " BODY[" + attachment.partNoStr + "]");
+    std::string commandLineStr("FETCH " + attachment.index + " BODY[" + attachment.partNo + "]");
     std::string parsedResponseStr(imap.sendCommand(commandLineStr));
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(parsedResponseStr));
 
     if ((parsedResponse->status == CIMAPParse::RespCode::BAD) ||
             (parsedResponse->status == CIMAPParse::RespCode::NO)) {
-        throw CIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessageStr);
+        throw CIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessage);
     }
 
     for (auto fetchEntry : parsedResponse->fetchList) {
 
         for (auto resp : fetchEntry.responseMap) {
 
-            if (resp.first.find("BODY[" + attachment.partNoStr + "]") == 0) {
-                fs::path fullFilePath = destinationFolder / attachment.fileNameStr;
+            if (resp.first.find("BODY[" + attachment.partNo + "]") == 0) {
+                fs::path fullFilePath = destinationFolder / attachment.fileName;
 
                 if (!fs::exists(fullFilePath)) {
                     std::string decodedStringStr;
@@ -229,11 +229,11 @@ static void getBodyStructAttachments(CIMAP& imap, std::uint64_t index, fs::path 
 
     if (!attachments->attachmentsList.empty()) {
         for (auto attachment : attachments->attachmentsList) {
-            if (CIMAPParse::stringEqual(attachment.encodingStr, CSMTP::kEncodingBase64Str)) {
-                attachment.indexStr = std::to_string(index);
+            if (CIMAPParse::stringEqual(attachment.encoding, CSMTP::kEncodingBase64)) {
+                attachment.index = std::to_string(index);
                 downloadAttachment(imap, destinationFolder, attachment);
             } else {
-                std::cout << "Attachment not base64 encoded but " << attachment.encodingStr << "]" << std::endl;
+                std::cout << "Attachment not base64 encoded but " << attachment.encoding << "]" << std::endl;
             }
         }
     } else {
@@ -288,9 +288,9 @@ int main(int argc, char** argv) {
         parsedResponseStr=imap.sendCommand("SELECT "+argData.mailBoxNameStr);
         parsedResponse = CIMAPParse::parseResponse(parsedResponseStr);
         if (parsedResponse->status != CIMAPParse::RespCode::OK) {
-            throw CIMAP::Exception("IMAP SELECT "+parsedResponse->errorMessageStr);
+            throw CIMAP::Exception("IMAP SELECT "+parsedResponse->errorMessage);
         } else if (parsedResponse->bBYESent) {
-            throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
+            throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessage);
         }
 
         // FETCH BODYSTRUCTURE for all mail
@@ -298,9 +298,9 @@ int main(int argc, char** argv) {
         parsedResponseStr=imap.sendCommand("FETCH 1:* BODYSTRUCTURE");
         parsedResponse = CIMAPParse::parseResponse(parsedResponseStr);
         if (parsedResponse->status != CIMAPParse::RespCode::OK) {
-            throw CIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessageStr);
+            throw CIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessage);
         }  else if (parsedResponse->bBYESent) {
-            throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
+            throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessage);
         }
 
         std::cout << "COMMAND = " << CIMAPParse::commandCodeString(parsedResponse->command) << std::endl;
@@ -310,7 +310,7 @@ int main(int argc, char** argv) {
         for (auto fetchEntry : parsedResponse->fetchList) {
             std::cout << "EMAIL INDEX [" << fetchEntry.index << "]" << std::endl;
             for (auto resp : fetchEntry.responseMap) {
-                if (resp.first.compare(kBODYSTRUCTUREStr) == 0) {
+                if (resp.first.compare(kBODYSTRUCTURE) == 0) {
                     getBodyStructAttachments(imap, fetchEntry.index, argData.destinationFolder,resp.second);
                 } else {
                     std::cout << resp.first << " = " << resp.second << std::endl;

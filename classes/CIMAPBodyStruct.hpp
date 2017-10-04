@@ -145,13 +145,13 @@ namespace Antik {
             // Construct body structure tree
             //
 
-            static void consructBodyuctTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart);
+            static void consructBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart);
 
             //
             // Walk body structure tree calling use supplied function for each body part.
             //
 
-            static void walkBodyuctTree(std::unique_ptr<BodyNode>& bodyNode, BodyPartFn walkFn, std::shared_ptr<void>& walkData);
+            static void walkBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, BodyPartFn walkFn, std::shared_ptr<void>& walkData);
 
             //
             // Walk function to extract file attachments.
@@ -190,13 +190,13 @@ namespace Antik {
 
             static void parseNext(std::string& part, std::string& value);
             static void parseBodyPart(BodyPart& bodyPart);
-            static void parseBodyuctTree(std::unique_ptr<BodyNode>& bodyNode);
+            static void parseBodyStructTree(std::unique_ptr<BodyNode>& bodyNode);
 
             //
             // Create body structure tree from body part list
             //
 
-            static void createBodyuctTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart);
+            static void createBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart);
 
             // =================
             // PRIVATE VARIABLES

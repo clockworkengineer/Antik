@@ -183,7 +183,7 @@ namespace Antik {
         // Get command string representation from internal code.
         //
 
-        static std::string commandCodeing(Commands commandCode);
+        static std::string commandCodeString(Commands commandCode);
 
         //
         // Parse IMAP command response and return parsed response structure.

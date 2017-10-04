@@ -211,9 +211,9 @@ static CIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& comma
 
     if (parsedResponse) {
         if (parsedResponse->bBYESent) {
-            throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessageStr);
+            throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessage);
         } else if (parsedResponse->status != CIMAPParse::RespCode::OK) {
-            throw CIMAP::Exception(commandStr + ": " + parsedResponse->errorMessageStr);
+            throw CIMAP::Exception(commandStr + ": " + parsedResponse->errorMessage);
         }
     } else {
         throw CIMAPParse::Exception("nullptr parsed response returned.");

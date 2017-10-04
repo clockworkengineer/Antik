@@ -735,7 +735,7 @@ namespace Antik {
         // Return string for IMAP command code
         //
 
-        std::string CIMAPParse::commandCodeing(Commands commandCode) {
+        std::string CIMAPParse::commandCodeString(Commands commandCode) {
 
             for (auto commandEntry : m_stringToCodeMap) {
                 if (commandEntry.second == commandCode) {
