@@ -71,16 +71,16 @@ namespace Antik {
     // Create CRedirect specifying output stream
     //
 
-    CRedirect::CRedirect(std::ostream& outStream) {
-        this->outStream = &outStream;
+    CRedirect::CRedirect(std::ostream& outeam) {
+        this->m_savedStream = &outeam;
     }
 
     //
     // Create CRedirect specifying output stream, output file and start the redirect
     //
 
-    CRedirect::CRedirect(std::ostream& outStream, std::string outfileName, std::ios_base::openmode mode) {
-        this->outStream = &outStream;
+    CRedirect::CRedirect(std::ostream& outeam, std::string outfileName, std::ios_base::openmode mode) {
+        this->m_savedStream = &outeam;
         this->change(outfileName, mode);
     }
 
@@ -88,16 +88,16 @@ namespace Antik {
     // Create CRedirect specifying file stream (stdout/stderr), output file and start the redirect
     //
 
-    CRedirect::CRedirect(std::FILE* stdStream, std::string outfileName, const char* mode) {
-        std::freopen(outfileName.c_str(), mode, stdStream);
+    CRedirect::CRedirect(std::FILE* stdeam, std::string outfileName, const char* mode) {
+        std::freopen(outfileName.c_str(), mode, stdeam);
     }
 
     //
     // Create CRedirect specifying file stream (stdout/stderr)
     //
 
-    CRedirect::CRedirect(std::FILE* stdStream) {
-        this->stdStream = stdStream;
+    CRedirect::CRedirect(std::FILE* stdeam) {
+        this->m_savedStdOutErr = stdeam;
     }
 
     //
@@ -113,9 +113,9 @@ namespace Antik {
     //
 
     void CRedirect::change(std::string outfileName, std::ios_base::openmode mode) {
-        this->fileStream.reset(new std::ofstream{outfileName, mode});
-        this->outBuffer = outStream->rdbuf();
-        outStream->rdbuf((this->fileStream)->rdbuf());
+        this->m_newFileStream.reset(new std::ofstream{outfileName, mode});
+        this->m_outputBuffer = m_savedStream->rdbuf();
+        m_savedStream->rdbuf((this->m_newFileStream)->rdbuf());
     }
 
     //
@@ -123,7 +123,7 @@ namespace Antik {
     //
 
     void CRedirect::change(std::string outfileName, const char* mode) {
-        std::freopen(outfileName.c_str(), mode, this->stdStream);
+        std::freopen(outfileName.c_str(), mode, this->m_savedStdOutErr);
     }
 
     //
@@ -134,16 +134,16 @@ namespace Antik {
 
     void CRedirect::restore() {
 
-        if (this->outBuffer) {
-            outStream->rdbuf(this->outBuffer);
+        if (this->m_outputBuffer) {
+            m_savedStream->rdbuf(this->m_outputBuffer);
         }
 
-        if (this->fileStream) {
-            this->fileStream->close();
+        if (this->m_newFileStream) {
+            this->m_newFileStream->close();
         }
 
-        if (this->stdStream) {
-            fclose(this->stdStream);
+        if (this->m_savedStdOutErr) {
+            fclose(this->m_savedStdOutErr);
         }
     }
 

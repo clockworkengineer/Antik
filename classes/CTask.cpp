@@ -70,21 +70,21 @@ namespace Antik {
 
         CTask::CTask
         (
-                const std::string& taskNameStr, // Task name
-                const std::string& watchFolderStr, // Watch folder path
+                const std::string& taskName, // Task name
+                const std::string& watchFolder, // Watch folder path
                 TaskActionFcn taskActFcn, // Task action function
                 std::shared_ptr<void> fnData, // Task file process function data
                 int watchDepth, // Watch depth -1= all, 0=just watch folder
                 std::shared_ptr<TaskOptions> options // Task options. 
                 )
-        : taskNameStr{taskNameStr}, taskActFcn{taskActFcn}, fnData{fnData}
+        : m_taskName{taskName}, m_taskActFcn{taskActFcn}, m_fnData{fnData}
 
         {
 
             // ASSERT if passed parameters invalid
 
-            assert(taskNameStr.length() != 0); // Length == 0
-            assert(watchFolderStr.length() != 0); // Length == 0
+            assert(taskName.length() != 0); // Length == 0
+            assert(watchFolder.length() != 0); // Length == 0
             assert(watchDepth >= -1); // < -1
             assert(taskActFcn != nullptr); // nullptr
             assert(fnData != nullptr); // nullptr
@@ -93,26 +93,26 @@ namespace Antik {
 
             if (options) {
                 if (options->coutstr) {
-                    this->coutstr = options->coutstr;
+                    this->m_coutstr = options->coutstr;
                 }
                 if (options->cerrstr) {
-                    this->cerrstr = options->cerrstr;
+                    this->m_cerrstr = options->cerrstr;
                 }
-                this->killCount = options->killCount;
+                this->m_killCount = options->killCount;
             }
 
             // Task prefix
 
-            this->prefix = "[TASK " + this->taskNameStr + "] ";
+            this->m_prefix = "[TASK " + this->m_taskName + "] ";
 
             // Create CFileApprise watcher object. Use same cout/cerr functions as Task.
 
-            this->watcherOptions.reset(new CApprise::Options{0, false, this->coutstr, this->cerrstr});
-            this->watcher.reset(new CApprise{watchFolderStr, watchDepth, watcherOptions});
+            this->m_watcherOptions.reset(new CApprise::Options{0, false, this->m_coutstr, this->m_cerrstr});
+            this->m_watcher.reset(new CApprise{watchFolder, watchDepth, m_watcherOptions});
 
             // Create CFileApprise object thread and start to watch
 
-            this->watcherThread.reset(new std::thread(&CApprise::watch, this->watcher));
+            this->m_watcherThread.reset(new std::thread(&CApprise::watch, this->m_watcher));
 
         }
 
@@ -122,7 +122,7 @@ namespace Antik {
 
         CTask::~CTask() {
 
-            this->coutstr({this->prefix, "CTask DESTRUCTOR CALLED."});
+            this->m_coutstr({this->m_prefix, "CTask DESTRUCTOR CALLED."});
 
         }
 
@@ -132,7 +132,7 @@ namespace Antik {
 
         std::exception_ptr CTask::getThrownException(void) {
 
-            return (this->thrownException);
+            return (this->m_thrownException);
 
         }
 
@@ -142,8 +142,8 @@ namespace Antik {
 
         void CTask::stop(void) {
 
-            this->coutstr({this->prefix, "Stop task."});
-            this->watcher->stop();
+            this->m_coutstr({this->m_prefix, "Stop task."});
+            this->m_watcher->stop();
 
         }
 
@@ -155,53 +155,53 @@ namespace Antik {
 
             try {
 
-                this->coutstr({this->prefix, "CTask monitor started."});
+                this->m_coutstr({this->m_prefix, "CTask monitor started."});
 
                 // Loop until watcher stopped
 
-                while (this->watcher->stillWatching()) {
+                while (this->m_watcher->stillWatching()) {
 
                     CApprise::Event evt;
 
-                    this->watcher->getEvent(evt);
+                    this->m_watcher->getEvent(evt);
 
-                    if ((evt.id == CApprise::Event_add) && !evt.messageStr.empty()) {
+                    if ((evt.id == CApprise::Event_add) && !evt.message.empty()) {
 
-                        this->taskActFcn(evt.messageStr, this->fnData);
+                        this->m_taskActFcn(evt.message, this->m_fnData);
 
-                        if ((this->killCount != 0) && (--(this->killCount) == 0)) {
-                            this->coutstr({this->prefix, "CTask kill count reached."});
+                        if ((this->m_killCount != 0) && (--(this->m_killCount) == 0)) {
+                            this->m_coutstr({this->m_prefix, "CTask kill count reached."});
                             break;
                         }
 
-                    } else if ((evt.id == CApprise::Event_error) && !evt.messageStr.empty()) {
-                        this->coutstr({evt.messageStr});
+                    } else if ((evt.id == CApprise::Event_error) && !evt.message.empty()) {
+                        this->m_coutstr({evt.message});
                     }
 
                 }
 
                 // Pass any CFileApprise exceptions up chain
 
-                if (this->watcher->getThrownException()) {
-                    this->thrownException = this->watcher->getThrownException();
+                if (this->m_watcher->getThrownException()) {
+                    this->m_thrownException = this->m_watcher->getThrownException();
                 }
 
             } catch (...) {
                 // Pass any CTask thrown exceptions up chain
-                this->thrownException = std::current_exception();
+                this->m_thrownException = std::current_exception();
             }
 
             // CFileApprise still flagged as running so close down 
 
-            if (this->watcher->stillWatching()) {
-                this->watcher->stop();
+            if (this->m_watcher->stillWatching()) {
+                this->m_watcher->stop();
             }
 
             // Wait for CFileApprise thread
 
-            this->watcherThread->join();
+            this->m_watcherThread->join();
 
-            this->coutstr({this->prefix, "CTask monitor on stopped."});
+            this->m_coutstr({this->m_prefix, "CTask monitor on stopped."});
 
         }
 

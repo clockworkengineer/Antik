@@ -51,16 +51,16 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& messageStr)
-                : std::runtime_error("CSMTP Failure: " + messageStr) {
+                Exception(std::string const& message)
+                : std::runtime_error("CSMTP Failure: " + message) {
                 }
 
             };
 
             // Supported contents encodings
 
-            static const char *kEncoding7BitStr;
-            static const char *kEncodingBase64Str;
+            static const char *kEncoding7Bit;
+            static const char *kEncodingBase64;
 
             // ============
             // CONSTRUCTORS
@@ -84,17 +84,17 @@ namespace Antik {
 
             // Set/Get email server account details. Note : No password get.
 
-            void setServer(const std::string& serverURLStr);
-            void setUserAndPassword(const std::string& userName, const std::string& userPasswordStr);
+            void setServer(const std::string& serverURL);
+            void setUserAndPassword(const std::string& userName, const std::string& userPassword);
 
             std::string getServer(void) const;
             std::string getUser(void) const;
 
             // Set/Get email message header details
 
-            void setFromAddress(const std::string& addressFromStr);
-            void setToAddress(const std::string& addressToStr);
-            void setCCAddress(const std::string& addressCCStr);
+            void setFromAddress(const std::string& addressFrom);
+            void setToAddress(const std::string& addressTo);
+            void setCCAddress(const std::string& addressCC);
 
             std::string getFromAddress(void) const;
             std::string getToAddress(void) const;
@@ -102,9 +102,9 @@ namespace Antik {
 
             // Set email content details
 
-            void setMailSubject(const std::string& mailSubjectStr);
-            void setMailMessage(const std::vector<std::string>& mailMessageStr);
-            void addFileAttachment(const std::string& fileNameStr, const std::string& contentTypeStr, const std::string& contentTransferEncodingStr);
+            void setMailSubject(const std::string& mailSubject);
+            void setMailMessage(const std::vector<std::string>& mailMessage);
+            void addFileAttachment(const std::string& fileName, const std::string& contentType, const std::string& contentTransferEncoding);
 
             std::string getMailSubject(void) const;
             std::string getMailMessage(void) const;
@@ -124,8 +124,8 @@ namespace Antik {
 
             // Encode/decode bytes to base64 string
 
-            static void encodeToBase64(const std::string& decodedStringStr, std::string& encodedStringStr, uint32_t numberOfBytes);
-            static void decodeFromBase64(const std::string& encodedStringStr, std::string& decodedStringStr, uint32_t numberOfBytes);
+            static void encodeToBase64(const std::string& decodeding, std::string& encodeding, uint32_t numberOfBytes);
+            static void decodeFromBase64(const std::string& encodeding, std::string& decodeding, uint32_t numberOfBytes);
 
 
             // ================
@@ -141,17 +141,17 @@ namespace Antik {
             // Attachments
 
             struct EmailAttachment {
-                std::string fileNameStr; // Attached file name
-                std::string contentTypesStr; // Attached file MIME content type
-                std::string contentTransferEncodingStr; // Attached file content encoding 
+                std::string fileName; // Attached file name
+                std::string contentTypes; // Attached file MIME content type
+                std::string contentTransferEncoding; // Attached file content encoding 
                 std::vector<std::string> encodedContents; // Attached file encoded contents
             };
 
-            static const char *kMimeBoundaryStr; // Text string used for MIME boundary
+            static const char *kMimeBoundary; // Text string used for MIME boundary
 
             static const int kBase64EncodeBufferSize { 54 }; // Optimum encode buffer size (since encoded max 76 bytes)
 
-            static const char *kEOLStr; // End of line
+            static const char *kEOL; // End of line
 
             static const char kCB64[]; // Valid characters for base64 encode/decode.
 
@@ -181,7 +181,7 @@ namespace Antik {
 
             // libcurl read callback for payload
 
-            static size_t payloadSource(void *ptr, size_t size, size_t nmemb, std::deque<std::string> *mailPayloadStr);
+            static size_t payloadSource(void *ptr, size_t size, size_t nmemb, std::deque<std::string> *mailPayload);
 
             // Date and time for email
 
@@ -199,28 +199,28 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
 
-            std::string userNameStr;       // Email account user name
-            std::string userPasswordStr;   // Email account user name password
-            std::string serverURLStr;      // SMTP server URL
+            std::string m_userName;       // Email account user name
+            std::string m_userPassword;   // Email account user name password
+            std::string m_serverURL;      // SMTP server URL
 
-            std::string addressFromStr;    // Email Sender
-            std::string addressToStr;      // Main recipients addresses
-            std::string addressCCStr;      // CC recipients addresses
+            std::string m_addressFrom;    // Email Sender
+            std::string m_addressTo;      // Main recipients addresses
+            std::string m_addressCC;      // CC recipients addresses
 
-            std::string mailSubjectStr; // Email subject
-            std::vector<std::string> mailMessage; // Email body
+            std::string m_mailSubject; // Email subject
+            std::vector<std::string> m_mailMessage; // Email body
 
-            std::string mailCABundleStr; // Path to CA bundle (Untested at present)
+            std::string m_mailCABundle; // Path to CA bundle (Untested at present)
 
-            CURL *curlHandle { nullptr }; // curl handle
-            struct curl_slist *curlRecipients { nullptr }; // curl email recipients list
-            CURLcode curlResult { CURLE_OK }; // curl status
-            char curlErrMsgBuffer[CURL_ERROR_SIZE]; // curl error string buffer  
-            static bool bCurlVerbosity; // curl verbosity setting
+            CURL *m_curlHandle { nullptr }; // curl handle
+            struct curl_slist *m_curlRecipients { nullptr }; // curl email recipients list
+            CURLcode m_curlResult { CURLE_OK }; // curl status
+            char m_curlErrMsgBuffer[CURL_ERROR_SIZE]; // curl error string buffer  
+            static bool m_curlVerbosity; // curl verbosity setting
 
-            std::deque<std::string> mailPayload; // Email payload
+            std::deque<std::string> m_mailPayload; // Email payload
 
-            std::vector<CSMTP::EmailAttachment> attachedFiles; // Attached files
+            std::vector<CSMTP::EmailAttachment> m_attachedFiles; // Attached files
 
         };
 

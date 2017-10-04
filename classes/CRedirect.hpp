@@ -46,15 +46,15 @@ namespace Antik {
         // Set stream to redirect
         //
 
-        CRedirect(std::ostream& outStream);
-        CRedirect(std::FILE* stdStream);
+        CRedirect(std::ostream& outeam);
+        CRedirect(std::FILE* stdeam);
 
         //
         // Set stream to redirect and start redirect
         //
 
-        CRedirect(std::ostream& outStream, std::string outfileName, std::ios_base::openmode mode = std::ios_base::out);
-        CRedirect(std::FILE* stdStream, std::string outfileName, const char *mode = "w");
+        CRedirect(std::ostream& outeam, std::string outfileName, std::ios_base::openmode mode = std::ios_base::out);
+        CRedirect(std::FILE* stdeam, std::string outfileName, const char *mode = "w");
 
         // ==========
         // DESTRUCTOR
@@ -102,10 +102,10 @@ namespace Antik {
         // PRIVATE VARIABLES
         // =================
 
-        std::unique_ptr<std::ofstream> fileStream { nullptr }; // New file stream
-        std::ostream *outStream { nullptr };                   // saved stream
-        std::streambuf *outBuffer { nullptr };                 // Saved readbuffer
-        std::FILE *stdStream { nullptr };                      // Saved stdout/stderr
+        std::unique_ptr<std::ofstream> m_newFileStream { nullptr }; // New file stream
+        std::ostream *m_savedStream { nullptr };                    // saved stream
+        std::streambuf *m_outputBuffer { nullptr };                 // Saved readbuffer
+        std::FILE *m_savedStdOutErr { nullptr };                    // Saved stdout/stderr
 
     };
 

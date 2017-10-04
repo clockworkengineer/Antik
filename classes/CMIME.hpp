@@ -56,8 +56,8 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& messageStr)
-                : std::runtime_error("CMIME Failure: " + messageStr) {
+                Exception(std::string const& message)
+                : std::runtime_error("CMIME Failure: " + message) {
                 }
 
             };
@@ -66,10 +66,10 @@ namespace Antik {
             // Parsed MIME string entry
             //
 
-            struct ParsedMIMEString {
+            struct ParsedMIMEing {
                 unsigned char type  { ' ' }; // Type Q (Quoted Printable), B (base64), ' ' None.
-                std::string encodingStr; // Encoding used
-                std::string contentsStr; // Contents
+                std::string encoding; // Encoding used
+                std::string contents; // Contents
             };
 
             // ============
@@ -84,8 +84,8 @@ namespace Antik {
             // PUBLIC METHODS
             // ==============
 
-            static std::string getFileMIMEType(const std::string& fileNameStr);
-            static std::string convertMIMEStringToASCII(const std::string& mimeStr);
+            static std::string getFileMIMEType(const std::string& fileName);
+            static std::string convertMIMEingToASCII(const std::string& mime);
 
             // ================
             // PUBLIC VARIABLES
@@ -101,10 +101,10 @@ namespace Antik {
             // MIME encoded word
             //
 
-            static const char *kEncodedWordPrefixStr;
-            static const char *kEncodedWordPostfixStr;
-            static const char *kEncodedWordSeparatorStr;
-            static const char *kEncodedWordASCIIStr;
+            static const char *kEncodedWordPrefix;
+            static const char *kEncodedWordPostfix;
+            static const char *kEncodedWordSeparator;
+            static const char *kEncodedWordASCII;
 
             static const char kEncodedWordTypeBase64;
             static const char kEncodedWordTypeQuoted;
@@ -126,13 +126,13 @@ namespace Antik {
             // PRIVATE METHODS
             // ===============
 
-            static std::vector<ParsedMIMEString> parseMIMEString(const std::string& mimeStr);
+            static std::vector<ParsedMIMEing> parseMIMEing(const std::string& mime);
 
             // =================
             // PRIVATE VARIABLES
             // =================
 
-            static std::unordered_map<std::string, std::string> extToMimeType; // File extension to MIME type
+            static std::unordered_map<std::string, std::string> m_extToMimeType; // File extension to MIME type
 
         };
 

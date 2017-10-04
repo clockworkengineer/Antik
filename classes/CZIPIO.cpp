@@ -67,7 +67,7 @@ namespace Antik {
         // Put Data Descriptor record into buffer and write to disk.
         //
 
-        void CZIPIO::writeZIPRecord(std::fstream &zipFileStream, CZIPIO::DataDescriptor& entry) {
+        void CZIPIO::writeZIPRecord(std::fstream &zipFileeam, CZIPIO::DataDescriptor& entry) {
 
             std::vector<std::uint8_t> buffer;
 
@@ -76,9 +76,9 @@ namespace Antik {
             putField(entry.compressedSize, buffer);
             putField(entry.uncompressedSize, buffer);
 
-            zipFileStream.write((char *) &buffer[0], entry.size);
+            zipFileeam.write((char *) &buffer[0], entry.size);
 
-            if (zipFileStream.fail()) {
+            if (zipFileeam.fail()) {
                 throw Exception("Error in writing Data Descriptor Record.");
             }
 
@@ -88,7 +88,7 @@ namespace Antik {
         // Put Central Directory File Header record into buffer and write to disk.
         //
 
-        void CZIPIO::writeZIPRecord(std::fstream &zipFileStream, CZIPIO::CentralDirectoryFileHeader& entry) {
+        void CZIPIO::writeZIPRecord(std::fstream &zipFileeam, CZIPIO::CentralDirectoryFileHeader& entry) {
 
             std::vector<std::uint8_t> buffer;
 
@@ -110,19 +110,19 @@ namespace Antik {
             putField(entry.externalFileAttrib, buffer);
             putField(entry.fileHeaderOffset, buffer);
 
-            zipFileStream.write((char *) &buffer[0], entry.size);
+            zipFileeam.write((char *) &buffer[0], entry.size);
 
             if (entry.fileNameLength) {
-                zipFileStream.write((char *) &entry.fileNameStr[0], entry.fileNameLength);
+                zipFileeam.write((char *) &entry.fileName[0], entry.fileNameLength);
             }
             if (entry.extraFieldLength) {
-                zipFileStream.write((char *) &entry.extraField[0], entry.extraFieldLength);
+                zipFileeam.write((char *) &entry.extraField[0], entry.extraFieldLength);
             }
             if (entry.fileCommentLength) {
-                zipFileStream.write((char *) &entry.fileCommentStr[0], entry.fileCommentLength);
+                zipFileeam.write((char *) &entry.fileComment[0], entry.fileCommentLength);
             }
 
-            if (zipFileStream.fail()) {
+            if (zipFileeam.fail()) {
                 throw Exception("Error in writing Central Directory Local File Header record.");
             }
 
@@ -132,7 +132,7 @@ namespace Antik {
         // Put Local File Header record into buffer and write to disk.
         //
 
-        void CZIPIO::writeZIPRecord(std::fstream &zipFileStream, CZIPIO::LocalFileHeader& entry) {
+        void CZIPIO::writeZIPRecord(std::fstream &zipFileeam, CZIPIO::LocalFileHeader& entry) {
 
             std::vector<std::uint8_t> buffer;
 
@@ -148,16 +148,16 @@ namespace Antik {
             putField(entry.fileNameLength, buffer);
             putField(entry.extraFieldLength, buffer);
 
-            zipFileStream.write((char *) &buffer[0], entry.size);
+            zipFileeam.write((char *) &buffer[0], entry.size);
 
             if (entry.fileNameLength) {
-                zipFileStream.write((char *) &entry.fileNameStr[0], entry.fileNameLength);
+                zipFileeam.write((char *) &entry.fileName[0], entry.fileNameLength);
             }
             if (entry.extraFieldLength) {
-                zipFileStream.write((char *) &entry.extraField[0], entry.extraFieldLength);
+                zipFileeam.write((char *) &entry.extraField[0], entry.extraFieldLength);
             }
 
-            if (zipFileStream.fail()) {
+            if (zipFileeam.fail()) {
                 throw Exception("Error in writing Local File Header record.");
             }
 
@@ -167,7 +167,7 @@ namespace Antik {
         // Put End Of Central Directory record into buffer and write to disk.
         //
 
-        void CZIPIO::writeZIPRecord(std::fstream &zipFileStream, CZIPIO::EOCentralDirectoryRecord& entry) {
+        void CZIPIO::writeZIPRecord(std::fstream &zipFileeam, CZIPIO::EOCentralDirectoryRecord& entry) {
 
             std::vector<std::uint8_t> buffer;
 
@@ -180,13 +180,13 @@ namespace Antik {
             putField(entry.offsetCentralDirRecords, buffer);
             putField(entry.commentLength, buffer);
 
-            zipFileStream.write((char *) &buffer[0], entry.size);
+            zipFileeam.write((char *) &buffer[0], entry.size);
 
             if (entry.commentLength) {
-                zipFileStream.write((char *) &entry.commentStr[0], entry.commentLength);
+                zipFileeam.write((char *) &entry.comment[0], entry.commentLength);
             }
 
-            if (zipFileStream.fail()) {
+            if (zipFileeam.fail()) {
                 throw Exception("Error in writing End Of Central Directory Local File Header record.");
             }
 
@@ -196,7 +196,7 @@ namespace Antik {
         // Put ZIP64 End Of Central Directory record into buffer and write to disk.
         //
 
-        void CZIPIO::writeZIPRecord(std::fstream &zipFileStream, CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
+        void CZIPIO::writeZIPRecord(std::fstream &zipFileeam, CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
 
             std::vector<std::uint8_t> buffer;
 
@@ -213,13 +213,13 @@ namespace Antik {
             putField(entry.totalCentralDirRecords, buffer);
             putField(entry.sizeOfCentralDirRecords, buffer);
             putField(entry.offsetCentralDirRecords, buffer);
-            zipFileStream.write((char *) &buffer[0], entry.size);
+            zipFileeam.write((char *) &buffer[0], entry.size);
 
             if (entry.extensibleDataSector.size()) {
-                zipFileStream.write((char *) &entry.extensibleDataSector[0], entry.extensibleDataSector.size());
+                zipFileeam.write((char *) &entry.extensibleDataSector[0], entry.extensibleDataSector.size());
             }
 
-            if (zipFileStream.fail()) {
+            if (zipFileeam.fail()) {
                 throw Exception("Error in writing ZIP64 End Of Central Directory record.");
             }
 
@@ -229,7 +229,7 @@ namespace Antik {
         // Put ZIP64 End Of Central Directory record locator into buffer and write to disk.
         //
 
-        void CZIPIO::writeZIPRecord(std::fstream &zipFileStream, CZIPIO::Zip64EOCentDirRecordLocator& entry) {
+        void CZIPIO::writeZIPRecord(std::fstream &zipFileeam, CZIPIO::Zip64EOCentDirRecordLocator& entry) {
 
             std::vector<std::uint8_t> buffer;
 
@@ -237,9 +237,9 @@ namespace Antik {
             putField(entry.startDiskNumber, buffer);
             putField(entry.offset, buffer);
             putField(entry.numberOfDisks, buffer);
-            zipFileStream.write((char *) &buffer[0], entry.size);
+            zipFileeam.write((char *) &buffer[0], entry.size);
 
-            if (zipFileStream.fail()) {
+            if (zipFileeam.fail()) {
                 throw Exception("Error in writing ZIP64 End Of Central Directory record locator.");
             }
 
@@ -249,24 +249,24 @@ namespace Antik {
         // Read Data Descriptor record from ZIP archive. 
         //
 
-        void CZIPIO::readZIPRecord(std::fstream &zipFileStream, CZIPIO::DataDescriptor& entry) {
+        void CZIPIO::readZIPRecord(std::fstream &zipFileeam, CZIPIO::DataDescriptor& entry) {
 
             std::vector<std::uint8_t> buffer(entry.size);
             std::uint8_t *buffptr = &buffer[0];
             std::uint32_t signature;
 
-            zipFileStream.read((char *) buffptr, sizeof (signature));
+            zipFileeam.read((char *) buffptr, sizeof (signature));
             buffptr = getField(signature, buffptr);
 
             if (signature == entry.signature) {
 
-                zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
+                zipFileeam.read((char *) buffptr, entry.size - sizeof (signature));
 
                 buffptr = getField(entry.crc32, buffptr);
                 buffptr = getField(entry.compressedSize, buffptr);
                 buffptr = getField(entry.uncompressedSize, buffptr);
 
-                if (zipFileStream.fail()) {
+                if (zipFileeam.fail()) {
                     throw Exception("Error in reading Data Descriptor Record.");
                 }
 
@@ -280,18 +280,18 @@ namespace Antik {
         // Read Central Directory File Header record from ZIP archive.
         //
 
-        void CZIPIO::readZIPRecord(std::fstream &zipFileStream, CZIPIO::CentralDirectoryFileHeader& entry) {
+        void CZIPIO::readZIPRecord(std::fstream &zipFileeam, CZIPIO::CentralDirectoryFileHeader& entry) {
 
             std::vector<std::uint8_t> buffer(entry.size);
             std::uint8_t *buffptr = &buffer[0];
             std::uint32_t signature;
 
-            zipFileStream.read((char *) buffptr, sizeof (signature));
+            zipFileeam.read((char *) buffptr, sizeof (signature));
             buffptr = getField(signature, buffptr);
 
             if (signature == entry.signature) {
 
-                zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
+                zipFileeam.read((char *) buffptr, entry.size - sizeof (signature));
 
                 buffptr = getField(entry.creatorVersion, buffptr);
                 buffptr = getField(entry.extractorVersion, buffptr);
@@ -314,20 +314,20 @@ namespace Antik {
                     buffer.resize(entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
                 }
 
-                zipFileStream.read((char *) &buffer[0], entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
+                zipFileeam.read((char *) &buffer[0], entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
 
                 if (entry.fileNameLength) {
-                    entry.fileNameStr.append((char *) &buffer[0], entry.fileNameLength);
+                    entry.fileName.append((char *) &buffer[0], entry.fileNameLength);
                 }
                 if (entry.extraFieldLength) {
                     entry.extraField.resize(entry.extraFieldLength);
                     std::memcpy(&entry.extraField[0], &buffer[entry.fileNameLength], entry.extraFieldLength);
                 }
                 if (entry.fileCommentLength) {
-                    entry.fileNameStr.append((char *) &buffer[entry.fileNameLength + entry.extraFieldLength], entry.fileCommentLength);
+                    entry.fileName.append((char *) &buffer[entry.fileNameLength + entry.extraFieldLength], entry.fileCommentLength);
                 }
 
-                if (zipFileStream.fail()) {
+                if (zipFileeam.fail()) {
                     throw Exception("Error in reading Central Directory Local File Header record.");
                 }
 
@@ -341,18 +341,18 @@ namespace Antik {
         // Read Local File Header record from ZIP archive.
         //
 
-        void CZIPIO::readZIPRecord(std::fstream &zipFileStream, CZIPIO::LocalFileHeader& entry) {
+        void CZIPIO::readZIPRecord(std::fstream &zipFileeam, CZIPIO::LocalFileHeader& entry) {
 
             std::vector<std::uint8_t> buffer(entry.size);
             std::uint8_t *buffptr = &buffer[0];
             std::uint32_t signature;
 
-            zipFileStream.read((char *) buffptr, sizeof (signature));
+            zipFileeam.read((char *) buffptr, sizeof (signature));
             buffptr = getField(signature, buffptr);
 
             if (signature == entry.signature) {
 
-                zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
+                zipFileeam.read((char *) buffptr, entry.size - sizeof (signature));
 
                 buffptr = getField(entry.creatorVersion, buffptr);
                 buffptr = getField(entry.bitFlag, buffptr);
@@ -369,10 +369,10 @@ namespace Antik {
                     buffer.resize(entry.fileNameLength + entry.extraFieldLength);
                 }
 
-                zipFileStream.read((char *) &buffer[0], entry.fileNameLength + entry.extraFieldLength);
+                zipFileeam.read((char *) &buffer[0], entry.fileNameLength + entry.extraFieldLength);
 
                 if (entry.fileNameLength) {
-                    entry.fileNameStr.append((char *) &buffer[0], entry.fileNameLength);
+                    entry.fileName.append((char *) &buffer[0], entry.fileNameLength);
                 }
 
                 if (entry.extraFieldLength) {
@@ -380,7 +380,7 @@ namespace Antik {
                     std::memcpy(&entry.extraField[0], &buffer[entry.fileNameLength], entry.extraFieldLength);
                 }
 
-                if (zipFileStream.fail()) {
+                if (zipFileeam.fail()) {
                     throw Exception("Error in reading Local File Header record.");
                 }
 
@@ -396,10 +396,10 @@ namespace Antik {
         // Read End Of Central Directory File Header record from ZIP archive.
         //
 
-        void CZIPIO::readZIPRecord(std::fstream &zipFileStream, CZIPIO::EOCentralDirectoryRecord& entry) {
+        void CZIPIO::readZIPRecord(std::fstream &zipFileeam, CZIPIO::EOCentralDirectoryRecord& entry) {
 
-            zipFileStream.seekg(0, std::ios_base::end);
-            uint64_t fileLength = zipFileStream.tellg();
+            zipFileeam.seekg(0, std::ios_base::end);
+            uint64_t fileLength = zipFileeam.tellg();
             int64_t filePosition = fileLength - 1;
             std::uint32_t signature = 0;
 
@@ -407,8 +407,8 @@ namespace Antik {
 
             while (filePosition) {
                 char nextByte;
-                zipFileStream.seekg(filePosition, std::ios_base::beg);
-                zipFileStream.get(nextByte);
+                zipFileeam.seekg(filePosition, std::ios_base::beg);
+                zipFileeam.get(nextByte);
                 signature <<= 8;
                 signature |= nextByte;
                 if (signature == entry.signature) {
@@ -424,8 +424,8 @@ namespace Antik {
                 std::vector<std::uint8_t> buffer(entry.size);
                 std::uint8_t *buffptr = &buffer[0];
 
-                zipFileStream.seekg(filePosition + sizeof (signature), std::ios_base::beg);
-                zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
+                zipFileeam.seekg(filePosition + sizeof (signature), std::ios_base::beg);
+                zipFileeam.read((char *) buffptr, entry.size - sizeof (signature));
 
                 buffptr = getField(entry.diskNumber, buffptr);
                 buffptr = getField(entry.startDiskNumber, buffptr);
@@ -439,12 +439,12 @@ namespace Antik {
                     if (entry.commentLength > buffer.size()) {
                         buffer.resize(entry.commentLength);
                     }
-                    zipFileStream.read((char *) &buffer[0], entry.commentLength);
-                    entry.commentStr.resize(entry.commentLength);
-                    entry.commentStr.append((char *) &buffer[0], entry.commentLength);
+                    zipFileeam.read((char *) &buffer[0], entry.commentLength);
+                    entry.comment.resize(entry.commentLength);
+                    entry.comment.append((char *) &buffer[0], entry.commentLength);
                 }
 
-                if (zipFileStream.fail()) {
+                if (zipFileeam.fail()) {
                     throw Exception("Error in reading End Of Central Directory record.");
                 }
 
@@ -457,7 +457,7 @@ namespace Antik {
         // Read ZIP64 End Of Central Directory record from ZIP archive.
         //
 
-        void CZIPIO::readZIPRecord(std::fstream &zipFileStream, CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
+        void CZIPIO::readZIPRecord(std::fstream &zipFileeam, CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
 
             std::vector<std::uint8_t> buffer(entry.size);
             std::uint8_t *buffptr = &buffer[0];
@@ -465,15 +465,15 @@ namespace Antik {
             std::uint64_t extensionSize;
             Zip64EOCentDirRecordLocator zip64EOCentralDirLocator;
 
-            readZIPRecord(zipFileStream, zip64EOCentralDirLocator);
-            zipFileStream.seekg(zip64EOCentralDirLocator.offset, std::ios::beg);
+            readZIPRecord(zipFileeam, zip64EOCentralDirLocator);
+            zipFileeam.seekg(zip64EOCentralDirLocator.offset, std::ios::beg);
 
-            zipFileStream.read((char *) buffptr, sizeof (signature));
+            zipFileeam.read((char *) buffptr, sizeof (signature));
             buffptr = getField(signature, buffptr);
 
             if (signature == entry.signature) {
 
-                zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
+                zipFileeam.read((char *) buffptr, entry.size - sizeof (signature));
 
                 buffptr = getField(entry.totalRecordSize, buffptr);
                 buffptr = getField(entry.creatorVersion, buffptr);
@@ -488,10 +488,10 @@ namespace Antik {
                 extensionSize = entry.totalRecordSize - entry.size + 12;
                 if (extensionSize) {
                     entry.extensibleDataSector.resize(extensionSize);
-                    zipFileStream.read((char *) &entry.extensibleDataSector[0], extensionSize);
+                    zipFileeam.read((char *) &entry.extensibleDataSector[0], extensionSize);
                 }
 
-                if (zipFileStream.fail()) {
+                if (zipFileeam.fail()) {
                     throw Exception("Error in reading ZIP64 End Of Central Directory record.");
                 }
 
@@ -505,10 +505,10 @@ namespace Antik {
         // Read ZIP64 End Of Central Directory record locator from ZIP archive
         //
 
-        void CZIPIO::readZIPRecord(std::fstream &zipFileStream, CZIPIO::Zip64EOCentDirRecordLocator& entry) {
+        void CZIPIO::readZIPRecord(std::fstream &zipFileeam, CZIPIO::Zip64EOCentDirRecordLocator& entry) {
 
-            zipFileStream.seekg(0, std::ios_base::end);
-            uint64_t fileLength = zipFileStream.tellg();
+            zipFileeam.seekg(0, std::ios_base::end);
+            uint64_t fileLength = zipFileeam.tellg();
             int64_t filePosition = fileLength - 1;
             std::uint32_t signature = 0;
 
@@ -516,8 +516,8 @@ namespace Antik {
 
             while (filePosition) {
                 char nextByte;
-                zipFileStream.seekg(filePosition, std::ios_base::beg);
-                zipFileStream.get(nextByte);
+                zipFileeam.seekg(filePosition, std::ios_base::beg);
+                zipFileeam.get(nextByte);
                 signature <<= 8;
                 signature |= nextByte;
                 if (signature == entry.signature) {
@@ -533,14 +533,14 @@ namespace Antik {
                 std::vector<std::uint8_t> buffer(entry.size);
                 std::uint8_t *buffptr = &buffer[0];
 
-                zipFileStream.seekg(filePosition + sizeof (signature), std::ios_base::beg);
-                zipFileStream.read((char *) buffptr, entry.size - sizeof (signature));
+                zipFileeam.seekg(filePosition + sizeof (signature), std::ios_base::beg);
+                zipFileeam.read((char *) buffptr, entry.size - sizeof (signature));
 
                 buffptr = getField(entry.startDiskNumber, buffptr);
                 buffptr = getField(entry.offset, buffptr);
                 buffptr = getField(entry.numberOfDisks, buffptr);
 
-                if (zipFileStream.fail()) {
+                if (zipFileeam.fail()) {
                     throw Exception("Error in reading ZIP64 End Of Central Directory Locator records.");
                 }
 
@@ -574,12 +574,12 @@ namespace Antik {
         // Open ZIP archive for I/O.
         //
 
-        void CZIPIO::openZIPFile(const std::string fileNameStr, std::ios_base::openmode mode) {
+        void CZIPIO::openZIPFile(const std::string fileName, std::ios_base::openmode mode) {
 
-            this->zipFileStream.open(fileNameStr, mode);
+            this->m_zipFileeam.open(fileName, mode);
 
-            if (this->zipFileStream.fail()) {
-                throw Exception("Could not open ZIP archive " + fileNameStr);
+            if (this->m_zipFileeam.fail()) {
+                throw Exception("Could not open ZIP archive " + fileName);
             }
 
         }
@@ -589,7 +589,7 @@ namespace Antik {
         //
 
         void CZIPIO::closeZIPFile(void) {
-            this->zipFileStream.close();
+            this->m_zipFileeam.close();
         }
 
         //
@@ -597,7 +597,7 @@ namespace Antik {
         //
 
         void CZIPIO::positionInZIPFile(std::uint64_t offset) {
-            this->zipFileStream.seekg(offset, std::ios::beg);
+            this->m_zipFileeam.seekg(offset, std::ios::beg);
         }
 
         //
@@ -605,7 +605,7 @@ namespace Antik {
         //
 
         std::uint64_t CZIPIO::currentPositionZIPFile(void) {
-            return (this->zipFileStream.tellg());
+            return (this->m_zipFileeam.tellg());
         }
 
         //
@@ -613,7 +613,7 @@ namespace Antik {
         //
 
         void CZIPIO::writeZIPFile(std::vector<std::uint8_t>& buffer, std::uint64_t count) {
-            this->zipFileStream.write((char *) &buffer[0], count);
+            this->m_zipFileeam.write((char *) &buffer[0], count);
         }
 
         //
@@ -621,7 +621,7 @@ namespace Antik {
         //
 
         void CZIPIO::readZIPFile(std::vector<std::uint8_t>& buffer, std::uint64_t count) {
-            this->zipFileStream.read((char *) &buffer[0], count);
+            this->m_zipFileeam.read((char *) &buffer[0], count);
         }
 
         //
@@ -629,7 +629,7 @@ namespace Antik {
         //
 
         std::uint64_t CZIPIO::readCountZIPFile() {
-            return (this->zipFileStream.gcount());
+            return (this->m_zipFileeam.gcount());
         }
 
         //
@@ -637,7 +637,7 @@ namespace Antik {
         //
 
         bool CZIPIO::errorInZIPFile(void) {
-            return (this->zipFileStream.fail());
+            return (this->m_zipFileeam.fail());
         }
 
         //
@@ -646,7 +646,7 @@ namespace Antik {
 
         void CZIPIO::putZIPRecord(CZIPIO::DataDescriptor& entry) {
 
-            writeZIPRecord(this->zipFileStream, entry);
+            writeZIPRecord(this->m_zipFileeam, entry);
 
         }
 
@@ -656,7 +656,7 @@ namespace Antik {
 
         void CZIPIO::putZIPRecord(CZIPIO::CentralDirectoryFileHeader& entry) {
 
-            writeZIPRecord(this->zipFileStream, entry);
+            writeZIPRecord(this->m_zipFileeam, entry);
 
         }
 
@@ -666,7 +666,7 @@ namespace Antik {
 
         void CZIPIO::putZIPRecord(CZIPIO::LocalFileHeader& entry) {
 
-            writeZIPRecord(this->zipFileStream, entry);
+            writeZIPRecord(this->m_zipFileeam, entry);
 
         }
 
@@ -676,7 +676,7 @@ namespace Antik {
 
         void CZIPIO::putZIPRecord(CZIPIO::EOCentralDirectoryRecord& entry) {
 
-            writeZIPRecord(this->zipFileStream, entry);
+            writeZIPRecord(this->m_zipFileeam, entry);
 
         }
 
@@ -686,7 +686,7 @@ namespace Antik {
 
         void CZIPIO::putZIPRecord(CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
 
-            writeZIPRecord(this->zipFileStream, entry);
+            writeZIPRecord(this->m_zipFileeam, entry);
 
         }
 
@@ -696,7 +696,7 @@ namespace Antik {
 
         void CZIPIO::putZIPRecord(CZIPIO::Zip64EOCentDirRecordLocator& entry) {
 
-            writeZIPRecord(this->zipFileStream, entry);
+            writeZIPRecord(this->m_zipFileeam, entry);
 
         }
 
@@ -748,7 +748,7 @@ namespace Antik {
 
         void CZIPIO::getZIPRecord(CZIPIO::DataDescriptor& entry) {
 
-            readZIPRecord(this->zipFileStream, entry);
+            readZIPRecord(this->m_zipFileeam, entry);
 
         }
 
@@ -758,7 +758,7 @@ namespace Antik {
 
         void CZIPIO::getZIPRecord(CZIPIO::CentralDirectoryFileHeader& entry) {
 
-            readZIPRecord(this->zipFileStream, entry);
+            readZIPRecord(this->m_zipFileeam, entry);
 
         }
 
@@ -768,7 +768,7 @@ namespace Antik {
 
         void CZIPIO::getZIPRecord(CZIPIO::LocalFileHeader& entry) {
 
-            readZIPRecord(this->zipFileStream, entry);
+            readZIPRecord(this->m_zipFileeam, entry);
 
         }
 
@@ -778,7 +778,7 @@ namespace Antik {
 
         void CZIPIO::getZIPRecord(CZIPIO::EOCentralDirectoryRecord& entry) {
 
-            readZIPRecord(this->zipFileStream, entry);
+            readZIPRecord(this->m_zipFileeam, entry);
 
         }
 
@@ -788,7 +788,7 @@ namespace Antik {
 
         void CZIPIO::getZIPRecord(CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
 
-            readZIPRecord(this->zipFileStream, entry);
+            readZIPRecord(this->m_zipFileeam, entry);
 
         }
 

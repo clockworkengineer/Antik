@@ -59,8 +59,8 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& messageStr)
-                : std::runtime_error("CApprise Failure: " + messageStr) {
+                Exception(std::string const& message)
+                : std::runtime_error("CApprise Failure: " + message) {
                 }
 
             };
@@ -72,8 +72,8 @@ namespace Antik {
             struct Options {
                 uint32_t inotifyWatchMask;                  // inotify watch event mask
                 bool bDisplayInotifyEvent;                  // ==true then display inotify event to coutstr
-                Antik::Util::CLogger::LogStringsFn coutstr; // coutstr output
-                Antik::Util::CLogger::LogStringsFn cerrstr; // cerrstr output
+                Antik::Util::CLogger::LogingsFn coutstr; // coutstr output
+                Antik::Util::CLogger::LogingsFn cerrstr; // cerrstr output
             };
 
             //
@@ -96,7 +96,7 @@ namespace Antik {
 
             struct Event {
                 EventId id;                 // Event id
-                std::string messageStr;     // Event file name / error message string
+                std::string message;     // Event file name / error message string
             };
 
             // ============
@@ -109,7 +109,7 @@ namespace Antik {
 
             CApprise
             (
-                const std::string& watchFolderStr, // Watch folder path
+                const std::string& watchFolder, // Watch folder path
                 int watchDepth, // Watch depth -1=all,0=just watch folder,1=next level down etc.
                 std::shared_ptr<CApprise::Options> options = nullptr // CApprise Options (OPTIONAL)
             );
@@ -151,8 +151,8 @@ namespace Antik {
             // Watch handling
             //
 
-            void addWatchFile(const std::string& filePathStr); // Add directory/file to be watched
-            void removeWatchFile(const std::string& filePathStr); // Remove directory/file being watched
+            void addWatchFile(const std::string& filePath); // Add directory/file to be watched
+            void removeWatchFile(const std::string& filePath); // Remove directory/file being watched
 
             //
             // Private data accessors
@@ -175,7 +175,7 @@ namespace Antik {
             // Logging prefix
             //
 
-            static const std::string kLogPrefixStr; // Logging output prefix 
+            static const std::string kLogPrefix; // Logging output prefix 
 
             //
             // inotify
@@ -208,8 +208,8 @@ namespace Antik {
             // Watch processing
             //
 
-            void addWatch(const std::string& filePathStr); // Add path to be watched
-            void removeWatch(const std::string& filePathStr); // Remove path being watched
+            void addWatch(const std::string& filePath); // Add path to be watched
+            void removeWatch(const std::string& filePath); // Remove path being watched
             void initWatchTable(void); // Initialise table for watched folders
             void destroyWatchTable(void); // Tare down watch table
 
@@ -219,7 +219,7 @@ namespace Antik {
 
             void sendEvent(
                 CApprise::EventId id,           // Event id
-                const std::string& messageStr   // Filename/message
+                const std::string& message   // Filename/message
             );
 
             // =================
@@ -230,39 +230,39 @@ namespace Antik {
             // Constructor passed in and intialised
             //
 
-            std::string watchFolderStr; // Watch Folder
-            int watchDepth { -1 }; // Watch depth -1=all,0=just watch folder,1=next level down etc.
+            std::string m_watchFolder; // Watch Folder
+            int m_watchDepth { -1 }; // Watch depth -1=all,0=just watch folder,1=next level down etc.
 
             //
             // Inotify
             //
 
-            int inotifyFd { 0 }; // file descriptor for read
-            uint32_t inotifyWatchMask { CApprise::kInofityEvents }; // watch event mask
-            std::unique_ptr<std::uint8_t> inotifyBuffer; // read buffer
-            std::unordered_map<int32_t, std::string> watchMap; // Watch table indexed by watch variable
-            std::set<std::string> inProcessOfCreation; // Set to hold files being created.
-            bool bDisplayInotifyEvent { false }; // ==true then display inotify event to coutstr
+            int m_inotifyFd { 0 }; // file descriptor for read
+            uint32_t m_inotifyWatchMask { CApprise::kInofityEvents }; // watch event mask
+            std::unique_ptr<std::uint8_t> m_inotifyBuffer; // read buffer
+            std::unordered_map<int32_t, std::string> m_watchMap; // Watch table indexed by watch variable
+            std::set<std::string> m_inProcessOfCreation; // Set to hold files being created.
+            bool m_bDisplayInotifyEvent { false }; // ==true then display inotify event to coutstr
 
             //
             // Publicly accessed via accessors
             //
 
-            std::exception_ptr thrownException { nullptr }; // Pointer to any exception thrown
-            std::atomic<bool> bDoWork { false }; // doWork=true (run watcher loop) false=(stop watcher loop)
+            std::exception_ptr m_thrownException { nullptr }; // Pointer to any exception thrown
+            std::atomic<bool> m_doWork { false }; // doWork=true (run watcher loop) false=(stop watcher loop)
 
             //
             // Event queue
             //
 
-            std::condition_variable queuedEventsWaiting; // Queued events conditional
-            std::mutex queuedEventsMutex; // Queued events mutex
-            std::queue <CApprise::Event> queuedEvents; // Queue of CApprise events
+            std::condition_variable m_queuedEventsWaiting; // Queued events conditional
+            std::mutex m_queuedEventsMutex; // Queued events mutex
+            std::queue <CApprise::Event> m_queuedEvents; // Queue of CApprise events
 
             // Trace functions default (do nothing).
 
-            Antik::Util::CLogger::LogStringsFn coutstr { Antik::Util::CLogger::noOp };
-            Antik::Util::CLogger::LogStringsFn cerrstr { Antik::Util::CLogger::noOp };
+            Antik::Util::CLogger::LogingsFn m_coutstr { Antik::Util::CLogger::noOp };
+            Antik::Util::CLogger::LogingsFn m_cerrstr { Antik::Util::CLogger::noOp };
 
         };
 

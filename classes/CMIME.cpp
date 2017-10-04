@@ -51,10 +51,10 @@ namespace Antik {
     // MIME encoded word constants
     //
 
-    const char *CMIME::kEncodedWordPrefixStr { "=?" };
-    const char *CMIME::kEncodedWordPostfixStr { "?=" };
-    const char *CMIME::kEncodedWordSeparatorStr { "?" };
-    const char *CMIME::kEncodedWordASCIIStr { "ASCII" };
+    const char *CMIME::kEncodedWordPrefix { "=?" };
+    const char *CMIME::kEncodedWordPostfix { "?=" };
+    const char *CMIME::kEncodedWordSeparator { "?" };
+    const char *CMIME::kEncodedWordASCII { "ASCII" };
     const char CMIME::kEncodedWordTypeBase64 { 'B' };
     const char CMIME::kEncodedWordTypeQuoted { 'Q' };
     const char CMIME::kEncodedWordTypeNone { ' ' };
@@ -71,7 +71,7 @@ namespace Antik {
 
     // File extension to MIME type mapping table
 
-    std::unordered_map<std::string, std::string> CMIME::extToMimeType
+    std::unordered_map<std::string, std::string> CMIME::m_extToMimeType
     {
 
         { "ez", "application/andrew-inset"},
@@ -644,15 +644,15 @@ namespace Antik {
     // If none found then return "application/unknown".
     //
 
-    std::string CMIME::getFileMIMEType(const std::string& fileNameStr) {
+    std::string CMIME::getFileMIMEType(const std::string& fileName) {
 
-        std::string baseFileName { fileNameStr.substr(fileNameStr.find_last_of("/\\") + 1) };
+        std::string baseFileName { fileName.substr(fileName.find_last_of("/\\") + 1) };
         std::size_t fullStop { baseFileName.find_last_of('.') };
 
         if (fullStop != std::string::npos) {
 
-            auto foundMapping = extToMimeType.find(baseFileName.substr(fullStop + 1));
-            if (foundMapping != extToMimeType.end()) {
+            auto foundMapping = m_extToMimeType.find(baseFileName.substr(fullStop + 1));
+            if (foundMapping != m_extToMimeType.end()) {
                 return (foundMapping->second);
             }
 
@@ -666,53 +666,53 @@ namespace Antik {
     // Parse MIME string into normal ASCII and MIME word encoded pieces.
     //
 
-    std::vector<CMIME::ParsedMIMEString> CMIME::parseMIMEString(const std::string& mimeStr) {
+    std::vector<CMIME::ParsedMIMEing> CMIME::parseMIMEing(const std::string& mime) {
 
-        std::istringstream subjectStream(mimeStr);
-        ParsedMIMEString parsedEntry;
-        std::vector<ParsedMIMEString> parsedString;
+        std::istringstream subjecteam(mime);
+        ParsedMIMEing parsedEntry;
+        std::vector<ParsedMIMEing> parseding;
 
-        for (std::string lineStr; std::getline(subjectStream, lineStr, '\n');) {
+        for (std::string line; std::getline(subjecteam, line, '\n');) {
 
-            lineStr.pop_back();
-            if (lineStr.find_first_not_of(' ') != std::string::npos) {
-                lineStr = lineStr.substr(lineStr.find_first_not_of(' '));
+            line.pop_back();
+            if (line.find_first_not_of(' ') != std::string::npos) {
+                line = line.substr(line.find_first_not_of(' '));
             }
 
-            while (!lineStr.empty()) {
+            while (!line.empty()) {
 
                 parsedEntry.type = kEncodedWordTypeNone;
-                parsedEntry.encodingStr = kEncodedWordASCIIStr;
+                parsedEntry.encoding = kEncodedWordASCII;
 
-                if (lineStr.find(kEncodedWordPrefixStr) == 0) {
+                if (line.find(kEncodedWordPrefix) == 0) {
 
-                    lineStr = lineStr.substr(std::strlen(kEncodedWordPrefixStr));
-                    parsedEntry.encodingStr = lineStr.substr(0, lineStr.find(kEncodedWordSeparatorStr));
-                    lineStr = lineStr.substr(lineStr.find(kEncodedWordSeparatorStr) + 1);
+                    line = line.substr(std::strlen(kEncodedWordPrefix));
+                    parsedEntry.encoding = line.substr(0, line.find(kEncodedWordSeparator));
+                    line = line.substr(line.find(kEncodedWordSeparator) + 1);
 
-                    parsedEntry.type = lineStr[0];
-                    lineStr = lineStr.substr(std::strlen(kEncodedWordPrefixStr));
-                    parsedEntry.contentsStr = lineStr.substr(0, lineStr.find(kEncodedWordPostfixStr));
-                    lineStr = lineStr.substr(lineStr.find(kEncodedWordPostfixStr) + 2);
+                    parsedEntry.type = line[0];
+                    line = line.substr(std::strlen(kEncodedWordPrefix));
+                    parsedEntry.contents = line.substr(0, line.find(kEncodedWordPostfix));
+                    line = line.substr(line.find(kEncodedWordPostfix) + 2);
 
                 } else {
 
-                    if (lineStr.find(kEncodedWordPostfixStr) == std::string::npos) {
-                        parsedEntry.contentsStr = lineStr;
-                        lineStr = "";
+                    if (line.find(kEncodedWordPostfix) == std::string::npos) {
+                        parsedEntry.contents = line;
+                        line = "";
                     } else {
-                        parsedEntry.contentsStr = lineStr.substr(0, lineStr.find(kEncodedWordPrefixStr));
-                        lineStr = lineStr.substr(lineStr.find(kEncodedWordPrefixStr));
+                        parsedEntry.contents = line.substr(0, line.find(kEncodedWordPrefix));
+                        line = line.substr(line.find(kEncodedWordPrefix));
                     }
 
                 }
 
-                parsedString.push_back(parsedEntry);
+                parseding.push_back(parsedEntry);
 
             }
         }
 
-        return (parsedString);
+        return (parseding);
 
     }
 
@@ -720,39 +720,39 @@ namespace Antik {
     // Parse MIME string passed in and convert it to ASCII as best can.
     //
 
-    std::string CMIME::convertMIMEStringToASCII(const std::string& mimeStr) {
+    std::string CMIME::convertMIMEingToASCII(const std::string& mime) {
 
-        std::vector<ParsedMIMEString> parsedString { parseMIMEString(mimeStr) };
-        std::string convertedMIMEStr;
+        std::vector<ParsedMIMEing> parseding { parseMIMEing(mime) };
+        std::string convertedMIME;
 
-        for (auto& parsedEntry : parsedString) {
+        for (auto& parsedEntry : parseding) {
             if (parsedEntry.type == kEncodedWordTypeNone) {
-                convertedMIMEStr += parsedEntry.contentsStr;
+                convertedMIME += parsedEntry.contents;
             } else if (parsedEntry.type == kEncodedWordTypeQuoted) {
                 int cnt01 = 0;
-                while (cnt01 < parsedEntry.contentsStr.length()) {
-                    if (parsedEntry.contentsStr[cnt01] != kQuotedPrintPrefix) {
-                        convertedMIMEStr.append(1, parsedEntry.contentsStr[cnt01++]);
+                while (cnt01 < parsedEntry.contents.length()) {
+                    if (parsedEntry.contents[cnt01] != kQuotedPrintPrefix) {
+                        convertedMIME.append(1, parsedEntry.contents[cnt01++]);
                     } else {
                         unsigned char byte1, byte2;
                         cnt01++;
-                        byte2 = parsedEntry.contentsStr[cnt01++];
+                        byte2 = parsedEntry.contents[cnt01++];
                         byte1 = ((byte2 <= '9') ? (byte2 - '0') : ((byte2 - 'A') + 10)) << 4;
-                        byte2 = parsedEntry.contentsStr[cnt01++];
+                        byte2 = parsedEntry.contents[cnt01++];
                         byte1 |= ((byte2 <= '9') ? (byte2 - '0') : ((byte2 - 'A') + 10));
-                        convertedMIMEStr.append(1, byte1);
+                        convertedMIME.append(1, byte1);
                     }
                 }
 
             } else if (parsedEntry.type == kEncodedWordTypeBase64) {
-                std::string decodedStr;
-                Antik::SMTP::CSMTP::decodeFromBase64(parsedEntry.contentsStr, decodedStr, parsedEntry.contentsStr.length());
-                convertedMIMEStr += decodedStr;
+                std::string decoded;
+                Antik::SMTP::CSMTP::decodeFromBase64(parsedEntry.contents, decoded, parsedEntry.contents.length());
+                convertedMIME += decoded;
             }
 
         }
 
-        return (convertedMIMEStr);
+        return (convertedMIME);
 
     }
 

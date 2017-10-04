@@ -56,15 +56,15 @@ namespace Antik {
 
     // Log output no op
 
-    const CLogger::LogStringsFn CLogger::noOp = [] (const std::initializer_list<std::string>& outstr) {
+    const CLogger::LogingsFn CLogger::noOp = [] (const std::initializer_list<std::string>& outstr) {
     };
 
     // ========================
     // PRIVATE STATIC VARIABLES
     // ========================
 
-    std::mutex CLogger::mOutput; // Mutex to control access to cout/cerr
-    bool CLogger::bDateTimeStamped { false }; // ==true then output timetamped
+    std::mutex CLogger::m_outputMutex; // Mutex to control access to cout/cerr
+    bool CLogger::m_dateTimeStamped { false }; // ==true then output timetamped
 
     // =======================
     // PUBLIC STATIC VARIABLES
@@ -101,7 +101,7 @@ namespace Antik {
     //
 
     void CLogger::setDateTimeStamped(const bool bDateTimeStamped) {
-        CLogger::bDateTimeStamped = bDateTimeStamped;
+        CLogger::m_dateTimeStamped = bDateTimeStamped;
     }
 
     //
@@ -111,10 +111,10 @@ namespace Antik {
 
     void CLogger::coutstr(const std::initializer_list<std::string>& outstr) {
 
-        std::lock_guard<std::mutex> locker(CLogger::mOutput);
+        std::lock_guard<std::mutex> locker(CLogger::m_outputMutex);
 
         if (outstr.size() > 0) {
-            if (CLogger::bDateTimeStamped) {
+            if (CLogger::m_dateTimeStamped) {
                 std::cout << ("[" + currentDateAndTime() + "]");
             }
             for (auto str : outstr) {
@@ -132,10 +132,10 @@ namespace Antik {
 
     void CLogger::cerrstr(const std::initializer_list<std::string>& errstr) {
 
-        std::lock_guard<std::mutex> locker(CLogger::mOutput);
+        std::lock_guard<std::mutex> locker(CLogger::m_outputMutex);
 
         if (errstr.size() > 0) {
-            if (CLogger::bDateTimeStamped) {
+            if (CLogger::m_dateTimeStamped) {
                 std::cerr << ("[" + currentDateAndTime() + "]");
             }
             for (auto str : errstr) {
@@ -151,7 +151,7 @@ namespace Antik {
     //
 
     template <>
-    std::string CLogger::toString(std::thread::id value) {
+    std::string CLogger::toing(std::thread::id value) {
         std::ostringstream ss;
         ss << "0x" << std::hex << value;
         return ss.str();

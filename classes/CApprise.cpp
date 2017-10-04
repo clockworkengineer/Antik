@@ -73,7 +73,7 @@ namespace Antik {
 
         // CApprise logging prefix
 
-        const std::string CApprise::kLogPrefixStr { "[CApprise] " };
+        const std::string CApprise::kLogPrefix { "[CApprise] " };
 
         // ==========================
         // PUBLIC TYPES AND CONSTANTS
@@ -128,7 +128,7 @@ namespace Antik {
                 outstr += ("\n        name = " + std::string(event->name));
             }
 
-            this->coutstr({outstr});
+            this->m_coutstr({outstr});
 
 #endif // DISPLAY_INOTIFY_EVENTS
 
@@ -143,17 +143,17 @@ namespace Antik {
 
         void CApprise::destroyWatchTable(void) {
 
-            for (auto it = this->watchMap.begin(); it != this->watchMap.end(); ++it) {
+            for (auto it = this->m_watchMap.begin(); it != this->m_watchMap.end(); ++it) {
 
-                if (inotify_rm_watch(this->inotifyFd, it->first) == -1) {
+                if (inotify_rm_watch(this->m_inotifyFd, it->first) == -1) {
                     throw std::system_error(std::error_code(errno, std::system_category()), "inotify_rm_watch() error");
                 } else {
-                    coutstr({kLogPrefixStr, "Watch[", std::to_string(it->first), "] removed.", "\n"});
+                    m_coutstr({kLogPrefix, "Watch[", std::to_string(it->first), "] removed.", "\n"});
                 }
 
             }
 
-            if (close(this->inotifyFd) == -1) {
+            if (close(this->m_inotifyFd) == -1) {
                 throw std::system_error(std::error_code(errno, std::system_category()), "inotify close() error");
             }
 
@@ -167,14 +167,14 @@ namespace Antik {
 
             // Initialize inotify 
 
-            if ((this->inotifyFd = inotify_init()) == -1) {
+            if ((this->m_inotifyFd = inotify_init()) == -1) {
                 throw std::system_error(std::error_code(errno, std::system_category()), "inotify_init() error");
             }
 
             // Add non empty watch folder
 
-            if (!this->watchFolderStr.empty()) {
-                this->addWatch(this->watchFolderStr);
+            if (!this->m_watchFolder.empty()) {
+                this->addWatch(this->m_watchFolder);
             }
 
         }
@@ -183,34 +183,34 @@ namespace Antik {
         // Add watch for file/directory
         //
 
-        void CApprise::addWatch(const std::string& filePathStr) {
+        void CApprise::addWatch(const std::string& filePath) {
 
-            std::string fileNameStr { filePathStr };
+            std::string fileName { filePath };
             int watch { 0 };
 
             // Remove path trailing '/'
 
-            if (fileNameStr.back() == '/') {
-                fileNameStr.pop_back();
+            if (fileName.back() == '/') {
+                fileName.pop_back();
             }
 
             // Deeper than max watch depth so ignore.
 
-            if ((this->watchDepth != -1) && (std::count(fileNameStr.begin(), fileNameStr.end(), '/') > this->watchDepth)) {
+            if ((this->m_watchDepth != -1) && (std::count(fileName.begin(), fileName.end(), '/') > this->m_watchDepth)) {
                 return;
             }
 
             // Add watch to inotify 
 
-            if ((watch = inotify_add_watch(this->inotifyFd, fileNameStr.c_str(), this->inotifyWatchMask)) == -1) {
+            if ((watch = inotify_add_watch(this->m_inotifyFd, fileName.c_str(), this->m_inotifyWatchMask)) == -1) {
                 throw std::system_error(std::error_code(errno, std::system_category()), "inotify_add_watch() error");
             }
 
             // Add watch to map
 
-            this->watchMap.insert({watch, fileNameStr});
+            this->m_watchMap.insert({watch, fileName});
 
-            this->coutstr({kLogPrefixStr, "Watch added [", fileNameStr, "] watch = [", std::to_string(watch), "]"});
+            this->m_coutstr({kLogPrefix, "Watch added [", fileName, "] watch = [", std::to_string(watch), "]"});
 
         }
 
@@ -218,11 +218,11 @@ namespace Antik {
         //  Remove watch for file/directory
         //
 
-        void CApprise::removeWatch(const std::string& filePathStr) {
+        void CApprise::removeWatch(const std::string& filePath) {
 
             try {
 
-                std::string fileName { filePathStr };
+                std::string fileName { filePath };
                 int32_t watch { 0 };
 
                 // Remove path trailing '/'
@@ -233,8 +233,8 @@ namespace Antik {
 
                 // Find Watch value
 
-                for (auto watchMapEntry : this->watchMap) {
-                    if (watchMapEntry.second.compare(filePathStr) == 0) {
+                for (auto watchMapEntry : this->m_watchMap) {
+                    if (watchMapEntry.second.compare(filePath) == 0) {
                         watch = watchMapEntry.first;
                         break;
                     }
@@ -242,16 +242,16 @@ namespace Antik {
 
                 if (watch) {
 
-                    this->coutstr({kLogPrefixStr, "Watch removed [", fileName, "] watch = [", std::to_string(watch), "]"});
+                    this->m_coutstr({kLogPrefix, "Watch removed [", fileName, "] watch = [", std::to_string(watch), "]"});
 
-                    this->watchMap.erase(watch);
+                    this->m_watchMap.erase(watch);
 
-                    if (inotify_rm_watch(this->inotifyFd, watch) == -1) {
+                    if (inotify_rm_watch(this->m_inotifyFd, watch) == -1) {
                         throw std::system_error(std::error_code(errno, std::system_category()), "inotify_rm_watch() error");
                     }
 
                 } else {
-                    this->cerrstr({kLogPrefixStr, "Watch not found in local map. Remove failed [", fileName, "]"});
+                    this->m_cerrstr({kLogPrefix, "Watch not found in local map. Remove failed [", fileName, "]"});
                 }
 
 
@@ -264,8 +264,8 @@ namespace Antik {
 
             // No more watches so closedown
 
-            if (this->watchMap.size() == 0) {
-                this->coutstr({kLogPrefixStr, "*** Last watch deleted so terminating watch loop. ***"});
+            if (this->m_watchMap.size() == 0) {
+                this->m_coutstr({kLogPrefix, "*** Last watch deleted so terminating watch loop. ***"});
                 this->stop();
             }
 
@@ -275,11 +275,11 @@ namespace Antik {
         // Queue CApprise event
         //
 
-        void CApprise::sendEvent(CApprise::EventId id, const std::string& fileNameStr) {
+        void CApprise::sendEvent(CApprise::EventId id, const std::string& fileName) {
 
-            std::unique_lock<std::mutex> locker(this->queuedEventsMutex);
-            this->queuedEvents.push({id, fileNameStr});
-            this->queuedEventsWaiting.notify_one();
+            std::unique_lock<std::mutex> locker(this->m_queuedEventsMutex);
+            this->m_queuedEvents.push({id, fileName});
+            this->m_queuedEventsWaiting.notify_one();
 
         }
 
@@ -291,48 +291,48 @@ namespace Antik {
         // Main CApprise object constructor. 
         //
 
-        CApprise::CApprise(const std::string& watchFolderStr, int watchDepth, std::shared_ptr<CApprise::Options> options) : watchFolderStr{watchFolderStr}, watchDepth{watchDepth}, bDoWork{true}
+        CApprise::CApprise(const std::string& watchFolder, int watchDepth, std::shared_ptr<CApprise::Options> options) : m_watchFolder{watchFolder}, m_watchDepth{watchDepth}, m_doWork{true}
         {
 
             // ASSERT if passed parameters invalid
 
-            assert(watchFolderStr.length() != 0); // Length == 0
+            assert(watchFolder.length() != 0); // Length == 0
             assert(watchDepth >= -1); // < -1
 
             // If options passed then setup trace functions and event mask
 
             if (options) {
-                this->bDisplayInotifyEvent = options->bDisplayInotifyEvent;
+                this->m_bDisplayInotifyEvent = options->bDisplayInotifyEvent;
                 if (options->inotifyWatchMask) {
-                    this->inotifyWatchMask = options->inotifyWatchMask;
+                    this->m_inotifyWatchMask = options->inotifyWatchMask;
                 }
                 if (options->coutstr) {
-                    this->coutstr = options->coutstr;
+                    this->m_coutstr = options->coutstr;
                 }
                 if (options->cerrstr) {
-                    this->cerrstr = options->cerrstr;
+                    this->m_cerrstr = options->cerrstr;
                 }
             }
 
             // Remove path trailing '/'
 
-            if ((this->watchFolderStr).back() == '/') {
-                (this->watchFolderStr).pop_back();
+            if ((this->m_watchFolder).back() == '/') {
+                (this->m_watchFolder).pop_back();
             }
 
-            this->coutstr({kLogPrefixStr, "Watch folder [", this->watchFolderStr, "]"});
-            this->coutstr({kLogPrefixStr, "Watch Depth [", std::to_string(watchDepth), "]"});
+            this->m_coutstr({kLogPrefix, "Watch folder [", this->m_watchFolder, "]"});
+            this->m_coutstr({kLogPrefix, "Watch Depth [", std::to_string(watchDepth), "]"});
 
             // Save away max watch depth and modify with watch folder depth value if not all (-1).
 
-            this->watchDepth = watchDepth;
+            this->m_watchDepth = watchDepth;
             if (watchDepth != -1) {
-                this->watchDepth += std::count(watchFolderStr.begin(), watchFolderStr.end(), '/');
+                this->m_watchDepth += std::count(watchFolder.begin(), watchFolder.end(), '/');
             }
 
             // Allocate inotify read buffer
 
-            this->inotifyBuffer.reset(new std::uint8_t [kInotifyEventBuffLen]);
+            this->m_inotifyBuffer.reset(new std::uint8_t [kInotifyEventBuffLen]);
 
             // Create watch table
 
@@ -344,28 +344,28 @@ namespace Antik {
         // CApprise object constructor (watches need to be added/removed). 
         //
 
-        CApprise::CApprise(std::shared_ptr<CApprise::Options> options) : bDoWork{true}
+        CApprise::CApprise(std::shared_ptr<CApprise::Options> options) : m_doWork{true}
         {
 
 
             // If options passed then setup trace functions and event mask
 
             if (options) {
-                this->bDisplayInotifyEvent = options->bDisplayInotifyEvent;
+                this->m_bDisplayInotifyEvent = options->bDisplayInotifyEvent;
                 if (options->inotifyWatchMask) {
-                    this->inotifyWatchMask = options->inotifyWatchMask;
+                    this->m_inotifyWatchMask = options->inotifyWatchMask;
                 }
                 if (options->coutstr) {
-                    this->coutstr = options->coutstr;
+                    this->m_coutstr = options->coutstr;
                 }
                 if (options->cerrstr) {
-                    this->cerrstr = options->cerrstr;
+                    this->m_cerrstr = options->cerrstr;
                 }
             }
 
             // Allocate inotify read buffer
 
-            this->inotifyBuffer.reset(new u_int8_t [kInotifyEventBuffLen]);
+            this->m_inotifyBuffer.reset(new u_int8_t [kInotifyEventBuffLen]);
 
             // Create watch table
 
@@ -379,7 +379,7 @@ namespace Antik {
 
         CApprise::~CApprise() {
 
-            this->coutstr({kLogPrefixStr, "DESTRUCTOR CALLED."});
+            this->m_coutstr({kLogPrefix, "DESTRUCTOR CALLED."});
 
         }
 
@@ -389,7 +389,7 @@ namespace Antik {
 
         bool CApprise::stillWatching(void) {
 
-            return (this->bDoWork.load());
+            return (this->m_doWork.load());
 
         }
 
@@ -399,7 +399,7 @@ namespace Antik {
 
         std::exception_ptr CApprise::getThrownException(void) {
 
-            return (this->thrownException);
+            return (this->m_thrownException);
 
         }
 
@@ -407,9 +407,9 @@ namespace Antik {
         // Add watch (file or directory)
         //
 
-        void CApprise::addWatchFile(const std::string& filePathStr) {
+        void CApprise::addWatchFile(const std::string& filePath) {
 
-            this->addWatch(filePathStr);
+            this->addWatch(filePath);
 
         }
 
@@ -417,9 +417,9 @@ namespace Antik {
         // Remove watch
         //
 
-        void CApprise::removeWatchFile(const std::string& filePathStr) {
+        void CApprise::removeWatchFile(const std::string& filePath) {
 
-            this->removeWatch(filePathStr);
+            this->removeWatch(filePath);
 
         }
 
@@ -429,22 +429,22 @@ namespace Antik {
 
         void CApprise::getEvent(CApprise::Event& evt) {
 
-            std::unique_lock<std::mutex> locker(this->queuedEventsMutex);
+            std::unique_lock<std::mutex> locker(this->m_queuedEventsMutex);
 
             // Wait for something to happen. Either an event or stop running
 
-            this->queuedEventsWaiting.wait(locker, [&]() {
-                return (!this->queuedEvents.empty() || !this->bDoWork.load());
+            this->m_queuedEventsWaiting.wait(locker, [&]() {
+                return (!this->m_queuedEvents.empty() || !this->m_doWork.load());
             });
 
             // return next event from queue
 
-            if (!this->queuedEvents.empty()) {
-                evt = this->queuedEvents.front();
-                this->queuedEvents.pop();
+            if (!this->m_queuedEvents.empty()) {
+                evt = this->m_queuedEvents.front();
+                this->m_queuedEvents.pop();
             } else {
                 evt.id = Event_none;
-                evt.messageStr = "";
+                evt.message = "";
             }
 
         }
@@ -455,11 +455,11 @@ namespace Antik {
 
         void CApprise::stop(void) {
 
-            this->coutstr({kLogPrefixStr, "Stop CApprise thread."});
+            this->m_coutstr({kLogPrefix, "Stop CApprise thread."});
 
-            std::unique_lock<std::mutex> locker(this->queuedEventsMutex);
-            this->bDoWork = false;
-            this->queuedEventsWaiting.notify_one();
+            std::unique_lock<std::mutex> locker(this->m_queuedEventsMutex);
+            this->m_doWork = false;
+            this->m_queuedEventsWaiting.notify_one();
 
             this->destroyWatchTable();
 
@@ -472,25 +472,25 @@ namespace Antik {
 
         void CApprise::watch(void) {
 
-            std::uint8_t *buffer { this->inotifyBuffer.get() };
+            std::uint8_t *buffer { this->m_inotifyBuffer.get() };
             struct inotify_event *event { nullptr };
-            std::string filePathStr;
+            std::string filePath;
 
-            this->coutstr({kLogPrefixStr, "CApprise watch loop started on thread [",
-                Antik::Util::CLogger::toString(std::this_thread::get_id()), "]"});
+            this->m_coutstr({kLogPrefix, "CApprise watch loop started on thread [",
+                Antik::Util::CLogger::toing(std::this_thread::get_id()), "]"});
 
             try {
 
                 // Loop until told to stop
 
-                while (this->bDoWork.load()) {
+                while (this->m_doWork.load()) {
 
                     int readLen { 0 };
                     int currentPos { 0 };
 
                     // Read in events
 
-                    if ((readLen = read(this->inotifyFd, buffer, kInotifyEventBuffLen)) == -1) {
+                    if ((readLen = read(this->m_inotifyFd, buffer, kInotifyEventBuffLen)) == -1) {
                         throw std::system_error(std::error_code(errno, std::system_category()), "inotify read() error");
                     }
 
@@ -505,7 +505,7 @@ namespace Antik {
 
                         // Display inotify event
 
-                        if (this->bDisplayInotifyEvent) {
+                        if (this->m_bDisplayInotifyEvent) {
                             this->displayInotifyEvent(event);
                         }
 
@@ -517,10 +517,10 @@ namespace Antik {
 
                         // Create full file name path
 
-                        filePathStr = this->watchMap[event->wd];
+                        filePath = this->m_watchMap[event->wd];
 
                         if (event->len > 0) {
-                            filePathStr += ("/" + static_cast<std::string>(event->name));
+                            filePath += ("/" + static_cast<std::string>(event->name));
                         }
 
                         // Process event
@@ -531,7 +531,7 @@ namespace Antik {
 
                             case IN_CREATE:
                             {
-                                this->inProcessOfCreation.insert(filePathStr);
+                                this->m_inProcessOfCreation.insert(filePath);
                                 break;
                             }
 
@@ -539,9 +539,9 @@ namespace Antik {
 
                             case IN_MODIFY:
                             {
-                                auto beingCreated = this->inProcessOfCreation.find(filePathStr);
-                                if (beingCreated == this->inProcessOfCreation.end()) {
-                                    this->sendEvent(Event_change, filePathStr);
+                                auto beingCreated = this->m_inProcessOfCreation.find(filePath);
+                                if (beingCreated == this->m_inProcessOfCreation.end()) {
+                                    this->sendEvent(Event_change, filePath);
                                 }
                                 break;
                             }
@@ -551,8 +551,8 @@ namespace Antik {
                             case (IN_ISDIR | IN_CREATE):
                             case (IN_ISDIR | IN_MOVED_TO):
                             {
-                                this->sendEvent(Event_addir, filePathStr);
-                                this->addWatch(filePathStr);
+                                this->sendEvent(Event_addir, filePath);
+                                this->addWatch(filePath);
                                 break;
                             }
 
@@ -560,7 +560,7 @@ namespace Antik {
 
                             case (IN_ISDIR | IN_DELETE):
                             {
-                                this->sendEvent(Event_unlinkdir, filePathStr);
+                                this->sendEvent(Event_unlinkdir, filePath);
                                 break;
                             }
 
@@ -569,7 +569,7 @@ namespace Antik {
                             case (IN_ISDIR | IN_MOVED_FROM):
                             case IN_DELETE_SELF:
                             {
-                                this->removeWatch(filePathStr);
+                                this->removeWatch(filePath);
                                 break;
                             }
 
@@ -577,7 +577,7 @@ namespace Antik {
 
                             case IN_DELETE:
                             {
-                                this->sendEvent(Event_unlink, filePathStr);
+                                this->sendEvent(Event_unlink, filePath);
                                 break;
                             }
 
@@ -585,7 +585,7 @@ namespace Antik {
 
                             case IN_MOVED_TO:
                             {
-                                this->sendEvent(Event_add, filePathStr);
+                                this->sendEvent(Event_add, filePath);
                                 break;
                             }
 
@@ -593,12 +593,12 @@ namespace Antik {
 
                             case IN_CLOSE_WRITE:
                             {
-                                auto beingCreated = this->inProcessOfCreation.find(filePathStr);
-                                if (beingCreated == this->inProcessOfCreation.end()) {
-                                    this->sendEvent(Event_change, filePathStr);
+                                auto beingCreated = this->m_inProcessOfCreation.find(filePath);
+                                if (beingCreated == this->m_inProcessOfCreation.end()) {
+                                    this->sendEvent(Event_change, filePath);
                                 } else {
-                                    this->inProcessOfCreation.erase(filePathStr);
-                                    this->sendEvent(Event_add, filePathStr);
+                                    this->m_inProcessOfCreation.erase(filePath);
+                                    this->sendEvent(Event_add, filePath);
                                 }
                                 break;
                             }
@@ -617,20 +617,20 @@ namespace Antik {
                 //
 
             } catch (std::system_error &e) {
-                this->sendEvent(Event_error, kLogPrefixStr + "Caught a system_error exception: [" + e.what() + "]");
-                this->thrownException = std::current_exception();
+                this->sendEvent(Event_error, kLogPrefix + "Caught a system_error exception: [" + e.what() + "]");
+                this->m_thrownException = std::current_exception();
             } catch (std::exception &e) {
-                this->sendEvent(Event_error, kLogPrefixStr + "General exception occured: [" + e.what() + "]");
-                this->thrownException = std::current_exception();
+                this->sendEvent(Event_error, kLogPrefix + "General exception occured: [" + e.what() + "]");
+                this->m_thrownException = std::current_exception();
             }
 
             // If still active then need to close down
 
-            if (this->bDoWork.load()) {
+            if (this->m_doWork.load()) {
                 this->stop();
             }
 
-            this->coutstr({kLogPrefixStr, "CApprise watch loop stopped."});
+            this->m_coutstr({kLogPrefix, "CApprise watch loop stopped."});
 
         }
 

@@ -118,7 +118,9 @@ namespace Antik {
             
             std::uint16_t list(const std::string &directoryPath, std::string &listOutput);
             std::uint16_t listFiles(const std::string &directoryPath, std::string &listOutput);
-            
+            std::uint16_t listDirectory(const std::string &directoryPath, std::string &listOutput);
+            std::uint16_t listFile(const std::string &filePath, std::string &listOutput);
+              
             // FTP set/get current working directory
             
             std::uint16_t changeWorkingDirectory(const std::string &workingDirectoryPath);
@@ -172,32 +174,32 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
 
-            bool bConnected { false }; // == true then connected to server
+            bool m_connected { false }; // == true then connected to server
             
-            std::string userName;     // FTP account user name
-            std::string userPassword; // FTP account user name password
-            std::string serverName;   // FTP server
-            std::string serverPort;   // FTP server port
+            std::string m_userName;     // FTP account user name
+            std::string m_userPassword; // FTP account user name password
+            std::string m_serverName;   // FTP server
+            std::string m_serverPort;   // FTP server port
 
-            std::string commandResponse; // FTP command response
+            std::string m_commandResponse; // FTP command response
             
-            std::string dataChannelPassiveAddresss; // Data channel server ip address
-            std::string dataChannelPassivePort;     // Data channel server port address
+            std::string m_dataChannelPassiveAddresss; // Data channel server ip address
+            std::string m_dataChannelPassivePort;     // Data channel server port address
          
-            std::string dataChannelActiveAddresss;  // Data channel client ip address
-            std::string dataChannelActivePort;      // Data channel client port address
+            std::string m_dataChannelActiveAddresss;  // Data channel client ip address
+            std::string m_dataChannelActivePort;      // Data channel client port address
             
-            bool passiveMode { false }; // == true passive mode enabled, == false active mode
+            bool m_passiveMode { false }; // == true passive mode enabled, == false active mode
 
-            boost::asio::io_service ioService;                                // IO Service
-            boost::array<char, 32*1024> ioBuffer;                             // IO Buffer
-            boost::system::error_code socketError;                            // Last socket error
-            boost::asio::ip::tcp::socket controlChannelSocket { ioService };  // Control channel socket
-            boost::asio::ip::tcp::socket dataChannelSocket { ioService };     // Data channel socket
-            boost::asio::ip::tcp::resolver queryResolver { ioService };       // Name resolver
+            boost::asio::io_service m_ioService;                                // IO Service
+            boost::array<char, 32*1024> m_ioBuffer;                             // IO Buffer
+            boost::system::error_code m_socketError;                            // Last socket error
+            boost::asio::ip::tcp::socket m_controlChannelSocket { m_ioService };  // Control channel socket
+            boost::asio::ip::tcp::socket m_dataChannelSocket { m_ioService };     // Data channel socket
+            boost::asio::ip::tcp::resolver m_queryResolver { m_ioService };       // Name resolver
             
-            std::atomic<bool> isListenThreadRunning { false };    // Listen thread running flag
-            std::shared_ptr<std::thread> dataChannelListenThread; // Active mode connection listen thread
+            std::atomic<bool> m_isListenThreadRunning { false };    // Listen thread running flag
+            std::shared_ptr<std::thread> m_dataChannelListenThread; // Active mode connection listen thread
                 
 
         };

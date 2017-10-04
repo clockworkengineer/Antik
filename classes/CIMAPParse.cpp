@@ -69,7 +69,7 @@ namespace Antik {
         // IMAP command code to parse response mapping table
         //
 
-        std::unordered_map<int, CIMAPParse::ParseFunction> CIMAPParse::parseCommmandMap
+        std::unordered_map<int, CIMAPParse::ParseFunction> CIMAPParse::m_parseCommmandMap
         {
             { static_cast<int> (Commands::LIST), parseLIST},
             { static_cast<int> (Commands::LSUB), parseLIST},
@@ -89,34 +89,34 @@ namespace Antik {
         // IMAP command string to internal enum code map table.
         //
 
-        std::unordered_map<std::string, CIMAPParse::Commands> CIMAPParse::stringToCodeMap
+        std::unordered_map<std::string, CIMAPParse::Commands> CIMAPParse::m_stringToCodeMap
         {
-            { kSTARTTLSStr, Commands::STARTTLS},
-            { kAUTHENTICATEStr, Commands::AUTHENTICATE},
-            { kLOGINStr, Commands::LOGIN},
-            { kCAPABILITYStr, Commands::CAPABILITY},
-            { kSELECTStr, Commands::SELECT},
-            { kEXAMINEStr, Commands::EXAMINE},
-            { kCREATEStr, Commands::CREATE},
-            { kDELETEStr, Commands::DELETE},
-            { kRENAMEStr, Commands::RENAME},
-            { kSUBSCRIBEStr, Commands::SUBSCRIBE},
-            { kUNSUBSCRIBEStr, Commands::UNSUBSCRIBE},
-            { kLISTStr, Commands::LIST},
-            { kLSUBStr, Commands::LSUB},
-            { kSTATUSStr, Commands::STATUS},
-            { kAPPENDStr, Commands::APPEND},
-            { kCHECKStr, Commands::CHECK},
-            { kCLOSEStr, Commands::CLOSE},
-            { kEXPUNGEStr, Commands::EXPUNGE},
-            { kSEARCHStr, Commands::SEARCH},
-            { kFETCHStr, Commands::FETCH},
-            { kSTOREStr, Commands::STORE},
-            { kCOPYStr, Commands::COPY},
-            { kUIDStr, Commands::UID},
-            { kNOOPStr, Commands::NOOP},
-            { kLOGOUTStr, Commands::LOGOUT},
-            { kIDLEStr, Commands::IDLE}};
+            { kSTARTTLS, Commands::STARTTLS},
+            { kAUTHENTICATE, Commands::AUTHENTICATE},
+            { kLOGIN, Commands::LOGIN},
+            { kCAPABILITY, Commands::CAPABILITY},
+            { kSELECT, Commands::SELECT},
+            { kEXAMINE, Commands::EXAMINE},
+            { kCREATE, Commands::CREATE},
+            { kDELETE, Commands::DELETE},
+            { kRENAME, Commands::RENAME},
+            { kSUBSCRIBE, Commands::SUBSCRIBE},
+            { kUNSUBSCRIBE, Commands::UNSUBSCRIBE},
+            { kLIST, Commands::LIST},
+            { kLSUB, Commands::LSUB},
+            { kSTATUS, Commands::STATUS},
+            { kAPPEND, Commands::APPEND},
+            { kCHECK, Commands::CHECK},
+            { kCLOSE, Commands::CLOSE},
+            { kEXPUNGE, Commands::EXPUNGE},
+            { kSEARCH, Commands::SEARCH},
+            { kFETCH, Commands::FETCH},
+            { kSTORE, Commands::STORE},
+            { kCOPY, Commands::COPY},
+            { kUID, Commands::UID},
+            { kNOOP, Commands::NOOP},
+            { kLOGOUT, Commands::LOGOUT},
+            { kIDLE, Commands::IDLE}};
 
         // =======================
         // PUBLIC STATIC VARIABLES
@@ -130,11 +130,11 @@ namespace Antik {
         // Read next line to parse. If the stream is no longer good then throw an exception.
         //
 
-        bool CIMAPParse::parseGetNextLine(std::istringstream& responseStream, std::string& lineStr) {
+        bool CIMAPParse::parseGetNextLine(std::istringstream& responseeam, std::string& line) {
 
-            if (responseStream.good()) {
-                bool bLineRead = static_cast<bool> (std::getline(responseStream, lineStr, '\n'));
-                if (bLineRead) lineStr.pop_back();
+            if (responseeam.good()) {
+                bool bLineRead = static_cast<bool> (std::getline(responseeam, line, '\n'));
+                if (bLineRead) line.pop_back();
                 return (bLineRead);
             } else {
                 throw Exception("error parsing command response (run out of input).");
@@ -147,15 +147,15 @@ namespace Antik {
         // response is processed over multiple lines and not line by line.
         //
 
-        void CIMAPParse::parseNumber(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr) {
+        void CIMAPParse::parseNumber(const std::string& item, FetchRespData& fetchData, std::string& line) {
             int numberPos { 0 };
-            std::string numberStr;
-            lineStr = lineStr.substr(itemStr.length() + 1);
-            while (std::isdigit(lineStr[numberPos])) {
-                numberStr.append(1, lineStr[numberPos++]);
+            std::string number;
+            line = line.substr(item.length() + 1);
+            while (std::isdigit(line[numberPos])) {
+                number.append(1, line[numberPos++]);
             }
-            lineStr = lineStr.substr(numberStr.length());
-            fetchData.responseMap.insert({itemStr, numberStr});
+            line = line.substr(number.length());
+            fetchData.responseMap.insert({item, number});
 
         }
 
@@ -164,12 +164,12 @@ namespace Antik {
         // updated to remove the pair and also this function is only used in FETCH command parse as the 
         // response is processed over multiple lines and not line by line.
 
-        void CIMAPParse::parseString(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr) {
-            std::string quotedString;
-            lineStr = lineStr.substr(lineStr.find(itemStr) + itemStr.length() + 1);
-            quotedString = "\"" + stringBetween(lineStr, '\"', '\"') + "\"";
-            lineStr = lineStr.substr(quotedString.length());
-            fetchData.responseMap.insert({itemStr, quotedString});
+        void CIMAPParse::parseing(const std::string& item, FetchRespData& fetchData, std::string& line) {
+            std::string quoteding;
+            line = line.substr(line.find(item) + item.length() + 1);
+            quoteding = "\"" + stringBetween(line, '\"', '\"') + "\"";
+            line = line.substr(quoteding.length());
+            fetchData.responseMap.insert({item, quoteding});
 
         }
 
@@ -180,13 +180,13 @@ namespace Antik {
         // by line.
         //
 
-        void CIMAPParse::parseList(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr) {
+        void CIMAPParse::parseList(const std::string& item, FetchRespData& fetchData, std::string& line) {
 
-            std::string listStr;
-            lineStr = lineStr.substr(lineStr.find(itemStr) + itemStr.length() + 1);
-            listStr = stringList(lineStr);
-            lineStr = lineStr.substr(listStr.length());
-            fetchData.responseMap.insert({itemStr, listStr});
+            std::string list;
+            line = line.substr(line.find(item) + item.length() + 1);
+            list = stringList(line);
+            line = line.substr(list.length());
+            fetchData.responseMap.insert({item, list});
 
         }
 
@@ -198,18 +198,18 @@ namespace Antik {
         // response map to distinguish between multiple octet fetches that might occur.
         //
 
-        void CIMAPParse::parseOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr, std::istringstream& responseStream) {
+        void CIMAPParse::parseOctets(const std::string& item, FetchRespData& fetchData, std::string& line, std::istringstream& responseeam) {
 
-            std::string octetStr;
+            std::string octet;
             std::string octectBuffer;
-            std::string commandLabel { lineStr };
+            std::string commandLabel { line };
             int numberOfOctets { 0 };
 
-            octetStr = stringBetween(lineStr, '{', '}');
-            numberOfOctets = std::strtoull(octetStr.c_str(), nullptr, 10);
+            octet = stringBetween(line, '{', '}');
+            numberOfOctets = std::strtoull(octet.c_str(), nullptr, 10);
             octectBuffer.resize(numberOfOctets);
-            responseStream.read(&octectBuffer[0], numberOfOctets);
-            parseGetNextLine(responseStream, lineStr);
+            responseeam.read(&octectBuffer[0], numberOfOctets);
+            parseGetNextLine(responseeam, line);
             fetchData.responseMap.insert({commandLabel, octectBuffer});
 
         }
@@ -220,62 +220,62 @@ namespace Antik {
         // in mailbox status.
         //
 
-        void CIMAPParse::parseCommon(const std::string& tagStr, const std::string& lineStr, CommandResponse * resp) {
+        void CIMAPParse::parseCommon(const std::string& tag, const std::string& line, CommandResponse * resp) {
 
 
-            if ((lineStr[0] == kUntaggedStr[0]) &&
-                    (lineStr.find(kRECENTStr) != std::string::npos)) {
+            if ((line[0] == kUntagged[0]) &&
+                    (line.find(kRECENT) != std::string::npos)) {
 
-                if (resp->responseMap.find(kRECENTStr) == resp->responseMap.end()) {
-                    resp->responseMap.insert({kRECENTStr, stringUntaggedNumber(lineStr)});
+                if (resp->responseMap.find(kRECENT) == resp->responseMap.end()) {
+                    resp->responseMap.insert({kRECENT, stringUntaggedNumber(line)});
                 } else {
-                    resp->responseMap[kRECENTStr] += " " + stringUntaggedNumber(lineStr);
+                    resp->responseMap[kRECENT] += " " + stringUntaggedNumber(line);
                 }
 
-            } else if ((lineStr[0] == kUntaggedStr[0]) &&
-                    (lineStr.find(kEXISTSStr) != std::string::npos)) {
+            } else if ((line[0] == kUntagged[0]) &&
+                    (line.find(kEXISTS) != std::string::npos)) {
 
-                if (resp->responseMap.find(kEXISTSStr) == resp->responseMap.end()) {
-                    resp->responseMap.insert({kEXISTSStr, stringUntaggedNumber(lineStr)});
+                if (resp->responseMap.find(kEXISTS) == resp->responseMap.end()) {
+                    resp->responseMap.insert({kEXISTS, stringUntaggedNumber(line)});
                 } else {
-                    resp->responseMap[kEXISTSStr] += " " + stringUntaggedNumber(lineStr);
+                    resp->responseMap[kEXISTS] += " " + stringUntaggedNumber(line);
                 }
 
-            } else if ((lineStr[0] == kUntaggedStr[0]) &&
-                    (lineStr.find(kEXPUNGEStr) != std::string::npos)) {
+            } else if ((line[0] == kUntagged[0]) &&
+                    (line.find(kEXPUNGE) != std::string::npos)) {
 
-                if (resp->responseMap.find(kEXPUNGEStr) == resp->responseMap.end()) {
-                    resp->responseMap.insert({kEXPUNGEStr, stringUntaggedNumber(lineStr)});
+                if (resp->responseMap.find(kEXPUNGE) == resp->responseMap.end()) {
+                    resp->responseMap.insert({kEXPUNGE, stringUntaggedNumber(line)});
                 } else {
-                    resp->responseMap[kEXPUNGEStr] += " " + stringUntaggedNumber(lineStr);
+                    resp->responseMap[kEXPUNGE] += " " + stringUntaggedNumber(line);
                 }
 
-            } else if (stringEqual(lineStr, tagStr + " " + kOKStr)) {
+            } else if (stringEqual(line, tag + " " + kOK)) {
                 resp->status = RespCode::OK;
 
-            } else if (stringEqual(lineStr, tagStr + " " + kNOStr)) {
+            } else if (stringEqual(line, tag + " " + kNO)) {
                 resp->status = RespCode::NO;
-                resp->errorMessageStr = lineStr;
+                resp->errorMessage = line;
 
-            } else if (stringEqual(lineStr, tagStr + " " + kBADStr)) {
+            } else if (stringEqual(line, tag + " " + kBAD)) {
                 resp->status = RespCode::BAD;
-                resp->errorMessageStr = lineStr;
+                resp->errorMessage = line;
 
-            } else if (stringEqual(lineStr, static_cast<std::string> (kUntaggedStr) + " " + kBYEStr)) {
+            } else if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kBYE)) {
                 if (!resp->bBYESent) {
                     resp->bBYESent = true;
                 }
-                resp->errorMessageStr = lineStr;
+                resp->errorMessage = line;
 
-            } else if ((stringEqual(lineStr, static_cast<std::string> (kUntaggedStr) + " " + kNOStr))
-                    || (stringEqual(lineStr, static_cast<std::string> (kUntaggedStr) + " " + kBADStr))) {
-                std::cerr << lineStr << std::endl;
+            } else if ((stringEqual(line, static_cast<std::string> (kUntagged) + " " + kNO))
+                    || (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kBAD))) {
+                std::cerr << line << std::endl;
 
-            } else if (stringEqual(lineStr, kUntaggedStr)) {
-                std::cerr << "WARNING: un-handled response: " << lineStr << std::endl; // WARN of any untagged that should be processed.
+            } else if (stringEqual(line, kUntagged)) {
+                std::cerr << "WARNING: un-handled response: " << line << std::endl; // WARN of any untagged that should be processed.
 
             } else {
-                throw Exception("error while parsing IMAP command [" + lineStr + "]");
+                throw Exception("error while parsing IMAP command [" + line + "]");
             }
 
         }
@@ -288,44 +288,44 @@ namespace Antik {
 
             // Extract mailbox name from command (stripping any quotes).
 
-            std::string mailBoxNameStr { commandData.commandLineStr.substr(commandData.commandLineStr.find_last_of(' ') + 1) };
-            if (mailBoxNameStr.back() == '\"') mailBoxNameStr.pop_back();
-            if (mailBoxNameStr.front() == '\"') mailBoxNameStr = mailBoxNameStr.substr(1);
+            std::string mailBoxName { commandData.commandLine.substr(commandData.commandLine.find_last_of(' ') + 1) };
+            if (mailBoxName.back() == '\"') mailBoxName.pop_back();
+            if (mailBoxName.front() == '\"') mailBoxName = mailBoxName.substr(1);
 
-            commandData.resp->responseMap.insert({kMAILBOXNAMEStr, mailBoxNameStr});
+            commandData.resp->responseMap.insert({kMAILBOXNAME, mailBoxName});
 
-            for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
+            for (std::string line; parseGetNextLine(commandData.commandRespeam, line);) {
 
-                if (stringEqual(lineStr, static_cast<std::string> (kUntaggedStr) + " " + kOKStr + " [")) {
-                    lineStr = stringBetween(lineStr, '[', ']');
+                if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kOK + " [")) {
+                    line = stringBetween(line, '[', ']');
                 }
 
-                if (stringEqual(lineStr, static_cast<std::string> (kUntaggedStr) + " " + kFLAGSStr)) {
-                    commandData.resp->responseMap.insert({kFLAGSStr, stringList(lineStr)});
+                if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kFLAGS)) {
+                    commandData.resp->responseMap.insert({kFLAGS, stringList(line)});
 
-                } else if (stringEqual(lineStr, kPERMANENTFLAGSStr)) {
-                    commandData.resp->responseMap.insert({kPERMANENTFLAGSStr, stringList(lineStr)});
+                } else if (stringEqual(line, kPERMANENTFLAGS)) {
+                    commandData.resp->responseMap.insert({kPERMANENTFLAGS, stringList(line)});
 
-                } else if (stringEqual(lineStr, kUIDVALIDITYStr)) {
-                    commandData.resp->responseMap.insert({kUIDVALIDITYStr, stringBetween(lineStr, ' ', ']')});
+                } else if (stringEqual(line, kUIDVALIDITY)) {
+                    commandData.resp->responseMap.insert({kUIDVALIDITY, stringBetween(line, ' ', ']')});
 
-                } else if (stringEqual(lineStr, kUIDNEXTStr)) {
-                    commandData.resp->responseMap.insert({kUIDNEXTStr, stringBetween(lineStr, ' ', ']')});
+                } else if (stringEqual(line, kUIDNEXT)) {
+                    commandData.resp->responseMap.insert({kUIDNEXT, stringBetween(line, ' ', ']')});
 
-                } else if (stringEqual(lineStr, kHIGHESTMODSEQStr)) {
-                    commandData.resp->responseMap.insert({kHIGHESTMODSEQStr, stringBetween(lineStr, ' ', ']')});
+                } else if (stringEqual(line, kHIGHESTMODSEQ)) {
+                    commandData.resp->responseMap.insert({kHIGHESTMODSEQ, stringBetween(line, ' ', ']')});
 
-                } else if (stringEqual(lineStr, static_cast<std::string> (kUntaggedStr) + " " + kCAPABILITYStr)) {
-                    lineStr = lineStr.substr(((static_cast<std::string> (kUntaggedStr) + " " + kCAPABILITYStr).length()) + 1);
-                    commandData.resp->responseMap.insert({kCAPABILITYStr, lineStr});
+                } else if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kCAPABILITY)) {
+                    line = line.substr(((static_cast<std::string> (kUntagged) + " " + kCAPABILITY).length()) + 1);
+                    commandData.resp->responseMap.insert({kCAPABILITY, line});
 
-                } else if (lineStr.find(kUNSEENStr) == 0) {
-                    commandData.resp->responseMap.insert({kUNSEENStr, stringBetween(lineStr, ' ', ']')});
+                } else if (line.find(kUNSEEN) == 0) {
+                    commandData.resp->responseMap.insert({kUNSEEN, stringBetween(line, ' ', ']')});
 
                 } else {
-                    parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (commandData.resp.get()));
+                    parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
                     if (commandData.resp->status == RespCode::OK) {
-                        commandData.resp->responseMap.insert({kMAILBOXACCESSStr, stringBetween(lineStr, '[', ']')});
+                        commandData.resp->responseMap.insert({kMAILBOXACCESS, stringBetween(line, '[', ']')});
                     }
                 }
 
@@ -339,25 +339,25 @@ namespace Antik {
 
         void CIMAPParse::parseSEARCH(CommandData& commandData) {
 
-            for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
+            for (std::string line; parseGetNextLine(commandData.commandRespeam, line);) {
 
-                if (stringEqual(lineStr, static_cast<std::string> (kUntaggedStr) + " " + kSEARCHStr)) {
+                if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kSEARCH)) {
 
-                    lineStr = lineStr.substr((static_cast<std::string> (kUntaggedStr) + " " + kSEARCHStr).length());
+                    line = line.substr((static_cast<std::string> (kUntagged) + " " + kSEARCH).length());
 
-                    if (!lineStr.empty()) {
-                        std::istringstream listStream(lineStr); // Read indexes/UIDs
-                        while (listStream.good()) {
+                    if (!line.empty()) {
+                        std::istringstream listeam(line); // Read indexes/UIDs
+                        while (listeam.good()) {
                             uint64_t index = 0;
-                            listStream >> index;
-                            if (!listStream.fail()) {
+                            listeam >> index;
+                            if (!listeam.fail()) {
                                 commandData.resp->indexes.push_back(index);
                             }
                         }
                     }
 
                 } else {
-                    parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (commandData.resp.get()));
+                    parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
                 }
 
             }
@@ -370,25 +370,25 @@ namespace Antik {
 
         void CIMAPParse::parseLIST(CommandData& commandData) {
 
-            for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
+            for (std::string line; parseGetNextLine(commandData.commandRespeam, line);) {
 
                 ListRespData mailBoxEntry;
 
-                if ((stringEqual(lineStr, static_cast<std::string> (kUntaggedStr) + " " + kLISTStr)) ||
-                        (stringEqual(lineStr, static_cast<std::string> (kUntaggedStr) + " " + kLSUBStr))) {
-                    mailBoxEntry.attributesStr = stringList(lineStr);
-                    mailBoxEntry.hierDel = stringBetween(lineStr, '\"', '\"').front();
-                    if (lineStr.back() != '\"') {
-                        mailBoxEntry.mailBoxNameStr = lineStr.substr(lineStr.find_last_of(' ')+1);
+                if ((stringEqual(line, static_cast<std::string> (kUntagged) + " " + kLIST)) ||
+                        (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kLSUB))) {
+                    mailBoxEntry.attributes = stringList(line);
+                    mailBoxEntry.hierDel = stringBetween(line, '\"', '\"').front();
+                    if (line.back() != '\"') {
+                        mailBoxEntry.mailBoxName = line.substr(line.find_last_of(' ')+1);
                     } else {
-                        lineStr.pop_back();
-                        mailBoxEntry.mailBoxNameStr = lineStr.substr(lineStr.find_last_of('\"'));
-                        mailBoxEntry.mailBoxNameStr += '\"';
+                        line.pop_back();
+                        mailBoxEntry.mailBoxName = line.substr(line.find_last_of('\"'));
+                        mailBoxEntry.mailBoxName += '\"';
                     }
                     commandData.resp->mailBoxList.push_back(std::move(mailBoxEntry));
 
                 } else {
-                    parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (commandData.resp.get()));
+                    parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
                 }
 
             }
@@ -401,29 +401,29 @@ namespace Antik {
 
         void CIMAPParse::parseSTATUS(CommandData& commandData) {
 
-            for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
+            for (std::string line; parseGetNextLine(commandData.commandRespeam, line);) {
 
-                if (stringEqual(lineStr, static_cast<std::string> (kUntaggedStr) + " " + kSTATUSStr)) {
+                if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kSTATUS)) {
 
-                    lineStr = lineStr.substr((static_cast<std::string> (kUntaggedStr) + " " + kSTATUSStr).length() + 1);
+                    line = line.substr((static_cast<std::string> (kUntagged) + " " + kSTATUS).length() + 1);
 
-                    commandData.resp->responseMap.insert({kMAILBOXNAMEStr, lineStr.substr(0, lineStr.find_first_of(' '))});
+                    commandData.resp->responseMap.insert({kMAILBOXNAME, line.substr(0, line.find_first_of(' '))});
 
-                    lineStr = stringBetween(lineStr, '(', ')');
+                    line = stringBetween(line, '(', ')');
 
-                    if (!lineStr.empty()) {
-                        std::istringstream listStream(lineStr);
-                        while (listStream.good()) {
-                            std::string itemStr, valueStr;
-                            listStream >> itemStr >> valueStr;
-                            if (!listStream.fail()) {
-                                commandData.resp->responseMap.insert({itemStr, valueStr});
+                    if (!line.empty()) {
+                        std::istringstream listeam(line);
+                        while (listeam.good()) {
+                            std::string item, value;
+                            listeam >> item >> value;
+                            if (!listeam.fail()) {
+                                commandData.resp->responseMap.insert({item, value});
                             }
                         }
                     }
 
                 } else {
-                    parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (commandData.resp.get()));
+                    parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
                 }
 
             }
@@ -436,8 +436,8 @@ namespace Antik {
 
         void CIMAPParse::parseEXPUNGE(CommandData& commandData) {
 
-            for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
-                parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (commandData.resp.get()));
+            for (std::string line; parseGetNextLine(commandData.commandRespeam, line);) {
+                parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
             }
 
         }
@@ -448,17 +448,17 @@ namespace Antik {
 
         void CIMAPParse::parseSTORE(CommandData& commandData) {
 
-            for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
+            for (std::string line; parseGetNextLine(commandData.commandRespeam, line);) {
 
                 StoreRespData storeData;
 
-                if (lineStr.find(kFETCHStr) != std::string::npos) {
-                    storeData.index = std::strtoull(stringUntaggedNumber(lineStr).c_str(), nullptr, 10);
-                    storeData.flagsListStr = stringList(stringList(lineStr).substr(1));
+                if (line.find(kFETCH) != std::string::npos) {
+                    storeData.index = std::strtoull(stringUntaggedNumber(line).c_str(), nullptr, 10);
+                    storeData.flagsList = stringList(stringList(line).substr(1));
                     commandData.resp->storeList.push_back(std::move(storeData));
 
                 } else {
-                    parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (commandData.resp.get()));
+                    parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
                 }
 
             }
@@ -471,12 +471,12 @@ namespace Antik {
 
         void CIMAPParse::parseCAPABILITY(CommandData& commandData) {
 
-            for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
+            for (std::string line; parseGetNextLine(commandData.commandRespeam, line);) {
 
-                if (stringEqual(lineStr, static_cast<std::string> (kUntaggedStr) + " " + kCAPABILITYStr)) {
-                    commandData.resp->responseMap.insert({kCAPABILITYStr, lineStr.substr((static_cast<std::string> (kUntaggedStr) + " " + kCAPABILITYStr).length() + 1)});
+                if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kCAPABILITY)) {
+                    commandData.resp->responseMap.insert({kCAPABILITY, line.substr((static_cast<std::string> (kUntagged) + " " + kCAPABILITY).length() + 1)});
                 } else {
-                    parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (commandData.resp.get()));
+                    parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
                 }
 
             }
@@ -489,8 +489,8 @@ namespace Antik {
 
         void CIMAPParse::parseNOOP(CommandData& commandData) {
 
-            for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
-                parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (commandData.resp.get()));
+            for (std::string line; parseGetNextLine(commandData.commandRespeam, line);) {
+                parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
             }
 
         }
@@ -501,58 +501,58 @@ namespace Antik {
 
         void CIMAPParse::parseFETCH(CommandData& commandData) {
 
-            for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
+            for (std::string line; parseGetNextLine(commandData.commandRespeam, line);) {
 
                 FetchRespData fetchData;
 
-                int lineLength = lineStr.length() + std::strlen(kEOLStr);
+                int lineLength = line.length() + std::strlen(kEOL);
 
-                if (lineStr.find(static_cast<std::string> (kFETCHStr) + " (") != std::string::npos) {
+                if (line.find(static_cast<std::string> (kFETCH) + " (") != std::string::npos) {
 
-                    fetchData.index = std::strtoull(stringUntaggedNumber(lineStr).c_str(), nullptr, 10);
-                    lineStr = lineStr.substr(lineStr.find_first_of('(') + 1);
+                    fetchData.index = std::strtoull(stringUntaggedNumber(line).c_str(), nullptr, 10);
+                    line = line.substr(line.find_first_of('(') + 1);
 
                     bool endOfFetch = false;
 
                     do {
 
-                        if (stringEqual(lineStr, static_cast<std::string> (kBODYSTRUCTUREStr) + " ")) {
-                            parseList(kBODYSTRUCTUREStr, fetchData, lineStr);
-                        } else if (stringEqual(lineStr, static_cast<std::string> (kENVELOPEStr) + " ")) {
-                            parseList(kENVELOPEStr, fetchData, lineStr);
-                        } else if (stringEqual(lineStr, static_cast<std::string> (kFLAGSStr) + " ")) {
-                            parseList(kFLAGSStr, fetchData, lineStr);
-                        } else if (stringEqual(lineStr, static_cast<std::string> (kBODYStr) + " ")) {
-                            parseList(kBODYStr, fetchData, lineStr);
-                        } else if (stringEqual(lineStr, static_cast<std::string> (kINTERNALDATEStr) + " ")) {
-                            parseString(kINTERNALDATEStr, fetchData, lineStr);
-                        } else if (stringEqual(lineStr, static_cast<std::string> (kRFC822SIZEStr) + " ")) {
-                            parseNumber(kRFC822SIZEStr, fetchData, lineStr);
-                        } else if (stringEqual(lineStr, static_cast<std::string> (kUIDStr) + " ")) {
-                            parseNumber(kUIDStr, fetchData, lineStr);
-                        } else if (stringEqual(lineStr, static_cast<std::string> (kRFC822HEADERStr) + " ")) {
-                            parseOctets(kRFC822HEADERStr, fetchData, lineStr, commandData.commandRespStream);
-                        } else if (stringEqual(lineStr, static_cast<std::string> (kBODYStr) + "[")) {
-                            parseOctets(kBODYStr, fetchData, lineStr, commandData.commandRespStream);
-                        } else if (stringEqual(lineStr, static_cast<std::string> (kRFC822Str) + " ")) {
-                            parseOctets(kRFC822Str, fetchData, lineStr, commandData.commandRespStream);
+                        if (stringEqual(line, static_cast<std::string> (kBODYSTRUCTURE) + " ")) {
+                            parseList(kBODYSTRUCTURE, fetchData, line);
+                        } else if (stringEqual(line, static_cast<std::string> (kENVELOPE) + " ")) {
+                            parseList(kENVELOPE, fetchData, line);
+                        } else if (stringEqual(line, static_cast<std::string> (kFLAGS) + " ")) {
+                            parseList(kFLAGS, fetchData, line);
+                        } else if (stringEqual(line, static_cast<std::string> (kBODY) + " ")) {
+                            parseList(kBODY, fetchData, line);
+                        } else if (stringEqual(line, static_cast<std::string> (kINTERNALDATE) + " ")) {
+                            parseing(kINTERNALDATE, fetchData, line);
+                        } else if (stringEqual(line, static_cast<std::string> (kRFC822SIZE) + " ")) {
+                            parseNumber(kRFC822SIZE, fetchData, line);
+                        } else if (stringEqual(line, static_cast<std::string> (kUID) + " ")) {
+                            parseNumber(kUID, fetchData, line);
+                        } else if (stringEqual(line, static_cast<std::string> (kRFC822HEADER) + " ")) {
+                            parseOctets(kRFC822HEADER, fetchData, line, commandData.commandRespeam);
+                        } else if (stringEqual(line, static_cast<std::string> (kBODY) + "[")) {
+                            parseOctets(kBODY, fetchData, line, commandData.commandRespeam);
+                        } else if (stringEqual(line, static_cast<std::string> (kRFC822) + " ")) {
+                            parseOctets(kRFC822, fetchData, line, commandData.commandRespeam);
                         } else {
-                            throw Exception("error while parsing FETCH command [" + lineStr + "]");
+                            throw Exception("error while parsing FETCH command [" + line + "]");
                         }
 
                         // Still data to process
 
-                        if (lineStr.length() != 0) {
-                            lineStr = lineStr.substr(lineStr.find_first_not_of(' ')); // Next non space.
-                            if (lineStr[0] == ')') { // End of FETCH List
+                        if (line.length() != 0) {
+                            line = line.substr(line.find_first_not_of(' ')); // Next non space.
+                            if (line[0] == ')') { // End of FETCH List
                                 endOfFetch = true;
-                            } else if (lineStr.length() == std::strlen(kEOLStr) - 1) { // No data left on line
-                                parseGetNextLine(commandData.commandRespStream, lineStr); // Move to next
+                            } else if (line.length() == std::strlen(kEOL) - 1) { // No data left on line
+                                parseGetNextLine(commandData.commandRespeam, line); // Move to next
                             }
                         } else {
-                            commandData.commandRespStream.seekg(-lineLength, std::ios_base::cur); // Rewind read to get line
-                            parseGetNextLine(commandData.commandRespStream, lineStr);
-                            throw Exception("error while parsing FETCH command [" + lineStr + "]");
+                            commandData.commandRespeam.seekg(-lineLength, std::ios_base::cur); // Rewind read to get line
+                            parseGetNextLine(commandData.commandRespeam, line);
+                            throw Exception("error while parsing FETCH command [" + line + "]");
                         }
 
 
@@ -561,7 +561,7 @@ namespace Antik {
                     commandData.resp->fetchList.push_back(std::move(fetchData));
 
                 } else {
-                    parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (commandData.resp.get()));
+                    parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
                 }
 
             }
@@ -574,8 +574,8 @@ namespace Antik {
 
         void CIMAPParse::parseLOGOUT(CommandData& commandData) {
 
-            for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
-                parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (commandData.resp.get()));
+            for (std::string line; parseGetNextLine(commandData.commandRespeam, line);) {
+                parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
             }
 
         }
@@ -586,8 +586,8 @@ namespace Antik {
 
         void CIMAPParse::parseDefault(CommandData& commandData) {
 
-            for (std::string lineStr; parseGetNextLine(commandData.commandRespStream, lineStr);) {
-                parseCommon(commandData.tagStr, lineStr, static_cast<CommandResponse *> (commandData.resp.get()));
+            for (std::string line; parseGetNextLine(commandData.commandRespeam, line);) {
+                parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
             }
 
         }
@@ -600,11 +600,11 @@ namespace Antik {
         // Convert any lowercase characters in string to upper.
         //
 
-        std::string CIMAPParse::stringToUpper(const std::string& lineStr) {
+        std::string CIMAPParse::stringToUpper(const std::string& line) {
 
-            std::string upperCaseStr { lineStr };
-            for (auto &c : upperCaseStr) c = std::toupper(c);
-            return (upperCaseStr);
+            std::string upperCase { line };
+            for (auto &c : upperCase) c = std::toupper(c);
+            return (upperCase);
 
         }
 
@@ -612,11 +612,11 @@ namespace Antik {
         // Perform case-insensitive string compare (return true strings are equal, false otherwise)
         //
 
-        bool CIMAPParse::stringEqual(const std::string& lineStr, const std::string& compareStr) {
+        bool CIMAPParse::stringEqual(const std::string& line, const std::string& compare) {
 
             int cnt01 { 0 };
-            if (lineStr.length() < compareStr.length()) return (false);
-            for (auto &c : compareStr) if (std::toupper(c) != std::toupper(lineStr[cnt01++])) return (false);
+            if (line.length() < compare.length()) return (false);
+            for (auto &c : compare) if (std::toupper(c) != std::toupper(line[cnt01++])) return (false);
             return (true);
 
         }
@@ -625,21 +625,21 @@ namespace Antik {
         // Extract the contents between two delimeters in command response line.
         //
 
-        std::string CIMAPParse::stringBetween(const std::string& lineStr, const char first, const char last) {
-            std::size_t firstDel { lineStr.find_first_of(first) };
-            std::size_t lastDel  { lineStr.find_first_of(last, firstDel + 1) };
-            return (lineStr.substr(firstDel + 1, (lastDel - firstDel - 1)));
+        std::string CIMAPParse::stringBetween(const std::string& line, const char first, const char last) {
+            std::size_t firstDel { line.find_first_of(first) };
+            std::size_t lastDel  { line.find_first_of(last, firstDel + 1) };
+            return (line.substr(firstDel + 1, (lastDel - firstDel - 1)));
         }
 
         //
         // Extract number that may follow an un-tagged command response.
         //
 
-        std::string CIMAPParse::stringUntaggedNumber(const std::string& lineStr) {
+        std::string CIMAPParse::stringUntaggedNumber(const std::string& line) {
 
-            std::size_t startNumber { lineStr.find_first_not_of(' ', 1) };
-            std::size_t endNumber { lineStr.find_first_of(' ', startNumber) };
-            return (lineStr.substr(startNumber, endNumber - startNumber));
+            std::size_t startNumber { line.find_first_not_of(' ', 1) };
+            std::size_t endNumber { line.find_first_of(' ', startNumber) };
+            return (line.substr(startNumber, endNumber - startNumber));
 
         }
 
@@ -647,8 +647,8 @@ namespace Antik {
         // Extract tag from command response line.
         //
 
-        std::string CIMAPParse::stringTag(const std::string& lineStr) {
-            return (lineStr.substr(0, lineStr.find_first_of(' ')));
+        std::string CIMAPParse::stringTag(const std::string& line) {
+            return (line.substr(0, line.find_first_of(' ')));
         }
 
         //
@@ -656,44 +656,44 @@ namespace Antik {
         // prefix then this is skipped over.
         //
 
-        std::string CIMAPParse::stringCommand(const std::string& lineStr) {
+        std::string CIMAPParse::stringCommand(const std::string& line) {
 
-            std::size_t startOfCommand { lineStr.find_first_of(' ') + 1 };
-            std::size_t endOfCommand { lineStr.find_first_of(' ', startOfCommand) };
+            std::size_t startOfCommand { line.find_first_of(' ') + 1 };
+            std::size_t endOfCommand { line.find_first_of(' ', startOfCommand) };
 
-            if (stringEqual(lineStr.substr(startOfCommand, endOfCommand - startOfCommand), kUIDStr)) {
-                startOfCommand = lineStr.find_first_of(' ', startOfCommand) + 1;
-                endOfCommand = lineStr.find_first_of(' ', startOfCommand);
+            if (stringEqual(line.substr(startOfCommand, endOfCommand - startOfCommand), kUID)) {
+                startOfCommand = line.find_first_of(' ', startOfCommand) + 1;
+                endOfCommand = line.find_first_of(' ', startOfCommand);
             }
 
-            return (stringToUpper(lineStr.substr(startOfCommand, endOfCommand - startOfCommand)));
+            return (stringToUpper(line.substr(startOfCommand, endOfCommand - startOfCommand)));
 
         }
 
         //
         // Extract list  from command response line. Note: only check until 
-        // the end of line; the first character in linsStr is the start 
+        // the end of line; the first character in lins is the start 
         // of the list ie. a '('.
         //
 
-        std::string CIMAPParse::stringList(const std::string& lineStr) {
+        std::string CIMAPParse::stringList(const std::string& line) {
 
             int bracketCount { 0 };
             int startPosition { 0 };
             std::size_t currentIndex { 0 };
-            std::size_t lineLength { lineStr.length() };
+            std::size_t lineLength { line.length() };
 
-            startPosition = lineStr.find_first_of('(');
+            startPosition = line.find_first_of('(');
             lineLength -= startPosition;
 
             currentIndex = startPosition;
             do {
-                if (lineStr[currentIndex] == '(') bracketCount++;
-                if (lineStr[currentIndex] == ')') bracketCount--;
+                if (line[currentIndex] == '(') bracketCount++;
+                if (line[currentIndex] == ')') bracketCount--;
                 currentIndex++;
             } while (bracketCount && (--lineLength > 0));
 
-            return (lineStr.substr(startPosition, currentIndex - startPosition));
+            return (line.substr(startPosition, currentIndex - startPosition));
 
         }
 
@@ -704,24 +704,24 @@ namespace Antik {
         // with differently as it has to cater for octet strings that can span multiple lines.
         //
 
-        CIMAPParse::COMMANDRESPONSE CIMAPParse::parseResponse(const std::string & commandResponseStr) {
+        CIMAPParse::COMMANDRESPONSE CIMAPParse::parseResponse(const std::string & commandResponse) {
 
-            std::istringstream responseStream { commandResponseStr };
-            std::string commandLineStr;
+            std::istringstream responseeam { commandResponse };
+            std::string commandLine;
 
-            parseGetNextLine(responseStream, commandLineStr);
+            parseGetNextLine(responseeam, commandLine);
 
             ParseFunction parseFn;
-            CommandData commandData{ stringTag(commandLineStr),
-                stringToCodeMap[stringCommand(commandLineStr)],
-                commandLineStr, responseStream};
+            CommandData commandData{ stringTag(commandLine),
+                m_stringToCodeMap[stringCommand(commandLine)],
+                commandLine, responseeam};
 
             commandData.resp.reset({new CommandResponse
                 { commandData.commandCode}});
 
-            parseFn = parseCommmandMap[static_cast<int> (commandData.commandCode)];
+            parseFn = m_parseCommmandMap[static_cast<int> (commandData.commandCode)];
             if (!parseFn) {
-                parseCommmandMap[static_cast<int> (commandData.commandCode)] = parseDefault;
+                m_parseCommmandMap[static_cast<int> (commandData.commandCode)] = parseDefault;
                 parseFn = parseDefault;
             }
 
@@ -735,15 +735,15 @@ namespace Antik {
         // Return string for IMAP command code
         //
 
-        std::string CIMAPParse::commandCodeString(Commands commandCode) {
+        std::string CIMAPParse::commandCodeing(Commands commandCode) {
 
-            for (auto commandEntry : stringToCodeMap) {
+            for (auto commandEntry : m_stringToCodeMap) {
                 if (commandEntry.second == commandCode) {
                     return (commandEntry.first);
                 }
             }
 
-            Exception("commandCodeString() : Invalid command code.");
+            Exception("commandCodeing() : Invalid command code.");
 
             return (""); // Never reached.
 

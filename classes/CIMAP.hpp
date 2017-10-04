@@ -41,79 +41,79 @@ namespace Antik {
         // End Of Line terminator
         //
 
-        constexpr const char *kEOLStr{ "\r\n"};
+        constexpr const char *kEOL{ "\r\n"};
 
         //
         // IMAP Command strings
         //
 
-        constexpr const char *kSTARTTLSStr{ "STARTTLS"};
-        constexpr const char *kAUTHENTICATEStr{ "AUTHENTICATE"};
-        constexpr const char *kSEARCHStr{ "SEARCH"};
-        constexpr const char *kSELECTStr{ "SELECT"};
-        constexpr const char *kEXAMINEStr{ "EXAMINE"};
-        constexpr const char *kCREATEStr{ "CREATE"};
-        constexpr const char *kDELETEStr{ "DELETE"};
-        constexpr const char *kRENAMEStr{ "RENAME"};
-        constexpr const char *kLOGINStr{ "LOGIN"};
-        constexpr const char *kSUBSCRIBEStr{ "SUBSCRIBE"};
-        constexpr const char *kUNSUBSCRIBEStr{ "UNSUBSCRIBE"};
-        constexpr const char *kLISTStr{ "LIST"};
-        constexpr const char *kLSUBStr{ "LSUB"};
-        constexpr const char *kSTATUSStr{ "STATUS"};
-        constexpr const char *kAPPENDStr{ "APPEND"};
-        constexpr const char *kCHECKStr{ "CHECK"};
-        constexpr const char *kCLOSEStr{ "CLOSE"};
-        constexpr const char *kEXPUNGEStr{ "EXPUNGE"};
-        constexpr const char *kFETCHStr{ "FETCH"};
-        constexpr const char *kSTOREStr{ "STORE"};
-        constexpr const char *kCOPYStr{ "COPY"};
-        constexpr const char *kNOOPStr{ "NOOP"};
-        constexpr const char *kLOGOUTStr{ "LOGOUT"};
-        constexpr const char *kIDLEStr{ "IDLE"};
-        constexpr const char *kCAPABILITYStr{ "CAPABILITY"};
-        constexpr const char *kUIDStr{ "UID"};
+        constexpr const char *kSTARTTLS{ "STARTTLS"};
+        constexpr const char *kAUTHENTICATE{ "AUTHENTICATE"};
+        constexpr const char *kSEARCH{ "SEARCH"};
+        constexpr const char *kSELECT{ "SELECT"};
+        constexpr const char *kEXAMINE{ "EXAMINE"};
+        constexpr const char *kCREATE{ "CREATE"};
+        constexpr const char *kDELETE{ "DELETE"};
+        constexpr const char *kRENAME{ "RENAME"};
+        constexpr const char *kLOGIN{ "LOGIN"};
+        constexpr const char *kSUBSCRIBE{ "SUBSCRIBE"};
+        constexpr const char *kUNSUBSCRIBE{ "UNSUBSCRIBE"};
+        constexpr const char *kLIST{ "LIST"};
+        constexpr const char *kLSUB{ "LSUB"};
+        constexpr const char *kSTATUS{ "STATUS"};
+        constexpr const char *kAPPEND{ "APPEND"};
+        constexpr const char *kCHECK{ "CHECK"};
+        constexpr const char *kCLOSE{ "CLOSE"};
+        constexpr const char *kEXPUNGE{ "EXPUNGE"};
+        constexpr const char *kFETCH{ "FETCH"};
+        constexpr const char *kSTORE{ "STORE"};
+        constexpr const char *kCOPY{ "COPY"};
+        constexpr const char *kNOOP{ "NOOP"};
+        constexpr const char *kLOGOUT{ "LOGOUT"};
+        constexpr const char *kIDLE{ "IDLE"};
+        constexpr const char *kCAPABILITY{ "CAPABILITY"};
+        constexpr const char *kUID{ "UID"};
 
         //
         // IMAP Response strings
         //
 
-        constexpr const char *kUntaggedStr{ "*"};
-        constexpr const char *kOKStr{ "OK"};
-        constexpr const char *kBADStr{ "BAD"};
-        constexpr const char *kNOStr{ "NO"};
-        constexpr const char *kFLAGSStr{ "FLAGS"};
-        constexpr const char *kPERMANENTFLAGSStr{ "PERMANENTFLAGS"};
-        constexpr const char *kUIDVALIDITYStr{ "UIDVALIDITY"};
-        constexpr const char *kUIDNEXTStr{ "UIDNEXT"};
-        constexpr const char *kHIGHESTMODSEQStr{ "HIGHESTMODSEQ"};
-        constexpr const char *kUNSEENStr{ "UNSEEN"};
-        constexpr const char *kEXISTSStr{ "EXISTS"};
-        constexpr const char *kRECENTStr{ "RECENT"};
-        constexpr const char *kDONEStr{ "DONE"};
-        constexpr const char *kContinuationStr{ "+"};
-        constexpr const char *kENVELOPEStr{ "ENVELOPE"};
-        constexpr const char *kBODYSTRUCTUREStr{ "BODYSTRUCTURE"};
-        constexpr const char *kBODYStr{ "BODY"};
-        constexpr const char *kRFC822Str{ "RFC822"};
-        constexpr const char *kINTERNALDATEStr{ "INTERNALDATE"};
-        constexpr const char *kRFC822HEADERStr{ "RFC822.HEADER"};
-        constexpr const char *kRFC822SIZEStr{ "RFC822.SIZE"};
-        constexpr const char *kRFC822TEXTStr{ "RFC822.TEXT"};
-        constexpr const char *kBYEStr{ "BYE"};
+        constexpr const char *kUntagged{ "*"};
+        constexpr const char *kOK{ "OK"};
+        constexpr const char *kBAD{ "BAD"};
+        constexpr const char *kNO{ "NO"};
+        constexpr const char *kFLAGS{ "FLAGS"};
+        constexpr const char *kPERMANENTFLAGS{ "PERMANENTFLAGS"};
+        constexpr const char *kUIDVALIDITY{ "UIDVALIDITY"};
+        constexpr const char *kUIDNEXT{ "UIDNEXT"};
+        constexpr const char *kHIGHESTMODSEQ{ "HIGHESTMODSEQ"};
+        constexpr const char *kUNSEEN{ "UNSEEN"};
+        constexpr const char *kEXISTS{ "EXISTS"};
+        constexpr const char *kRECENT{ "RECENT"};
+        constexpr const char *kDONE{ "DONE"};
+        constexpr const char *kContinuation{ "+"};
+        constexpr const char *kENVELOPE{ "ENVELOPE"};
+        constexpr const char *kBODYSTRUCTURE{ "BODYSTRUCTURE"};
+        constexpr const char *kBODY{ "BODY"};
+        constexpr const char *kRFC822{ "RFC822"};
+        constexpr const char *kINTERNALDATE{ "INTERNALDATE"};
+        constexpr const char *kRFC822HEADER{ "RFC822.HEADER"};
+        constexpr const char *kRFC822SIZE{ "RFC822.SIZE"};
+        constexpr const char *kRFC822TEXT{ "RFC822.TEXT"};
+        constexpr const char *kBYE{ "BYE"};
 
         //
         // Response MAP generated entries.
         //
 
-        constexpr const char *kMAILBOXNAMEStr{ "MAILBOX-NAME"};
-        constexpr const char *kMAILBOXACCESSStr{ "MAILBOX-ACCESS"};
+        constexpr const char *kMAILBOXNAME{ "MAILBOX-NAME"};
+        constexpr const char *kMAILBOXACCESS{ "MAILBOX-ACCESS"};
         
         //
         // Default command tag prefix.
         //
         
-        constexpr const char *kDefaultTagPrefixStr { "A" };
+        constexpr const char *kDefaultTagPrefix { "A" };
 
         // ================
         // CLASS DEFINITION
@@ -132,8 +132,8 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& messageStr)
-                : std::runtime_error("CIMAP Failure: " + messageStr) {
+                Exception(std::string const& message)
+                : std::runtime_error("CIMAP Failure: " + message) {
                 }
 
             };
@@ -162,8 +162,8 @@ namespace Antik {
             // Set/Get email server account details
             //
 
-            void setServer(const std::string& serverURLStr);
-            void setUserAndPassword(const std::string& userNameStr, const std::string& userPasswordStr);
+            void setServer(const std::string& serverURL);
+            void setUserAndPassword(const std::string& userName, const std::string& userPassword);
             std::string getServer(void) const;
             std::string getUser(void) const;
 
@@ -172,7 +172,7 @@ namespace Antik {
             //
 
             void connect(void);
-            std::string sendCommand(const std::string& commandLineStr);
+            std::string sendCommand(const std::string& commandLine);
             void disconnect(void);
             bool getConnectedStatus(void) const;
 
@@ -180,7 +180,7 @@ namespace Antik {
             // Set IMAP command tag prefix
             //
 
-            void setTagPrefix(const std::string& tagPrefixStr);
+            void setTagPrefix(const std::string& tagPrefix);
 
             //
             // IMAP initialization and closedown processing
@@ -220,21 +220,21 @@ namespace Antik {
             //
             // Generate curl error message and throw exception
             //
-            void throwCurlError(std::string baseMessageStr);
+            void throwCurlError(std::string baseMessage);
 
             //
             // Send IDLE/APPEND command (requires a special handler).
             //
 
-            void sendCommandIDLE(const std::string& commandLineStr);
-            void sendCommandAPPEND(const std::string& commandLineStr);
+            void sendCommandIDLE(const std::string& commandLine);
+            void sendCommandAPPEND(const std::string& commandLine);
 
             //
             // Talks to server using curl_easy_send/recv()
             //
 
-            void sendIMAPCommand(const std::string& commandLineStr);
-            void waitForIMAPCommandResponse(const std::string& commandTag, std::string& commandResponseStr);
+            void sendIMAPCommand(const std::string& commandLine);
+            void waitForIMAPCommandResponse(const std::string& commandTag, std::string& commandResponse);
             int waitOnSocket(bool bRecv, long timeoutMS);
 
             //
@@ -247,23 +247,23 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
 
-            bool bConnected{ false}; // == true then connected to server
-            std::string userNameStr; // Email account user name
-            std::string userPasswordStr; // Email account user name password
-            std::string serverURLStr; // IMAP server URL
+            bool m_connected{ false}; // == true then connected to server
+            std::string m_userName; // Email account user name
+            std::string m_userPassword; // Email account user name password
+            std::string m_serverURL; // IMAP server URL
 
-            CURL *curlHandle{ nullptr}; // curl handle
-            CURLcode curlResult{ CURLE_OK}; // curl status
-            curl_socket_t curlSocketFD; // curl socket
-            static bool bCurlVerbosity; // curl verbosity setting 
-            char curlRxBuffer[CURL_MAX_WRITE_SIZE]; // curl rx buffer
-            char curlErrMsgBuffer[CURL_ERROR_SIZE]; // curl error string buffer
+            CURL *m_curlHandle{ nullptr}; // curl handle
+            CURLcode m_curlResult{ CURLE_OK}; // curl status
+            curl_socket_t m_curlSocketFD; // curl socket
+            static bool m_curlVerbosity; // curl verbosity setting 
+            char m_curlRxBuffer[CURL_MAX_WRITE_SIZE]; // curl rx buffer
+            char m_curlErrMsgBuffer[CURL_ERROR_SIZE]; // curl error string buffer
 
-            std::string commandResponseStr; // IMAP command response
+            std::string m_commandResponse; // IMAP command response
 
-            uint64_t tagCount{ 1}; // Current command tag count
-            std::string currentTagStr; // Current command tag
-            std::string tagPrefixStr{ kDefaultTagPrefixStr}; // Current command tag prefixes
+            uint64_t m_tagCount{ 1}; // Current command tag count
+            std::string m_currentTag; // Current command tag
+            std::string m_tagPrefix{ kDefaultTagPrefix}; // Current command tag prefixes
 
         };
 

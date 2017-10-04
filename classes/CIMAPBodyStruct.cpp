@@ -70,24 +70,24 @@ namespace Antik {
     // Parse and extract next element in IMAP body structure
     //
 
-    void CIMAPBodyStruct::parseNext(std::string& partStr, std::string& valueStr) {
+    void CIMAPBodyStruct::parseNext(std::string& part, std::string& value) {
 
-        if (partStr.empty()) {
+        if (part.empty()) {
             return;
-        } else if (partStr[0] == '\"') {
-            valueStr = CIMAPParse::stringBetween(partStr, '\"', '\"');
-            partStr = partStr.substr(valueStr.length() + 3);
-        } else if (partStr[0] == '(') {
-            valueStr = CIMAPParse::stringList(partStr);
-            partStr = partStr.substr(valueStr.length() + 1);
-        } else if (std::isdigit(partStr[0])) {
-            valueStr = partStr.substr(0, partStr.find_first_of(' '));
-            partStr = partStr.substr(partStr.find_first_of(' ') + 1);
-        } else if (CIMAPParse::stringEqual(partStr, kNILStr)) {
-            valueStr = kNILStr;
-            partStr = partStr.substr(valueStr.length() + 1);
+        } else if (part[0] == '\"') {
+            value = CIMAPParse::stringBetween(part, '\"', '\"');
+            part = part.substr(value.length() + 3);
+        } else if (part[0] == '(') {
+            value = CIMAPParse::stringList(part);
+            part = part.substr(value.length() + 1);
+        } else if (std::isdigit(part[0])) {
+            value = part.substr(0, part.find_first_of(' '));
+            part = part.substr(part.find_first_of(' ') + 1);
+        } else if (CIMAPParse::stringEqual(part, kNIL)) {
+            value = kNIL;
+            part = part.substr(value.length() + 1);
         } else {
-            throw Exception("error while parsing body structure [" + partStr + "]");
+            throw Exception("error while parsing body structure [" + part + "]");
         }
 
     }
@@ -98,26 +98,26 @@ namespace Antik {
 
     void CIMAPBodyStruct::parseBodyPart(BodyPart& bodyPart) {
 
-        std::string partStr{bodyPart.partStr.substr(1)};
+        std::string part{bodyPart.part.substr(1)};
 
         bodyPart.parsedPart.reset(new BodyPartParsed());
 
-        parseNext(partStr, bodyPart.parsedPart->typeStr);
-        parseNext(partStr, bodyPart.parsedPart->subtypeStr);
-        parseNext(partStr, bodyPart.parsedPart->parameterListStr);
-        parseNext(partStr, bodyPart.parsedPart->idStr);
-        parseNext(partStr, bodyPart.parsedPart->descriptionStr);
-        parseNext(partStr, bodyPart.parsedPart->encodingStr);
-        parseNext(partStr, bodyPart.parsedPart->sizeStr);
+        parseNext(part, bodyPart.parsedPart->type);
+        parseNext(part, bodyPart.parsedPart->subtype);
+        parseNext(part, bodyPart.parsedPart->parameterList);
+        parseNext(part, bodyPart.parsedPart->id);
+        parseNext(part, bodyPart.parsedPart->description);
+        parseNext(part, bodyPart.parsedPart->encoding);
+        parseNext(part, bodyPart.parsedPart->size);
 
-        if (CIMAPParse::CIMAPParse::stringEqual(bodyPart.parsedPart->typeStr, kTEXTStr)) {
-            parseNext(partStr, bodyPart.parsedPart->textLinesStr);
+        if (CIMAPParse::CIMAPParse::stringEqual(bodyPart.parsedPart->type, kTEXT)) {
+            parseNext(part, bodyPart.parsedPart->textLines);
         }
 
-        parseNext(partStr, bodyPart.parsedPart->md5Str);
-        parseNext(partStr, bodyPart.parsedPart->dispositionStr);
-        parseNext(partStr, bodyPart.parsedPart->languageStr);
-        parseNext(partStr, bodyPart.parsedPart->locationStr);
+        parseNext(part, bodyPart.parsedPart->md5);
+        parseNext(part, bodyPart.parsedPart->disposition);
+        parseNext(part, bodyPart.parsedPart->language);
+        parseNext(part, bodyPart.parsedPart->location);
 
     }
 
@@ -125,11 +125,11 @@ namespace Antik {
     // Parse basic body structure filling in data
     //
 
-    void CIMAPBodyStruct::parseBodyStructTree(std::unique_ptr<BodyNode>& bodyNode) {
+    void CIMAPBodyStruct::parseBodyuctTree(std::unique_ptr<BodyNode>& bodyNode) {
 
         for (auto &bodyPart : bodyNode->bodyParts) {
             if (bodyPart.child) {
-                parseBodyStructTree(bodyPart.child);
+                parseBodyuctTree(bodyPart.child);
             } else {
                 parseBodyPart(bodyPart);
             }
@@ -141,35 +141,35 @@ namespace Antik {
     // Create body structure tree from body part list
     //
 
-    void CIMAPBodyStruct::createBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPartStr) {
+    void CIMAPBodyStruct::createBodyuctTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart) {
 
         uint32_t partNo { 1 };
-        std::string bodyStructureStr(bodyPartStr.substr(1));
+        std::string bodyucture(bodyPart.substr(1));
         std::vector<std::string> bodyParts;
 
-        while (bodyStructureStr[0] == '(') {
-            bodyParts.push_back(CIMAPParse::stringList(bodyStructureStr));
-            bodyStructureStr = bodyStructureStr.substr(bodyParts.back().length());
+        while (bodyucture[0] == '(') {
+            bodyParts.push_back(CIMAPParse::stringList(bodyucture));
+            bodyucture = bodyucture.substr(bodyParts.back().length());
         }
 
-        bodyStructureStr.pop_back();
-        bodyStructureStr = bodyStructureStr.substr(1);
-        bodyParts.push_back(bodyStructureStr);
+        bodyucture.pop_back();
+        bodyucture = bodyucture.substr(1);
+        bodyParts.push_back(bodyucture);
 
-        for (auto partStr : bodyParts) {
-            if (partStr[1] == '\"') {
-                if (!bodyNode->partLevelStr.empty()) {
-                    bodyNode->bodyParts.push_back({bodyNode->partLevelStr + "." + std::to_string(partNo), partStr, nullptr, nullptr});
+        for (auto part : bodyParts) {
+            if (part[1] == '\"') {
+                if (!bodyNode->partLevel.empty()) {
+                    bodyNode->bodyParts.push_back({bodyNode->partLevel + "." + std::to_string(partNo), part, nullptr, nullptr});
                 } else {
-                    bodyNode->bodyParts.push_back({bodyNode->partLevelStr + std::to_string(partNo), partStr, nullptr, nullptr});
+                    bodyNode->bodyParts.push_back({bodyNode->partLevel + std::to_string(partNo), part, nullptr, nullptr});
                 }
-            } else if (partStr[1] == '(') {
+            } else if (part[1] == '(') {
                 bodyNode->bodyParts.push_back({"", "", nullptr});
                 bodyNode->bodyParts.back().child.reset(new BodyNode());
-                bodyNode->bodyParts.back().child->partLevelStr = bodyNode->partLevelStr + std::to_string(partNo);
-                createBodyStructTree(bodyNode->bodyParts.back().child, partStr);
+                bodyNode->bodyParts.back().child->partLevel = bodyNode->partLevel + std::to_string(partNo);
+                createBodyuctTree(bodyNode->bodyParts.back().child, part);
             } else {
-                bodyNode->extendedStr = partStr;
+                bodyNode->extended = part;
             }
             partNo++;
         }
@@ -188,42 +188,42 @@ namespace Antik {
 
         AttachmentData *attachments { static_cast<AttachmentData *> (attachmentData.get()) };
         std::unordered_map<std::string, std::string> dispositionMap;
-        std::string dispositionStr {bodyPart.parsedPart->dispositionStr };
+        std::string disposition {bodyPart.parsedPart->disposition };
 
-        if (!CIMAPParse::stringEqual(dispositionStr, kNILStr)) {
-            dispositionStr = dispositionStr.substr(1);
-            while (!dispositionStr.empty()) {
-                std::string itemStr, valueStr;
-                parseNext(dispositionStr, itemStr);
-                parseNext(dispositionStr, valueStr);
-                dispositionMap.insert({CIMAPParse::stringToUpper(itemStr), valueStr});
+        if (!CIMAPParse::stringEqual(disposition, kNIL)) {
+            disposition = disposition.substr(1);
+            while (!disposition.empty()) {
+                std::string item, value;
+                parseNext(disposition, item);
+                parseNext(disposition, value);
+                dispositionMap.insert({CIMAPParse::stringToUpper(item), value});
             }
-            std::string attachmentLabelStr;
-            auto findAttachment = dispositionMap.find(kATTACHMENTStr);
-            auto findInline = dispositionMap.find(kINLINEStr);
+            std::string attachmentLabel;
+            auto findAttachment = dispositionMap.find(kATTACHMENT);
+            auto findInline = dispositionMap.find(kINLINE);
             if (findAttachment != dispositionMap.end()) {
-                attachmentLabelStr = kATTACHMENTStr;
+                attachmentLabel = kATTACHMENT;
             } else if (findInline != dispositionMap.end()) {
-                attachmentLabelStr = kINLINEStr;
+                attachmentLabel = kINLINE;
             }
-            if (!attachmentLabelStr.empty()) {
-                dispositionStr = dispositionMap[attachmentLabelStr];
-                if (!CIMAPParse::stringEqual(dispositionStr, kNILStr)) {
+            if (!attachmentLabel.empty()) {
+                disposition = dispositionMap[attachmentLabel];
+                if (!CIMAPParse::stringEqual(disposition, kNIL)) {
                     dispositionMap.clear();
-                    dispositionStr = dispositionStr.substr(1);
-                    while (!dispositionStr.empty()) {
-                        std::string itemStr, valueStr;
-                        parseNext(dispositionStr, itemStr);
-                        parseNext(dispositionStr, valueStr);
-                        dispositionMap.insert({CIMAPParse::stringToUpper(itemStr), valueStr});
+                    disposition = disposition.substr(1);
+                    while (!disposition.empty()) {
+                        std::string item, value;
+                        parseNext(disposition, item);
+                        parseNext(disposition, value);
+                        dispositionMap.insert({CIMAPParse::stringToUpper(item), value});
                     }
                     Attachment fileAttachment;
-                    fileAttachment.creationDateStr = dispositionMap[kCREATIONDATEStr];
-                    fileAttachment.fileNameStr = dispositionMap[kFILENAMEStr];
-                    fileAttachment.modifiactionDateStr = dispositionMap[kMODIFICATIONDATEStr];
-                    fileAttachment.sizeStr = dispositionMap[kSIZEStr];
-                    fileAttachment.partNoStr = bodyPart.partNoStr;
-                    fileAttachment.encodingStr = bodyPart.parsedPart->encodingStr;
+                    fileAttachment.creationDate = dispositionMap[kCREATIONDATE];
+                    fileAttachment.fileName = dispositionMap[kFILENAME];
+                    fileAttachment.modifiactionDate = dispositionMap[kMODIFICATIONDATE];
+                    fileAttachment.size = dispositionMap[kSIZE];
+                    fileAttachment.partNo = bodyPart.partNo;
+                    fileAttachment.encoding = bodyPart.parsedPart->encoding;
                     attachments->attachmentsList.push_back(fileAttachment);
                 }
             }
@@ -235,10 +235,10 @@ namespace Antik {
     // Construct body structure tree
     //
 
-    void CIMAPBodyStruct::consructBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPartStr) {
+    void CIMAPBodyStruct::consructBodyuctTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart) {
 
-        createBodyStructTree(bodyNode, bodyPartStr);
-        parseBodyStructTree(bodyNode);
+        createBodyuctTree(bodyNode, bodyPart);
+        parseBodyuctTree(bodyNode);
 
     }
 
@@ -246,11 +246,11 @@ namespace Antik {
     // Walk body structure tree calling user supplied function for each body part.
     //
 
-    void CIMAPBodyStruct::walkBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, BodyPartFn walkFn, std::shared_ptr<void>& walkData) {
+    void CIMAPBodyStruct::walkBodyuctTree(std::unique_ptr<BodyNode>& bodyNode, BodyPartFn walkFn, std::shared_ptr<void>& walkData) {
 
         for (auto &bodyPart : bodyNode->bodyParts) {
             if (bodyPart.child) {
-                walkBodyStructTree(bodyPart.child, walkFn, walkData);
+                walkBodyuctTree(bodyPart.child, walkFn, walkData);
             } else {
                 walkFn(bodyNode, bodyPart, walkData);
             }

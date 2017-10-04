@@ -42,13 +42,13 @@ namespace Antik {
         // Logging output function
         //
 
-        typedef std::function<void (const std::initializer_list<std::string>&) > LogStringsFn;
+        typedef std::function<void (const std::initializer_list<std::string>&) > LogingsFn;
 
         //
         // NoOp output function
         //
 
-        static const LogStringsFn  noOp;
+        static const LogingsFn  noOp;
 
         // ============
         // CONSTRUCTORS
@@ -75,7 +75,7 @@ namespace Antik {
         // Template for string conversion method
         //
 
-        template <typename T> static std::string toString(T value);
+        template <typename T> static std::string toing(T value);
 
         // ===========================
         // PRIVATE TYPES AND CONSTANTS
@@ -107,8 +107,8 @@ namespace Antik {
         // PRIVATE VARIABLES
         // =================
 
-        static std::mutex mOutput; // Stream output mutex
-        static bool bDateTimeStamped; // ==true output date/time stamped
+        static std::mutex m_outputMutex; // eam output mutex
+        static bool m_dateTimeStamped; // ==true output date/time stamped
 
     };
 
@@ -117,7 +117,7 @@ namespace Antik {
     //
 
     template <typename T>
-    std::string CLogger::toString(T value) {
+    std::string CLogger::toing(T value) {
         std::ostringstream ss;
         ss << value;
         return ss.str();

@@ -51,8 +51,8 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& messageStr)
-                : std::runtime_error("CTask Failure: " + messageStr) {
+                Exception(std::string const& message)
+                : std::runtime_error("CTask Failure: " + message) {
                 }
 
             };
@@ -70,8 +70,8 @@ namespace Antik {
 
             struct TaskOptions {
                 int killCount; // file kill count
-                Antik::Util::CLogger::LogStringsFn coutstr; // coutstr output
-                Antik::Util::CLogger::LogStringsFn cerrstr; // cerrstr output
+                Antik::Util::CLogger::LogingsFn coutstr; // coutstr output
+                Antik::Util::CLogger::LogingsFn cerrstr; // cerrstr output
             };
 
             // ===========
@@ -84,8 +84,8 @@ namespace Antik {
 
             CTask
             (
-                const std::string& taskNameStr, // Task name
-                const std::string& watchFolderStr, // Watch folder path
+                const std::string& taskName, // Task name
+                const std::string& watchFolder, // Watch folder path
                 TaskActionFcn taskActFcn, // Task action function
                 std::shared_ptr<void> fnData, // Task file process function data
                 int watchDepth, // Watch depth -1= all, 0=just watch folder
@@ -142,34 +142,34 @@ namespace Antik {
             // Constructor passed in and intialized
             //
 
-            std::string taskNameStr; // Task name
-            std::string watchFolderStr; // Watch Folder
-            TaskActionFcn taskActFcn; // Task action function 
-            std::shared_ptr<void> fnData; // Task action function data   
-            int killCount { 0 }; // Task Kill Count
+            std::string m_taskName; // Task name
+            std::string m_watchFolder; // Watch Folder
+            TaskActionFcn m_taskActFcn; // Task action function 
+            std::shared_ptr<void> m_fnData; // Task action function data   
+            int m_killCount { 0 }; // Task Kill Count
 
             //
             // CFileApprise file watcher
             //
 
-            std::shared_ptr<CApprise> watcher; // Folder watcher
-            std::shared_ptr<CApprise::Options> watcherOptions; // folder watcher options
-            std::unique_ptr<std::thread> watcherThread; // Folder watcher thread
+            std::shared_ptr<CApprise> m_watcher; // Folder watcher
+            std::shared_ptr<CApprise::Options> m_watcherOptions; // folder watcher options
+            std::unique_ptr<std::thread> m_watcherThread; // Folder watcher thread
 
             //
             // Publicly accessed via accessors
             //
 
-            std::exception_ptr thrownException { nullptr }; // Pointer to any exception thrown
+            std::exception_ptr m_thrownException { nullptr }; // Pointer to any exception thrown
 
             //
             // Trace functions default do nothing
             //
 
-            Antik::Util::CLogger::LogStringsFn coutstr { Antik::Util::CLogger::noOp };
-            Antik::Util::CLogger::LogStringsFn cerrstr { Antik::Util::CLogger::noOp };
+            Antik::Util::CLogger::LogingsFn m_coutstr { Antik::Util::CLogger::noOp };
+            Antik::Util::CLogger::LogingsFn m_cerrstr { Antik::Util::CLogger::noOp };
 
-            std::string prefix; // Task trace prefix
+            std::string m_prefix; // Task trace prefix
 
         };
 

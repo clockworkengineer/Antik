@@ -45,8 +45,8 @@ namespace Antik {
 
         struct Exception : public std::runtime_error {
 
-            Exception(std::string const& messageStr)
-            : std::runtime_error("ClIMAPParse Failure: " + messageStr) {
+            Exception(std::string const& message)
+            : std::runtime_error("ClIMAPParse Failure: " + message) {
             }
 
         };
@@ -118,8 +118,8 @@ namespace Antik {
 
         struct ListRespData {
             uint8_t hierDel { ' ' }; // Hierarchy Delimeter
-            std::string attributesStr; // Mailbox attributes
-            std::string mailBoxNameStr; // Mailbox name
+            std::string attributes; // Mailbox attributes
+            std::string mailBoxName; // Mailbox name
         };
 
         //
@@ -128,7 +128,7 @@ namespace Antik {
 
         struct StoreRespData {
             uint64_t index { 0 }; // EMail Index/UID
-            std::string flagsListStr; // EMail flags list
+            std::string flagsList; // EMail flags list
         };
 
         //
@@ -142,7 +142,7 @@ namespace Antik {
 
             Commands command { Commands::NONE }; // Command enum code
             RespCode status { RespCode::NONE }; // Command enum status
-            std::string errorMessageStr; // Command error string
+            std::string errorMessage; // Command error string
             bool bBYESent { false } ; // ==true then BYE sent as part of response
             CommandResponseMap responseMap; // Command response map 
 
@@ -160,10 +160,10 @@ namespace Antik {
         //
 
         struct CommandData {
-            std::string tagStr; // Command tag
+            std::string tag; // Command tag
             Commands commandCode; // Command code
-            std::string commandLineStr; // Full command line
-            std::istringstream& commandRespStream; // Command response stream (Note reference)
+            std::string commandLine; // Full command line
+            std::istringstream& commandRespeam; // Command response stream (Note reference)
             COMMANDRESPONSE resp; // Parsed command response structure
         };
 
@@ -183,26 +183,26 @@ namespace Antik {
         // Get command string representation from internal code.
         //
 
-        static std::string commandCodeString(Commands commandCode);
+        static std::string commandCodeing(Commands commandCode);
 
         //
         // Parse IMAP command response and return parsed response structure.
         //
 
-        static COMMANDRESPONSE parseResponse(const std::string& commandResponseStr);
+        static COMMANDRESPONSE parseResponse(const std::string& commandResponse);
 
         //
         // Command response parse string utility methods
         //
 
-        static std::string stringToUpper(const std::string& lineStr);
-        static bool stringEqual(const std::string& lineStr, const std::string& compareStr);
+        static std::string stringToUpper(const std::string& line);
+        static bool stringEqual(const std::string& line, const std::string& compare);
 
-        static std::string stringBetween(const std::string& lineStr, const char first, const char last);
-        static std::string stringTag(const std::string& lineStr);
-        static std::string stringCommand(const std::string& lineStr);
-        static std::string stringList(const std::string& lineStr);
-        static std::string stringUntaggedNumber(const std::string& lineStr);
+        static std::string stringBetween(const std::string& line, const char first, const char last);
+        static std::string stringTag(const std::string& line);
+        static std::string stringCommand(const std::string& line);
+        static std::string stringList(const std::string& line);
+        static std::string stringUntaggedNumber(const std::string& line);
 
         // ================
         // PUBLIC VARIABLES
@@ -238,17 +238,17 @@ namespace Antik {
         // Get next line from response
         //
 
-        static bool parseGetNextLine(std::istringstream& responseStream, std::string& lineStr);
+        static bool parseGetNextLine(std::istringstream& responseeam, std::string& line);
 
         //
         // Command response parse utility methods
         //
 
-        static void parseCommon(const std::string& tagStr, const std::string& lineStr, CommandResponse* statusResponse);
-        static void parseOctets(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr, std::istringstream& responseStream);
-        static void parseList(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
-        static void parseString(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
-        static void parseNumber(const std::string& itemStr, FetchRespData& fetchData, std::string& lineStr);
+        static void parseCommon(const std::string& tag, const std::string& line, CommandResponse* statusResponse);
+        static void parseOctets(const std::string& item, FetchRespData& fetchData, std::string& line, std::istringstream& responseeam);
+        static void parseList(const std::string& item, FetchRespData& fetchData, std::string& line);
+        static void parseing(const std::string& item, FetchRespData& fetchData, std::string& line);
+        static void parseNumber(const std::string& item, FetchRespData& fetchData, std::string& line);
 
         //
         // Command response parse methods
@@ -274,13 +274,13 @@ namespace Antik {
         // IMAP command code to parse response function mapping table
         //
 
-        static std::unordered_map<int, ParseFunction> parseCommmandMap;
+        static std::unordered_map<int, ParseFunction> m_parseCommmandMap;
 
         //
         // IMAP command string to code mapping table
         //
 
-        static std::unordered_map<std::string, Commands> stringToCodeMap;
+        static std::unordered_map<std::string, Commands> m_stringToCodeMap;
 
     };
 
