@@ -125,6 +125,16 @@ namespace Antik {
             
             std::uint16_t changeWorkingDirectory(const std::string &workingDirectoryPath);
             std::uint16_t getCurrentWoringDirectory(std::string &currentWoringDirectory);
+            
+       
+            // FTP make/remove server directory
+
+            std::uint16_t makeDirectory(const std::string &directoryName);            
+            std::uint16_t removeDirectory(const std::string &directoryName);
+ 
+            // FTP delete remote file
+            
+            std::uint16_t deleteFile(const std::string &fileName);
         
             // ================
             // PUBLIC VARIABLES
@@ -148,6 +158,8 @@ namespace Antik {
             // PRIVATE METHODS
             // ===============
 
+            bool socketClosedByServer();
+            
             std::string determineLocalIPAddress();
             
             bool sendTransferMode();

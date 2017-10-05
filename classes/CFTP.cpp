@@ -18,7 +18,8 @@
 // It uses boost ASIO for all communication with the server but besides that it is just
 // standard C11++.
 //
-// Note: At present TLS/SSL connections are not supported so all commands go in the clear.
+// Note: At present TLS/SSL connections are not supported so all commands and data sent 
+// are in the clear.
 //
 // Dependencies:   C11++        - Language standard features used.
 //                 BOOST ASIO   - Used to talk to FTP server.
@@ -77,6 +78,23 @@ namespace Antik {
         // ===============
         // PRIVATE METHODS
         // ===============
+ 
+        //
+        // Return true if socket closed by server otherwise false.
+        // Also throw exception for any socket error detected,
+        //
+        
+        bool CFTP::socketClosedByServer() {
+
+            if (m_socketError == asio::error::eof) {
+                return(true);           // Connection closed cleanly by peer.
+            } else if (m_socketError) {
+                throw Exception(m_socketError.message());
+            }
+            
+            return(false);
+            
+        }
         
         //
         // Work out ip address for local machine. This is quite difficult to achieve but
@@ -173,26 +191,12 @@ namespace Antik {
 
         void CFTP::downloadFile(const std::string &file) {
 
-            fs::path localFilePath{ file};
-
-            if (fs::exists(localFilePath)) {
-                fs::remove(localFilePath);
-            }
-
-            std::ofstream localFile{ localFilePath.string(), std::ofstream::binary};
+            std::ofstream localFile{ file, std::ofstream::trunc |std::ofstream::binary};
 
             for (;;) {
-
                 size_t len = m_dataChannelSocket.read_some(asio::buffer(m_ioBuffer), m_socketError);
-
-                if (m_socketError == asio::error::eof) {
-                    break; // Connection closed cleanly by peer.
-                } else if (m_socketError) {
-                    throw Exception(m_socketError.message());
-                }
-
+                if (socketClosedByServer()) break;
                 localFile.write(&m_ioBuffer[0], len);
-
             }
 
             localFile.close();
@@ -211,29 +215,20 @@ namespace Antik {
 
             std::size_t localFileLength = fs::file_size(localFilePath);
 
-            for (;;) {
+            if (localFile) {
 
-                if (!localFile) break;
+                for (;;) {
 
-                localFile.read(&m_ioBuffer[0], m_ioBuffer.size());
+                    localFile.read(&m_ioBuffer[0], m_ioBuffer.size());
+                    asio::write(m_dataChannelSocket, asio::buffer(m_ioBuffer, localFile.gcount()), m_socketError);
+                    localFileLength -= localFile.gcount();
+                    if (!localFile || socketClosedByServer()) break;
 
-                if (localFileLength < m_ioBuffer.size()) {
-                    asio::write(m_dataChannelSocket, asio::buffer(m_ioBuffer, localFileLength), m_socketError);
-                } else {
-                    asio::write(m_dataChannelSocket, asio::buffer(m_ioBuffer, m_ioBuffer.size()), m_socketError);
                 }
 
-                localFileLength -= m_ioBuffer.size();
-
-                if (m_socketError == asio::error::eof) {
-                    break; // Connection closed cleanly by peer.
-                } else if (m_socketError) {
-                    throw Exception(m_socketError.message());
-                }
+                localFile.close();
 
             }
-
-            localFile.close();
 
         }
 
@@ -306,11 +301,7 @@ namespace Antik {
 
                         size_t len = m_dataChannelSocket.read_some(asio::buffer(m_ioBuffer), m_socketError);
 
-                        if (m_socketError == asio::error::eof) {
-                            break; // Connection closed cleanly by peer.
-                        } else if (m_socketError) {
-                            throw Exception(m_socketError.message());
-                        }
+                        if (socketClosedByServer()) break;
 
                         for (auto byte : m_ioBuffer) {
                             if (len == 0) break;
@@ -427,11 +418,7 @@ namespace Antik {
                     break;
                 }
 
-                if (m_socketError == asio::error::eof) {
-                    break; // Connection closed cleanly by peer.
-                } else if (m_socketError) {
-                    throw Exception(m_socketError.message());
-                }
+                if (socketClosedByServer()) break;
 
             }
 
@@ -578,16 +565,23 @@ namespace Antik {
         
         std::uint16_t CFTP::putFile(const std::string &remoteFilePath, const std::string &localFilePath) {
 
+            std::uint16_t statusCode = 550;
+
             if (!m_connected) {
                 throw Exception("Not connected to server.");
             }
 
-            if (sendTransferMode()) {
-                sendFTPCommand("STOR " + remoteFilePath + "\r\n");
-                transferFile(localFilePath, false);
+            if (fs::exists(static_cast<fs::path> (localFilePath))) {
+                if (sendTransferMode()) {
+                    sendFTPCommand("STOR " + remoteFilePath + "\r\n");
+                    transferFile(localFilePath, false);
+                }
+                statusCode = extractStatusCode(m_commandResponse);
+            } else {
+                throw Exception("Local file " + localFilePath + " does not exist.");
             }
 
-            return (extractStatusCode(m_commandResponse));
+            return (statusCode);
 
         }
 
@@ -683,6 +677,57 @@ namespace Antik {
 
             return (extractStatusCode(m_commandResponse));
 
+
+        }
+
+        //
+        // Make remote FTP server directory
+        //
+        
+        std::uint16_t CFTP::makeDirectory(const std::string &directoryName) {
+
+            if (!m_connected) {
+                throw Exception("Not connected to server.");
+            }
+
+            sendFTPCommand("MKD " + directoryName + "\r\n");
+            waitForFTPCommandResponse(m_commandResponse);
+
+            return (extractStatusCode(m_commandResponse));
+
+        }
+        
+        //
+        // Remove remote FTP server directory
+        //
+        
+        std::uint16_t CFTP::removeDirectory(const std::string &directoryName) {
+
+            if (!m_connected) {
+                throw Exception("Not connected to server.");
+            }
+
+            sendFTPCommand("RMD " + directoryName + "\r\n");
+            waitForFTPCommandResponse(m_commandResponse);
+
+            return (extractStatusCode(m_commandResponse));
+
+        }
+        
+        //
+        // Delete remote FTP server file
+        //
+        
+        std::uint16_t CFTP::deleteFile(const std::string &fileName) {
+
+            if (!m_connected) {
+                throw Exception("Not connected to server.");
+            }
+
+            sendFTPCommand("DELE " + fileName + "\r\n");
+            waitForFTPCommandResponse(m_commandResponse);
+
+            return (extractStatusCode(m_commandResponse));
 
         }
         
