@@ -50,7 +50,6 @@
 
 namespace asio = boost::asio;
 namespace ip = asio::ip;
-namespace fs = boost::filesystem;
 
 // =========
 // NAMESPACE
@@ -194,9 +193,11 @@ namespace Antik {
             std::ofstream localFile{ file, std::ofstream::trunc |std::ofstream::binary};
 
             for (;;) {
-                size_t len = m_dataChannelSocket.read_some(asio::buffer(m_ioBuffer), m_socketError);
+                size_t recvLength = m_dataChannelSocket.read_some(asio::buffer(m_ioBuffer), m_socketError);
+                if (recvLength) {
+                    localFile.write(&m_ioBuffer[0], recvLength);
+                }
                 if (socketClosedByServer()) break;
-                localFile.write(&m_ioBuffer[0], len);
             }
 
             localFile.close();
@@ -209,19 +210,17 @@ namespace Antik {
 
         void CFTP::uploadFile(const std::string &file) {
 
-            fs::path localFilePath{ file};
-
-            std::ifstream localFile{ localFilePath.string(), std::ifstream::binary};
-
-            std::size_t localFileLength = fs::file_size(localFilePath);
+  
+            std::ifstream localFile{ file, std::ifstream::binary};
 
             if (localFile) {
 
                 for (;;) {
 
                     localFile.read(&m_ioBuffer[0], m_ioBuffer.size());
-                    asio::write(m_dataChannelSocket, asio::buffer(m_ioBuffer, localFile.gcount()), m_socketError);
-                    localFileLength -= localFile.gcount();
+                    if (localFile.gcount()) {
+                        asio::write(m_dataChannelSocket, asio::buffer(m_ioBuffer, localFile.gcount()), m_socketError);
+                    }
                     if (!localFile || socketClosedByServer()) break;
 
                 }
@@ -287,7 +286,7 @@ namespace Antik {
                     asio::connect(m_dataChannelSocket, m_queryResolver.resolve(query));
                 }
 
-                waitForFTPCommandResponse(m_commandResponse);
+                waitForFTPCommandResponse();
 
                 std::uint16_t statusCode = extractStatusCode(m_commandResponse);
 
@@ -299,15 +298,15 @@ namespace Antik {
 
                     for (;;) {
 
-                        size_t len = m_dataChannelSocket.read_some(asio::buffer(m_ioBuffer), m_socketError);
+                        size_t recvLength = m_dataChannelSocket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size()-1), m_socketError);
+
+                         if (recvLength) {
+                            m_ioBuffer[recvLength] = '\0';
+                            commandResponse.append(&m_ioBuffer[0]);
+                         } 
 
                         if (socketClosedByServer()) break;
 
-                        for (auto byte : m_ioBuffer) {
-                            if (len == 0) break;
-                            commandResponse.append(1, byte);
-                            len--;
-                        }
 
                     }
 
@@ -315,7 +314,7 @@ namespace Antik {
                         m_dataChannelSocket.close();
                     }
 
-                    waitForFTPCommandResponse(m_commandResponse);
+                    waitForFTPCommandResponse();
 
                 }
 
@@ -344,7 +343,7 @@ namespace Antik {
                     asio::connect(m_dataChannelSocket, m_queryResolver.resolve(query));
                 }
 
-                waitForFTPCommandResponse(m_commandResponse);
+                waitForFTPCommandResponse();
                 std::uint16_t statusCode = extractStatusCode(m_commandResponse);
 
                 if ((statusCode == 125) || (statusCode == 150)) {
@@ -363,7 +362,7 @@ namespace Antik {
                         m_dataChannelSocket.close();
                     }
 
-                    waitForFTPCommandResponse(m_commandResponse);
+                    waitForFTPCommandResponse();
 
                 }
 
@@ -392,30 +391,29 @@ namespace Antik {
         }
         
         //
-        // Read FTP command response fromconrol channel.
+        // Read FTP command response from control channel.
         //
 
-        void CFTP::waitForFTPCommandResponse(std::string& commandResponse) {
+        void CFTP::waitForFTPCommandResponse() {
 
             size_t recvLength { 0 };
 
-            commandResponse.clear();
+            m_commandResponse.clear();
 
             for (;;) {
 
-                recvLength = m_controlChannelSocket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size()), m_socketError);
+                recvLength = m_controlChannelSocket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size()-1), m_socketError);
 
-                if (recvLength == 0) {
-                    commandResponse.clear();
-                    break;
-                }
+                if (recvLength) {
 
-                m_ioBuffer[recvLength] = '\0';
-                commandResponse.append(&m_ioBuffer[0]);
+                    m_ioBuffer[recvLength] = '\0';
+                    m_commandResponse.append(&m_ioBuffer[0]);
 
-                recvLength = commandResponse.length();
-                if ((commandResponse[recvLength - 2] == '\r') && (commandResponse[recvLength - 1] == '\n')) {
-                    break;
+                    recvLength = m_commandResponse.length();
+                    if ((m_commandResponse[recvLength - 2] == '\r') && (m_commandResponse[recvLength - 1] == '\n')) {
+                        break;
+                    }
+                    
                 }
 
                 if (socketClosedByServer()) break;
@@ -465,12 +463,14 @@ namespace Antik {
         // Setup connection to server
         //
 
-        void CFTP::connect(void) {
+        std::uint16_t CFTP::connect(void) {
 
             if (m_connected) {
                 Exception("Already connected to a server.");
             }
 
+            m_dataChannelActiveAddresss = determineLocalIPAddress();
+                        
             ip::tcp::resolver::query query(m_serverName, m_serverPort);
 
             asio::connect(m_controlChannelSocket, m_queryResolver.resolve(query), m_socketError);
@@ -479,17 +479,23 @@ namespace Antik {
                 throw Exception(m_socketError.message());
             }
 
-            waitForFTPCommandResponse(m_commandResponse);
+            waitForFTPCommandResponse();
 
-            m_connected = true;
+            if (extractStatusCode(m_commandResponse) == 220) {
+                
+                m_connected = true;
 
-            sendFTPCommand("USER " + m_userName + "\r\n");
-            waitForFTPCommandResponse(m_commandResponse);
-            sendFTPCommand("PASS " + m_userPassword + "\r\n");
-            waitForFTPCommandResponse(m_commandResponse);
+                sendFTPCommand("USER " + m_userName + "\r\n");
+                waitForFTPCommandResponse();
 
-            m_dataChannelActiveAddresss = determineLocalIPAddress();
-
+                if (extractStatusCode(m_commandResponse) == 331) {
+                    sendFTPCommand("PASS " + m_userPassword + "\r\n");
+                    waitForFTPCommandResponse();
+                }
+                
+            }
+            
+            return(extractStatusCode(m_commandResponse));
 
         }
 
@@ -529,12 +535,12 @@ namespace Antik {
         bool CFTP::sendTransferMode() {
             if (m_passiveMode) {
                 sendFTPCommand("PASV\r\n");
-                waitForFTPCommandResponse(m_commandResponse);
+                waitForFTPCommandResponse();
                 extractPassiveAddressPort(m_commandResponse);
                 return (extractStatusCode(m_commandResponse) == 227);
             } else {
                 m_dataChannelListenThread.reset(new std::thread(&CFTP::dataChannelTransferListener, this));
-                waitForFTPCommandResponse(m_commandResponse);
+                waitForFTPCommandResponse();
                 return (extractStatusCode(m_commandResponse) == 200);
             }
         }
@@ -566,12 +572,14 @@ namespace Antik {
         std::uint16_t CFTP::putFile(const std::string &remoteFilePath, const std::string &localFilePath) {
 
             std::uint16_t statusCode = 550;
+            std::ifstream localFile { localFilePath, std::ifstream::binary};    
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
             }
 
-            if (fs::exists(static_cast<fs::path> (localFilePath))) {
+            if (localFile) {
+                localFile.close();
                 if (sendTransferMode()) {
                     sendFTPCommand("STOR " + remoteFilePath + "\r\n");
                     transferFile(localFilePath, false);
@@ -668,7 +676,7 @@ namespace Antik {
             listOutput.clear();
 
             sendFTPCommand("MLST " + filePath + "\r\n");
-            waitForFTPCommandResponse(m_commandResponse);
+            waitForFTPCommandResponse();
             
             if (extractStatusCode(m_commandResponse)==250) {
                 listOutput = m_commandResponse.substr(m_commandResponse.find('\n')+1);
@@ -691,7 +699,7 @@ namespace Antik {
             }
 
             sendFTPCommand("MKD " + directoryName + "\r\n");
-            waitForFTPCommandResponse(m_commandResponse);
+            waitForFTPCommandResponse();
 
             return (extractStatusCode(m_commandResponse));
 
@@ -708,7 +716,29 @@ namespace Antik {
             }
 
             sendFTPCommand("RMD " + directoryName + "\r\n");
-            waitForFTPCommandResponse(m_commandResponse);
+            waitForFTPCommandResponse();
+
+            return (extractStatusCode(m_commandResponse));
+
+        }
+        
+              //
+        // Remove remote FTP server directory
+        //
+        
+        std::uint16_t CFTP::fileSize(const std::string &fileName, size_t &fileSize) {
+
+            if (!m_connected) {
+                throw Exception("Not connected to server.");
+            }
+
+            sendFTPCommand("SIZE " + fileName + "\r\n");
+            waitForFTPCommandResponse();
+            
+            if (extractStatusCode(m_commandResponse)==213) {
+                fileSize = std::stoi(m_commandResponse.substr(m_commandResponse.find(' ')+1));
+                return(213);
+            }
 
             return (extractStatusCode(m_commandResponse));
 
@@ -725,7 +755,7 @@ namespace Antik {
             }
 
             sendFTPCommand("DELE " + fileName + "\r\n");
-            waitForFTPCommandResponse(m_commandResponse);
+            waitForFTPCommandResponse();
 
             return (extractStatusCode(m_commandResponse));
 
@@ -742,7 +772,7 @@ namespace Antik {
             }
 
             sendFTPCommand("CWD " + workingDirectoryPath + "\r\n");
-            waitForFTPCommandResponse(m_commandResponse);
+            waitForFTPCommandResponse();
 
             return (extractStatusCode(m_commandResponse));
 
@@ -761,7 +791,7 @@ namespace Antik {
             currentWoringDirectoryPath.clear();
 
             sendFTPCommand("PWD\r\n");
-            waitForFTPCommandResponse(m_commandResponse);
+            waitForFTPCommandResponse();
 
             currentWoringDirectoryPath = m_commandResponse.substr(m_commandResponse.find_first_of('\"') + 1);
             currentWoringDirectoryPath = currentWoringDirectoryPath.substr(0, currentWoringDirectoryPath.find_first_of('\"'));

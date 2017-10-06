@@ -29,8 +29,6 @@
 //
 
 #include <boost/asio.hpp>
-#include <boost/array.hpp>
-#include <boost/filesystem.hpp>
 
 // =========
 // NAMESPACE
@@ -100,7 +98,7 @@ namespace Antik {
             // FTP connect, disconnect and connection status
             //
 
-            void connect(void);
+            std::uint16_t connect(void);
             void disconnect(void);
             bool getConnectedStatus(void) const;
             
@@ -132,9 +130,10 @@ namespace Antik {
             std::uint16_t makeDirectory(const std::string &directoryName);            
             std::uint16_t removeDirectory(const std::string &directoryName);
  
-            // FTP delete remote file
+            // FTP delete remote file, get size in bytes
             
             std::uint16_t deleteFile(const std::string &fileName);
+            std::uint16_t fileSize(const std::string &fileName, size_t &fileSize);
         
             // ================
             // PUBLIC VARIABLES
@@ -165,7 +164,7 @@ namespace Antik {
             bool sendTransferMode();
             
             void sendFTPCommand(const std::string& commandLine);
-            void waitForFTPCommandResponse(std::string& commandResponse);
+            void waitForFTPCommandResponse();
             
             void readDataChannelCommandResponse(std::string &commandResponse);
 
@@ -203,9 +202,9 @@ namespace Antik {
             
             bool m_passiveMode { false }; // == true passive mode enabled, == false active mode
 
-            boost::asio::io_service m_ioService;                                // IO Service
-            boost::array<char, 32*1024> m_ioBuffer;                             // IO Buffer
-            boost::system::error_code m_socketError;                            // Last socket error
+            boost::asio::io_service m_ioService;                                  // IO Service
+            std::array<char, 32*1024> m_ioBuffer;                                 // IO Buffer
+            boost::system::error_code m_socketError;                              // Last socket error
             boost::asio::ip::tcp::socket m_controlChannelSocket { m_ioService };  // Control channel socket
             boost::asio::ip::tcp::socket m_dataChannelSocket { m_ioService };     // Data channel socket
             boost::asio::ip::tcp::resolver m_queryResolver { m_ioService };       // Name resolver

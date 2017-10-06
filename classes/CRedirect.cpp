@@ -72,7 +72,7 @@ namespace Antik {
     //
 
     CRedirect::CRedirect(std::ostream& outeam) {
-        this->m_savedStream = &outeam;
+        m_savedStream = &outeam;
     }
 
     //
@@ -80,8 +80,8 @@ namespace Antik {
     //
 
     CRedirect::CRedirect(std::ostream& outeam, std::string outfileName, std::ios_base::openmode mode) {
-        this->m_savedStream = &outeam;
-        this->change(outfileName, mode);
+        m_savedStream = &outeam;
+        change(outfileName, mode);
     }
 
     //
@@ -97,7 +97,7 @@ namespace Antik {
     //
 
     CRedirect::CRedirect(std::FILE* stdeam) {
-        this->m_savedStdOutErr = stdeam;
+        m_savedStdOutErr = stdeam;
     }
 
     //
@@ -113,9 +113,9 @@ namespace Antik {
     //
 
     void CRedirect::change(std::string outfileName, std::ios_base::openmode mode) {
-        this->m_newFileStream.reset(new std::ofstream{outfileName, mode});
-        this->m_outputBuffer = m_savedStream->rdbuf();
-        m_savedStream->rdbuf((this->m_newFileStream)->rdbuf());
+        m_newFileStream.reset(new std::ofstream{outfileName, mode});
+        m_outputBuffer = m_savedStream->rdbuf();
+        m_savedStream->rdbuf((m_newFileStream)->rdbuf());
     }
 
     //
@@ -123,7 +123,7 @@ namespace Antik {
     //
 
     void CRedirect::change(std::string outfileName, const char* mode) {
-        std::freopen(outfileName.c_str(), mode, this->m_savedStdOutErr);
+        std::freopen(outfileName.c_str(), mode, m_savedStdOutErr);
     }
 
     //
@@ -134,16 +134,16 @@ namespace Antik {
 
     void CRedirect::restore() {
 
-        if (this->m_outputBuffer) {
-            m_savedStream->rdbuf(this->m_outputBuffer);
+        if (m_outputBuffer) {
+            m_savedStream->rdbuf(m_outputBuffer);
         }
 
-        if (this->m_newFileStream) {
-            this->m_newFileStream->close();
+        if (m_newFileStream) {
+            m_newFileStream->close();
         }
 
-        if (this->m_savedStdOutErr) {
-            fclose(this->m_savedStdOutErr);
+        if (m_savedStdOutErr) {
+            fclose(m_savedStdOutErr);
         }
     }
 

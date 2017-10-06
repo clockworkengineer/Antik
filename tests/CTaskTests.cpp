@@ -70,7 +70,7 @@ protected:
         fnData.reset(new TestActFnData{0});
         funcData = static_cast<TestActFnData *> (fnData.get());
 
-        this->taskOptions.reset(new CTask::TaskOptions{0, nullptr, nullptr});
+        taskOptions.reset(new CTask::TaskOptions{0, nullptr, nullptr});
 
         // Create watch folder.
 
@@ -164,13 +164,13 @@ void CTaskTests::createFile(std::string fileName) {
 
 void CTaskTests::createFiles(int fileCount) {
 
-    this->taskName = "Test";
-    this->watchFolder = kWatchFolder;
-    this->watchDepth = -1;
+    taskName = "Test";
+    watchFolder = kWatchFolder;
+    watchDepth = -1;
 
     // Simple test action function that just increases call count
 
-    this->taskActFcn = [] ( const std::string &filenamePath, const std::shared_ptr<void> fnData) -> bool {
+    taskActFcn = [] ( const std::string &filenamePath, const std::shared_ptr<void> fnData) -> bool {
         TestActFnData *funcData = static_cast<TestActFnData *> (fnData.get());
         funcData->fnCalledCount++;
         return true;
@@ -178,11 +178,11 @@ void CTaskTests::createFiles(int fileCount) {
 
     // Set any task options required by test
 
-    (this->taskOptions)->killCount = fileCount;
+    (taskOptions)->killCount = fileCount;
 
     // Create task object
     
-    CTask task{this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth, this->taskOptions};
+    CTask task{taskName, watchFolder, taskActFcn, fnData, watchDepth, taskOptions};
 
     // Create task object thread and start to watch
 
@@ -190,11 +190,11 @@ void CTaskTests::createFiles(int fileCount) {
 
     taskThread.reset(new std::thread(&CTask::monitor, &task));
      
-    this->filePath = CTaskTests::kWatchFolder;
+    filePath = CTaskTests::kWatchFolder;
 
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::string file = (boost::format("temp%1%.txt") % cnt01).str();
-        this->createFile(this->filePath + file);
+        createFile(filePath + file);
     }
 
     // Thread should die after killCount files created
@@ -205,7 +205,7 @@ void CTaskTests::createFiles(int fileCount) {
 
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::string file = (boost::format("temp%1%.txt") % cnt01).str();
-        fs::remove(this->filePath + file);
+        fs::remove(filePath + file);
     }
 
 }
@@ -232,7 +232,7 @@ void CTaskTests::generateException(std::exception_ptr e) {
 
 TEST_F(CTaskTests, AssertParam1) {
 
-    EXPECT_DEATH(CTask task(this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth), CTaskTests::kParamAssertion1);
+    EXPECT_DEATH(CTask task(taskName, watchFolder, taskActFcn, fnData, watchDepth), CTaskTests::kParamAssertion1);
 
 }
 
@@ -242,9 +242,9 @@ TEST_F(CTaskTests, AssertParam1) {
 
 TEST_F(CTaskTests, AssertParam2) {
 
-    this->taskName = "Test";
+    taskName = "Test";
 
-    EXPECT_DEATH(CTask task(this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth), CTaskTests::kParamAssertion2);
+    EXPECT_DEATH(CTask task(taskName, watchFolder, taskActFcn, fnData, watchDepth), CTaskTests::kParamAssertion2);
 
 }
 
@@ -254,11 +254,11 @@ TEST_F(CTaskTests, AssertParam2) {
 
 TEST_F(CTaskTests, AssertParam3) {
 
-    this->taskName = "Test";
-    this->watchFolder = kWatchFolder;
-    this->watchDepth = -1;
+    taskName = "Test";
+    watchFolder = kWatchFolder;
+    watchDepth = -1;
 
-    EXPECT_DEATH(CTask task(this->taskName, this->watchFolder, nullptr, this->fnData, this->watchDepth), CTaskTests::kParamAssertion3);
+    EXPECT_DEATH(CTask task(taskName, watchFolder, nullptr, fnData, watchDepth), CTaskTests::kParamAssertion3);
 
 }
 
@@ -268,11 +268,11 @@ TEST_F(CTaskTests, AssertParam3) {
 
 TEST_F(CTaskTests, AssertParam4) {
 
-    this->taskName = "Test";
-    this->watchFolder = kWatchFolder;
-    this->watchDepth = -1;
+    taskName = "Test";
+    watchFolder = kWatchFolder;
+    watchDepth = -1;
 
-    EXPECT_DEATH(CTask task(this->taskName, this->watchFolder, this->taskActFcn, nullptr, this->watchDepth), CTaskTests::kParamAssertion4);
+    EXPECT_DEATH(CTask task(taskName, watchFolder, taskActFcn, nullptr, watchDepth), CTaskTests::kParamAssertion4);
 
 }
 
@@ -282,11 +282,11 @@ TEST_F(CTaskTests, AssertParam4) {
 
 TEST_F(CTaskTests, AssertParam5) {
 
-    this->taskName = "Test";
-    this->watchFolder = kWatchFolder;
-    this->watchDepth = -99;
+    taskName = "Test";
+    watchFolder = kWatchFolder;
+    watchDepth = -99;
 
-    EXPECT_DEATH(CTask task(this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth), CTaskTests::kParamAssertion5);
+    EXPECT_DEATH(CTask task(taskName, watchFolder, taskActFcn, fnData, watchDepth), CTaskTests::kParamAssertion5);
 
 }
 
@@ -296,7 +296,7 @@ TEST_F(CTaskTests, AssertParam5) {
 
 TEST_F(CTaskTests, CreateFile1) {
 
-    this->createFiles(1);
+    createFiles(1);
 
 }
 
@@ -306,7 +306,7 @@ TEST_F(CTaskTests, CreateFile1) {
 
 TEST_F(CTaskTests, CreateFile10) {
 
-    this->createFiles(10);
+    createFiles(10);
 
 }
 
@@ -316,7 +316,7 @@ TEST_F(CTaskTests, CreateFile10) {
 
 TEST_F(CTaskTests, CreateFile50) {
 
-    this->createFiles(50);
+    createFiles(50);
 
 }
 
@@ -326,7 +326,7 @@ TEST_F(CTaskTests, CreateFile50) {
 
 TEST_F(CTaskTests, CreateFile100) {
 
-    this->createFiles(100);
+    createFiles(100);
 
 }
 
@@ -336,7 +336,7 @@ TEST_F(CTaskTests, CreateFile100) {
 
 TEST_F(CTaskTests, CreateFile250) {
 
-    this->createFiles(250);
+    createFiles(250);
 
 }
 
@@ -346,7 +346,7 @@ TEST_F(CTaskTests, CreateFile250) {
 
 TEST_F(CTaskTests, CreateFile500) {
 
-    this->createFiles(500);
+    createFiles(500);
 
 }
 
@@ -356,20 +356,20 @@ TEST_F(CTaskTests, CreateFile500) {
 
 TEST_F(CTaskTests, NoWatchFolder) {
 
-    this->taskName = "Test";
-    this->watchFolder = "/tmp/tnothere";
-    this->watchDepth = -1;
+    taskName = "Test";
+    watchFolder = "/tmp/tnothere";
+    watchDepth = -1;
 
     // Simple test action function that does nothing
 
-    this->taskActFcn = [] (const std::string& filenamePath, const std::shared_ptr<void> fnData) -> bool {
+    taskActFcn = [] (const std::string& filenamePath, const std::shared_ptr<void> fnData) -> bool {
         TestActFnData *funcData = static_cast<TestActFnData *> (fnData.get());
         return true;
     };
 
     // Create task object
 
-    EXPECT_THROW(CTask task(this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth, this->taskOptions), std::system_error);
+    EXPECT_THROW(CTask task(taskName, watchFolder, taskActFcn, fnData, watchDepth, taskOptions), std::system_error);
 
 }
 
@@ -379,14 +379,14 @@ TEST_F(CTaskTests, NoWatchFolder) {
 
 TEST_F(CTaskTests, ActionFunctionException) {
 
-    this->taskName = "Test";
-    this->watchFolder = kWatchFolder;
-    this->fileName = "tmp.txt";
-    this->watchDepth = -1;
+    taskName = "Test";
+    watchFolder = kWatchFolder;
+    fileName = "tmp.txt";
+    watchDepth = -1;
 
     // Simple test action function that just throws an exception
 
-    this->taskActFcn = [] (const std::string& filenamePath, const std::shared_ptr<void> fnData) -> bool {
+    taskActFcn = [] (const std::string& filenamePath, const std::shared_ptr<void> fnData) -> bool {
         TestActFnData *funcData = static_cast<TestActFnData *> (fnData.get());
         throw std::logic_error("Just an example.");
         return true;
@@ -394,11 +394,11 @@ TEST_F(CTaskTests, ActionFunctionException) {
 
     // Set any task options required by test
 
-    (this->taskOptions)->killCount = 1;
+    (taskOptions)->killCount = 1;
     
     // Create task object
 
-    CTask task{this->taskName, this->watchFolder, this->taskActFcn, this->fnData, this->watchDepth, this->taskOptions};
+    CTask task{taskName, watchFolder, taskActFcn, fnData, watchDepth, taskOptions};
 
     // Create task object thread and start to watch
 
@@ -408,16 +408,16 @@ TEST_F(CTaskTests, ActionFunctionException) {
     
     // Create one file to trigger action function
 
-    this->createFile(this->watchFolder + this->fileName);
+    createFile(watchFolder + fileName);
 
     // Thread should die after killCount files created
 
     taskThread->join();
 
-    EXPECT_THROW(this->generateException(task.getThrownException()), std::logic_error);
+    EXPECT_THROW(generateException(task.getThrownException()), std::logic_error);
 
-    if (fs::exists(this->watchFolder + this->fileName)) {
-        fs::remove(this->watchFolder + this->fileName);
+    if (fs::exists(watchFolder + fileName)) {
+        fs::remove(watchFolder + fileName);
     }
 
 }

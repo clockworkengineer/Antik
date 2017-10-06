@@ -136,24 +136,24 @@ namespace Antik {
 
             do {
 
-                this->readZIPFile(this->m_zipInBuffer, std::min(fileSize, this->m_zipIOBufferSize));
+                readZIPFile(m_zipInBuffer, std::min(fileSize, m_zipIOBufferSize));
 
-                if (this->errorInZIPFile()) {
+                if (errorInZIPFile()) {
                     inflateEnd(&inlateZIPeam);
                     throw Exception("Error reading ZIP archive file during inflate.");
                 }
 
-                inlateZIPeam.avail_in = this->readCountZIPFile();
+                inlateZIPeam.avail_in = readCountZIPFile();
                 if (inlateZIPeam.avail_in == 0) {
                     break;
                 }
 
-                inlateZIPeam.next_in = (Bytef *) & this->m_zipInBuffer[0];
+                inlateZIPeam.next_in = (Bytef *) & m_zipInBuffer[0];
 
                 do {
 
-                    inlateZIPeam.avail_out = this->m_zipIOBufferSize;
-                    inlateZIPeam.next_out = (Bytef *) & this->m_zipOutBuffer[0];
+                    inlateZIPeam.avail_out = m_zipIOBufferSize;
+                    inlateZIPeam.next_out = (Bytef *) & m_zipOutBuffer[0];
 
                     inflateResult = inflate(&inlateZIPeam, Z_NO_FLUSH);
                     switch (inflateResult) {
@@ -165,18 +165,18 @@ namespace Antik {
                             throw Exception("Error inflating ZIP archive. = " + std::to_string(inflateResult));
                     }
 
-                    inflatedBytes = this->m_zipIOBufferSize - inlateZIPeam.avail_out;
-                    fileeam.write((char *) & this->m_zipOutBuffer[0], inflatedBytes);
+                    inflatedBytes = m_zipIOBufferSize - inlateZIPeam.avail_out;
+                    fileeam.write((char *) & m_zipOutBuffer[0], inflatedBytes);
                     if (fileeam.fail()) {
                         inflateEnd(&inlateZIPeam);
                         throw Exception("Error writing to file during inflate.");
                     }
 
-                    crc = crc32(crc, &this->m_zipOutBuffer[0], inflatedBytes);
+                    crc = crc32(crc, &m_zipOutBuffer[0], inflatedBytes);
 
                 } while (inlateZIPeam.avail_out == 0);
 
-                fileSize -= this->m_zipIOBufferSize;
+                fileSize -= m_zipIOBufferSize;
 
             } while (inflateResult != Z_STREAM_END);
 
@@ -214,7 +214,7 @@ namespace Antik {
 
             do {
 
-                fileeam.read((char *) & this->m_zipInBuffer[0], std::min(fileSize, this->m_zipIOBufferSize));
+                fileeam.read((char *) & m_zipInBuffer[0], std::min(fileSize, m_zipIOBufferSize));
                 if (fileeam.fail() && !fileeam.eof()) {
                     deflateEnd(&deflateZIPeam);
                     throw Exception("Error reading source file to deflate.");
@@ -223,21 +223,21 @@ namespace Antik {
                 deflateZIPeam.avail_in = fileeam.gcount();
                 fileSize -= deflateZIPeam.avail_in;
 
-                crc = crc32(crc, &this->m_zipInBuffer[0], deflateZIPeam.avail_in);
+                crc = crc32(crc, &m_zipInBuffer[0], deflateZIPeam.avail_in);
 
                 flushRemainder = ((fileeam.eof() || fileSize == 0)) ? Z_FINISH : Z_NO_FLUSH;
 
-                deflateZIPeam.next_in = &this->m_zipInBuffer[0];
+                deflateZIPeam.next_in = &m_zipInBuffer[0];
 
                 do {
 
-                    deflateZIPeam.avail_out = this->m_zipIOBufferSize;
-                    deflateZIPeam.next_out = &this->m_zipOutBuffer[0];
+                    deflateZIPeam.avail_out = m_zipIOBufferSize;
+                    deflateZIPeam.next_out = &m_zipOutBuffer[0];
                     deflateResult = deflate(&deflateZIPeam, flushRemainder); /* no bad return value */
 
-                    bytesDeflated = this->m_zipIOBufferSize - deflateZIPeam.avail_out;
-                    this->writeZIPFile(this->m_zipOutBuffer, bytesDeflated);
-                    if (this->errorInZIPFile()) {
+                    bytesDeflated = m_zipIOBufferSize - deflateZIPeam.avail_out;
+                    writeZIPFile(m_zipOutBuffer, bytesDeflated);
+                    if (errorInZIPFile()) {
                         deflateEnd(&deflateZIPeam);
                         throw Exception("Error writing deflated data to ZIP archive.");
                     }
@@ -273,16 +273,16 @@ namespace Antik {
             }
 
             while (fileSize) {
-                this->readZIPFile(this->m_zipInBuffer, std::min(fileSize, this->m_zipIOBufferSize));
-                if (this->errorInZIPFile()) {
+                readZIPFile(m_zipInBuffer, std::min(fileSize, m_zipIOBufferSize));
+                if (errorInZIPFile()) {
                     throw Exception("Error in reading ZIP archive file.");
                 }
-                crc = crc32(crc, &this->m_zipInBuffer[0], this->readCountZIPFile());
-                fileeam.write((char *) & this->m_zipInBuffer[0], this->readCountZIPFile());
+                crc = crc32(crc, &m_zipInBuffer[0], readCountZIPFile());
+                fileeam.write((char *) & m_zipInBuffer[0], readCountZIPFile());
                 if (fileeam.fail()) {
                     throw Exception("Error in writing extracted file.");
                 }
-                fileSize -= (std::min(fileSize, this->m_zipIOBufferSize));
+                fileSize -= (std::min(fileSize, m_zipIOBufferSize));
 
             }
 
@@ -304,17 +304,17 @@ namespace Antik {
 
             while (fileSize) {
 
-                fileeam.read((char *) & this->m_zipInBuffer[0], std::min(fileSize, this->m_zipIOBufferSize));
+                fileeam.read((char *) & m_zipInBuffer[0], std::min(fileSize, m_zipIOBufferSize));
                 if (fileeam.fail()) {
                     throw Exception("Error reading source file to store in ZIP archive.");
                 }
 
-                this->writeZIPFile(this->m_zipInBuffer, fileeam.gcount());
-                if (this->errorInZIPFile()) {
+                writeZIPFile(m_zipInBuffer, fileeam.gcount());
+                if (errorInZIPFile()) {
                     throw Exception("Error writing to ZIP archive.");
                 }
 
-                fileSize -= (std::min(fileSize, this->m_zipIOBufferSize));
+                fileSize -= (std::min(fileSize, m_zipIOBufferSize));
 
             }
 
@@ -429,7 +429,7 @@ namespace Antik {
 
             // Work from extended information 64 bit sizes
 
-            info.fileHeaderOffset = this->m_offsetToEndOfLocalFileHeaders;
+            info.fileHeaderOffset = m_offsetToEndOfLocalFileHeaders;
             info.originalSize = getFileSize(fileName);
             info.compressedSize = info.originalSize;
 
@@ -440,7 +440,7 @@ namespace Antik {
 
             // If current offset > 32 bits use ZIP64
 
-            if (this->fieldRequires64bits(info.fileHeaderOffset)) {
+            if (fieldRequires64bits(info.fileHeaderOffset)) {
                 directoryEntry.fileHeaderOffset = static_cast<std::uint32_t> (~0);
                 bZIP64 = true;
             } else {
@@ -449,7 +449,7 @@ namespace Antik {
 
             // File size > 32 bits then use ZIP64
 
-            if (this->fieldRequires64bits(info.originalSize)) {
+            if (fieldRequires64bits(info.originalSize)) {
                 directoryEntry.uncompressedSize = static_cast<std::uint32_t> (~0);
                 directoryEntry.compressedSize = static_cast<std::uint32_t> (~0);
                 bZIP64 = true;
@@ -483,10 +483,10 @@ namespace Antik {
             // information field where their format has more bits.
 
             if (bZIP64) {
-                this->m_ZIP64 = true;
+                m_ZIP64 = true;
                 directoryEntry.extractorVersion = kZIPVersion45;
                 directoryEntry.creatorVersion = (kZIPCreatorUnix << 8) | (kZIPVersion45);
-                this->putZip64ExtendedInfoExtraField(info, directoryEntry.extraField);
+                putZip64ExtendedInfoExtraField(info, directoryEntry.extraField);
                 directoryEntry.extraFieldLength = directoryEntry.extraField.size();
             }
 
@@ -504,8 +504,8 @@ namespace Antik {
             fileHeader.fileName = directoryEntry.fileName;
             fileHeader.extraField = directoryEntry.extraField;
 
-            this->positionInZIPFile(this->m_offsetToEndOfLocalFileHeaders);
-            this->putZIPRecord(fileHeader);
+            positionInZIPFile(m_offsetToEndOfLocalFileHeaders);
+            putZIPRecord(fileHeader);
 
             // Write any file contents next
 
@@ -516,50 +516,50 @@ namespace Antik {
                 // compressed size is greater then or equal to its original size then store file 
                 // instead of compress.
 
-                std::pair<std::uint32_t, std::int64_t> deflateValues = this->deflateFile(fileName, info.originalSize);
+                std::pair<std::uint32_t, std::int64_t> deflateValues = deflateFile(fileName, info.originalSize);
 
                 fileHeader.crc32 = directoryEntry.crc32 = deflateValues.first;
                 info.compressedSize = deflateValues.second;
 
                 // Save away current position next file header
 
-                this->m_offsetToEndOfLocalFileHeaders = this->currentPositionZIPFile();
+                m_offsetToEndOfLocalFileHeaders = currentPositionZIPFile();
 
                 // Back up to beginning of current local file header
 
-                this->positionInZIPFile(info.fileHeaderOffset);
+                positionInZIPFile(info.fileHeaderOffset);
 
                 // Rewrite local file header with compressed size if compressed file
                 // smaller or if ZIP64 format.
 
                 if ((info.compressedSize < info.originalSize) || bZIP64) {
                     if (bZIP64) {
-                        this->putZip64ExtendedInfoExtraField(info, directoryEntry.extraField);
+                        putZip64ExtendedInfoExtraField(info, directoryEntry.extraField);
                         fileHeader.extraField = directoryEntry.extraField;
                     } else {
                         fileHeader.compressedSize = directoryEntry.compressedSize = info.compressedSize;
                     }
-                    this->putZIPRecord(fileHeader);
+                    putZIPRecord(fileHeader);
                 } else {
                     // Store non-compressed file.
                     directoryEntry.extractorVersion = kZIPVersion10;
                     fileHeader.creatorVersion = (kZIPCreatorUnix << 8) | kZIPVersion10;
                     fileHeader.compression = directoryEntry.compression = kZIPCompressionStore;
                     fileHeader.compressedSize = directoryEntry.compressedSize = info.originalSize;
-                    this->putZIPRecord(fileHeader);
-                    this->storeFile(fileName, info.originalSize);
-                    this->m_offsetToEndOfLocalFileHeaders = this->currentPositionZIPFile();
+                    putZIPRecord(fileHeader);
+                    storeFile(fileName, info.originalSize);
+                    m_offsetToEndOfLocalFileHeaders = currentPositionZIPFile();
                 }
 
             } else {
-                this->m_offsetToEndOfLocalFileHeaders = this->currentPositionZIPFile();
+                m_offsetToEndOfLocalFileHeaders = currentPositionZIPFile();
             }
 
             // Save Central Directory File Entry
 
-            this->m_zipCentralDirectory.push_back(directoryEntry);
+            m_zipCentralDirectory.push_back(directoryEntry);
 
-            this->m_modified = true;
+            m_modified = true;
 
         }
 
@@ -569,7 +569,7 @@ namespace Antik {
 
         void CZIP::UpdateCentralDirectory(void) {
 
-            if (this->m_modified) {
+            if (m_modified) {
 
                 EOCentralDirectoryRecord zipEOCentralDirectory;
                 Zip64EOCentralDirectoryRecord zip64EOCentralDirectory;
@@ -577,28 +577,28 @@ namespace Antik {
 
                 // Position to end of local file headers
 
-                this->positionInZIPFile(this->m_offsetToEndOfLocalFileHeaders);
+                positionInZIPFile(m_offsetToEndOfLocalFileHeaders);
 
                 // Initialise central directory offset and size
 
-                zip64EOCentralDirectory.numberOfCentralDirRecords = this->m_zipCentralDirectory.size();
-                zip64EOCentralDirectory.totalCentralDirRecords = this->m_zipCentralDirectory.size();
-                zip64EOCentralDirectory.offsetCentralDirRecords = this->currentPositionZIPFile();
+                zip64EOCentralDirectory.numberOfCentralDirRecords = m_zipCentralDirectory.size();
+                zip64EOCentralDirectory.totalCentralDirRecords = m_zipCentralDirectory.size();
+                zip64EOCentralDirectory.offsetCentralDirRecords = currentPositionZIPFile();
 
                 // Write Central Directory to ZIP archive
 
-                for (auto& directoryEntry : this->m_zipCentralDirectory) {
-                    this->putZIPRecord(directoryEntry);
+                for (auto& directoryEntry : m_zipCentralDirectory) {
+                    putZIPRecord(directoryEntry);
                 }
 
                 // Calculate Central Directory size in byes.
 
-                zip64EOCentralDirectory.sizeOfCentralDirRecords = this->currentPositionZIPFile();
+                zip64EOCentralDirectory.sizeOfCentralDirRecords = currentPositionZIPFile();
                 zip64EOCentralDirectory.sizeOfCentralDirRecords -= zip64EOCentralDirectory.offsetCentralDirRecords;
 
                 // Number of records 16 bit overflow so use ZIP64 ie. 32 bits
 
-                if (this->fieldRequires32bits(zip64EOCentralDirectory.numberOfCentralDirRecords)) {
+                if (fieldRequires32bits(zip64EOCentralDirectory.numberOfCentralDirRecords)) {
                     zipEOCentralDirectory.numberOfCentralDirRecords = static_cast<std::uint16_t> (~0);
                     bZIP64 = true;
                 } else {
@@ -607,7 +607,7 @@ namespace Antik {
 
                 // Total number of records 16 bit overflow so use ZIP64 ie. 32 bits
 
-                if (this->fieldRequires32bits(zip64EOCentralDirectory.totalCentralDirRecords)) {
+                if (fieldRequires32bits(zip64EOCentralDirectory.totalCentralDirRecords)) {
                     zipEOCentralDirectory.totalCentralDirRecords = static_cast<std::uint16_t> (~0);
                     bZIP64 = true;
                 } else {
@@ -616,7 +616,7 @@ namespace Antik {
 
                 // Offset 32 bit overflow so use ZIP64 ie. 64 bits
 
-                if (this->fieldRequires64bits(zip64EOCentralDirectory.offsetCentralDirRecords)) {
+                if (fieldRequires64bits(zip64EOCentralDirectory.offsetCentralDirRecords)) {
                     zipEOCentralDirectory.offsetCentralDirRecords = static_cast<std::uint32_t> (~0);
                     bZIP64 = true;
                 } else {
@@ -625,7 +625,7 @@ namespace Antik {
 
                 // Central Directory size 32 bit overflow so use ZIP64 ie. 64 bits
 
-                if (this->fieldRequires64bits(zip64EOCentralDirectory.sizeOfCentralDirRecords)) {
+                if (fieldRequires64bits(zip64EOCentralDirectory.sizeOfCentralDirRecords)) {
                     zipEOCentralDirectory.sizeOfCentralDirRecords = static_cast<std::uint32_t> (~0);
                     bZIP64 = true;
                 } else {
@@ -634,7 +634,7 @@ namespace Antik {
 
                 // Central Directory start disk 16 bit overflow so use ZIP64 ie. 32 bits
 
-                if (this->fieldRequires32bits(zip64EOCentralDirectory.startDiskNumber)) {
+                if (fieldRequires32bits(zip64EOCentralDirectory.startDiskNumber)) {
                     zipEOCentralDirectory.startDiskNumber = static_cast<std::uint16_t> (~0);
                     bZIP64 = true;
                 } else {
@@ -644,7 +644,7 @@ namespace Antik {
 
                 // Central Directory number of disks 16 bit overflow so use ZIP64 ie. 32 bits
 
-                if (this->fieldRequires32bits(zip64EOCentralDirectory.diskNumber)) {
+                if (fieldRequires32bits(zip64EOCentralDirectory.diskNumber)) {
                     zipEOCentralDirectory.diskNumber = static_cast<std::uint16_t> (~0);
                     bZIP64 = true;
                 } else {
@@ -655,14 +655,14 @@ namespace Antik {
 
                 if (bZIP64) {
                     Zip64EOCentDirRecordLocator locator;
-                    locator.offset = this->currentPositionZIPFile();
-                    this->putZIPRecord(zip64EOCentralDirectory);
-                    this->putZIPRecord(locator);
+                    locator.offset = currentPositionZIPFile();
+                    putZIPRecord(zip64EOCentralDirectory);
+                    putZIPRecord(locator);
                 }
 
                 // Write End Of Central Directory record
 
-                this->putZIPRecord(zipEOCentralDirectory);
+                putZIPRecord(zipEOCentralDirectory);
 
             }
 
@@ -679,8 +679,8 @@ namespace Antik {
         CZIP::CZIP(const std::string& zipFileName) : m_zipFileName{zipFileName}
         {
 
-            this->m_zipInBuffer.resize(this->m_zipIOBufferSize);
-            this->m_zipOutBuffer.resize(this->m_zipIOBufferSize);
+            m_zipInBuffer.resize(m_zipIOBufferSize);
+            m_zipOutBuffer.resize(m_zipIOBufferSize);
 
         }
 
@@ -698,7 +698,7 @@ namespace Antik {
 
         void CZIP::name(const std::string& zipFileName) {
 
-            this->m_zipFileName = zipFileName;
+            m_zipFileName = zipFileName;
 
         }
 
@@ -708,54 +708,54 @@ namespace Antik {
 
         void CZIP::open(void) {
 
-            if (this->m_open) {
+            if (m_open) {
                 throw Exception("ZIP archive has already been opened.");
             }
 
             EOCentralDirectoryRecord zipEOCentralDirectory;
             Zip64EOCentralDirectoryRecord zip64EOCentralDirectory;
 
-            this->openZIPFile(this->m_zipFileName, std::ios::binary | std::ios_base::in | std::ios_base::out);
+            openZIPFile(m_zipFileName, std::ios::binary | std::ios_base::in | std::ios_base::out);
 
             std::int64_t noOfFileRecords = 0;
 
-            this->getZIPRecord(zipEOCentralDirectory);
+            getZIPRecord(zipEOCentralDirectory);
 
             // If one of the central directory fields is to large to store so ZIP64
 
-            if (this->fieldOverflow(zipEOCentralDirectory.totalCentralDirRecords) ||
-                    this->fieldOverflow(zipEOCentralDirectory.numberOfCentralDirRecords) ||
-                    this->fieldOverflow(zipEOCentralDirectory.sizeOfCentralDirRecords) ||
-                    this->fieldOverflow(zipEOCentralDirectory.totalCentralDirRecords) ||
-                    this->fieldOverflow(zipEOCentralDirectory.startDiskNumber) ||
-                    this->fieldOverflow(zipEOCentralDirectory.diskNumber) ||
-                    this->fieldOverflow(zipEOCentralDirectory.offsetCentralDirRecords)) {
+            if (fieldOverflow(zipEOCentralDirectory.totalCentralDirRecords) ||
+                    fieldOverflow(zipEOCentralDirectory.numberOfCentralDirRecords) ||
+                    fieldOverflow(zipEOCentralDirectory.sizeOfCentralDirRecords) ||
+                    fieldOverflow(zipEOCentralDirectory.totalCentralDirRecords) ||
+                    fieldOverflow(zipEOCentralDirectory.startDiskNumber) ||
+                    fieldOverflow(zipEOCentralDirectory.diskNumber) ||
+                    fieldOverflow(zipEOCentralDirectory.offsetCentralDirRecords)) {
 
-                this->m_ZIP64 = true;
-                this->getZIPRecord(zip64EOCentralDirectory);
-                this->positionInZIPFile(zip64EOCentralDirectory.offsetCentralDirRecords);
+                m_ZIP64 = true;
+                getZIPRecord(zip64EOCentralDirectory);
+                positionInZIPFile(zip64EOCentralDirectory.offsetCentralDirRecords);
                 noOfFileRecords = zip64EOCentralDirectory.numberOfCentralDirRecords;
-                this->m_offsetToEndOfLocalFileHeaders = zip64EOCentralDirectory.offsetCentralDirRecords;
+                m_offsetToEndOfLocalFileHeaders = zip64EOCentralDirectory.offsetCentralDirRecords;
 
             } else {
                 // Normal Archive
-                this->positionInZIPFile(zipEOCentralDirectory.offsetCentralDirRecords);
+                positionInZIPFile(zipEOCentralDirectory.offsetCentralDirRecords);
                 noOfFileRecords = zipEOCentralDirectory.numberOfCentralDirRecords;
-                this->m_offsetToEndOfLocalFileHeaders = zipEOCentralDirectory.offsetCentralDirRecords;
+                m_offsetToEndOfLocalFileHeaders = zipEOCentralDirectory.offsetCentralDirRecords;
             }
 
             // Read in Central Directory
 
             for (auto cnt01 = 0; cnt01 < noOfFileRecords; cnt01++) {
                 CentralDirectoryFileHeader directoryEntry;
-                this->getZIPRecord(directoryEntry);
-                this->m_zipCentralDirectory.push_back(directoryEntry);
-                this->m_ZIP64 = this->fieldOverflow(directoryEntry.compressedSize) ||
-                        this->fieldOverflow(directoryEntry.uncompressedSize) ||
-                        this->fieldOverflow(directoryEntry.fileHeaderOffset);
+                getZIPRecord(directoryEntry);
+                m_zipCentralDirectory.push_back(directoryEntry);
+                m_ZIP64 = fieldOverflow(directoryEntry.compressedSize) ||
+                        fieldOverflow(directoryEntry.uncompressedSize) ||
+                        fieldOverflow(directoryEntry.fileHeaderOffset);
             }
 
-            this->m_open = true;
+            m_open = true;
 
         }
 
@@ -767,11 +767,11 @@ namespace Antik {
 
             std::vector<FileDetail> fileDetailList;
 
-            if (!this->m_open) {
+            if (!m_open) {
                 throw Exception("ZIP archive has not been opened.");
             }
 
-            for (auto& directoryEntry : this->m_zipCentralDirectory) {
+            for (auto& directoryEntry : m_zipCentralDirectory) {
 
                 FileDetail fileEntry;
 
@@ -784,20 +784,20 @@ namespace Antik {
                 fileEntry.creatorVersion = directoryEntry.creatorVersion;
                 fileEntry.extraField = directoryEntry.extraField;
                 fileEntry.modificationDateTime =
-                        this->convertModificationDateTime(directoryEntry.modificationDate,
+                        convertModificationDateTime(directoryEntry.modificationDate,
                         directoryEntry.modificationTime);
 
                 // File size information stored in Extended information.
 
-                if (this->fieldOverflow(directoryEntry.compressedSize) ||
-                        this->fieldOverflow(directoryEntry.uncompressedSize) ||
-                        this->fieldOverflow(directoryEntry.fileHeaderOffset)) {
+                if (fieldOverflow(directoryEntry.compressedSize) ||
+                        fieldOverflow(directoryEntry.uncompressedSize) ||
+                        fieldOverflow(directoryEntry.fileHeaderOffset)) {
 
                     Zip64ExtendedInfoExtraField extra;
                     extra.compressedSize = directoryEntry.compressedSize;
                     extra.fileHeaderOffset = directoryEntry.fileHeaderOffset;
                     extra.originalSize = directoryEntry.uncompressedSize;
-                    this->getZip64ExtendedInfoExtraField(extra, fileEntry.extraField);
+                    getZip64ExtendedInfoExtraField(extra, fileEntry.extraField);
                     fileEntry.uncompressedSize = extra.originalSize;
                     fileEntry.compressedSize = extra.compressedSize;
                     fileEntry.bZIP64 = true;
@@ -819,11 +819,11 @@ namespace Antik {
 
             bool fileExtracted = false;
 
-            if (!this->m_open) {
+            if (!m_open) {
                 throw Exception("ZIP archive has not been opened.");
             }
 
-            for (auto& directoryEntry : this->m_zipCentralDirectory) {
+            for (auto& directoryEntry : m_zipCentralDirectory) {
 
                 if (directoryEntry.fileName.compare(fileName) == 0) {
 
@@ -839,24 +839,24 @@ namespace Antik {
 
                     // If dealing with ZIP64 extract full 64 bit values from extended field
 
-                    if (this->fieldOverflow(directoryEntry.compressedSize) ||
-                            this->fieldOverflow(directoryEntry.uncompressedSize) ||
-                            this->fieldOverflow(directoryEntry.fileHeaderOffset)) {
+                    if (fieldOverflow(directoryEntry.compressedSize) ||
+                            fieldOverflow(directoryEntry.uncompressedSize) ||
+                            fieldOverflow(directoryEntry.fileHeaderOffset)) {
                         getZip64ExtendedInfoExtraField(extendedInfo, directoryEntry.extraField);
                     }
 
                     // Move to and read file header
 
-                    this->positionInZIPFile(extendedInfo.fileHeaderOffset);
-                    this->getZIPRecord(fileHeader);
+                    positionInZIPFile(extendedInfo.fileHeaderOffset);
+                    getZIPRecord(fileHeader);
 
                     // Now positioned at file contents so extract
 
                     if (directoryEntry.compression == kZIPCompressionDeflate) {
-                        crc32 = this->inflateFile(destFileName, extendedInfo.compressedSize);
+                        crc32 = inflateFile(destFileName, extendedInfo.compressedSize);
                         fileExtracted = true;
                     } else if (directoryEntry.compression == kZIPCompressionStore) {
-                        crc32 = this->extractFile(destFileName, extendedInfo.originalSize);
+                        crc32 = extractFile(destFileName, extendedInfo.originalSize);
                         fileExtracted = true;
                     } else {
                         throw Exception("File uses unsupported compression = " + std::to_string(directoryEntry.compression));
@@ -884,17 +884,17 @@ namespace Antik {
 
         void CZIP::create(void) {
 
-            if (this->m_open) {
+            if (m_open) {
                 throw Exception("ZIP archive should not be open.");
             }
 
             EOCentralDirectoryRecord zipEOCentralDirectory;
 
-            this->openZIPFile(this->m_zipFileName, std::ios::binary | std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
+            openZIPFile(m_zipFileName, std::ios::binary | std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
-            this->putZIPRecord(zipEOCentralDirectory);
+            putZIPRecord(zipEOCentralDirectory);
 
-            this->closeZIPFile();
+            closeZIPFile();
 
         }
 
@@ -904,25 +904,25 @@ namespace Antik {
 
         void CZIP::close(void) {
 
-            if (!this->m_open) {
+            if (!m_open) {
                 throw Exception("ZIP archive has not been opened.");
             }
 
             // Flush Central Directory to ZIP achive and clear
 
-            this->UpdateCentralDirectory();
-            this->m_zipCentralDirectory.clear();
+            UpdateCentralDirectory();
+            m_zipCentralDirectory.clear();
 
             // Reset end of local file header and close archive.
 
-            this->m_offsetToEndOfLocalFileHeaders = 0;
-            this->closeZIPFile();
+            m_offsetToEndOfLocalFileHeaders = 0;
+            closeZIPFile();
 
             // Reset object flags
 
-            this->m_open = false;
-            this->m_modified = false;
-            this->m_ZIP64 = false;
+            m_open = false;
+            m_modified = false;
+            m_ZIP64 = false;
 
         }
 
@@ -932,13 +932,13 @@ namespace Antik {
 
         bool CZIP::add(const std::string& fileName, const std::string& zippedFileName) {
 
-            if (!this->m_open) {
+            if (!m_open) {
                 throw Exception("ZIP archive has not been opened.");
             }
 
             // Check that an entry does not already exist
 
-            for (auto& directoryEntry : this->m_zipCentralDirectory) {
+            for (auto& directoryEntry : m_zipCentralDirectory) {
                 if (directoryEntry.fileName.compare(zippedFileName) == 0) {
                     std::cerr << "File already present in archive [" << zippedFileName << "]" << std::endl;
                     return (false);
@@ -947,8 +947,8 @@ namespace Antik {
 
             // Add file if it exists
 
-            if (this->fileExists(fileName)) {
-                this->addFileHeaderAndContents(fileName, zippedFileName);
+            if (fileExists(fileName)) {
+                addFileHeaderAndContents(fileName, zippedFileName);
                 return (true);
 
             } else {
@@ -977,7 +977,7 @@ namespace Antik {
 
         bool CZIP::isZIP64(void) {
 
-            return (this->m_ZIP64);
+            return (m_ZIP64);
 
         }
 
@@ -987,9 +987,9 @@ namespace Antik {
 
         void CZIP::setZIPBufferSize(std::uint64_t newBufferSize) {
 
-            this->m_zipIOBufferSize = newBufferSize;
-            this->m_zipInBuffer.resize(this->m_zipIOBufferSize);
-            this->m_zipOutBuffer.resize(this->m_zipIOBufferSize);
+            m_zipIOBufferSize = newBufferSize;
+            m_zipInBuffer.resize(m_zipIOBufferSize);
+            m_zipOutBuffer.resize(m_zipIOBufferSize);
 
         }
 

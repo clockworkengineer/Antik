@@ -576,9 +576,9 @@ namespace Antik {
 
         void CZIPIO::openZIPFile(const std::string fileName, std::ios_base::openmode mode) {
 
-            this->m_zipFileeam.open(fileName, mode);
+            m_zipFileeam.open(fileName, mode);
 
-            if (this->m_zipFileeam.fail()) {
+            if (m_zipFileeam.fail()) {
                 throw Exception("Could not open ZIP archive " + fileName);
             }
 
@@ -589,7 +589,7 @@ namespace Antik {
         //
 
         void CZIPIO::closeZIPFile(void) {
-            this->m_zipFileeam.close();
+            m_zipFileeam.close();
         }
 
         //
@@ -597,7 +597,7 @@ namespace Antik {
         //
 
         void CZIPIO::positionInZIPFile(std::uint64_t offset) {
-            this->m_zipFileeam.seekg(offset, std::ios::beg);
+            m_zipFileeam.seekg(offset, std::ios::beg);
         }
 
         //
@@ -605,7 +605,7 @@ namespace Antik {
         //
 
         std::uint64_t CZIPIO::currentPositionZIPFile(void) {
-            return (this->m_zipFileeam.tellg());
+            return (m_zipFileeam.tellg());
         }
 
         //
@@ -613,7 +613,7 @@ namespace Antik {
         //
 
         void CZIPIO::writeZIPFile(std::vector<std::uint8_t>& buffer, std::uint64_t count) {
-            this->m_zipFileeam.write((char *) &buffer[0], count);
+            m_zipFileeam.write((char *) &buffer[0], count);
         }
 
         //
@@ -621,7 +621,7 @@ namespace Antik {
         //
 
         void CZIPIO::readZIPFile(std::vector<std::uint8_t>& buffer, std::uint64_t count) {
-            this->m_zipFileeam.read((char *) &buffer[0], count);
+            m_zipFileeam.read((char *) &buffer[0], count);
         }
 
         //
@@ -629,7 +629,7 @@ namespace Antik {
         //
 
         std::uint64_t CZIPIO::readCountZIPFile() {
-            return (this->m_zipFileeam.gcount());
+            return (m_zipFileeam.gcount());
         }
 
         //
@@ -637,7 +637,7 @@ namespace Antik {
         //
 
         bool CZIPIO::errorInZIPFile(void) {
-            return (this->m_zipFileeam.fail());
+            return (m_zipFileeam.fail());
         }
 
         //
@@ -646,7 +646,7 @@ namespace Antik {
 
         void CZIPIO::putZIPRecord(CZIPIO::DataDescriptor& entry) {
 
-            writeZIPRecord(this->m_zipFileeam, entry);
+            writeZIPRecord(m_zipFileeam, entry);
 
         }
 
@@ -656,7 +656,7 @@ namespace Antik {
 
         void CZIPIO::putZIPRecord(CZIPIO::CentralDirectoryFileHeader& entry) {
 
-            writeZIPRecord(this->m_zipFileeam, entry);
+            writeZIPRecord(m_zipFileeam, entry);
 
         }
 
@@ -666,7 +666,7 @@ namespace Antik {
 
         void CZIPIO::putZIPRecord(CZIPIO::LocalFileHeader& entry) {
 
-            writeZIPRecord(this->m_zipFileeam, entry);
+            writeZIPRecord(m_zipFileeam, entry);
 
         }
 
@@ -676,7 +676,7 @@ namespace Antik {
 
         void CZIPIO::putZIPRecord(CZIPIO::EOCentralDirectoryRecord& entry) {
 
-            writeZIPRecord(this->m_zipFileeam, entry);
+            writeZIPRecord(m_zipFileeam, entry);
 
         }
 
@@ -686,7 +686,7 @@ namespace Antik {
 
         void CZIPIO::putZIPRecord(CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
 
-            writeZIPRecord(this->m_zipFileeam, entry);
+            writeZIPRecord(m_zipFileeam, entry);
 
         }
 
@@ -696,7 +696,7 @@ namespace Antik {
 
         void CZIPIO::putZIPRecord(CZIPIO::Zip64EOCentDirRecordLocator& entry) {
 
-            writeZIPRecord(this->m_zipFileeam, entry);
+            writeZIPRecord(m_zipFileeam, entry);
 
         }
 
@@ -748,7 +748,7 @@ namespace Antik {
 
         void CZIPIO::getZIPRecord(CZIPIO::DataDescriptor& entry) {
 
-            readZIPRecord(this->m_zipFileeam, entry);
+            readZIPRecord(m_zipFileeam, entry);
 
         }
 
@@ -758,7 +758,7 @@ namespace Antik {
 
         void CZIPIO::getZIPRecord(CZIPIO::CentralDirectoryFileHeader& entry) {
 
-            readZIPRecord(this->m_zipFileeam, entry);
+            readZIPRecord(m_zipFileeam, entry);
 
         }
 
@@ -768,7 +768,7 @@ namespace Antik {
 
         void CZIPIO::getZIPRecord(CZIPIO::LocalFileHeader& entry) {
 
-            readZIPRecord(this->m_zipFileeam, entry);
+            readZIPRecord(m_zipFileeam, entry);
 
         }
 
@@ -778,7 +778,7 @@ namespace Antik {
 
         void CZIPIO::getZIPRecord(CZIPIO::EOCentralDirectoryRecord& entry) {
 
-            readZIPRecord(this->m_zipFileeam, entry);
+            readZIPRecord(m_zipFileeam, entry);
 
         }
 
@@ -788,7 +788,7 @@ namespace Antik {
 
         void CZIPIO::getZIPRecord(CZIPIO::Zip64EOCentralDirectoryRecord& entry) {
 
-            readZIPRecord(this->m_zipFileeam, entry);
+            readZIPRecord(m_zipFileeam, entry);
 
         }
 

@@ -83,14 +83,14 @@ namespace Antik {
 
         // Check for connected as an error can happen during connect
         
-        if (this->m_connected) {
+        if (m_connected) {
             disconnect();
         }
 
-        if (std::strlen(this->m_curlErrMsgBuffer) != 0) {
-            errMsg = this->m_curlErrMsgBuffer;
+        if (std::strlen(m_curlErrMsgBuffer) != 0) {
+            errMsg = m_curlErrMsgBuffer;
         } else {
-            errMsg = curl_easy_strerror(this->m_curlResult);
+            errMsg = curl_easy_strerror(m_curlResult);
         }
         throw Exception(baseMessage + errMsg);
     }
@@ -114,15 +114,15 @@ namespace Antik {
         FD_ZERO(&sendfd);
         FD_ZERO(&errorfd);
 
-        FD_SET(this->m_curlSocketFD, &errorfd);
+        FD_SET(m_curlSocketFD, &errorfd);
 
         if (bRecv) {
-            FD_SET(this->m_curlSocketFD, &recvfd);
+            FD_SET(m_curlSocketFD, &recvfd);
         } else {
-            FD_SET(this->m_curlSocketFD, &sendfd);
+            FD_SET(m_curlSocketFD, &sendfd);
         }
 
-        res = select(this->m_curlSocketFD + 1, &recvfd, &sendfd, &errorfd, &timeoutValue);
+        res = select(m_curlSocketFD + 1, &recvfd, &sendfd, &errorfd, &timeoutValue);
 
         return res;
 
@@ -141,16 +141,16 @@ namespace Antik {
 
         do {
 
-            this->m_curlErrMsgBuffer[0] = 0;
-            this->m_curlResult = curl_easy_send(this->m_curlHandle, &command[bytesCopied],
+            m_curlErrMsgBuffer[0] = 0;
+            m_curlResult = curl_easy_send(m_curlHandle, &command[bytesCopied],
                     std::min((static_cast<int> (command.length()) - bytesCopied),
                     CURL_MAX_WRITE_SIZE), &bytesSent);
 
-            if (this->m_curlResult == CURLE_AGAIN) {
+            if (m_curlResult == CURLE_AGAIN) {
                 waitOnSocket(false, kWaitOnSocketTimeOut);
                 continue;
 
-            } else if (this->m_curlResult != CURLE_OK) {
+            } else if (m_curlResult != CURLE_OK) {
                 throwCurlError("curl_easy_send(): ");
             }
 
@@ -176,20 +176,20 @@ namespace Antik {
 
         do {
 
-            this->m_curlErrMsgBuffer[0] = 0;
-            this->m_curlResult = curl_easy_recv(this->m_curlHandle,
-                    this->m_curlRxBuffer,
-                    sizeof (this->m_curlRxBuffer), &recvLength);
+            m_curlErrMsgBuffer[0] = 0;
+            m_curlResult = curl_easy_recv(m_curlHandle,
+                    m_curlRxBuffer,
+                    sizeof (m_curlRxBuffer), &recvLength);
 
-            if (this->m_curlResult == CURLE_OK) {
+            if (m_curlResult == CURLE_OK) {
 
                 if (recvLength == 0) {
                     commandResponse.clear();
                     break;
                 }
 
-                this->m_curlRxBuffer[recvLength] = '\0';
-                commandResponse.append(this->m_curlRxBuffer);
+                m_curlRxBuffer[recvLength] = '\0';
+                commandResponse.append(m_curlRxBuffer);
 
                 recvLength = commandResponse.length();
                 if ((commandResponse[recvLength - 2] == '\r') &&
@@ -206,7 +206,7 @@ namespace Antik {
                     }
                 }
 
-            } else if (this->m_curlResult == CURLE_AGAIN) {
+            } else if (m_curlResult == CURLE_AGAIN) {
                 waitOnSocket(true, kWaitOnSocketTimeOut);
 
             } else {
@@ -225,8 +225,8 @@ namespace Antik {
 
     void CIMAP::generateTag() {
         std::ostringstream ss;
-        ss << this->m_tagPrefix << std::setw(6) << std::setfill('0') << std::to_string(this->m_tagCount++);
-        this->m_currentTag = ss.str();
+        ss << m_tagPrefix << std::setw(6) << std::setfill('0') << std::to_string(m_tagCount++);
+        m_currentTag = ss.str();
     }
 
     //
@@ -242,23 +242,23 @@ namespace Antik {
 
         std::string response;
 
-        this->sendIMAPCommand(commandLine);
-        this->waitForIMAPCommandResponse(kContinuation, this->m_commandResponse);
+        sendIMAPCommand(commandLine);
+        waitForIMAPCommandResponse(kContinuation, m_commandResponse);
 
-        if (!this->m_commandResponse.empty()) {
+        if (!m_commandResponse.empty()) {
 
-            this->waitForIMAPCommandResponse(kUntagged, response);
+            waitForIMAPCommandResponse(kUntagged, response);
 
             if (!response.empty()) {
-                this->sendIMAPCommand(static_cast<std::string> (kDONE) + kEOL);
-                this->waitForIMAPCommandResponse(this->m_currentTag, this->m_commandResponse);
-                if (!this->m_commandResponse.empty()) {
-                    response += this->m_commandResponse;
-                    this->m_commandResponse = response;
+                sendIMAPCommand(static_cast<std::string> (kDONE) + kEOL);
+                waitForIMAPCommandResponse(m_currentTag, m_commandResponse);
+                if (!m_commandResponse.empty()) {
+                    response += m_commandResponse;
+                    m_commandResponse = response;
                 }
 
             } else {
-                this->m_commandResponse.clear();
+                m_commandResponse.clear();
             }
 
         }
@@ -274,12 +274,12 @@ namespace Antik {
 
     void CIMAP::sendCommandAPPEND(const std::string& commandLine) {
 
-        this->sendIMAPCommand(commandLine.substr(0, commandLine.find_first_of('}') + 1) + kEOL);
-        this->waitForIMAPCommandResponse(kContinuation, this->m_commandResponse);
+        sendIMAPCommand(commandLine.substr(0, commandLine.find_first_of('}') + 1) + kEOL);
+        waitForIMAPCommandResponse(kContinuation, m_commandResponse);
 
-        if (!this->m_commandResponse.empty()) {
-            this->sendIMAPCommand(commandLine.substr(commandLine.find_first_of('}') + 1));
-            this->waitForIMAPCommandResponse(this->m_currentTag, this->m_commandResponse);
+        if (!m_commandResponse.empty()) {
+            sendIMAPCommand(commandLine.substr(commandLine.find_first_of('}') + 1));
+            waitForIMAPCommandResponse(m_currentTag, m_commandResponse);
         }
 
     }
@@ -294,7 +294,7 @@ namespace Antik {
 
     void CIMAP::setServer(const std::string& serverURL) {
 
-        this->m_serverURL = serverURL;
+        m_serverURL = serverURL;
 
     }
 
@@ -304,7 +304,7 @@ namespace Antik {
 
     std::string CIMAP::getServer(void) const {
 
-        return (this->m_serverURL);
+        return (m_serverURL);
 
     }
 
@@ -314,8 +314,8 @@ namespace Antik {
 
     void CIMAP::setUserAndPassword(const std::string& userName, const std::string& userPassword) {
 
-        this->m_userName = userName;
-        this->m_userPassword = userPassword;
+        m_userName = userName;
+        m_userPassword = userPassword;
 
     }
 
@@ -335,7 +335,7 @@ namespace Antik {
 
     bool CIMAP::getConnectedStatus(void) const {
 
-        return (this->m_connected);
+        return (m_connected);
 
     }
 
@@ -345,7 +345,7 @@ namespace Antik {
 
     void CIMAP::setTagPrefix(const std::string& tagPrefix) {
 
-        this->m_tagPrefix = tagPrefix;
+        m_tagPrefix = tagPrefix;
 
     }
     
@@ -355,45 +355,45 @@ namespace Antik {
 
     void CIMAP::connect(void) {
 
-        if (this->m_connected) {
+        if (m_connected) {
             Exception("Already connected to a server.");
         }
 
-        this->m_curlHandle = curl_easy_init();
+        m_curlHandle = curl_easy_init();
         
-        if (this->m_curlHandle) {
+        if (m_curlHandle) {
 
-            curl_easy_setopt(this->m_curlHandle, CURLOPT_USERNAME, this->m_userName.c_str());
-            curl_easy_setopt(this->m_curlHandle, CURLOPT_PASSWORD, this->m_userPassword.c_str());
+            curl_easy_setopt(m_curlHandle, CURLOPT_USERNAME, m_userName.c_str());
+            curl_easy_setopt(m_curlHandle, CURLOPT_PASSWORD, m_userPassword.c_str());
 
-            curl_easy_setopt(this->m_curlHandle, CURLOPT_VERBOSE, this->m_curlVerbosity);
-            curl_easy_setopt(this->m_curlHandle, CURLOPT_URL, this->m_serverURL.c_str());
+            curl_easy_setopt(m_curlHandle, CURLOPT_VERBOSE, m_curlVerbosity);
+            curl_easy_setopt(m_curlHandle, CURLOPT_URL, m_serverURL.c_str());
 
-            curl_easy_setopt(this->m_curlHandle, CURLOPT_USE_SSL, (long) CURLUSESSL_ALL);
-            curl_easy_setopt(this->m_curlHandle, CURLOPT_ERRORBUFFER, this->m_curlErrMsgBuffer);
+            curl_easy_setopt(m_curlHandle, CURLOPT_USE_SSL, (long) CURLUSESSL_ALL);
+            curl_easy_setopt(m_curlHandle, CURLOPT_ERRORBUFFER, m_curlErrMsgBuffer);
 
-            curl_easy_setopt(this->m_curlHandle, CURLOPT_CONNECT_ONLY, 1L);
-            curl_easy_setopt(this->m_curlHandle, CURLOPT_MAXCONNECTS, 1L);
+            curl_easy_setopt(m_curlHandle, CURLOPT_CONNECT_ONLY, 1L);
+            curl_easy_setopt(m_curlHandle, CURLOPT_MAXCONNECTS, 1L);
 
-            this->m_curlErrMsgBuffer[0] = 0;
-            this->m_curlResult = curl_easy_perform(this->m_curlHandle);
-            if (this->m_curlResult != CURLE_OK) {
+            m_curlErrMsgBuffer[0] = 0;
+            m_curlResult = curl_easy_perform(m_curlHandle);
+            if (m_curlResult != CURLE_OK) {
                 throwCurlError("curl_easy_perform(): ");
             }
 
             // Get curl socket using CURLINFO_ACTIVESOCKET first then depreciated CURLINFO_LASTSOCKET
 
-            this->m_curlErrMsgBuffer[0] = 0;
-            this->m_curlResult = curl_easy_getinfo(this->m_curlHandle, CURLINFO_ACTIVESOCKET, &this->m_curlSocketFD);
-            if (this->m_curlResult == CURLE_BAD_FUNCTION_ARGUMENT) {
-                this->m_curlErrMsgBuffer[0] = 0;
-                this->m_curlResult = curl_easy_getinfo(this->m_curlHandle, CURLINFO_LASTSOCKET, &this->m_curlSocketFD);
+            m_curlErrMsgBuffer[0] = 0;
+            m_curlResult = curl_easy_getinfo(m_curlHandle, CURLINFO_ACTIVESOCKET, &m_curlSocketFD);
+            if (m_curlResult == CURLE_BAD_FUNCTION_ARGUMENT) {
+                m_curlErrMsgBuffer[0] = 0;
+                m_curlResult = curl_easy_getinfo(m_curlHandle, CURLINFO_LASTSOCKET, &m_curlSocketFD);
             }
-            if (this->m_curlResult != CURLE_OK) {
+            if (m_curlResult != CURLE_OK) {
                 throwCurlError("Could not get curl socket.");
             }
 
-            this->m_connected = true;
+            m_connected = true;
 
         }
 
@@ -406,15 +406,15 @@ namespace Antik {
 
     void CIMAP::disconnect(void) {
 
-        if (!this->m_connected) {
+        if (!m_connected) {
             throw Exception("Not connected to server.");
         }
 
-        if (this->m_curlHandle) {
-            curl_easy_cleanup(this->m_curlHandle);
-            this->m_curlHandle = nullptr;
-            this->m_tagCount = 1;
-            this->m_connected = false;
+        if (m_curlHandle) {
+            curl_easy_cleanup(m_curlHandle);
+            m_curlHandle = nullptr;
+            m_tagCount = 1;
+            m_connected = false;
         }
 
     }
@@ -425,29 +425,29 @@ namespace Antik {
 
     std::string CIMAP::sendCommand(const std::string& commandLine) {
 
-        if (!this->m_connected) {
+        if (!m_connected) {
             throw Exception("Not connected to server.");
         }
 
-        this->generateTag();
+        generateTag();
 
         if (commandLine.compare(kIDLE) == 0) {
-            sendCommandIDLE(this->m_currentTag + " " + commandLine + kEOL);
+            sendCommandIDLE(m_currentTag + " " + commandLine + kEOL);
         } else if (commandLine.compare(kAPPEND) == 0) {
-            sendCommandAPPEND(this->m_currentTag + " " + commandLine);
+            sendCommandAPPEND(m_currentTag + " " + commandLine);
         } else {
-            this->sendIMAPCommand(this->m_currentTag + " " + commandLine + kEOL);
-            this->waitForIMAPCommandResponse(this->m_currentTag, this->m_commandResponse);
+            sendIMAPCommand(m_currentTag + " " + commandLine + kEOL);
+            waitForIMAPCommandResponse(m_currentTag, m_commandResponse);
         }
 
         // If response is empty then server disconnect without BYE
 
-        if (this->m_commandResponse.empty()) {
+        if (m_commandResponse.empty()) {
             disconnect();
             throw Exception("Server Disconnect without BYE.");
         }
 
-        return (this->m_currentTag + " " + commandLine + kEOL + this->m_commandResponse);
+        return (m_currentTag + " " + commandLine + kEOL + m_commandResponse);
 
     }
 
@@ -465,8 +465,8 @@ namespace Antik {
 
     CIMAP::~CIMAP() {
 
-        if (this->m_curlHandle) {
-            curl_easy_cleanup(this->m_curlHandle);
+        if (m_curlHandle) {
+            curl_easy_cleanup(m_curlHandle);
         }
 
     }

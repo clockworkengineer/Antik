@@ -191,14 +191,14 @@ void CAppriseTests::createChanges(int updateCount) {
     
     EventCounts evtTotals { 0, 0, 0, 0, 0, 0};
     
-    this->watchFolder = kWatchFolder;
-    this->watchDepth = -1;
-    this->filePath = this->watchFolder;
-    this->fileName = "tmp.txt";
+    watchFolder = kWatchFolder;
+    watchDepth = -1;
+    filePath = watchFolder;
+    fileName = "tmp.txt";
 
     // Create the file
     
-    this->createFile(this->filePath+this->fileName);
+    createFile(filePath+fileName);
        
     // Setup CFileApprise options
 
@@ -207,28 +207,28 @@ void CAppriseTests::createChanges(int updateCount) {
 
     // Create CFileApprise object
 
-    CApprise watcher{this->watchFolder, this->watchDepth, watchOptions};
+    CApprise watcher{watchFolder, watchDepth, watchOptions};
 
     // Create CFileApprise object thread and start to watch
 
     std::unique_ptr<std::thread> watcherThread;
     watcherThread.reset(new std::thread(&CApprise::watch, &watcher));
 
-    this->filePath = CAppriseTests::kWatchFolder;
+    filePath = CAppriseTests::kWatchFolder;
 
     // Perform updates. Given the nature of modify events (i.e  the number and frequency not being 
     // predictable then perform one up and close file per expected event.
     
     for (auto cnt01 = 0; cnt01 < updateCount; cnt01++) {
             std::ofstream fileToUpdate;
-            fileToUpdate.open(this->filePath+this->fileName, std::ios::out | std::ios::app);
+            fileToUpdate.open(filePath+fileName, std::ios::out | std::ios::app);
             fileToUpdate << "Writing this to a file.\n";           
             fileToUpdate.close();
     }
     
     // Loop getting change events
 
-    this->gatherEvents(watcher, evtTotals, updateCount);
+    gatherEvents(watcher, evtTotals, updateCount);
     
     // Check events generated
     
@@ -241,7 +241,7 @@ void CAppriseTests::createChanges(int updateCount) {
 
     // Remove file
     
-    fs::remove(this->filePath+this->fileName);
+    fs::remove(filePath+fileName);
         
     // Stop watcher
     
@@ -260,8 +260,8 @@ void CAppriseTests::createRemoveFiles(int fileCount) {
     
     EventCounts evtTotals { 0, 0, 0, 0, 0, 0};
     
-    this->watchFolder = kWatchFolder;
-    this->watchDepth = -1;
+    watchFolder = kWatchFolder;
+    watchDepth = -1;
 
     // Setup CFileApprise options
 
@@ -270,25 +270,25 @@ void CAppriseTests::createRemoveFiles(int fileCount) {
 
     // Create CFileApprise object
 
-    CApprise watcher{this->watchFolder, this->watchDepth, watchOptions};
+    CApprise watcher{watchFolder, watchDepth, watchOptions};
 
     // Create CFileApprise object thread and start to watch
 
     std::unique_ptr<std::thread> watcherThread;
     watcherThread.reset(new std::thread(&CApprise::watch, &watcher));
 
-    this->filePath = CAppriseTests::kWatchFolder;
+    filePath = CAppriseTests::kWatchFolder;
 
     // Create fileCount files
     
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::string file = (boost::format("temp%1%.txt") % cnt01).str();
-        this->createFile(this->filePath + file);
+        createFile(filePath + file);
     }
     
     // Loop getting add events
 
-    this->gatherEvents(watcher, evtTotals, fileCount);
+    gatherEvents(watcher, evtTotals, fileCount);
     
     // Check events generated
     
@@ -303,13 +303,13 @@ void CAppriseTests::createRemoveFiles(int fileCount) {
     
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::string file = (boost::format("temp%1%.txt") % cnt01).str();
-        fs::remove(this->filePath + file);
+        fs::remove(filePath + file);
     }
     
      // Loop getting unlink events
 
     evtTotals = { 0, 0, 0, 0, 0, 0};
-    this->gatherEvents(watcher, evtTotals, fileCount);
+    gatherEvents(watcher, evtTotals, fileCount);
        
     // Stop watcher
     
@@ -349,9 +349,9 @@ void CAppriseTests::generateException(std::exception_ptr e) {
 
 TEST_F(CAppriseTests, AssertParam1) {
 
-    //  this->taskName = "Test";
+    //  taskName = "Test";
 
-    EXPECT_DEATH(CApprise watcher(this->watchFolder, this->watchDepth), CAppriseTests::kParamAssertion1);
+    EXPECT_DEATH(CApprise watcher(watchFolder, watchDepth), CAppriseTests::kParamAssertion1);
 
 }
 
@@ -361,11 +361,11 @@ TEST_F(CAppriseTests, AssertParam1) {
 
 TEST_F(CAppriseTests,AssertParam2) {
 
-    //   this->taskName = "Test";
-    this->watchFolder = kWatchFolder;
-    this->watchDepth = -99;
+    //   taskName = "Test";
+    watchFolder = kWatchFolder;
+    watchDepth = -99;
 
-    EXPECT_DEATH(CApprise watcher(this->watchFolder, this->watchDepth), CAppriseTests::kParamAssertion2);
+    EXPECT_DEATH(CApprise watcher(watchFolder, watchDepth), CAppriseTests::kParamAssertion2);
 
 }
 
@@ -375,7 +375,7 @@ TEST_F(CAppriseTests,AssertParam2) {
 
 TEST_F(CAppriseTests,CreateFile1) {
 
-    this->createRemoveFiles(1);
+    createRemoveFiles(1);
 
 }
 
@@ -385,7 +385,7 @@ TEST_F(CAppriseTests,CreateFile1) {
 
 TEST_F(CAppriseTests, CreateFile10) {
 
-    this->createRemoveFiles(10);
+    createRemoveFiles(10);
 
 }
 
@@ -395,7 +395,7 @@ TEST_F(CAppriseTests, CreateFile10) {
 
 TEST_F(CAppriseTests, CreateFile50) {
 
-    this->createRemoveFiles(50);
+    createRemoveFiles(50);
 
 }
 
@@ -405,7 +405,7 @@ TEST_F(CAppriseTests, CreateFile50) {
 
 TEST_F(CAppriseTests,CreateFile100) {
 
-    this->createRemoveFiles(100);
+    createRemoveFiles(100);
 
 }
 
@@ -415,7 +415,7 @@ TEST_F(CAppriseTests,CreateFile100) {
 
 TEST_F(CAppriseTests, CreateFile250) {
 
-    this->createRemoveFiles(250);
+    createRemoveFiles(250);
 
 }
 
@@ -425,7 +425,7 @@ TEST_F(CAppriseTests, CreateFile250) {
 
 TEST_F(CAppriseTests, CreateFile500) {
 
-    this->createRemoveFiles(500);
+    createRemoveFiles(500);
 
 }
 
@@ -435,7 +435,7 @@ TEST_F(CAppriseTests, CreateFile500) {
 
 TEST_F(CAppriseTests, UpdateFile1) {
 
-    this->createChanges(1);
+    createChanges(1);
 
 }
 
@@ -445,7 +445,7 @@ TEST_F(CAppriseTests, UpdateFile1) {
 
 TEST_F(CAppriseTests, UpdateFile10) {
 
-    this->createChanges(10);
+    createChanges(10);
 
 }
 
@@ -455,7 +455,7 @@ TEST_F(CAppriseTests, UpdateFile10) {
 
 TEST_F(CAppriseTests, UpdateFile50) {
 
-    this->createChanges(50);
+    createChanges(50);
 
 }
 
@@ -465,7 +465,7 @@ TEST_F(CAppriseTests, UpdateFile50) {
 
 TEST_F(CAppriseTests, UpdateFile100) {
 
-    this->createChanges(100);
+    createChanges(100);
 
 }
 
@@ -475,7 +475,7 @@ TEST_F(CAppriseTests, UpdateFile100) {
 
 TEST_F(CAppriseTests, UpdateFile250) {
 
-    this->createChanges(250);
+    createChanges(250);
 
 }
 
@@ -485,7 +485,7 @@ TEST_F(CAppriseTests, UpdateFile250) {
 
 TEST_F(CAppriseTests, UpdateFile500) {
 
-    this->createChanges(500);
+    createChanges(500);
 
 }
 
