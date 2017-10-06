@@ -164,7 +164,7 @@ namespace Antik {
             bool sendTransferMode();
             
             void sendFTPCommand(const std::string& commandLine);
-            void waitForFTPCommandResponse();
+            std::uint16_t waitForFTPCommandResponse();
             
             void readDataChannelCommandResponse(std::string &commandResponse);
 
@@ -176,7 +176,6 @@ namespace Antik {
             void extractPassiveAddressPort(std::string &pasvResponse);
             
             std::string createPortCommand(); 
-            std::uint16_t extractStatusCode(const std::string &commandResponse);
             
             void dataChannelTransferListener();
             void dataChannelTransferCleanup();
@@ -192,7 +191,8 @@ namespace Antik {
             std::string m_serverName;   // FTP server
             std::string m_serverPort;   // FTP server port
 
-            std::string m_commandResponse; // FTP command response
+            std::string m_commandResponse;        // FTP command response
+            std::uint16_t m_commandStatusCode=0;  // FTP last returned command status code
             
             std::string m_dataChannelPassiveAddresss; // Data channel server ip address
             std::string m_dataChannelPassivePort;     // Data channel server port address
