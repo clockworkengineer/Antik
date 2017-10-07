@@ -178,11 +178,21 @@ namespace Antik {
             std::ofstream localFile{ file, std::ofstream::trunc | std::ofstream::binary};
 
             for (;;) {
-                size_t recvLength = m_dataChannelSocket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size()), m_socketError);
+
+                size_t recvLength;
+                
+                if (m_sslConnectionActive) {
+                    recvLength = m_dataChannelSocket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
+                } else {
+                    recvLength = m_dataChannelSocket.next_layer().read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
+                }
+                
                 if (recvLength) {
                     localFile.write(&m_ioBuffer[0], recvLength);
                 }
+                
                 if (socketClosedByServer()) break;
+                
             }
 
             localFile.close();
@@ -197,14 +207,29 @@ namespace Antik {
 
 
             std::ifstream localFile{ file, std::ifstream::binary};
-
+            int total=0;
             if (localFile) {
 
                 for (;;) {
 
                     localFile.read(&m_ioBuffer[0], m_ioBuffer.size());
-                    if (localFile.gcount()) {
-                        asio::write(m_dataChannelSocket, asio::buffer(m_ioBuffer, localFile.gcount()), m_socketError);
+                    
+                    size_t bytesToWrite=localFile.gcount();
+      
+                    if (bytesToWrite) {
+
+                        for (;;) {
+                            
+                            if (m_sslConnectionActive) {
+                                bytesToWrite -= m_dataChannelSocket.write_some(asio::buffer(&m_ioBuffer[localFile.gcount()-bytesToWrite], bytesToWrite), m_socketError);
+                            } else {
+                                bytesToWrite -= m_dataChannelSocket.next_layer().write_some(asio::buffer(&m_ioBuffer[localFile.gcount()-bytesToWrite], bytesToWrite), m_socketError);
+                            }
+
+                            if ((bytesToWrite == 0) || socketClosedByServer()) break;
+ 
+                        }
+
                     }
                     if (!localFile || socketClosedByServer()) break;
 
@@ -225,15 +250,22 @@ namespace Antik {
 
             m_isListenThreadRunning = true;
 
-            if (m_dataChannelSocket.is_open()) {
-                m_dataChannelSocket.close();
+            if (m_dataChannelSocket.next_layer().is_open()) {
+                m_dataChannelSocket.next_layer().close();
             }
 
             sendFTPCommand(createPortCommand() + "\r\n");
 
-            ip::tcp::acceptor acceptor(m_ioService, ip::tcp::endpoint(ip::tcp::v4(), std::stoi(m_dataChannelActivePort)));
-            acceptor.accept(m_dataChannelSocket);
+            ip::tcp::acceptor acceptor(m_ioService, ip::tcp::endpoint(ip::tcp::v4(), std::stoi(m_dataChannelActivePort)));           
+            acceptor.accept(m_dataChannelSocket.next_layer());
 
+            if (m_sslConnectionActive) {
+                m_dataChannelSocket.handshake(SSLSocket::client, m_socketError);
+                if (m_socketError) {
+                    throw Exception(m_socketError.message());
+                }
+            }
+            
             m_isListenThreadRunning = false;
 
         }
@@ -257,9 +289,9 @@ namespace Antik {
                 }
                 
             }
-
-            if (m_dataChannelSocket.is_open()) {
-                m_dataChannelSocket.close();
+            
+            if (m_dataChannelSocket.next_layer().is_open()) {
+                m_dataChannelSocket.next_layer().close();
             }
 
         }
@@ -274,7 +306,16 @@ namespace Antik {
 
                 if (m_passiveMode) {
                     ip::tcp::resolver::query query(m_dataChannelPassiveAddresss, m_dataChannelPassivePort);
-                    asio::connect(m_dataChannelSocket, m_queryResolver.resolve(query));
+                    m_dataChannelSocket.next_layer().connect(*m_queryResolver.resolve(query), m_socketError);
+                    if (m_socketError) {
+                        throw Exception(m_socketError.message());
+                    }
+                    if (m_sslConnectionActive) {
+                        m_dataChannelSocket.handshake(SSLSocket::client, m_socketError);
+                        if (m_socketError) {
+                            throw Exception(m_socketError.message());
+                        }
+                    }
                 }
 
                 m_commandStatusCode = waitForFTPCommandResponse();
@@ -287,8 +328,14 @@ namespace Antik {
 
                     for (;;) {
 
-                        size_t recvLength = m_dataChannelSocket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
+                        size_t recvLength;
 
+                        if (m_sslConnectionActive) {
+                            recvLength = m_dataChannelSocket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
+                        } else {
+                            recvLength = m_dataChannelSocket.next_layer().read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
+                        }
+                        
                         if (recvLength) {
                             m_ioBuffer[recvLength] = '\0';
                             commandResponse.append(&m_ioBuffer[0]);
@@ -298,9 +345,9 @@ namespace Antik {
 
 
                     }
-
-                    if (m_dataChannelSocket.is_open()) {
-                        m_dataChannelSocket.close();
+                    
+                    if ( m_dataChannelSocket.next_layer().is_open()) {
+                         m_dataChannelSocket.next_layer().close();
                     }
 
                     m_commandStatusCode = waitForFTPCommandResponse();
@@ -327,9 +374,18 @@ namespace Antik {
 
             try {
 
-                if (m_passiveMode) {
+              if (m_passiveMode) {
                     ip::tcp::resolver::query query(m_dataChannelPassiveAddresss, m_dataChannelPassivePort);
-                    asio::connect(m_dataChannelSocket, m_queryResolver.resolve(query));
+                    m_dataChannelSocket.next_layer().connect(*m_queryResolver.resolve(query), m_socketError);
+                    if (m_socketError) {
+                        throw Exception(m_socketError.message());
+                    }
+                    if (m_sslConnectionActive) {
+                        m_dataChannelSocket.handshake(SSLSocket::client, m_socketError);
+                        if (m_socketError) {
+                            throw Exception(m_socketError.message());
+                        }
+                    }
                 }
 
                 m_commandStatusCode = waitForFTPCommandResponse();
@@ -345,9 +401,9 @@ namespace Antik {
                     } else {
                         uploadFile(file);
                     }
-
-                    if (m_dataChannelSocket.is_open()) {
-                        m_dataChannelSocket.close();
+                    
+                    if (m_dataChannelSocket.next_layer().is_open()) {
+                        m_dataChannelSocket.next_layer().close();
                     }
 
                     m_commandStatusCode = waitForFTPCommandResponse();
@@ -370,10 +426,25 @@ namespace Antik {
 
         void CFTP::sendFTPCommand(const std::string& command) {
 
-            asio::write(m_controlChannelSocket, asio::buffer(&command[0], command.size()), m_socketError);
+            size_t commandLength=command.size();
 
-            if (m_socketError) {
-                throw Exception(m_socketError.message());
+            for (;;) {
+
+                if (m_sslConnectionActive) {
+                    commandLength -= m_controlChannelSocket.write_some(asio::buffer(&command[command.size()-commandLength], commandLength), m_socketError);
+                } else {
+                    commandLength -= m_controlChannelSocket.next_layer().write_some(asio::buffer(&command[command.size()-commandLength], commandLength), m_socketError);
+                }
+
+                if (m_socketError) {
+                    throw Exception(m_socketError.message());
+                }
+                
+                if (commandLength==0) {
+                    break;
+                }
+                
+
             }
 
         }
@@ -390,8 +461,12 @@ namespace Antik {
 
             for (;;) {
 
-                recvLength = m_controlChannelSocket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
-
+                if (m_sslConnectionActive) {
+                    recvLength = m_controlChannelSocket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
+                } else {
+                    recvLength = m_controlChannelSocket.next_layer().read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
+                }
+                
                 if (recvLength) {
 
                     m_ioBuffer[recvLength] = '\0';
@@ -464,8 +539,7 @@ namespace Antik {
 
             ip::tcp::resolver::query query(m_serverName, m_serverPort);
 
-            asio::connect(m_controlChannelSocket, m_queryResolver.resolve(query), m_socketError);
-
+            m_controlChannelSocket.next_layer().connect(*(m_queryResolver.resolve(query)), m_socketError );
             if (m_socketError) {
                 throw Exception(m_socketError.message());
             }
@@ -473,6 +547,25 @@ namespace Antik {
             m_commandStatusCode = waitForFTPCommandResponse();
 
             if (m_commandStatusCode == 220) {
+
+                if (m_sslEnabled) {
+                    sendFTPCommand("AUTH TLS\r\n");
+                    m_commandStatusCode = waitForFTPCommandResponse();
+                    if (m_commandStatusCode == 234) {
+                        m_controlChannelSocket.handshake(SSLSocket::client, m_socketError);
+                        if (m_socketError) {
+                            throw Exception(m_socketError.message());
+                        }
+                        m_sslConnectionActive = true;
+                        sendFTPCommand("PBSZ 0\r\n");
+                        m_commandStatusCode = waitForFTPCommandResponse();
+                        if (m_commandStatusCode == 200) {
+                            sendFTPCommand("PROT P\r\n");
+                            m_commandStatusCode = waitForFTPCommandResponse();
+                        }
+                    }
+                    
+                }
 
                 m_connected = true;
 

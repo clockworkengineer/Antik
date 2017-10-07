@@ -29,7 +29,7 @@
 //
 
 #include <boost/asio.hpp>
-
+#include <boost/asio/ssl.hpp>
 // =========
 // NAMESPACE
 // =========
@@ -205,13 +205,17 @@ namespace Antik {
             boost::asio::io_service m_ioService;                                  // IO Service
             std::array<char, 32*1024> m_ioBuffer;                                 // IO Buffer
             boost::system::error_code m_socketError;                              // Last socket error
-            boost::asio::ip::tcp::socket m_controlChannelSocket { m_ioService };  // Control channel socket
-            boost::asio::ip::tcp::socket m_dataChannelSocket { m_ioService };     // Data channel socket
             boost::asio::ip::tcp::resolver m_queryResolver { m_ioService };       // Name resolver
             
             std::atomic<bool> m_isListenThreadRunning { false };    // Listen thread running flag
             std::shared_ptr<std::thread> m_dataChannelListenThread; // Active mode connection listen thread
-                
+   
+            boost::asio::ssl::context sslcontext {m_ioService, boost::asio::ssl::context::tlsv12 };
+            typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLSocket;
+            SSLSocket m_controlChannelSocket {m_ioService, sslcontext};
+            SSLSocket m_dataChannelSocket {m_ioService, sslcontext};
+            bool m_sslConnectionActive=false;
+            bool m_sslEnabled=false;
 
         };
 
