@@ -19,7 +19,7 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
-#include <fstream>
+//#include <fstream>
 #include <thread>
 #include <memory>
 #include <mutex>
@@ -30,6 +30,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+
 // =========
 // NAMESPACE
 // =========
@@ -98,7 +99,7 @@ namespace Antik {
             // FTP connect, disconnect and connection status
             //
 
-            std::uint16_t connect(void);
+            uint16_t connect(void);
             void disconnect(void);
             bool getConnectedStatus(void) const;
             
@@ -109,31 +110,33 @@ namespace Antik {
             
             // FTP get and put file
             
-            std::uint16_t getFile(const std::string &remoteFilePath, const std::string &localFilePath);
-            std::uint16_t putFile(const std::string &remoteFilePath, const std::string &localFilePath);
+            uint16_t getFile(const std::string &remoteFilePath, const std::string &localFilePath);
+            uint16_t putFile(const std::string &remoteFilePath, const std::string &localFilePath);
 
             // FTP list file/directory
             
-            std::uint16_t list(const std::string &directoryPath, std::string &listOutput);
-            std::uint16_t listFiles(const std::string &directoryPath, std::string &listOutput);
-            std::uint16_t listDirectory(const std::string &directoryPath, std::string &listOutput);
-            std::uint16_t listFile(const std::string &filePath, std::string &listOutput);
+            uint16_t list(const std::string &directoryPath, std::string &listOutput);
+            uint16_t listFiles(const std::string &directoryPath, std::string &listOutput);
+            uint16_t listDirectory(const std::string &directoryPath, std::string &listOutput);
+            uint16_t listFile(const std::string &filePath, std::string &listOutput);
               
             // FTP set/get current working directory
             
-            std::uint16_t changeWorkingDirectory(const std::string &workingDirectoryPath);
-            std::uint16_t getCurrentWoringDirectory(std::string &currentWoringDirectory);
+            uint16_t changeWorkingDirectory(const std::string &workingDirectoryPath);
+            uint16_t getCurrentWoringDirectory(std::string &currentWoringDirectory);
             
        
             // FTP make/remove server directory
 
-            std::uint16_t makeDirectory(const std::string &directoryName);            
-            std::uint16_t removeDirectory(const std::string &directoryName);
+            uint16_t makeDirectory(const std::string &directoryName);            
+            uint16_t removeDirectory(const std::string &directoryName);
  
             // FTP delete remote file, get size in bytes
             
-            std::uint16_t deleteFile(const std::string &fileName);
-            std::uint16_t fileSize(const std::string &fileName, size_t &fileSize);
+            uint16_t deleteFile(const std::string &fileName);
+            uint16_t fileSize(const std::string &fileName, size_t &fileSize);
+            void setSslEnabled(bool sslEnabled);
+            bool isSslEnabled() const;
         
             // ================
             // PUBLIC VARIABLES
@@ -145,6 +148,8 @@ namespace Antik {
             // PRIVATE TYPES AND CONSTANTS
             // ===========================
 
+            typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLSocket;
+                        
             // ===========================================
             // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
             // ===========================================
@@ -157,6 +162,16 @@ namespace Antik {
             // PRIVATE METHODS
             // ===============
 
+            void connectSocket(SSLSocket &socket, const std::string &hostAddress, const std::string &hostPort);
+
+            size_t readFromSocket(SSLSocket &socket);
+            
+            size_t writeToSocket(SSLSocket &socket, const char *writeBuffer, size_t writeLength);
+            
+            void  switchOnSSL(SSLSocket &socket);
+            
+            size_t readFromSo(SSLSocket &socket);
+            
             bool socketClosedByServer();
             
             std::string determineLocalIPAddress();
@@ -164,7 +179,7 @@ namespace Antik {
             bool sendTransferMode();
             
             void sendFTPCommand(const std::string& commandLine);
-            std::uint16_t waitForFTPCommandResponse();
+            uint16_t waitForFTPCommandResponse();
             
             void readDataChannelCommandResponse(std::string &commandResponse);
 
@@ -192,7 +207,7 @@ namespace Antik {
             std::string m_serverPort;   // FTP server port
 
             std::string m_commandResponse;        // FTP command response
-            std::uint16_t m_commandStatusCode=0;  // FTP last returned command status code
+            uint16_t m_commandStatusCode=0;  // FTP last returned command status code
             
             std::string m_dataChannelPassiveAddresss; // Data channel server ip address
             std::string m_dataChannelPassivePort;     // Data channel server port address
@@ -210,12 +225,12 @@ namespace Antik {
             std::atomic<bool> m_isListenThreadRunning { false };    // Listen thread running flag
             std::shared_ptr<std::thread> m_dataChannelListenThread; // Active mode connection listen thread
    
-            boost::asio::ssl::context sslcontext {m_ioService, boost::asio::ssl::context::tlsv12 };
-            typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLSocket;
+            boost::asio::ssl::context sslcontext { m_ioService, boost::asio::ssl::context::tlsv12 };
+
             SSLSocket m_controlChannelSocket {m_ioService, sslcontext};
             SSLSocket m_dataChannelSocket {m_ioService, sslcontext};
-            bool m_sslConnectionActive=false;
-            bool m_sslEnabled=false;
+            bool m_sslConnectionActive { false };
+            bool m_sslEnabled { false };
 
         };
 

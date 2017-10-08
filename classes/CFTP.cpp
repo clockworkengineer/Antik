@@ -18,8 +18,7 @@
 // It uses boost ASIO for all communication with the server but besides that it is just
 // standard C11++.
 //
-// Note: At present TLS/SSL connections are not supported so all commands and data sent 
-// are in the clear.
+// Note: TLS/SSL connections are supported.
 //
 // Dependencies:   C11++        - Language standard features used.
 //                 BOOST ASIO   - Used to talk to FTP server.
@@ -39,10 +38,8 @@
 // C++ STL
 //
 
-#include <cstring>
-#include <sstream>
-#include <iomanip>
 #include <iostream>
+#include <fstream>
 
 // =======
 // IMPORTS
@@ -79,11 +76,64 @@ namespace Antik {
         // ===============
 
         //
+        // Connect to a given host and port.
+        //
+        
+        inline void CFTP::connectSocket(SSLSocket &socket, const std::string &hostAddress, const std::string &hostPort) {
+            
+            ip::tcp::resolver::query query(hostAddress, hostPort);
+            socket.next_layer().connect(*m_queryResolver.resolve(query), m_socketError);
+            if (m_socketError) {
+                throw Exception(m_socketError.message());
+            }    
+            
+        }
+        
+        //
+        // Read data from socket into io buffer
+        //
+        
+        inline size_t CFTP::readFromSocket(SSLSocket &socket) {
+            
+            if (m_sslConnectionActive) {
+                return(socket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError));
+            } else {
+                return(socket.next_layer().read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError));
+            }
+            
+        }
+        
+        //
+        // Write data to socket
+        //
+        
+        inline size_t CFTP::writeToSocket(SSLSocket &socket, const char *writeBuffer, size_t writeLength) {
+            
+            if (m_sslConnectionActive) {
+                return(socket.write_some(asio::buffer(writeBuffer, writeLength), m_socketError));
+            } else {
+                return(socket.next_layer().write_some(asio::buffer(writeBuffer, writeLength), m_socketError));
+            }
+            
+        }
+        
+        //
+        // Perform TLS handshake to enable SSL
+        //
+        
+        inline void  CFTP::switchOnSSL(SSLSocket &socket) {
+            socket.handshake(SSLSocket::client, m_socketError);
+            if (m_socketError) {
+                throw Exception(m_socketError.message());
+            }         
+        }
+        
+        //
         // Return true if socket closed by server otherwise false.
         // Also throw exception for any socket error detected,
         //
 
-        bool CFTP::socketClosedByServer() {
+        inline bool CFTP::socketClosedByServer() {
 
             if (m_socketError == asio::error::eof) {
                 return (true); // Connection closed cleanly by peer.
@@ -109,12 +159,11 @@ namespace Antik {
             try {
                 ip::udp::resolver resolver(m_ioService);
                 ip::udp::resolver::query query(ip::udp::v4(), "google.com", "");
-                ip::udp::resolver::iterator endpoints = resolver.resolve(query);
                 ip::udp::socket socket(m_ioService);
-                socket.connect(*endpoints);
+                socket.connect(*resolver.resolve(query));
                 localIPAddress = socket.local_endpoint().address().to_string();
                 socket.close();
-            } catch (std::exception& e) {
+            } catch (std::exception &e) {
                 return (localIPAddress);
             }
 
@@ -128,21 +177,26 @@ namespace Antik {
 
         void CFTP::extractPassiveAddressPort(std::string &pasvResponse) {
 
-            std::string passiveParams = pasvResponse.substr(pasvResponse.find('(') + 1);
-            passiveParams = passiveParams.substr(0, passiveParams.find(')'));
+            try {
 
-            std::uint32_t port = std::stoi(passiveParams.substr(passiveParams.find_last_of(',') + 1));
-            passiveParams = passiveParams.substr(0, passiveParams.find_last_of(','));
-            port |= (std::stoi(passiveParams.substr(passiveParams.find_last_of(',') + 1)) << 8);
+                std::string passiveParams = pasvResponse.substr(pasvResponse.find('(') + 1);
+                passiveParams = passiveParams.substr(0, passiveParams.find(')'));
 
-            passiveParams = passiveParams.substr(0, passiveParams.find_last_of(','));
-            for (auto &byte : passiveParams) {
-                if (byte == ',') byte = '.';
+                std::uint32_t port = std::stoi(passiveParams.substr(passiveParams.find_last_of(',') + 1));
+                passiveParams = passiveParams.substr(0, passiveParams.find_last_of(','));
+                port |= (std::stoi(passiveParams.substr(passiveParams.find_last_of(',') + 1)) << 8);
+
+                passiveParams = passiveParams.substr(0, passiveParams.find_last_of(','));
+                for (auto &byte : passiveParams) {
+                    if (byte == ',') byte = '.';
+                }
+
+                m_dataChannelPassiveAddresss = passiveParams;
+                m_dataChannelPassivePort = std::to_string(port);
+
+            } catch (std::exception &e) {
+                throw CFTP::Exception(e.what());
             }
-
-            m_dataChannelPassiveAddresss = passiveParams;
-            m_dataChannelPassivePort = std::to_string(port);
-
 
         }
 
@@ -154,16 +208,23 @@ namespace Antik {
 
             std::string portCommand{ "PORT "};
 
-            ip::tcp::acceptor acceptor(m_ioService, ip::tcp::endpoint(ip::tcp::v4(), 0));
-            unsigned short port = acceptor.local_endpoint().port();
-            auto address = acceptor.local_endpoint().address();
+            try {
 
-            m_dataChannelActivePort = std::to_string(port);
-            portCommand += m_dataChannelActiveAddresss;
-            for (auto &byte : portCommand) {
-                if (byte == '.') byte = ',';
+                ip::tcp::acceptor acceptor(m_ioService, ip::tcp::endpoint(ip::tcp::v4(), 0));
+                unsigned short port = acceptor.local_endpoint().port();
+                auto address = acceptor.local_endpoint().address();
+
+                m_dataChannelActivePort = std::to_string(port);
+                portCommand += m_dataChannelActiveAddresss;
+                for (auto &byte : portCommand) {
+                    if (byte == '.') byte = ',';
+                }
+                portCommand += "," + std::to_string((port & 0xFF00) >> 8) + "," + std::to_string(port & 0xFF);
+
+
+            } catch (std::exception &e) {
+                throw CFTP::Exception(e.what());
             }
-            portCommand += "," + std::to_string((port & 0xFF00) >> 8) + "," + std::to_string(port & 0xFF);
 
             return (portCommand);
 
@@ -177,23 +238,15 @@ namespace Antik {
 
             std::ofstream localFile{ file, std::ofstream::trunc | std::ofstream::binary};
 
-            for (;;) {
+            do {
 
-                size_t recvLength;
-                
-                if (m_sslConnectionActive) {
-                    recvLength = m_dataChannelSocket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
-                } else {
-                    recvLength = m_dataChannelSocket.next_layer().read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
+                size_t bytesRead = readFromSocket(m_dataChannelSocket);
+
+                if (bytesRead) {
+                    localFile.write(&m_ioBuffer[0], bytesRead);
                 }
-                
-                if (recvLength) {
-                    localFile.write(&m_ioBuffer[0], recvLength);
-                }
-                
-                if (socketClosedByServer()) break;
-                
-            }
+
+            } while (!socketClosedByServer());
 
             localFile.close();
 
@@ -205,35 +258,29 @@ namespace Antik {
 
         void CFTP::uploadFile(const std::string &file) {
 
-
             std::ifstream localFile{ file, std::ifstream::binary};
-            int total=0;
+
             if (localFile) {
 
-                for (;;) {
+                do  {
 
                     localFile.read(&m_ioBuffer[0], m_ioBuffer.size());
-                    
-                    size_t bytesToWrite=localFile.gcount();
-      
+
+                    size_t bytesToWrite = localFile.gcount();
+
                     if (bytesToWrite) {
 
                         for (;;) {
-                            
-                            if (m_sslConnectionActive) {
-                                bytesToWrite -= m_dataChannelSocket.write_some(asio::buffer(&m_ioBuffer[localFile.gcount()-bytesToWrite], bytesToWrite), m_socketError);
-                            } else {
-                                bytesToWrite -= m_dataChannelSocket.next_layer().write_some(asio::buffer(&m_ioBuffer[localFile.gcount()-bytesToWrite], bytesToWrite), m_socketError);
+                            bytesToWrite -= writeToSocket(m_dataChannelSocket, &m_ioBuffer[localFile.gcount() - bytesToWrite], bytesToWrite);
+                            if ((bytesToWrite == 0) || socketClosedByServer()) {
+                                break;
                             }
-
-                            if ((bytesToWrite == 0) || socketClosedByServer()) break;
- 
                         }
 
                     }
-                    if (!localFile || socketClosedByServer()) break;
 
-                }
+                } while (localFile && !socketClosedByServer());
+
 
                 localFile.close();
 
@@ -256,8 +303,11 @@ namespace Antik {
 
             sendFTPCommand(createPortCommand() + "\r\n");
 
-            ip::tcp::acceptor acceptor(m_ioService, ip::tcp::endpoint(ip::tcp::v4(), std::stoi(m_dataChannelActivePort)));           
-            acceptor.accept(m_dataChannelSocket.next_layer());
+            ip::tcp::acceptor acceptor(m_ioService, ip::tcp::endpoint(ip::tcp::v4(), std::stoi(m_dataChannelActivePort)));
+            acceptor.accept(m_dataChannelSocket.next_layer(), m_socketError);
+            if (m_socketError) {
+                throw Exception(m_socketError.message());
+            }
 
             if (m_sslConnectionActive) {
                 m_dataChannelSocket.handshake(SSLSocket::client, m_socketError);
@@ -265,7 +315,7 @@ namespace Antik {
                     throw Exception(m_socketError.message());
                 }
             }
-            
+
             m_isListenThreadRunning = false;
 
         }
@@ -280,16 +330,16 @@ namespace Antik {
             if (m_isListenThreadRunning) {
 
                 try {
-                    ip::tcp::socket socket{ m_ioService};
+                    ip::tcp::socket socket { m_ioService };
                     ip::tcp::resolver::query query(m_dataChannelActiveAddresss, m_dataChannelActivePort);
                     asio::connect(socket, m_queryResolver.resolve(query));
                     m_dataChannelListenThread->join();
                 } catch (std::exception &e) {
                     std::cerr << "Listener thread running when it should not be." << std::endl;
                 }
-                
+
             }
-            
+
             if (m_dataChannelSocket.next_layer().is_open()) {
                 m_dataChannelSocket.next_layer().close();
             }
@@ -305,16 +355,9 @@ namespace Antik {
             try {
 
                 if (m_passiveMode) {
-                    ip::tcp::resolver::query query(m_dataChannelPassiveAddresss, m_dataChannelPassivePort);
-                    m_dataChannelSocket.next_layer().connect(*m_queryResolver.resolve(query), m_socketError);
-                    if (m_socketError) {
-                        throw Exception(m_socketError.message());
-                    }
+                    connectSocket(m_dataChannelSocket,m_dataChannelPassiveAddresss, m_dataChannelPassivePort);
                     if (m_sslConnectionActive) {
-                        m_dataChannelSocket.handshake(SSLSocket::client, m_socketError);
-                        if (m_socketError) {
-                            throw Exception(m_socketError.message());
-                        }
+                        switchOnSSL(m_dataChannelSocket);
                     }
                 }
 
@@ -326,28 +369,20 @@ namespace Antik {
                         m_dataChannelListenThread->join();
                     }
 
-                    for (;;) {
+                    do {
 
-                        size_t recvLength;
+                        size_t bytesRead = readFromSocket(m_dataChannelSocket);
 
-                        if (m_sslConnectionActive) {
-                            recvLength = m_dataChannelSocket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
-                        } else {
-                            recvLength = m_dataChannelSocket.next_layer().read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
-                        }
-                        
-                        if (recvLength) {
-                            m_ioBuffer[recvLength] = '\0';
+                        if (bytesRead) {
+                            m_ioBuffer[bytesRead] = '\0';
                             commandResponse.append(&m_ioBuffer[0]);
                         }
 
-                        if (socketClosedByServer()) break;
 
+                    } while (!socketClosedByServer());
 
-                    }
-                    
-                    if ( m_dataChannelSocket.next_layer().is_open()) {
-                         m_dataChannelSocket.next_layer().close();
+                    if (m_dataChannelSocket.next_layer().is_open()) {
+                        m_dataChannelSocket.next_layer().close();
                     }
 
                     m_commandStatusCode = waitForFTPCommandResponse();
@@ -357,7 +392,7 @@ namespace Antik {
             } catch (CFTP::Exception& e) {
                 dataChannelTransferCleanup();
                 throw;
-            } catch (std::exception& e) {
+            } catch (std::exception &e) {
                 dataChannelTransferCleanup();
                 throw Exception(e.what());
             }
@@ -374,17 +409,10 @@ namespace Antik {
 
             try {
 
-              if (m_passiveMode) {
-                    ip::tcp::resolver::query query(m_dataChannelPassiveAddresss, m_dataChannelPassivePort);
-                    m_dataChannelSocket.next_layer().connect(*m_queryResolver.resolve(query), m_socketError);
-                    if (m_socketError) {
-                        throw Exception(m_socketError.message());
-                    }
+                if (m_passiveMode) {
+                    connectSocket(m_dataChannelSocket, m_dataChannelPassiveAddresss, m_dataChannelPassivePort);
                     if (m_sslConnectionActive) {
-                        m_dataChannelSocket.handshake(SSLSocket::client, m_socketError);
-                        if (m_socketError) {
-                            throw Exception(m_socketError.message());
-                        }
+                        switchOnSSL(m_dataChannelSocket);
                     }
                 }
 
@@ -401,7 +429,7 @@ namespace Antik {
                     } else {
                         uploadFile(file);
                     }
-                    
+
                     if (m_dataChannelSocket.next_layer().is_open()) {
                         m_dataChannelSocket.next_layer().close();
                     }
@@ -410,7 +438,7 @@ namespace Antik {
 
                 }
 
-            } catch (std::exception& e) {
+            } catch (std::exception &e) {
                 dataChannelTransferCleanup();
                 throw Exception(e.what());
             }
@@ -426,26 +454,16 @@ namespace Antik {
 
         void CFTP::sendFTPCommand(const std::string& command) {
 
-            size_t commandLength=command.size();
+            size_t commandLength = command.size();
 
-            for (;;) {
+           do {
 
-                if (m_sslConnectionActive) {
-                    commandLength -= m_controlChannelSocket.write_some(asio::buffer(&command[command.size()-commandLength], commandLength), m_socketError);
-                } else {
-                    commandLength -= m_controlChannelSocket.next_layer().write_some(asio::buffer(&command[command.size()-commandLength], commandLength), m_socketError);
-                }
-
+                commandLength -= writeToSocket(m_controlChannelSocket, &command[command.size() - commandLength], commandLength);           
                 if (m_socketError) {
                     throw Exception(m_socketError.message());
                 }
-                
-                if (commandLength==0) {
-                    break;
-                }
-                
 
-            }
+            } while (commandLength != 0);
 
         }
 
@@ -453,34 +471,25 @@ namespace Antik {
         // Read FTP command response from control channel (return its status code).
         //
 
-        std::uint16_t CFTP::waitForFTPCommandResponse() {
+        uint16_t CFTP::waitForFTPCommandResponse() {
 
-            size_t recvLength{ 0};
 
             m_commandResponse.clear();
 
-            for (;;) {
-
-                if (m_sslConnectionActive) {
-                    recvLength = m_controlChannelSocket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
-                } else {
-                    recvLength = m_controlChannelSocket.next_layer().read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_socketError);
-                }
+            do  {
                 
-                if (recvLength) {
+                size_t bytesRead = readFromSocket(m_controlChannelSocket);
 
-                    m_ioBuffer[recvLength] = '\0';
+                if (bytesRead) {
+                    m_ioBuffer[bytesRead] = '\0';
                     m_commandResponse.append(&m_ioBuffer[0]);
-
-                    recvLength = m_commandResponse.length();
-                    if ((m_commandResponse[recvLength - 2] == '\r') && (m_commandResponse[recvLength - 1] == '\n')) {
-                        break;
-                    }
-
                 }
 
-                if (socketClosedByServer()) break;
+            } while (!socketClosedByServer() && (m_commandResponse.back() != '\n'));
+       
 
+            if (m_socketError) {
+                throw Exception(m_socketError.message());
             }
 
             return (std::stoi(m_commandResponse));
@@ -529,7 +538,7 @@ namespace Antik {
         // Setup connection to server
         //
 
-        std::uint16_t CFTP::connect(void) {
+        uint16_t CFTP::connect(void) {
 
             if (m_connected) {
                 Exception("Already connected to a server.");
@@ -537,12 +546,7 @@ namespace Antik {
 
             m_dataChannelActiveAddresss = determineLocalIPAddress();
 
-            ip::tcp::resolver::query query(m_serverName, m_serverPort);
-
-            m_controlChannelSocket.next_layer().connect(*(m_queryResolver.resolve(query)), m_socketError );
-            if (m_socketError) {
-                throw Exception(m_socketError.message());
-            }
+            connectSocket(m_controlChannelSocket, m_serverName, m_serverPort);
 
             m_commandStatusCode = waitForFTPCommandResponse();
 
@@ -552,10 +556,7 @@ namespace Antik {
                     sendFTPCommand("AUTH TLS\r\n");
                     m_commandStatusCode = waitForFTPCommandResponse();
                     if (m_commandStatusCode == 234) {
-                        m_controlChannelSocket.handshake(SSLSocket::client, m_socketError);
-                        if (m_socketError) {
-                            throw Exception(m_socketError.message());
-                        }
+                        switchOnSSL(m_controlChannelSocket);
                         m_sslConnectionActive = true;
                         sendFTPCommand("PBSZ 0\r\n");
                         m_commandStatusCode = waitForFTPCommandResponse();
@@ -564,7 +565,7 @@ namespace Antik {
                             m_commandStatusCode = waitForFTPCommandResponse();
                         }
                     }
-                    
+
                 }
 
                 m_connected = true;
@@ -617,7 +618,7 @@ namespace Antik {
         //
 
         bool CFTP::sendTransferMode() {
-        
+
             if (m_passiveMode) {
                 sendFTPCommand("PASV\r\n");
                 m_commandStatusCode = waitForFTPCommandResponse();
@@ -636,7 +637,7 @@ namespace Antik {
         // Transfer a file from the server to a local file.
         //
 
-        std::uint16_t CFTP::getFile(const std::string &remoteFilePath, const std::string &localFilePath) {
+        uint16_t CFTP::getFile(const std::string &remoteFilePath, const std::string &localFilePath) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -656,7 +657,7 @@ namespace Antik {
         // Transfer a file to the server from a local file.
         //
 
-        std::uint16_t CFTP::putFile(const std::string &remoteFilePath, const std::string &localFilePath) {
+        uint16_t CFTP::putFile(const std::string &remoteFilePath, const std::string &localFilePath) {
 
 
             std::ifstream localFile{ localFilePath, std::ifstream::binary};
@@ -665,7 +666,6 @@ namespace Antik {
                 throw Exception("Not connected to server.");
             }
 
-              
             if (localFile) {
                 localFile.close();
                 if (sendTransferMode()) {
@@ -686,7 +686,7 @@ namespace Antik {
         // working directory if none is.
         //
 
-        std::uint16_t CFTP::list(const std::string &directoryPath, std::string &listOutput) {
+        uint16_t CFTP::list(const std::string &directoryPath, std::string &listOutput) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -708,7 +708,7 @@ namespace Antik {
         // working directory if none is.
         //
 
-        std::uint16_t CFTP::listFiles(const std::string &directoryPath, std::string &listOutput) {
+        uint16_t CFTP::listFiles(const std::string &directoryPath, std::string &listOutput) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -731,7 +731,7 @@ namespace Antik {
         // working directory if none is.
         //
 
-        std::uint16_t CFTP::listDirectory(const std::string &directoryPath, std::string &listOutput) {
+        uint16_t CFTP::listDirectory(const std::string &directoryPath, std::string &listOutput) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -755,7 +755,7 @@ namespace Antik {
         // the data channel.
         //
 
-        std::uint16_t CFTP::listFile(const std::string &filePath, std::string &listOutput) {
+        uint16_t CFTP::listFile(const std::string &filePath, std::string &listOutput) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -781,7 +781,7 @@ namespace Antik {
         // Make remote FTP server directory
         //
 
-        std::uint16_t CFTP::makeDirectory(const std::string &directoryName) {
+        uint16_t CFTP::makeDirectory(const std::string &directoryName) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -789,7 +789,7 @@ namespace Antik {
 
             sendFTPCommand("MKD " + directoryName + "\r\n");
 
-            return (m_commandStatusCode=waitForFTPCommandResponse());
+            return (m_commandStatusCode = waitForFTPCommandResponse());
 
         }
 
@@ -797,7 +797,7 @@ namespace Antik {
         // Remove remote FTP server directory
         //
 
-        std::uint16_t CFTP::removeDirectory(const std::string &directoryName) {
+        uint16_t CFTP::removeDirectory(const std::string &directoryName) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -805,7 +805,7 @@ namespace Antik {
 
             sendFTPCommand("RMD " + directoryName + "\r\n");
 
-            return (m_commandStatusCode=waitForFTPCommandResponse());
+            return (m_commandStatusCode = waitForFTPCommandResponse());
 
         }
 
@@ -813,7 +813,7 @@ namespace Antik {
         // Remove remote FTP server directory
         //
 
-        std::uint16_t CFTP::fileSize(const std::string &fileName, size_t &fileSize) {
+        uint16_t CFTP::fileSize(const std::string &fileName, size_t &fileSize) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -831,11 +831,23 @@ namespace Antik {
 
         }
 
+        void CFTP::setSslEnabled(bool sslEnabled) {
+            if (!m_connected) {
+                m_sslEnabled = sslEnabled;
+            } else {
+                throw Exception("Cannot set SSL mode while connected.");
+            }
+        }
+
+        bool CFTP::isSslEnabled() const {
+            return m_sslEnabled;
+        }
+
         //
         // Delete remote FTP server file
         //
 
-        std::uint16_t CFTP::deleteFile(const std::string &fileName) {
+        uint16_t CFTP::deleteFile(const std::string &fileName) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -843,7 +855,7 @@ namespace Antik {
 
             sendFTPCommand("DELE " + fileName + "\r\n");
 
-            return (m_commandStatusCode=waitForFTPCommandResponse());
+            return (m_commandStatusCode = waitForFTPCommandResponse());
 
         }
 
@@ -851,7 +863,7 @@ namespace Antik {
         // Change current working directory on server.
         //
 
-        std::uint16_t CFTP::changeWorkingDirectory(const std::string &workingDirectoryPath) {
+        uint16_t CFTP::changeWorkingDirectory(const std::string &workingDirectoryPath) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -859,7 +871,7 @@ namespace Antik {
 
             sendFTPCommand("CWD " + workingDirectoryPath + "\r\n");
 
-            return (m_commandStatusCode=waitForFTPCommandResponse());
+            return (m_commandStatusCode = waitForFTPCommandResponse());
 
         }
 
@@ -867,7 +879,7 @@ namespace Antik {
         // Fetch current working directory on server and return path as string.
         //
 
-        std::uint16_t CFTP::getCurrentWoringDirectory(std::string &currentWoringDirectoryPath) {
+        uint16_t CFTP::getCurrentWoringDirectory(std::string &currentWoringDirectoryPath) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
