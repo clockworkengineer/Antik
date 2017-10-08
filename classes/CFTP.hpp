@@ -19,7 +19,6 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
-//#include <fstream>
 #include <thread>
 #include <memory>
 #include <mutex>
@@ -64,6 +63,19 @@ namespace Antik {
                 }
 
             };
+            
+            //
+            // Date Time (could be more compact)
+            //
+            
+            struct DateTime {
+                std::uint8_t day;
+                std::uint8_t month;
+                std::uint16_t year;
+                std::uint8_t second;
+                std::uint8_t minute;
+                std::uint8_t hour;
+            };
 
             // ============
             // CONSTRUCTORS
@@ -100,7 +112,7 @@ namespace Antik {
             //
 
             std::uint16_t connect(void);
-            void disconnect(void);
+            std::uint16_t disconnect(void);
             bool getConnectedStatus(void) const;
             
             // Set FTP passive transfer mode 
@@ -135,8 +147,19 @@ namespace Antik {
             
             std::uint16_t deleteFile(const std::string &fileName);
             std::uint16_t fileSize(const std::string &fileName, size_t &fileSize);
+            
+            std::uint16_t getModifiedDateTime(const std::string &filePath, DateTime &modifiedDateTime );
+            
+            // Enable/Disable SSL
+            
             void setSslEnabled(bool sslEnabled);
             bool isSslEnabled() const;
+            
+            // Get last FTP command , returned status code
+            
+            std::string getLastCommand() const;
+            std::uint16_t getCommandStatusCode() const;
+            std::string getCommandResponse() const;
         
             // ================
             // PUBLIC VARIABLES
@@ -162,39 +185,43 @@ namespace Antik {
             // PRIVATE METHODS
             // ===============
 
+            
+            // Socket I/O functions
+            
             void connectSocket(SSLSocket &socket, const std::string &hostAddress, const std::string &hostPort);
-
-            size_t readFromSocket(SSLSocket &socket);
-            
+            size_t readFromSocket(SSLSocket &socket);       
             size_t writeToSocket(SSLSocket &socket, const char *writeBuffer, size_t writeLength);
-            
-            void  switchOnSSL(SSLSocket &socket);
-            
-            size_t readFromSo(SSLSocket &socket);
-            
+            void closeSocket(SSLSocket &socket);    
+            void  switchOnSSL(SSLSocket &socket);   
             bool socketClosedByServer();
+            
+            // Get local IP address
             
             std::string determineLocalIPAddress();
             
+            // Set data channel transfer mode
+            
             bool sendTransferMode();
             
-            void sendFTPCommand(const std::string& commandLine);
-            std::uint16_t waitForFTPCommandResponse();
+            // FTP command channel I/O server
             
-            void readDataChannelCommandResponse(std::string &commandResponse);
-
-            void transferFile(const std::string &file, bool downloading);
+            void ftpCommand(const std::string& commandLine);
+            std::uint16_t ftpResponse();
             
+            // Data channel I/O
+            
+            void readCommandResponse(std::string &commandResponse);
+            void transferFile(const std::string &file, bool downloading);            
             void downloadFile(const std::string &file);
             void uploadFile(const std::string &file);
-                  
-            void extractPassiveAddressPort(std::string &pasvResponse);
+            void transferConnectionListener();
+            void postTransferCleanup();
+
+            // PORT/PASV related methods
             
+            void extractPassiveAddressPort(std::string &pasvResponse);          
             std::string createPortCommand(); 
-            
-            void dataChannelTransferListener();
-            void dataChannelTransferCleanup();
-            
+           
             // =================
             // PRIVATE VARIABLES
             // =================
@@ -206,12 +233,12 @@ namespace Antik {
             std::string m_serverName;   // FTP server
             std::string m_serverPort;   // FTP server port
 
-            std::string m_commandResponse;        // FTP command response
+            std::string m_commandResponse;        // FTP last command response
             std::uint16_t m_commandStatusCode=0;  // FTP last returned command status code
+            std::string m_lastCommand;            // FTP last command sent
             
             std::string m_dataChannelPassiveAddresss; // Data channel server ip address
-            std::string m_dataChannelPassivePort;     // Data channel server port address
-         
+            std::string m_dataChannelPassivePort;     // Data channel server port address      
             std::string m_dataChannelActiveAddresss;  // Data channel client ip address
             std::string m_dataChannelActivePort;      // Data channel client port address
             
@@ -219,16 +246,16 @@ namespace Antik {
 
             boost::asio::io_service m_ioService;                                  // IO Service
             std::array<char, 32*1024> m_ioBuffer;                                 // IO Buffer
-            boost::system::error_code m_socketError;                              // Last socket error
-            boost::asio::ip::tcp::resolver m_queryResolver { m_ioService };       // Name resolver
+            boost::system::error_code m_ioSocketError;                            // Last socket error
+            boost::asio::ip::tcp::resolver m_ioQueryResolver { m_ioService };     // Name resolver
             
             std::atomic<bool> m_isListenThreadRunning { false };    // Listen thread running flag
             std::shared_ptr<std::thread> m_dataChannelListenThread; // Active mode connection listen thread
    
-            boost::asio::ssl::context sslcontext { m_ioService, boost::asio::ssl::context::tlsv12 };
+            boost::asio::ssl::context sslContext { m_ioService, boost::asio::ssl::context::tlsv12 };
 
-            SSLSocket m_controlChannelSocket {m_ioService, sslcontext};
-            SSLSocket m_dataChannelSocket {m_ioService, sslcontext};
+            SSLSocket m_controlChannelSocket {m_ioService, sslContext};
+            SSLSocket m_dataChannelSocket {m_ioService, sslContext};
             bool m_sslConnectionActive { false };
             bool m_sslEnabled { false };
 
