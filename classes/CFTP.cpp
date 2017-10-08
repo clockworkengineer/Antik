@@ -760,17 +760,27 @@ namespace Antik {
         // working directory if none is.
         //
 
-        std::uint16_t CFTP::listFiles(const std::string &directoryPath, std::string &listOutput) {
+        std::uint16_t CFTP::listFiles(const std::string &directoryPath, std::vector<std::string> &fileList) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
             }
-
-            listOutput.clear();
+            
+            fileList.clear();
 
             if (sendTransferMode()) {
+                std::string listOutput;
                 ftpCommand("NLST " + directoryPath + "\r\n");
                 readCommandResponse(listOutput);
+                if(m_commandStatusCode==226) {
+                    std::string file;
+                    std::istringstream listOutputStream{ listOutput};
+                    while (std::getline(listOutputStream, file, '\n')) {
+                        file.pop_back();
+                        fileList.push_back(file);
+                    }
+                 
+                }
             }
 
             return (m_commandStatusCode);

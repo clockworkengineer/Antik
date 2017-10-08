@@ -107,7 +107,7 @@ namespace Antik {
         // PRIVATE VARIABLES
         // =================
 
-        static std::mutex m_outputMutex; // eam output mutex
+        static std::mutex m_outputMutex; // Stream output mutex
         static bool m_dateTimeStamped; // ==true output date/time stamped
 
     };

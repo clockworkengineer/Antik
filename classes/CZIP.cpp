@@ -115,11 +115,11 @@ namespace Antik {
 
             int inflateResult = Z_OK;
             std::uint64_t inflatedBytes = 0;
-            z_stream inlateZIPeam{};
-            std::ofstream fileeam(fileName, std::ios::binary | std::ios::trunc);
+            z_stream inlateZIPStream{};
+            std::ofstream fileStream(fileName, std::ios::binary | std::ios::trunc);
             std::uint32_t crc;
 
-            if (fileeam.fail()) {
+            if (fileStream.fail()) {
                 throw Exception("Could not open destination file for inflate.");
             }
 
@@ -129,7 +129,7 @@ namespace Antik {
                 return (crc);
             }
 
-            inflateResult = inflateInit2(&inlateZIPeam, -MAX_WBITS);
+            inflateResult = inflateInit2(&inlateZIPStream, -MAX_WBITS);
             if (inflateResult != Z_OK) {
                 throw Exception("inflateInit2() Error = " + std::to_string(inflateResult));
             }
@@ -139,48 +139,48 @@ namespace Antik {
                 readZIPFile(m_zipInBuffer, std::min(fileSize, m_zipIOBufferSize));
 
                 if (errorInZIPFile()) {
-                    inflateEnd(&inlateZIPeam);
+                    inflateEnd(&inlateZIPStream);
                     throw Exception("Error reading ZIP archive file during inflate.");
                 }
 
-                inlateZIPeam.avail_in = readCountZIPFile();
-                if (inlateZIPeam.avail_in == 0) {
+                inlateZIPStream.avail_in = readCountZIPFile();
+                if (inlateZIPStream.avail_in == 0) {
                     break;
                 }
 
-                inlateZIPeam.next_in = (Bytef *) & m_zipInBuffer[0];
+                inlateZIPStream.next_in = (Bytef *) & m_zipInBuffer[0];
 
                 do {
 
-                    inlateZIPeam.avail_out = m_zipIOBufferSize;
-                    inlateZIPeam.next_out = (Bytef *) & m_zipOutBuffer[0];
+                    inlateZIPStream.avail_out = m_zipIOBufferSize;
+                    inlateZIPStream.next_out = (Bytef *) & m_zipOutBuffer[0];
 
-                    inflateResult = inflate(&inlateZIPeam, Z_NO_FLUSH);
+                    inflateResult = inflate(&inlateZIPStream, Z_NO_FLUSH);
                     switch (inflateResult) {
                         case Z_NEED_DICT:
                             inflateResult = Z_DATA_ERROR;
                         case Z_DATA_ERROR:
                         case Z_MEM_ERROR:
-                            inflateEnd(&inlateZIPeam);
+                            inflateEnd(&inlateZIPStream);
                             throw Exception("Error inflating ZIP archive. = " + std::to_string(inflateResult));
                     }
 
-                    inflatedBytes = m_zipIOBufferSize - inlateZIPeam.avail_out;
-                    fileeam.write((char *) & m_zipOutBuffer[0], inflatedBytes);
-                    if (fileeam.fail()) {
-                        inflateEnd(&inlateZIPeam);
+                    inflatedBytes = m_zipIOBufferSize - inlateZIPStream.avail_out;
+                    fileStream.write((char *) & m_zipOutBuffer[0], inflatedBytes);
+                    if (fileStream.fail()) {
+                        inflateEnd(&inlateZIPStream);
                         throw Exception("Error writing to file during inflate.");
                     }
 
                     crc = crc32(crc, &m_zipOutBuffer[0], inflatedBytes);
 
-                } while (inlateZIPeam.avail_out == 0);
+                } while (inlateZIPStream.avail_out == 0);
 
                 fileSize -= m_zipIOBufferSize;
 
             } while (inflateResult != Z_STREAM_END);
 
-            inflateEnd(&inlateZIPeam);
+            inflateEnd(&inlateZIPStream);
 
             return (crc);
 
@@ -196,62 +196,62 @@ namespace Antik {
 
             int deflateResult = 0, flushRemainder = 0;
             std::uint64_t bytesDeflated = 0;
-            z_stream deflateZIPeam{};
-            std::ifstream fileeam(fileName, std::ios::binary);
+            z_stream deflateZIPStream{};
+            std::ifstream fileStream(fileName, std::ios::binary);
             std::uint32_t crc;
             std::uint64_t compressedSize = 0;
 
-            if (fileeam.fail()) {
+            if (fileStream.fail()) {
                 throw Exception("Could not open source file for deflate.");
             }
 
             crc = crc32(0L, Z_NULL, 0);
 
-            deflateResult = deflateInit2(&deflateZIPeam, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -MAX_WBITS, 8, Z_DEFAULT_STRATEGY);
+            deflateResult = deflateInit2(&deflateZIPStream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -MAX_WBITS, 8, Z_DEFAULT_STRATEGY);
             if (deflateResult != Z_OK) {
                 throw Exception("deflateInit2() Error = " + std::to_string(deflateResult));
             }
 
             do {
 
-                fileeam.read((char *) & m_zipInBuffer[0], std::min(fileSize, m_zipIOBufferSize));
-                if (fileeam.fail() && !fileeam.eof()) {
-                    deflateEnd(&deflateZIPeam);
+                fileStream.read((char *) & m_zipInBuffer[0], std::min(fileSize, m_zipIOBufferSize));
+                if (fileStream.fail() && !fileStream.eof()) {
+                    deflateEnd(&deflateZIPStream);
                     throw Exception("Error reading source file to deflate.");
                 }
 
-                deflateZIPeam.avail_in = fileeam.gcount();
-                fileSize -= deflateZIPeam.avail_in;
+                deflateZIPStream.avail_in = fileStream.gcount();
+                fileSize -= deflateZIPStream.avail_in;
 
-                crc = crc32(crc, &m_zipInBuffer[0], deflateZIPeam.avail_in);
+                crc = crc32(crc, &m_zipInBuffer[0], deflateZIPStream.avail_in);
 
-                flushRemainder = ((fileeam.eof() || fileSize == 0)) ? Z_FINISH : Z_NO_FLUSH;
+                flushRemainder = ((fileStream.eof() || fileSize == 0)) ? Z_FINISH : Z_NO_FLUSH;
 
-                deflateZIPeam.next_in = &m_zipInBuffer[0];
+                deflateZIPStream.next_in = &m_zipInBuffer[0];
 
                 do {
 
-                    deflateZIPeam.avail_out = m_zipIOBufferSize;
-                    deflateZIPeam.next_out = &m_zipOutBuffer[0];
-                    deflateResult = deflate(&deflateZIPeam, flushRemainder); /* no bad return value */
+                    deflateZIPStream.avail_out = m_zipIOBufferSize;
+                    deflateZIPStream.next_out = &m_zipOutBuffer[0];
+                    deflateResult = deflate(&deflateZIPStream, flushRemainder); /* no bad return value */
 
-                    bytesDeflated = m_zipIOBufferSize - deflateZIPeam.avail_out;
+                    bytesDeflated = m_zipIOBufferSize - deflateZIPStream.avail_out;
                     writeZIPFile(m_zipOutBuffer, bytesDeflated);
                     if (errorInZIPFile()) {
-                        deflateEnd(&deflateZIPeam);
+                        deflateEnd(&deflateZIPStream);
                         throw Exception("Error writing deflated data to ZIP archive.");
                     }
 
                     compressedSize += bytesDeflated;
 
-                } while (deflateZIPeam.avail_out == 0);
+                } while (deflateZIPStream.avail_out == 0);
 
 
             } while (flushRemainder != Z_FINISH);
 
-            deflateEnd(&deflateZIPeam);
+            deflateEnd(&deflateZIPStream);
 
-            fileeam.close();
+            fileStream.close();
 
             return (std::make_pair(crc, compressedSize));
 
@@ -266,9 +266,9 @@ namespace Antik {
 
             std::uint32_t crc;
             crc = crc32(0L, Z_NULL, 0);
-            std::ofstream fileeam(fileName, std::ios::binary | std::ios::trunc);
+            std::ofstream fileStream(fileName, std::ios::binary | std::ios::trunc);
 
-            if (fileeam.fail()) {
+            if (fileStream.fail()) {
                 throw Exception("Could not open destination file for extract.");
             }
 
@@ -278,8 +278,8 @@ namespace Antik {
                     throw Exception("Error in reading ZIP archive file.");
                 }
                 crc = crc32(crc, &m_zipInBuffer[0], readCountZIPFile());
-                fileeam.write((char *) & m_zipInBuffer[0], readCountZIPFile());
-                if (fileeam.fail()) {
+                fileStream.write((char *) & m_zipInBuffer[0], readCountZIPFile());
+                if (fileStream.fail()) {
                     throw Exception("Error in writing extracted file.");
                 }
                 fileSize -= (std::min(fileSize, m_zipIOBufferSize));
@@ -296,20 +296,20 @@ namespace Antik {
 
         void CZIP::storeFile(const std::string& fileName, std::uint64_t fileSize) {
 
-            std::ifstream fileeam(fileName, std::ios::binary);
+            std::ifstream fileStream(fileName, std::ios::binary);
 
-            if (fileeam.fail()) {
+            if (fileStream.fail()) {
                 throw Exception("Could not open source file for store.");
             }
 
             while (fileSize) {
 
-                fileeam.read((char *) & m_zipInBuffer[0], std::min(fileSize, m_zipIOBufferSize));
-                if (fileeam.fail()) {
+                fileStream.read((char *) & m_zipInBuffer[0], std::min(fileSize, m_zipIOBufferSize));
+                if (fileStream.fail()) {
                     throw Exception("Error reading source file to store in ZIP archive.");
                 }
 
-                writeZIPFile(m_zipInBuffer, fileeam.gcount());
+                writeZIPFile(m_zipInBuffer, fileStream.gcount());
                 if (errorInZIPFile()) {
                     throw Exception("Error writing to ZIP archive.");
                 }

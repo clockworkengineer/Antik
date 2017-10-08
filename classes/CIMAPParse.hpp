@@ -163,7 +163,7 @@ namespace Antik {
             std::string tag; // Command tag
             Commands commandCode; // Command code
             std::string commandLine; // Full command line
-            std::istringstream& commandRespeam; // Command response stream (Note reference)
+            std::istringstream& commandRespStream; // Command response stream (Note reference)
             COMMANDRESPONSE resp; // Parsed command response structure
         };
 
@@ -238,14 +238,14 @@ namespace Antik {
         // Get next line from response
         //
 
-        static bool parseGetNextLine(std::istringstream& responseeam, std::string& line);
+        static bool parseGetNextLine(std::istringstream& responseStream, std::string& line);
 
         //
         // Command response parse utility methods
         //
 
         static void parseCommon(const std::string& tag, const std::string& line, CommandResponse* statusResponse);
-        static void parseOctets(const std::string& item, FetchRespData& fetchData, std::string& line, std::istringstream& responseeam);
+        static void parseOctets(const std::string& item, FetchRespData& fetchData, std::string& line, std::istringstream& responseStream);
         static void parseList(const std::string& item, FetchRespData& fetchData, std::string& line);
         static void parseing(const std::string& item, FetchRespData& fetchData, std::string& line);
         static void parseNumber(const std::string& item, FetchRespData& fetchData, std::string& line);

@@ -71,16 +71,16 @@ namespace Antik {
     // Create CRedirect specifying output stream
     //
 
-    CRedirect::CRedirect(std::ostream& outeam) {
-        m_savedStream = &outeam;
+    CRedirect::CRedirect(std::ostream& outStream) {
+        m_savedStream = &outStream;
     }
 
     //
     // Create CRedirect specifying output stream, output file and start the redirect
     //
 
-    CRedirect::CRedirect(std::ostream& outeam, std::string outfileName, std::ios_base::openmode mode) {
-        m_savedStream = &outeam;
+    CRedirect::CRedirect(std::ostream& outStream, std::string outfileName, std::ios_base::openmode mode) {
+        m_savedStream = &outStream;
         change(outfileName, mode);
     }
 
@@ -88,16 +88,16 @@ namespace Antik {
     // Create CRedirect specifying file stream (stdout/stderr), output file and start the redirect
     //
 
-    CRedirect::CRedirect(std::FILE* stdeam, std::string outfileName, const char* mode) {
-        std::freopen(outfileName.c_str(), mode, stdeam);
+    CRedirect::CRedirect(std::FILE* stdStream, std::string outfileName, const char* mode) {
+        std::freopen(outfileName.c_str(), mode, stdStream);
     }
 
     //
     // Create CRedirect specifying file stream (stdout/stderr)
     //
 
-    CRedirect::CRedirect(std::FILE* stdeam) {
-        m_savedStdOutErr = stdeam;
+    CRedirect::CRedirect(std::FILE* stdStream) {
+        m_savedStdOutErr = stdStream;
     }
 
     //

@@ -321,19 +321,19 @@ namespace Antik {
             // Worker methods for put/get field.
             //
 
-            static void readZIPRecord(std::fstream &zipFileeam, DataDescriptor& entry);
-            static void readZIPRecord(std::fstream &zipFileeam, CentralDirectoryFileHeader& entry);
-            static void readZIPRecord(std::fstream &zipFileeam, LocalFileHeader& entry);
-            static void readZIPRecord(std::fstream &zipFileeam, EOCentralDirectoryRecord& entry);
-            static void readZIPRecord(std::fstream &zipFileeam, Zip64EOCentralDirectoryRecord& entry);
-            static void readZIPRecord(std::fstream &zipFileeam, Zip64EOCentDirRecordLocator& entry);
+            static void readZIPRecord(std::fstream &zipFileStream, DataDescriptor& entry);
+            static void readZIPRecord(std::fstream &zipFileStream, CentralDirectoryFileHeader& entry);
+            static void readZIPRecord(std::fstream &zipFileStream, LocalFileHeader& entry);
+            static void readZIPRecord(std::fstream &zipFileStream, EOCentralDirectoryRecord& entry);
+            static void readZIPRecord(std::fstream &zipFileStream, Zip64EOCentralDirectoryRecord& entry);
+            static void readZIPRecord(std::fstream &zipFileStream, Zip64EOCentDirRecordLocator& entry);
 
-            static void writeZIPRecord(std::fstream &zipFileeam, DataDescriptor& entry);
-            static void writeZIPRecord(std::fstream &zipFileeam, CentralDirectoryFileHeader& entry);
-            static void writeZIPRecord(std::fstream &zipFileeam, LocalFileHeader& entry);
-            static void writeZIPRecord(std::fstream &zipFileeam, EOCentralDirectoryRecord& entry);
-            static void writeZIPRecord(std::fstream &zipFileeam, Zip64EOCentralDirectoryRecord& entry);
-            static void writeZIPRecord(std::fstream &zipFileeam, Zip64EOCentDirRecordLocator& entry);
+            static void writeZIPRecord(std::fstream &zipFileStream, DataDescriptor& entry);
+            static void writeZIPRecord(std::fstream &zipFileStream, CentralDirectoryFileHeader& entry);
+            static void writeZIPRecord(std::fstream &zipFileStream, LocalFileHeader& entry);
+            static void writeZIPRecord(std::fstream &zipFileStream, EOCentralDirectoryRecord& entry);
+            static void writeZIPRecord(std::fstream &zipFileStream, Zip64EOCentralDirectoryRecord& entry);
+            static void writeZIPRecord(std::fstream &zipFileStream, Zip64EOCentDirRecordLocator& entry);
 
             // =================
             // PRIVATE VARIABLES
@@ -343,7 +343,7 @@ namespace Antik {
             // ZIP archive I/O stream
             //
 
-            std::fstream m_zipFileeam;
+            std::fstream m_zipFileStream;
 
         };
 

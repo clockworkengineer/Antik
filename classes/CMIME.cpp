@@ -668,11 +668,11 @@ namespace Antik {
 
     std::vector<CMIME::ParsedMIMEing> CMIME::parseMIMEing(const std::string& mime) {
 
-        std::istringstream subjecteam(mime);
+        std::istringstream subjectStream(mime);
         ParsedMIMEing parsedEntry;
         std::vector<ParsedMIMEing> parseding;
 
-        for (std::string line; std::getline(subjecteam, line, '\n');) {
+        for (std::string line; std::getline(subjectStream, line, '\n');) {
 
             line.pop_back();
             if (line.find_first_not_of(' ') != std::string::npos) {

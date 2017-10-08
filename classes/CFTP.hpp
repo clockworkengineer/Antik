@@ -128,7 +128,7 @@ namespace Antik {
             // FTP list file/directory
             
             std::uint16_t list(const std::string &directoryPath, std::string &listOutput);
-            std::uint16_t listFiles(const std::string &directoryPath, std::string &listOutput);
+            std::uint16_t listFiles(const std::string &directoryPath, std::vector<std::string> &fileList);
             std::uint16_t listDirectory(const std::string &directoryPath, std::string &listOutput);
             std::uint16_t listFile(const std::string &filePath, std::string &listOutput);
               
