@@ -54,7 +54,7 @@ protected:
     virtual void TearDown() {
     }
     
-    static void checkListRespData(CIMAPParse::ListRespData &respData, uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr);
+    static void checkListRespData(CIMAPParse::ListRespData &respData, std::uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr);
 
 
 };
@@ -67,7 +67,7 @@ protected:
 // FIXTURE METHODS
 // ===============
 
-void CIMAPParseTests::checkListRespData(CIMAPParse::ListRespData &respData, uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr) {
+void CIMAPParseTests::checkListRespData(CIMAPParse::ListRespData &respData, std::uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr) {
 
     EXPECT_EQ(hierDel, respData.hierDel);
     ASSERT_STREQ(attributesStr.c_str(), respData.attributes.c_str());

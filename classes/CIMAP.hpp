@@ -261,7 +261,7 @@ namespace Antik {
 
             std::string m_commandResponse; // IMAP command response
 
-            uint64_t m_tagCount{ 1}; // Current command tag count
+            std::uint64_t m_tagCount{ 1}; // Current command tag count
             std::string m_currentTag; // Current command tag
             std::string m_tagPrefix{ kDefaultTagPrefix}; // Current command tag prefixes
 

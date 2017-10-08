@@ -348,7 +348,7 @@ namespace Antik {
                     if (!line.empty()) {
                         std::istringstream listeam(line); // Read indexes/UIDs
                         while (listeam.good()) {
-                            uint64_t index = 0;
+                            std::uint64_t index = 0;
                             listeam >> index;
                             if (!listeam.fail()) {
                                 commandData.resp->indexes.push_back(index);

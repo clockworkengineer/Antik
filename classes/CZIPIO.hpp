@@ -362,7 +362,7 @@ namespace Antik {
 
         template <typename T>
         void CZIPIO::putField(T field, std::vector<std::uint8_t>& buffer) {
-            uint16_t size = sizeof (T);
+            std::uint16_t size = sizeof (T);
             while (size--) {
                 buffer.push_back(static_cast<std::uint8_t> (field & 0xFF));
                 field >>= 8;

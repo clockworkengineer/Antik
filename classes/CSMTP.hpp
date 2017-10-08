@@ -124,8 +124,8 @@ namespace Antik {
 
             // Encode/decode bytes to base64 string
 
-            static void encodeToBase64(const std::string& decodeding, std::string& encodeding, uint32_t numberOfBytes);
-            static void decodeFromBase64(const std::string& encodeding, std::string& decodeding, uint32_t numberOfBytes);
+            static void encodeToBase64(const std::string& decodeding, std::string& encodeding, std::uint32_t numberOfBytes);
+            static void decodeFromBase64(const std::string& encodeding, std::string& decodeding, std::uint32_t numberOfBytes);
 
 
             // ================

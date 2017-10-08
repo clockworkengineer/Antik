@@ -99,7 +99,7 @@ namespace Antik {
             // FTP connect, disconnect and connection status
             //
 
-            uint16_t connect(void);
+            std::uint16_t connect(void);
             void disconnect(void);
             bool getConnectedStatus(void) const;
             
@@ -110,31 +110,31 @@ namespace Antik {
             
             // FTP get and put file
             
-            uint16_t getFile(const std::string &remoteFilePath, const std::string &localFilePath);
-            uint16_t putFile(const std::string &remoteFilePath, const std::string &localFilePath);
+            std::uint16_t getFile(const std::string &remoteFilePath, const std::string &localFilePath);
+            std::uint16_t putFile(const std::string &remoteFilePath, const std::string &localFilePath);
 
             // FTP list file/directory
             
-            uint16_t list(const std::string &directoryPath, std::string &listOutput);
-            uint16_t listFiles(const std::string &directoryPath, std::string &listOutput);
-            uint16_t listDirectory(const std::string &directoryPath, std::string &listOutput);
-            uint16_t listFile(const std::string &filePath, std::string &listOutput);
+            std::uint16_t list(const std::string &directoryPath, std::string &listOutput);
+            std::uint16_t listFiles(const std::string &directoryPath, std::string &listOutput);
+            std::uint16_t listDirectory(const std::string &directoryPath, std::string &listOutput);
+            std::uint16_t listFile(const std::string &filePath, std::string &listOutput);
               
             // FTP set/get current working directory
             
-            uint16_t changeWorkingDirectory(const std::string &workingDirectoryPath);
-            uint16_t getCurrentWoringDirectory(std::string &currentWoringDirectory);
+            std::uint16_t changeWorkingDirectory(const std::string &workingDirectoryPath);
+            std::uint16_t getCurrentWoringDirectory(std::string &currentWoringDirectory);
             
        
             // FTP make/remove server directory
 
-            uint16_t makeDirectory(const std::string &directoryName);            
-            uint16_t removeDirectory(const std::string &directoryName);
+            std::uint16_t makeDirectory(const std::string &directoryName);            
+            std::uint16_t removeDirectory(const std::string &directoryName);
  
             // FTP delete remote file, get size in bytes
             
-            uint16_t deleteFile(const std::string &fileName);
-            uint16_t fileSize(const std::string &fileName, size_t &fileSize);
+            std::uint16_t deleteFile(const std::string &fileName);
+            std::uint16_t fileSize(const std::string &fileName, size_t &fileSize);
             void setSslEnabled(bool sslEnabled);
             bool isSslEnabled() const;
         
@@ -179,7 +179,7 @@ namespace Antik {
             bool sendTransferMode();
             
             void sendFTPCommand(const std::string& commandLine);
-            uint16_t waitForFTPCommandResponse();
+            std::uint16_t waitForFTPCommandResponse();
             
             void readDataChannelCommandResponse(std::string &commandResponse);
 
@@ -207,7 +207,7 @@ namespace Antik {
             std::string m_serverPort;   // FTP server port
 
             std::string m_commandResponse;        // FTP command response
-            uint16_t m_commandStatusCode=0;  // FTP last returned command status code
+            std::uint16_t m_commandStatusCode=0;  // FTP last returned command status code
             
             std::string m_dataChannelPassiveAddresss; // Data channel server ip address
             std::string m_dataChannelPassivePort;     // Data channel server port address

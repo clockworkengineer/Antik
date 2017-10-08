@@ -512,10 +512,10 @@ namespace Antik {
     //
 
     void CSMTP::encodeToBase64(const std::string& decodeding,
-            std::string& encodeding, uint32_t numberOfBytes) {
+            std::string& encodeding, std::uint32_t numberOfBytes) {
 
         int trailing, byteIndex = 0;
-        register uint8_t byte1, byte2, byte3;
+        register std::uint8_t byte1, byte2, byte3;
 
         if (numberOfBytes == 0) {
             return;
@@ -566,10 +566,10 @@ namespace Antik {
     //
 
     void CSMTP::decodeFromBase64(const std::string& encoded,
-            std::string& decoded, uint32_t numberOfBytes) {
+            std::string& decoded, std::uint32_t numberOfBytes) {
 
         int byteIndex { 0 };
-        register uint8_t byte1, byte2, byte3, byte4;
+        register std::uint8_t byte1, byte2, byte3, byte4;
 
         if ((numberOfBytes == 0) || (numberOfBytes % 4)) {
             return;

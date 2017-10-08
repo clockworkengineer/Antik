@@ -471,7 +471,7 @@ namespace Antik {
         // Read FTP command response from control channel (return its status code).
         //
 
-        uint16_t CFTP::waitForFTPCommandResponse() {
+        std::uint16_t CFTP::waitForFTPCommandResponse() {
 
 
             m_commandResponse.clear();
@@ -538,7 +538,7 @@ namespace Antik {
         // Setup connection to server
         //
 
-        uint16_t CFTP::connect(void) {
+        std::uint16_t CFTP::connect(void) {
 
             if (m_connected) {
                 Exception("Already connected to a server.");
@@ -637,7 +637,7 @@ namespace Antik {
         // Transfer a file from the server to a local file.
         //
 
-        uint16_t CFTP::getFile(const std::string &remoteFilePath, const std::string &localFilePath) {
+        std::uint16_t CFTP::getFile(const std::string &remoteFilePath, const std::string &localFilePath) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -657,7 +657,7 @@ namespace Antik {
         // Transfer a file to the server from a local file.
         //
 
-        uint16_t CFTP::putFile(const std::string &remoteFilePath, const std::string &localFilePath) {
+        std::uint16_t CFTP::putFile(const std::string &remoteFilePath, const std::string &localFilePath) {
 
 
             std::ifstream localFile{ localFilePath, std::ifstream::binary};
@@ -686,7 +686,7 @@ namespace Antik {
         // working directory if none is.
         //
 
-        uint16_t CFTP::list(const std::string &directoryPath, std::string &listOutput) {
+        std::uint16_t CFTP::list(const std::string &directoryPath, std::string &listOutput) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -708,7 +708,7 @@ namespace Antik {
         // working directory if none is.
         //
 
-        uint16_t CFTP::listFiles(const std::string &directoryPath, std::string &listOutput) {
+        std::uint16_t CFTP::listFiles(const std::string &directoryPath, std::string &listOutput) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -731,7 +731,7 @@ namespace Antik {
         // working directory if none is.
         //
 
-        uint16_t CFTP::listDirectory(const std::string &directoryPath, std::string &listOutput) {
+        std::uint16_t CFTP::listDirectory(const std::string &directoryPath, std::string &listOutput) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -755,7 +755,7 @@ namespace Antik {
         // the data channel.
         //
 
-        uint16_t CFTP::listFile(const std::string &filePath, std::string &listOutput) {
+        std::uint16_t CFTP::listFile(const std::string &filePath, std::string &listOutput) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -781,7 +781,7 @@ namespace Antik {
         // Make remote FTP server directory
         //
 
-        uint16_t CFTP::makeDirectory(const std::string &directoryName) {
+        std::uint16_t CFTP::makeDirectory(const std::string &directoryName) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -797,7 +797,7 @@ namespace Antik {
         // Remove remote FTP server directory
         //
 
-        uint16_t CFTP::removeDirectory(const std::string &directoryName) {
+        std::uint16_t CFTP::removeDirectory(const std::string &directoryName) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -813,7 +813,7 @@ namespace Antik {
         // Remove remote FTP server directory
         //
 
-        uint16_t CFTP::fileSize(const std::string &fileName, size_t &fileSize) {
+        std::uint16_t CFTP::fileSize(const std::string &fileName, size_t &fileSize) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -847,7 +847,7 @@ namespace Antik {
         // Delete remote FTP server file
         //
 
-        uint16_t CFTP::deleteFile(const std::string &fileName) {
+        std::uint16_t CFTP::deleteFile(const std::string &fileName) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -863,7 +863,7 @@ namespace Antik {
         // Change current working directory on server.
         //
 
-        uint16_t CFTP::changeWorkingDirectory(const std::string &workingDirectoryPath) {
+        std::uint16_t CFTP::changeWorkingDirectory(const std::string &workingDirectoryPath) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");
@@ -879,7 +879,7 @@ namespace Antik {
         // Fetch current working directory on server and return path as string.
         //
 
-        uint16_t CFTP::getCurrentWoringDirectory(std::string &currentWoringDirectoryPath) {
+        std::uint16_t CFTP::getCurrentWoringDirectory(std::string &currentWoringDirectoryPath) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");

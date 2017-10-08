@@ -143,7 +143,7 @@ namespace Antik {
 
     void CIMAPBodyStruct::createBodyStructTree(std::unique_ptr<BodyNode>& bodyNode, const std::string& bodyPart) {
 
-        uint32_t partNo { 1 };
+        std::uint32_t partNo { 1 };
         std::string bodyucture(bodyPart.substr(1));
         std::vector<std::string> bodyParts;
 

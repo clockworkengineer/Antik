@@ -399,7 +399,7 @@ namespace Antik {
         void CZIPIO::readZIPRecord(std::fstream &zipFileeam, CZIPIO::EOCentralDirectoryRecord& entry) {
 
             zipFileeam.seekg(0, std::ios_base::end);
-            uint64_t fileLength = zipFileeam.tellg();
+            std::uint64_t fileLength = zipFileeam.tellg();
             int64_t filePosition = fileLength - 1;
             std::uint32_t signature = 0;
 
@@ -508,7 +508,7 @@ namespace Antik {
         void CZIPIO::readZIPRecord(std::fstream &zipFileeam, CZIPIO::Zip64EOCentDirRecordLocator& entry) {
 
             zipFileeam.seekg(0, std::ios_base::end);
-            uint64_t fileLength = zipFileeam.tellg();
+            std::uint64_t fileLength = zipFileeam.tellg();
             int64_t filePosition = fileLength - 1;
             std::uint32_t signature = 0;
 

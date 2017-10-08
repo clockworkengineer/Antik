@@ -58,18 +58,18 @@ namespace Antik {
 
         // inotify events to recieve
 
-        const uint32_t CApprise::kInofityEvents { 
+        const std::uint32_t CApprise::kInofityEvents { 
                 IN_ISDIR | IN_CREATE | IN_MOVED_TO | IN_MOVED_FROM |
                 IN_DELETE_SELF | IN_CLOSE_WRITE | IN_DELETE | IN_MODIFY 
         };
 
         // inotify event structure size
 
-        const uint32_t CApprise::kInotifyEventSize { (sizeof (struct inotify_event)) };
+        const std::uint32_t CApprise::kInotifyEventSize { (sizeof (struct inotify_event)) };
 
         // inotify event read buffer size
 
-        const uint32_t CApprise::kInotifyEventBuffLen { (1024 * (CApprise::kInotifyEventSize + 16)) };
+        const std::uint32_t CApprise::kInotifyEventBuffLen { (1024 * (CApprise::kInotifyEventSize + 16)) };
 
         // CApprise logging prefix
 

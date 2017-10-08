@@ -70,7 +70,7 @@ namespace Antik {
             //
 
             struct Options {
-                uint32_t inotifyWatchMask;                  // inotify watch event mask
+                std::uint32_t inotifyWatchMask;                  // inotify watch event mask
                 bool bDisplayInotifyEvent;                  // ==true then display inotify event to coutstr
                 Antik::Util::CLogger::LogStringsFn coutstr; // coutstr output
                 Antik::Util::CLogger::LogStringsFn cerrstr; // cerrstr output
@@ -181,9 +181,9 @@ namespace Antik {
             // inotify
             //
 
-            static const uint32_t kInofityEvents; // inotify events to monitor
-            static const uint32_t kInotifyEventSize; // inotify read event size
-            static const uint32_t kInotifyEventBuffLen; // inotify read buffer length
+            static const std::uint32_t kInofityEvents; // inotify events to monitor
+            static const std::uint32_t kInotifyEventSize; // inotify read event size
+            static const std::uint32_t kInotifyEventBuffLen; // inotify read buffer length
 
             // ===========================================
             // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
@@ -238,7 +238,7 @@ namespace Antik {
             //
 
             int m_inotifyFd { 0 }; // file descriptor for read
-            uint32_t m_inotifyWatchMask { CApprise::kInofityEvents }; // watch event mask
+            std::uint32_t m_inotifyWatchMask { CApprise::kInofityEvents }; // watch event mask
             std::unique_ptr<std::uint8_t> m_inotifyBuffer; // read buffer
             std::unordered_map<int32_t, std::string> m_watchMap; // Watch table indexed by watch variable
             std::set<std::string> m_inProcessOfCreation; // Set to hold files being created.

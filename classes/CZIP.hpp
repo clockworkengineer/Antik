@@ -206,8 +206,8 @@ namespace Antik {
             // Inflate/deflate buffers.
             //
 
-            std::vector<uint8_t> m_zipInBuffer;
-            std::vector<uint8_t> m_zipOutBuffer;
+            std::vector<std::uint8_t> m_zipInBuffer;
+            std::vector<std::uint8_t> m_zipOutBuffer;
 
             //
             //  ZIP(64) archive End Of Central Directory record  and  Central Directory
