@@ -129,7 +129,7 @@ namespace Antik {
         }
 
         //
-        // Perform TLS handshake to enable SSL
+        // Closedown any running SSL and close socket.
         //
 
         inline void CFTP::closeSocket(SSLSocket &socket) {
@@ -320,13 +320,6 @@ namespace Antik {
                 throw Exception(m_ioSocketError.message());
             }
 
-            if (m_sslConnectionActive) {
-                m_dataChannelSocket.handshake(SSLSocket::client, m_ioSocketError);
-                if (m_ioSocketError) {
-                    throw Exception(m_ioSocketError.message());
-                }
-            }
-
             m_isListenThreadRunning = false;
 
         }
@@ -376,6 +369,9 @@ namespace Antik {
 
                     if (!m_passiveMode) {
                         m_dataChannelListenThread->join();
+                        if (m_sslConnectionActive) {
+                           switchOnSSL(m_dataChannelSocket);
+                        }
                     }
 
                     do {
@@ -429,6 +425,9 @@ namespace Antik {
 
                     if (!m_passiveMode) {
                         m_dataChannelListenThread->join();
+                        if (m_sslConnectionActive) {
+                            switchOnSSL(m_dataChannelSocket);
+                        }
                     }
 
                     if (downloading) {
