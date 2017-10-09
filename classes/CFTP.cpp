@@ -310,8 +310,6 @@ namespace Antik {
 
             m_isListenThreadRunning = true;
 
-            closeSocket(m_dataChannelSocket);
-
             ftpCommand(createPortCommand() + "\r\n");
 
             ip::tcp::acceptor acceptor(m_ioService, ip::tcp::endpoint(ip::tcp::v4(), std::stoi(m_dataChannelActivePort)));
@@ -319,8 +317,9 @@ namespace Antik {
             if (m_ioSocketError) {
                 throw Exception(m_ioSocketError.message());
             }
-
+            
             m_isListenThreadRunning = false;
+ 
 
         }
 
@@ -332,7 +331,7 @@ namespace Antik {
         void CFTP::postTransferCleanup() {
 
             if (m_isListenThreadRunning) {
-
+                m_isListenThreadRunning=false;
                 try {
                     ip::tcp::socket socket{ m_ioService};
                     ip::tcp::resolver::query query(m_dataChannelActiveAddresss, m_dataChannelActivePort);
@@ -340,6 +339,7 @@ namespace Antik {
                     m_dataChannelListenThread->join();
                 } catch (std::exception &e) {
                     std::cerr << "Listener thread running when it should not be." << std::endl;
+                    m_dataChannelListenThread->join();
                 }
 
             }
@@ -356,22 +356,16 @@ namespace Antik {
 
             try {
 
-                if (m_passiveMode) {
-                    connectSocket(m_dataChannelSocket, m_dataChannelPassiveAddresss, m_dataChannelPassivePort);
-                    if (m_sslConnectionActive) {
-                        switchOnSSL(m_dataChannelSocket);
-                    }
-                }
-
                 m_commandStatusCode = ftpResponse();
 
                 if ((m_commandStatusCode == 125) || (m_commandStatusCode == 150)) {
 
                     if (!m_passiveMode) {
                         m_dataChannelListenThread->join();
-                        if (m_sslConnectionActive) {
-                           switchOnSSL(m_dataChannelSocket);
-                        }
+                    } 
+
+                    if (m_sslConnectionActive) {
+                        switchOnSSL(m_dataChannelSocket);
                     }
 
                     do {
@@ -412,22 +406,16 @@ namespace Antik {
 
             try {
 
-                if (m_passiveMode) {
-                    connectSocket(m_dataChannelSocket, m_dataChannelPassiveAddresss, m_dataChannelPassivePort);
-                    if (m_sslConnectionActive) {
-                        switchOnSSL(m_dataChannelSocket);
-                    }
-                }
-
                 m_commandStatusCode = ftpResponse();
 
                 if ((m_commandStatusCode == 125) || (m_commandStatusCode == 150)) {
 
                     if (!m_passiveMode) {
                         m_dataChannelListenThread->join();
-                        if (m_sslConnectionActive) {
-                            switchOnSSL(m_dataChannelSocket);
-                        }
+                    } 
+
+                    if (m_sslConnectionActive) {
+                        switchOnSSL(m_dataChannelSocket);
                     }
 
                     if (downloading) {
@@ -566,7 +554,7 @@ namespace Antik {
         }
 
         //
-        // Get last FTP response status code
+        // Get last FTP response status code and ful response string
         //
 
         std::uint16_t CFTP::getCommandStatusCode() const {
@@ -675,6 +663,7 @@ namespace Antik {
                 m_commandStatusCode = ftpResponse();
                 if (m_commandStatusCode == 227) {
                     extractPassiveAddressPort(m_commandResponse);
+                    connectSocket(m_dataChannelSocket, m_dataChannelPassiveAddresss, m_dataChannelPassivePort);
                 }
                 return (m_commandStatusCode == 227);
             } else {
@@ -682,6 +671,7 @@ namespace Antik {
                 m_commandStatusCode = ftpResponse();
                 return (m_commandStatusCode == 200);
             }
+            
         }
 
         //
