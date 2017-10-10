@@ -469,24 +469,44 @@ namespace Antik {
 
         std::uint16_t CFTP::ftpResponse() {
 
-
+            bool extendedResponse=false;
+            std::uint16_t statusCode;
+            
             m_commandResponse.clear();
 
             do {
 
-                size_t bytesRead = readFromSocket(m_controlChannelSocket);
+                do {
 
-                if (bytesRead) {
-                    m_ioBuffer[bytesRead] = '\0';
-                    m_commandResponse.append(&m_ioBuffer[0]);
+                    size_t bytesRead = readFromSocket(m_controlChannelSocket);
+
+                    if (bytesRead) {
+                        m_ioBuffer[bytesRead] = '\0';
+                        m_commandResponse.append(&m_ioBuffer[0]);
+                    }
+
+                } while (!socketClosedByServer() && (m_commandResponse.back() != '\n'));
+
+                if (m_ioSocketError) {
+                    throw Exception(m_ioSocketError.message());
                 }
 
-            } while (!socketClosedByServer() && (m_commandResponse.back() != '\n'));
+                if (!extendedResponse && (m_commandResponse[3] == '-')) {
+                    extendedResponse = true;
+                    statusCode = std::stoi(m_commandResponse);
+                } 
+                
+                if (extendedResponse) {
+                    size_t multiLine;
+                    multiLine = m_commandResponse.rfind("\r\n"+std::to_string(statusCode)+" ");
+                    if (multiLine != std::string::npos) {
+                        extendedResponse=false;
+                    }
+                }
 
-            if (m_ioSocketError) {
-                throw Exception(m_ioSocketError.message());
-            }
-
+            } while (extendedResponse);
+            
+            
             return (std::stoi(m_commandResponse));
 
 
@@ -554,13 +574,16 @@ namespace Antik {
         }
 
         //
-        // Get last FTP response status code and ful response string
+        // Get last FTP response status code
         //
 
         std::uint16_t CFTP::getCommandStatusCode() const {
             return m_commandStatusCode;
         }
 
+        //
+        // Get last FTP full response string
+        //
         std::string CFTP::getCommandResponse() const {
             return m_commandResponse;
         }
@@ -680,13 +703,21 @@ namespace Antik {
 
         std::uint16_t CFTP::getFile(const std::string &remoteFilePath, const std::string &localFilePath) {
 
+            std::ofstream localFile { localFilePath, std::ofstream::binary};
+                       
             if (!m_connected) {
                 throw Exception("Not connected to server.");
             }
 
-            if (sendTransferMode()) {
-                ftpCommand("RETR " + remoteFilePath + "\r\n");
-                transferFile(localFilePath, true);
+            if (localFile) {
+                localFile.close();
+                if (sendTransferMode()) {
+                    ftpCommand("RETR " + remoteFilePath + "\r\n");
+                    transferFile(localFilePath, true);
+                }
+            } else {
+                m_commandStatusCode = 550;
+                throw Exception("Local file " + localFilePath + " could not be created.");
             }
 
             return (m_commandStatusCode);
@@ -965,6 +996,33 @@ namespace Antik {
             return (m_commandStatusCode);
 
         }
+        
+        //
+        // Return true if passed in file is a directory false for a file.
+        //
+
+        bool CFTP::isDirectory(const std::string &fileName) {
+
+            if (!m_connected) {
+                throw Exception("Not connected to server.");
+            }
+
+            ftpCommand("STAT " + fileName + "\r\n");
+
+            m_commandStatusCode = ftpResponse();
+            
+            if (m_commandStatusCode==213) {
+                size_t dirPosition = m_commandResponse.find("\r\n")+2;
+                if ((dirPosition != std::string::npos) && 
+                     (m_commandResponse[dirPosition]=='d')) {
+                    return(true);
+                }
+            }
+
+            return (false);
+
+        }
+
 
         //
         // Main CFTP object constructor. 

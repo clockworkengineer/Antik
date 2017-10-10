@@ -148,7 +148,13 @@ namespace Antik {
             std::uint16_t deleteFile(const std::string &fileName);
             std::uint16_t fileSize(const std::string &fileName, size_t &fileSize);
             
-            std::uint16_t getModifiedDateTime(const std::string &filePath, DateTime &modifiedDateTime );
+            // FTP get file last modified time
+            
+            std::uint16_t getModifiedDateTime(const std::string &filePath, DateTime &modifiedDateTime);
+            
+            // FTP Is file a directory
+            
+            bool isDirectory(const std::string &fileName);
             
             // Enable/Disable SSL
             
@@ -185,7 +191,6 @@ namespace Antik {
             // PRIVATE METHODS
             // ===============
 
-            
             // Socket I/O functions
             
             void connectSocket(SSLSocket &socket, const std::string &hostAddress, const std::string &hostPort);
