@@ -161,7 +161,7 @@ namespace Antik {
             void setSslEnabled(bool sslEnabled);
             bool isSslEnabled() const;
             
-            // Get last FTP command , returned status code
+            // Get last FTP command , returned status code, raw response string.
             
             std::string getLastCommand() const;
             std::uint16_t getCommandStatusCode() const;
@@ -219,6 +219,7 @@ namespace Antik {
             void transferFile(const std::string &file, bool downloading);            
             void downloadFile(const std::string &file);
             void uploadFile(const std::string &file);
+            void generateListenPort();
             void transferConnectionListener();
             void postTransferCleanup();
 
@@ -249,10 +250,10 @@ namespace Antik {
             
             bool m_passiveMode { false }; // == true passive mode enabled, == false active mode
 
-            boost::asio::io_service m_ioService;                                  // IO Service
-            std::array<char, 32*1024> m_ioBuffer;                                 // IO Buffer
-            boost::system::error_code m_ioSocketError;                            // Last socket error
-            boost::asio::ip::tcp::resolver m_ioQueryResolver { m_ioService };     // Name resolver
+            boost::asio::io_service m_ioService;                                  // io Service
+            std::array<char, 32*1024> m_ioBuffer;                                 // io Buffer
+            boost::system::error_code m_ioSocketError;                            // io last socket error
+            boost::asio::ip::tcp::resolver m_ioQueryResolver { m_ioService };     // io name resolver
             
             std::atomic<bool> m_isListenThreadRunning { false };    // Listen thread running flag
             std::shared_ptr<std::thread> m_dataChannelListenThread; // Active mode connection listen thread

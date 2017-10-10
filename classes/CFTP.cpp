@@ -223,11 +223,7 @@ namespace Antik {
 
             try {
 
-                ip::tcp::acceptor acceptor(m_ioService, ip::tcp::endpoint(ip::tcp::v4(), 0));
-                unsigned short port = acceptor.local_endpoint().port();
-                auto address = acceptor.local_endpoint().address();
-
-                m_dataChannelActivePort = std::to_string(port);
+                std::uint16_t port = std::stoi(m_dataChannelActivePort);
                 portCommand += m_dataChannelActiveAddresss;
                 for (auto &byte : portCommand) {
                     if (byte == '.') byte = ',';
@@ -302,22 +298,35 @@ namespace Antik {
         }
 
         //
+        // Generate random port to listen om in active connections
+        //
+        
+        void CFTP::generateListenPort() {
+            
+            ip::tcp::acceptor acceptor(m_ioService, ip::tcp::endpoint(ip::tcp::v4(), 0));
+            unsigned short port = acceptor.local_endpoint().port();
+            auto address = acceptor.local_endpoint().address();
+
+            m_dataChannelActivePort = std::to_string(port);
+            
+        }
+        
+        //
         // Data channel socket listener thread function for incoming data 
         // channel connections.
         //
 
         void CFTP::transferConnectionListener() {
-
-            m_isListenThreadRunning = true;
-
-            ftpCommand(createPortCommand() + "\r\n");
+            
+            generateListenPort();
 
             ip::tcp::acceptor acceptor(m_ioService, ip::tcp::endpoint(ip::tcp::v4(), std::stoi(m_dataChannelActivePort)));
+
+            m_isListenThreadRunning = true;
             acceptor.accept(m_dataChannelSocket.next_layer(), m_ioSocketError);
             if (m_ioSocketError) {
                 throw Exception(m_ioSocketError.message());
             }
-            
             m_isListenThreadRunning = false;
  
 
@@ -691,6 +700,10 @@ namespace Antik {
                 return (m_commandStatusCode == 227);
             } else {
                 m_dataChannelListenThread.reset(new std::thread(&CFTP::transferConnectionListener, this));
+                while(!m_isListenThreadRunning) {   // Wait for until listening before sending PORT command
+                    continue;                       // Could use conditional but use existing flag for now
+                }
+                ftpCommand(createPortCommand() + "\r\n");
                 m_commandStatusCode = ftpResponse();
                 return (m_commandStatusCode == 200);
             }
