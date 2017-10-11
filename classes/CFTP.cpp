@@ -334,6 +334,7 @@ namespace Antik {
             m_isListenThreadRunning = true;
             acceptor.accept(m_dataChannelSocket.next_layer(), m_ioSocketError);
             if (m_ioSocketError) {
+                m_isListenThreadRunning = false;
                 throw Exception(m_ioSocketError.message());
             }
             m_isListenThreadRunning = false;
