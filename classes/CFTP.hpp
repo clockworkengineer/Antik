@@ -237,7 +237,7 @@ namespace Antik {
             void uploadCommandResponse(std::string &commandResponse);
             void downloadFile(const std::string &file);
             void uploadFile(const std::string &file);
-            void generateListenPort();
+
             void transferConnectionListener();
             void postTransferCleanup();
 

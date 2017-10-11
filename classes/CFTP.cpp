@@ -306,19 +306,6 @@ namespace Antik {
             } while (!socketClosedByServer());
 
         }
-        //
-        // Generate random port to listen on in active connections
-        //
-
-        void CFTP::generateListenPort() {
-
-            ip::tcp::acceptor acceptor(m_ioService, ip::tcp::endpoint(ip::tcp::v4(), 0));
-            unsigned short port = acceptor.local_endpoint().port();
-            auto address = acceptor.local_endpoint().address();
-
-            m_dataChannelActivePort = std::to_string(port);
-
-        }
 
         //
         // Data channel socket listener thread function for incoming data 
@@ -327,16 +314,17 @@ namespace Antik {
 
         void CFTP::transferConnectionListener() {
 
-            generateListenPort();
-
-            ip::tcp::acceptor acceptor(m_ioService, ip::tcp::endpoint(ip::tcp::v4(), std::stoi(m_dataChannelActivePort)));
-
+            ip::tcp::acceptor acceptor(m_ioService,  ip::tcp::endpoint(ip::tcp::v4(), 0));
+            
+            m_dataChannelActivePort = std::to_string(acceptor.local_endpoint().port());
+                 
             m_isListenThreadRunning = true;
             acceptor.accept(m_dataChannelSocket.next_layer(), m_ioSocketError);
             if (m_ioSocketError) {
                 m_isListenThreadRunning = false;
                 throw Exception(m_ioSocketError.message());
             }
+
             m_isListenThreadRunning = false;
 
 
