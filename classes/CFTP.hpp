@@ -166,6 +166,11 @@ namespace Antik {
             std::string getLastCommand() const;
             std::uint16_t getCommandStatusCode() const;
             std::string getCommandResponse() const;
+            
+            // Set transfer type ==true binary == false ASCII
+            
+            void setBinaryTransfer(bool binaryTransfer);
+            bool isBinaryTransfer() const;
         
             // ================
             // PUBLIC VARIABLES
@@ -177,7 +182,17 @@ namespace Antik {
             // PRIVATE TYPES AND CONSTANTS
             // ===========================
 
+            // ASIO SSL socket stream
+            
             typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLSocket;
+            
+            // Data channel transfer types
+            
+            enum DataTransferType {
+                upload,
+                download,
+                commandResponse
+            };
                         
             // ===========================================
             // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
@@ -214,9 +229,12 @@ namespace Antik {
             std::uint16_t ftpResponse();
             
             // Data channel I/O
-            
-            void readCommandResponse(std::string &commandResponse);
-            void transferFile(const std::string &file, bool downloading);            
+ 
+            void transferOnDataChannel(const std::string &file, DataTransferType transferType);
+            void transferOnDataChannel(std::string &commandRespnse);      
+            void transferOnDataChannel(const std::string &file, std::string &commandRespnse, DataTransferType transferType);            
+ 
+            void uploadCommandResponse(std::string &commandResponse);
             void downloadFile(const std::string &file);
             void uploadFile(const std::string &file);
             void generateListenPort();
@@ -238,6 +256,8 @@ namespace Antik {
             std::string m_userPassword; // FTP account user name password
             std::string m_serverName;   // FTP server
             std::string m_serverPort;   // FTP server port
+            
+            bool m_binaryTransfer { false }; // == true binary transfer otherwise ASCII
 
             std::string m_commandResponse;        // FTP last command response
             std::uint16_t m_commandStatusCode=0;  // FTP last returned command status code
