@@ -208,13 +208,17 @@ namespace Antik {
 
             // Socket I/O functions
             
-            void connectSocket(SSLSocket &socket, const std::string &hostAddress, const std::string &hostPort);
-            size_t readFromSocket(SSLSocket &socket);       
-            size_t writeToSocket(SSLSocket &socket, const char *writeBuffer, size_t writeLength);
-            void closeSocket(SSLSocket &socket);    
-            void  switchOnSSL(SSLSocket &socket);   
-            bool socketClosedByServer();
-            
+            void socketConnect(SSLSocket &socket, const std::string &hostAddress, const std::string &hostPort);
+            size_t socketRead(SSLSocket &socket);       
+            size_t socketWrite(SSLSocket &socket, const char *writeBuffer, size_t writeLength);
+            void socketClose(SSLSocket &socket);    
+            void  socketSwitchOnSSL(SSLSocket &socket);   
+            bool socketClosedByServer(SSLSocket &socket);
+            void socketListenForConnection(SSLSocket &socket);
+            void socketIsConnected(SSLSocket &socket);
+             void socketConnectionListener(SSLSocket &socket);
+            void socketCleanup(SSLSocket &socket);
+         
             // Get local IP address
             
             std::string determineLocalIPAddress();
@@ -238,9 +242,7 @@ namespace Antik {
             void downloadFile(const std::string &file);
             void uploadFile(const std::string &file);
 
-            void transferConnectionListener();
-            void postTransferCleanup();
-
+ 
             // PORT/PASV related methods
             
             void extractPassiveAddressPort(std::string &pasvResponse);          
@@ -276,7 +278,7 @@ namespace Antik {
             boost::asio::ip::tcp::resolver m_ioQueryResolver { m_ioService };     // io name resolver
             
             std::atomic<bool> m_isListenThreadRunning { false };    // Listen thread running flag
-            std::shared_ptr<std::thread> m_dataChannelListenThread; // Active mode connection listen thread
+            std::shared_ptr<std::thread> m_dataChannelListenThread { nullptr } ; // Active mode connection listen thread
    
             boost::asio::ssl::context sslContext { m_ioService, boost::asio::ssl::context::tlsv12 };
 
