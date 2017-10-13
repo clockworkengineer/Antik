@@ -24,6 +24,12 @@
 #include <mutex>
 
 //
+// Antik socket
+//
+
+#include "CSocket.hpp"
+
+//
 // Boost ASIO
 //
 
@@ -181,11 +187,7 @@ namespace Antik {
             // ===========================
             // PRIVATE TYPES AND CONSTANTS
             // ===========================
-
-            // ASIO SSL socket stream
-            
-            typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLSocket;
-            
+          
             // Data channel transfer types
             
             enum DataTransferType {
@@ -205,19 +207,6 @@ namespace Antik {
             // ===============
             // PRIVATE METHODS
             // ===============
-
-            // Socket I/O functions
-            
-            void socketConnect(SSLSocket &socket, const std::string &hostAddress, const std::string &hostPort);
-            size_t socketRead(SSLSocket &socket, char *readBuffer, size_t bufferLength);       
-            size_t socketWrite(SSLSocket &socket, const char *writeBuffer, size_t writeLength);
-            void socketClose(SSLSocket &socket);    
-            void  socketSwitchOnSSL(SSLSocket &socket);   
-            bool socketClosedByServer(SSLSocket &socket);
-            void socketListenForConnection(SSLSocket &socket);
-            void socketIsConnected(SSLSocket &socket);
-            void socketConnectionListener(SSLSocket &socket);
-            void socketCleanup(SSLSocket &socket);
          
             // Get local IP address
             
@@ -265,26 +254,14 @@ namespace Antik {
             std::uint16_t m_commandStatusCode=0;  // FTP last returned command status code
             std::string m_lastCommand;            // FTP last command sent
             
-            std::string m_dataChannelPassiveAddresss; // Data channel server ip address
-            std::string m_dataChannelPassivePort;     // Data channel server port address      
-            std::string m_dataChannelActiveAddresss;  // Data channel client ip address
-            std::string m_dataChannelActivePort;      // Data channel client port address
-            
             bool m_passiveMode { false }; // == true passive mode enabled, == false active mode
 
-            boost::asio::io_service m_ioService;                                  // io Service
-            std::array<char, 32*1024> m_ioBuffer;                                 // io Buffer
-            boost::system::error_code m_ioSocketError;                            // io last socket error
-            boost::asio::ip::tcp::resolver m_ioQueryResolver { m_ioService };     // io name resolver
-            
-            std::atomic<bool> m_isListenThreadRunning { false };    // Listen thread running flag
-            std::shared_ptr<std::thread> m_dataChannelListenThread { nullptr } ; // Active mode connection listen thread
-   
-            boost::asio::ssl::context sslContext { m_ioService, boost::asio::ssl::context::tlsv12 };
+            boost::asio::io_service m_ioService;   // io Service
+            std::array<char, 32*1024> m_ioBuffer;  // io Buffer
 
-            SSLSocket m_controlChannelSocket {m_ioService, sslContext};
-            SSLSocket m_dataChannelSocket {m_ioService, sslContext};
-            bool m_sslConnectionActive { false };
+            CSocket m_controlChannelSocket;
+            CSocket m_dataChannelSocket;
+
             bool m_sslEnabled { false };
 
         };

@@ -76,175 +76,6 @@ namespace Antik {
         // ===============
 
         //
-        // Data channel socket listener thread method for incoming data 
-        // channel connections.
-        //
-
-        void CFTP::socketConnectionListener(SSLSocket &socket) {
-
-            ip::tcp::acceptor acceptor(m_ioService, ip::tcp::endpoint(ip::tcp::v4(), 0));
-
-            m_dataChannelActivePort = std::to_string(acceptor.local_endpoint().port());
-
-            m_isListenThreadRunning = true;
-            acceptor.accept(socket.next_layer(), m_ioSocketError);
-            if (m_ioSocketError) {
-                m_isListenThreadRunning = false;
-                throw Exception(m_ioSocketError.message());
-            }
-
-            m_isListenThreadRunning = false;
-
-
-        }
-
-        //
-        // Cleanup after data channel transfer. This includes stopping any unused listener
-        // thread and closing the socket if still open.
-        //
-
-        void CFTP::socketCleanup(SSLSocket &socket) {
-
-            if (m_isListenThreadRunning && m_dataChannelListenThread) {
-                m_isListenThreadRunning = false;
-                try {
-                    ip::tcp::socket socket{ m_ioService};
-                    ip::tcp::resolver::query query(m_dataChannelActiveAddresss, m_dataChannelActivePort);
-                    asio::connect(socket, m_ioQueryResolver.resolve(query));
-                } catch (std::exception &e) {
-                    std::cerr << "Listener thread running when it should not be." << std::endl;
-                }
-                m_dataChannelListenThread->join();
-            }
-
-            socketClose(socket);
-
-        }
-
-        //
-        // Listen for connections
-        //
-
-        void CFTP::socketListenForConnection(SSLSocket &socket) {
-            
-            m_dataChannelListenThread.reset(new std::thread(&CFTP::socketConnectionListener, this, std::ref(socket)));
-            while (!m_isListenThreadRunning) { // Wait for until listening before sending PORT command
-                continue; // Could use conditional but use existing flag for now
-            }
-            
-        }
-
-        //
-        // Socket connected processings
-        //
-
-        void CFTP::socketIsConnected(SSLSocket &socket) {
-
-            // Listener thread is running (wait for it to finish)
-            
-            if (m_dataChannelListenThread) {
-                m_dataChannelListenThread->join();
-            }
-
-            // TLS handshake
-            
-            if (m_sslConnectionActive) {
-                socketSwitchOnSSL(socket);
-
-            }
-
-        }
-                       
-        //
-        // Connect to a given host and port.
-        //
-
-        inline void CFTP::socketConnect(SSLSocket &socket, const std::string &hostAddress, const std::string &hostPort) {
-
-            ip::tcp::resolver::query query(hostAddress, hostPort);
-            socket.next_layer().connect(*m_ioQueryResolver.resolve(query), m_ioSocketError);
-            if (m_ioSocketError) {
-                throw Exception(m_ioSocketError.message());
-            }
-
-        }
-
-        //
-        // Read data from socket into io buffer
-        //
-
-        inline size_t CFTP::socketRead(SSLSocket &socket, char *readBuffer, size_t bufferLength) {
-
-            if (m_sslConnectionActive) {
-                return (socket.read_some(asio::buffer(readBuffer, bufferLength), m_ioSocketError));
-            } else {
-                return (socket.next_layer().read_some(asio::buffer(readBuffer, bufferLength), m_ioSocketError));
-            }
-
-        }
-
-        //
-        // Write data to socket
-        //
-
-        inline size_t CFTP::socketWrite(SSLSocket &socket, const char *writeBuffer, size_t writeLength) {
-
-            if (m_sslConnectionActive) {
-                return (socket.write_some(asio::buffer(writeBuffer, writeLength), m_ioSocketError));
-            } else {
-                return (socket.next_layer().write_some(asio::buffer(writeBuffer, writeLength), m_ioSocketError));
-            }
-
-        }
-
-        //
-        // Perform TLS handshake to enable SSL
-        //
-
-        inline void CFTP::socketSwitchOnSSL(SSLSocket &socket) {
-            socket.handshake(SSLSocket::client, m_ioSocketError);
-            if (m_ioSocketError) {
-                throw Exception(m_ioSocketError.message());
-            }
-        }
-
-        //
-        // Closedown any running SSL and close socket.
-        //
-
-        inline void CFTP::socketClose(SSLSocket &socket) {
-            
-            if (socket.next_layer().is_open()) {
-                if (m_sslConnectionActive) {
-                    socket.shutdown(m_ioSocketError);
-                }
-                socket.next_layer().close();
-            }
-            
-            if (m_dataChannelListenThread) {
-                m_dataChannelListenThread.reset();
-            }
-            
-        }
-
-        //
-        // Return true if socket closed by server otherwise false.
-        // Also throw exception for any socket error detected,
-        //
-
-        inline bool CFTP::socketClosedByServer(SSLSocket &m_dataChannelSocket) {
-
-            if (m_ioSocketError == asio::error::eof) {
-                return (true); // Connection closed cleanly by peer.
-            } else if (m_ioSocketError) {
-                throw Exception(m_ioSocketError.message());
-            }
-
-            return (false);
-
-        }
-
-        //
         // Work out ip address for local machine. This is quite difficult to achieve but
         // this is the best code i have seen for doing it. It just tries to connect to
         // google.com with a udp connect to get the local socket endpoint.
@@ -253,17 +84,19 @@ namespace Antik {
 
         std::string CFTP::determineLocalIPAddress() {
 
-            std::string localIPAddress{ "127.0.0.1"};
+            static std::string localIPAddress;
 
-            try {
-                ip::udp::resolver resolver(m_ioService);
-                ip::udp::resolver::query query(ip::udp::v4(), "google.com", "");
-                ip::udp::socket socket(m_ioService);
-                socket.connect(*resolver.resolve(query));
-                localIPAddress = socket.local_endpoint().address().to_string();
-                socket.close();
-            } catch (std::exception &e) {
-                return (localIPAddress);
+            if (localIPAddress.empty()) {
+                try {
+                    ip::udp::resolver resolver(m_ioService);
+                    ip::udp::resolver::query query(ip::udp::v4(), "google.com", "");
+                    ip::udp::socket socket(m_ioService);
+                    socket.connect(*resolver.resolve(query));
+                    localIPAddress = socket.local_endpoint().address().to_string();
+                    socket.close();
+                } catch (std::exception &e) {
+                    return ("127.0.0.1");
+                }
             }
 
             return (localIPAddress);
@@ -290,8 +123,8 @@ namespace Antik {
                     if (byte == ',') byte = '.';
                 }
 
-                m_dataChannelPassiveAddresss = passiveParams;
-                m_dataChannelPassivePort = std::to_string(port);
+                m_dataChannelSocket.setHostAddress(passiveParams);
+                m_dataChannelSocket.setHostPort(std::to_string(port));
 
             } catch (std::exception &e) {
                 throw CFTP::Exception(e.what());
@@ -309,8 +142,8 @@ namespace Antik {
 
             try {
 
-                std::uint16_t port = std::stoi(m_dataChannelActivePort);
-                portCommand += m_dataChannelActiveAddresss;
+                std::uint16_t port = std::stoi(m_dataChannelSocket.getHostPort());
+                portCommand += m_dataChannelSocket.getHostAddress();
                 for (auto &byte : portCommand) {
                     if (byte == '.') byte = ',';
                 }
@@ -334,12 +167,12 @@ namespace Antik {
 
             do {
 
-                size_t bytesRead = socketRead(m_dataChannelSocket, &m_ioBuffer[0], m_ioBuffer.size());
+                size_t bytesRead = m_dataChannelSocket.socketRead(&m_ioBuffer[0], m_ioBuffer.size());
                 if (bytesRead) {
                     localFile.write(&m_ioBuffer[0], bytesRead);
                 }
 
-            } while (!socketClosedByServer(m_dataChannelSocket));
+            } while (!m_dataChannelSocket.socketClosedByServer());
 
             localFile.close();
 
@@ -362,14 +195,14 @@ namespace Antik {
                     size_t bytesToWrite = localFile.gcount();
                     if (bytesToWrite) {
                         for (;;) {
-                            bytesToWrite -= socketWrite(m_dataChannelSocket, &m_ioBuffer[localFile.gcount() - bytesToWrite], bytesToWrite);
-                            if ((bytesToWrite == 0) || socketClosedByServer(m_dataChannelSocket)) {
+                            bytesToWrite -= m_dataChannelSocket.socketWrite(&m_ioBuffer[localFile.gcount() - bytesToWrite], bytesToWrite);
+                            if ((bytesToWrite == 0) || m_dataChannelSocket.socketClosedByServer()) {
                                 break;
                             }
                         }
                     }
 
-                } while (localFile && !socketClosedByServer(m_dataChannelSocket));
+                } while (localFile && !m_dataChannelSocket.socketClosedByServer());
 
                 localFile.close();
 
@@ -381,13 +214,13 @@ namespace Antik {
 
             do {
 
-                size_t bytesRead = socketRead(m_dataChannelSocket, &m_ioBuffer[0], m_ioBuffer.size() - 1);
+                size_t bytesRead = m_dataChannelSocket.socketRead(&m_ioBuffer[0], m_ioBuffer.size() - 1);
                 if (bytesRead) {
                     m_ioBuffer[bytesRead] = '\0';
                     commandResponse.append(&m_ioBuffer[0]);
                 }
 
-            } while (!socketClosedByServer(m_dataChannelSocket));
+            } while (!m_dataChannelSocket.socketClosedByServer());
 
         }
 
@@ -427,7 +260,7 @@ namespace Antik {
 
                 if ((m_commandStatusCode == 125) || (m_commandStatusCode == 150)) {
 
-                    socketIsConnected(m_dataChannelSocket);
+                    m_dataChannelSocket.socketIsConnected();
 
                     switch (transferType) {
                         case DataTransferType::download:
@@ -441,22 +274,21 @@ namespace Antik {
                             break;
                     }
 
-                    socketClose(m_dataChannelSocket);
+                    m_dataChannelSocket.socketClose();
 
                     m_commandStatusCode = ftpResponse();
 
                 }
 
             } catch (CFTP::Exception &e) {
-                socketCleanup(m_dataChannelSocket);
+                m_dataChannelSocket.socketCleanup();
                 throw;
             } catch (std::exception &e) {
-                socketCleanup(m_dataChannelSocket);
+                m_dataChannelSocket.socketCleanup();
                 throw Exception(e.what());
             }
 
-            socketCleanup(m_dataChannelSocket);
-
+            m_dataChannelSocket.socketCleanup();
 
         }
 
@@ -469,12 +301,7 @@ namespace Antik {
             size_t commandLength = command.size();
 
             do {
-
-                commandLength -= socketWrite(m_controlChannelSocket, &command[command.size() - commandLength], commandLength);
-                if (m_ioSocketError) {
-                    throw Exception(m_ioSocketError.message());
-                }
-
+                commandLength -= m_controlChannelSocket.socketWrite(&command[command.size() - commandLength], commandLength);
             } while (commandLength != 0);
 
             this->m_lastCommand = command;
@@ -498,17 +325,13 @@ namespace Antik {
 
                 do {
 
-                    size_t bytesRead = socketRead(m_controlChannelSocket, &m_ioBuffer[0], m_ioBuffer.size() - 1);
+                     size_t bytesRead = m_controlChannelSocket.socketRead(&m_ioBuffer[0], m_ioBuffer.size() - 1);
                     if (bytesRead) {
                         m_ioBuffer[bytesRead] = '\0';
                         m_commandResponse.append(&m_ioBuffer[0]);
                     }
 
-                } while (!socketClosedByServer(m_dataChannelSocket) && (m_commandResponse.back() != '\n'));
-
-                if (m_ioSocketError) {
-                    throw Exception(m_ioSocketError.message());
-                }
+                } while (!m_controlChannelSocket.socketClosedByServer() && (m_commandResponse.back() != '\n'));
 
                 if (!extendedResponse && (m_commandResponse[3] == '-')) {
                     extendedResponse = true;
@@ -540,11 +363,12 @@ namespace Antik {
                 m_commandStatusCode = ftpResponse();
                 if (m_commandStatusCode == 227) {
                     extractPassiveAddressPort(m_commandResponse);
-                    socketConnect(m_dataChannelSocket, m_dataChannelPassiveAddresss, m_dataChannelPassivePort);
+                    m_dataChannelSocket.socketConnect(m_dataChannelSocket.getHostAddress(), m_dataChannelSocket.getHostPort());
                 }
                 return (m_commandStatusCode == 227);
             } else {
-                socketListenForConnection(m_dataChannelSocket);
+                m_dataChannelSocket.setHostAddress(determineLocalIPAddress());
+                m_dataChannelSocket.socketListenForConnection();
                 ftpCommand(createPortCommand() + "\r\n");
                 m_commandStatusCode = ftpResponse();
                 return (m_commandStatusCode == 200);
@@ -638,9 +462,9 @@ namespace Antik {
                 Exception("Already connected to a server.");
             }
 
-            m_dataChannelActiveAddresss = determineLocalIPAddress();
+            m_dataChannelSocket.setHostAddress(determineLocalIPAddress());
 
-            socketConnect(m_controlChannelSocket, m_serverName, m_serverPort);
+            m_controlChannelSocket.socketConnect(m_serverName, m_serverPort);
 
             m_commandStatusCode = ftpResponse();
 
@@ -650,8 +474,8 @@ namespace Antik {
                     ftpCommand("AUTH TLS\r\n");
                     m_commandStatusCode = ftpResponse();
                     if (m_commandStatusCode == 234) {
-                        socketSwitchOnSSL(m_controlChannelSocket);
-                        m_sslConnectionActive = true;
+                        m_controlChannelSocket.socketSwitchOnSSL();
+                        m_dataChannelSocket.setSslActive(true);
                         ftpCommand("PBSZ 0\r\n");
                         m_commandStatusCode = ftpResponse();
                         if (m_commandStatusCode == 200) {
@@ -691,10 +515,12 @@ namespace Antik {
             ftpCommand("QUIT\r\n");
             m_commandStatusCode = ftpResponse();
 
-            m_sslConnectionActive = false;
             m_connected = false;
 
-            socketClose(m_controlChannelSocket);
+            m_controlChannelSocket.socketClose();
+
+            m_controlChannelSocket.setSslActive(false);
+            m_dataChannelSocket.setSslActive(false);
 
             return (m_commandStatusCode);
 
