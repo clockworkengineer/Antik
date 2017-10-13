@@ -209,14 +209,14 @@ namespace Antik {
             // Socket I/O functions
             
             void socketConnect(SSLSocket &socket, const std::string &hostAddress, const std::string &hostPort);
-            size_t socketRead(SSLSocket &socket);       
+            size_t socketRead(SSLSocket &socket, char *readBuffer, size_t bufferLength);       
             size_t socketWrite(SSLSocket &socket, const char *writeBuffer, size_t writeLength);
             void socketClose(SSLSocket &socket);    
             void  socketSwitchOnSSL(SSLSocket &socket);   
             bool socketClosedByServer(SSLSocket &socket);
             void socketListenForConnection(SSLSocket &socket);
             void socketIsConnected(SSLSocket &socket);
-             void socketConnectionListener(SSLSocket &socket);
+            void socketConnectionListener(SSLSocket &socket);
             void socketCleanup(SSLSocket &socket);
          
             // Get local IP address

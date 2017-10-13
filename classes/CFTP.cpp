@@ -173,12 +173,12 @@ namespace Antik {
         // Read data from socket into io buffer
         //
 
-        inline size_t CFTP::socketRead(SSLSocket &socket) {
+        inline size_t CFTP::socketRead(SSLSocket &socket, char *readBuffer, size_t bufferLength) {
 
             if (m_sslConnectionActive) {
-                return (socket.read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_ioSocketError));
+                return (socket.read_some(asio::buffer(readBuffer, bufferLength), m_ioSocketError));
             } else {
-                return (socket.next_layer().read_some(asio::buffer(m_ioBuffer, m_ioBuffer.size() - 1), m_ioSocketError));
+                return (socket.next_layer().read_some(asio::buffer(readBuffer, bufferLength), m_ioSocketError));
             }
 
         }
@@ -334,7 +334,7 @@ namespace Antik {
 
             do {
 
-                size_t bytesRead = socketRead(m_dataChannelSocket);
+                size_t bytesRead = socketRead(m_dataChannelSocket, &m_ioBuffer[0], m_ioBuffer.size());
                 if (bytesRead) {
                     localFile.write(&m_ioBuffer[0], bytesRead);
                 }
@@ -381,7 +381,7 @@ namespace Antik {
 
             do {
 
-                size_t bytesRead = socketRead(m_dataChannelSocket);
+                size_t bytesRead = socketRead(m_dataChannelSocket, &m_ioBuffer[0], m_ioBuffer.size() - 1);
                 if (bytesRead) {
                     m_ioBuffer[bytesRead] = '\0';
                     commandResponse.append(&m_ioBuffer[0]);
@@ -498,7 +498,7 @@ namespace Antik {
 
                 do {
 
-                    size_t bytesRead = socketRead(m_controlChannelSocket);
+                    size_t bytesRead = socketRead(m_controlChannelSocket, &m_ioBuffer[0], m_ioBuffer.size() - 1);
                     if (bytesRead) {
                         m_ioBuffer[bytesRead] = '\0';
                         m_commandResponse.append(&m_ioBuffer[0]);
