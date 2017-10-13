@@ -45,9 +45,6 @@
 // IMPORTS
 // =======
 
-namespace asio = boost::asio;
-namespace ip = asio::ip;
-
 // =========
 // NAMESPACE
 // =========
@@ -75,33 +72,33 @@ namespace Antik {
         // PRIVATE METHODS
         // ===============
 
-        //
-        // Work out ip address for local machine. This is quite difficult to achieve but
-        // this is the best code i have seen for doing it. It just tries to connect to
-        // google.com with a udp connect to get the local socket endpoint.
-        // Note: Fall back of localhost on failure.
-        // 
-
-        std::string CFTP::determineLocalIPAddress() {
-
-            static std::string localIPAddress;
-
-            if (localIPAddress.empty()) {
-                try {
-                    ip::udp::resolver resolver(m_ioService);
-                    ip::udp::resolver::query query(ip::udp::v4(), "google.com", "");
-                    ip::udp::socket socket(m_ioService);
-                    socket.connect(*resolver.resolve(query));
-                    localIPAddress = socket.local_endpoint().address().to_string();
-                    socket.close();
-                } catch (std::exception &e) {
-                    return ("127.0.0.1");
-                }
-            }
-
-            return (localIPAddress);
-
-        }
+//        //
+//        // Work out ip address for local machine. This is quite difficult to achieve but
+//        // this is the best code i have seen for doing it. It just tries to connect to
+//        // google.com with a udp connect to get the local socket endpoint.
+//        // Note: Fall back of localhost on failure.
+//        // 
+//
+//        std::string CFTP::determineLocalIPAddress() {
+//
+//            static std::string localIPAddress;
+//
+//            if (localIPAddress.empty()) {
+//                try {
+//                    ip::udp::resolver resolver(m_ioService);
+//                    ip::udp::resolver::query query(ip::udp::v4(), "google.com", "");
+//                    ip::udp::socket socket(m_ioService);
+//                    socket.connect(*resolver.resolve(query));
+//                    localIPAddress = socket.local_endpoint().address().to_string();
+//                    socket.close();
+//                } catch (std::exception &e) {
+//                    return ("127.0.0.1");
+//                }
+//            }
+//
+//            return (localIPAddress);
+//
+//        }
 
         //
         // Extract host ip address and port information from passive command reply.
@@ -167,12 +164,12 @@ namespace Antik {
 
             do {
 
-                size_t bytesRead = m_dataChannelSocket.socketRead(&m_ioBuffer[0], m_ioBuffer.size());
+                size_t bytesRead = m_dataChannelSocket.read(&m_ioBuffer[0], m_ioBuffer.size());
                 if (bytesRead) {
                     localFile.write(&m_ioBuffer[0], bytesRead);
                 }
 
-            } while (!m_dataChannelSocket.socketClosedByServer());
+            } while (!m_dataChannelSocket.closedByRemotePeer());
 
             localFile.close();
 
@@ -195,14 +192,14 @@ namespace Antik {
                     size_t bytesToWrite = localFile.gcount();
                     if (bytesToWrite) {
                         for (;;) {
-                            bytesToWrite -= m_dataChannelSocket.socketWrite(&m_ioBuffer[localFile.gcount() - bytesToWrite], bytesToWrite);
-                            if ((bytesToWrite == 0) || m_dataChannelSocket.socketClosedByServer()) {
+                            bytesToWrite -= m_dataChannelSocket.write(&m_ioBuffer[localFile.gcount() - bytesToWrite], bytesToWrite);
+                            if ((bytesToWrite == 0) || m_dataChannelSocket.closedByRemotePeer()) {
                                 break;
                             }
                         }
                     }
 
-                } while (localFile && !m_dataChannelSocket.socketClosedByServer());
+                } while (localFile && !m_dataChannelSocket.closedByRemotePeer());
 
                 localFile.close();
 
@@ -214,13 +211,13 @@ namespace Antik {
 
             do {
 
-                size_t bytesRead = m_dataChannelSocket.socketRead(&m_ioBuffer[0], m_ioBuffer.size() - 1);
+                size_t bytesRead = m_dataChannelSocket.read(&m_ioBuffer[0], m_ioBuffer.size() - 1);
                 if (bytesRead) {
                     m_ioBuffer[bytesRead] = '\0';
                     commandResponse.append(&m_ioBuffer[0]);
                 }
 
-            } while (!m_dataChannelSocket.socketClosedByServer());
+            } while (!m_dataChannelSocket.closedByRemotePeer());
 
         }
 
@@ -260,7 +257,7 @@ namespace Antik {
 
                 if ((m_commandStatusCode == 125) || (m_commandStatusCode == 150)) {
 
-                    m_dataChannelSocket.socketIsConnected();
+                    m_dataChannelSocket.connected();
 
                     switch (transferType) {
                         case DataTransferType::download:
@@ -274,21 +271,21 @@ namespace Antik {
                             break;
                     }
 
-                    m_dataChannelSocket.socketClose();
+                    m_dataChannelSocket.close();
 
                     m_commandStatusCode = ftpResponse();
 
                 }
 
             } catch (CFTP::Exception &e) {
-                m_dataChannelSocket.socketCleanup();
+                m_dataChannelSocket.cleanup();
                 throw;
             } catch (std::exception &e) {
-                m_dataChannelSocket.socketCleanup();
+                m_dataChannelSocket.cleanup();
                 throw Exception(e.what());
             }
 
-            m_dataChannelSocket.socketCleanup();
+            m_dataChannelSocket.cleanup();
 
         }
 
@@ -301,7 +298,7 @@ namespace Antik {
             size_t commandLength = command.size();
 
             do {
-                commandLength -= m_controlChannelSocket.socketWrite(&command[command.size() - commandLength], commandLength);
+                commandLength -= m_controlChannelSocket.write(&command[command.size() - commandLength], commandLength);
             } while (commandLength != 0);
 
             this->m_lastCommand = command;
@@ -325,13 +322,13 @@ namespace Antik {
 
                 do {
 
-                     size_t bytesRead = m_controlChannelSocket.socketRead(&m_ioBuffer[0], m_ioBuffer.size() - 1);
+                     size_t bytesRead = m_controlChannelSocket.read(&m_ioBuffer[0], m_ioBuffer.size() - 1);
                     if (bytesRead) {
                         m_ioBuffer[bytesRead] = '\0';
                         m_commandResponse.append(&m_ioBuffer[0]);
                     }
 
-                } while (!m_controlChannelSocket.socketClosedByServer() && (m_commandResponse.back() != '\n'));
+                } while (!m_controlChannelSocket.closedByRemotePeer() && (m_commandResponse.back() != '\n'));
 
                 if (!extendedResponse && (m_commandResponse[3] == '-')) {
                     extendedResponse = true;
@@ -363,12 +360,12 @@ namespace Antik {
                 m_commandStatusCode = ftpResponse();
                 if (m_commandStatusCode == 227) {
                     extractPassiveAddressPort(m_commandResponse);
-                    m_dataChannelSocket.socketConnect(m_dataChannelSocket.getHostAddress(), m_dataChannelSocket.getHostPort());
+                    m_dataChannelSocket.connect(m_dataChannelSocket.getHostAddress(), m_dataChannelSocket.getHostPort());
                 }
                 return (m_commandStatusCode == 227);
             } else {
-                m_dataChannelSocket.setHostAddress(determineLocalIPAddress());
-                m_dataChannelSocket.socketListenForConnection();
+                m_dataChannelSocket.setHostAddress(Antik::Network::CSocket::localIPAddress());
+                m_dataChannelSocket.listenForConnection();
                 ftpCommand(createPortCommand() + "\r\n");
                 m_commandStatusCode = ftpResponse();
                 return (m_commandStatusCode == 200);
@@ -462,9 +459,9 @@ namespace Antik {
                 Exception("Already connected to a server.");
             }
 
-            m_dataChannelSocket.setHostAddress(determineLocalIPAddress());
+            m_dataChannelSocket.setHostAddress(Antik::Network::CSocket::localIPAddress());;
 
-            m_controlChannelSocket.socketConnect(m_serverName, m_serverPort);
+            m_controlChannelSocket.connect(m_serverName, m_serverPort);
 
             m_commandStatusCode = ftpResponse();
 
@@ -474,7 +471,7 @@ namespace Antik {
                     ftpCommand("AUTH TLS\r\n");
                     m_commandStatusCode = ftpResponse();
                     if (m_commandStatusCode == 234) {
-                        m_controlChannelSocket.socketSwitchOnSSL();
+                        m_controlChannelSocket.tlsHandshake();
                         m_dataChannelSocket.setSslActive(true);
                         ftpCommand("PBSZ 0\r\n");
                         m_commandStatusCode = ftpResponse();
@@ -517,7 +514,7 @@ namespace Antik {
 
             m_connected = false;
 
-            m_controlChannelSocket.socketClose();
+            m_controlChannelSocket.close();
 
             m_controlChannelSocket.setSslActive(false);
             m_dataChannelSocket.setSslActive(false);

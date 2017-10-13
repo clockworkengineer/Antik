@@ -29,13 +29,6 @@
 
 #include "CSocket.hpp"
 
-//
-// Boost ASIO
-//
-
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-
 // =========
 // NAMESPACE
 // =========
@@ -207,11 +200,7 @@ namespace Antik {
             // ===============
             // PRIVATE METHODS
             // ===============
-         
-            // Get local IP address
-            
-            std::string determineLocalIPAddress();
-            
+                   
             // Set data channel transfer mode
             
             bool sendTransferMode();
@@ -256,11 +245,10 @@ namespace Antik {
             
             bool m_passiveMode { false }; // == true passive mode enabled, == false active mode
 
-            boost::asio::io_service m_ioService;   // io Service
-            std::array<char, 32*1024> m_ioBuffer;  // io Buffer
+             std::array<char, 32*1024> m_ioBuffer;  // io Buffer
 
-            CSocket m_controlChannelSocket;
-            CSocket m_dataChannelSocket;
+            Antik::Network::CSocket m_controlChannelSocket;
+            Antik::Network::CSocket m_dataChannelSocket;
 
             bool m_sslEnabled { false };
 
