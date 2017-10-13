@@ -9,6 +9,14 @@
  *
  */
 
+//
+// Class: CSocket
+// 
+// Description: 
+//
+// Dependencies:   C11++     - Language standard features used.
+//
+
 #ifndef CSOCKET_HPP
 #define CSOCKET_HPP
 
@@ -79,6 +87,8 @@ namespace Antik {
             // PUBLIC METHODS
             // ==============
 
+            // Determine local machines IP address
+            
             static std::string localIPAddress();
 
             // Socket I/O functions
@@ -93,6 +103,8 @@ namespace Antik {
             void connected();
             void cleanup();
 
+            // Private data accessors
+            
             void setSslActive(bool sslActive);
             bool isSslActive() const;
             boost::system::error_code getSocketError() const;
@@ -126,13 +138,11 @@ namespace Antik {
             // PRIVATE METHODS
             // ===============
 
-
             void connectionListener();
 
             // =================
             // PRIVATE VARIABLES
             // =================
-
 
             bool m_sslActive{ false};
 
@@ -188,6 +198,7 @@ namespace Antik {
                     boost::asio::ip::tcp::socket socket{ m_ioService};
                     boost::asio::ip::tcp::resolver::query query(m_hostAddress, m_hostPort);
                     boost::asio::connect(socket, m_ioQueryResolver.resolve(query));
+                    socket.close();
                 } catch (std::exception &e) {
                     throw Exception ("Listener thread running when it should not be.");
                 }
@@ -246,7 +257,7 @@ namespace Antik {
         }
 
         //
-        // Read data from socket into io buffer
+        // Read data from socket into buffer
         //
 
         inline size_t CSocket::read(char *readBuffer, size_t bufferLength) {
@@ -282,7 +293,7 @@ namespace Antik {
         }
 
         //
-        // Perform TLS handshake to enable SSL
+        // Perform TLS handshake on to enable SSL
         //
 
         inline void CSocket::tlsHandshake() {

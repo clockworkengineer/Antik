@@ -23,7 +23,6 @@
 // for any commands in responses.
 //
 // Dependencies:   C11++     - Language standard features used.
-
 //
 
 // =================

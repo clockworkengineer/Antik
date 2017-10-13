@@ -72,34 +72,6 @@ namespace Antik {
         // PRIVATE METHODS
         // ===============
 
-//        //
-//        // Work out ip address for local machine. This is quite difficult to achieve but
-//        // this is the best code i have seen for doing it. It just tries to connect to
-//        // google.com with a udp connect to get the local socket endpoint.
-//        // Note: Fall back of localhost on failure.
-//        // 
-//
-//        std::string CFTP::determineLocalIPAddress() {
-//
-//            static std::string localIPAddress;
-//
-//            if (localIPAddress.empty()) {
-//                try {
-//                    ip::udp::resolver resolver(m_ioService);
-//                    ip::udp::resolver::query query(ip::udp::v4(), "google.com", "");
-//                    ip::udp::socket socket(m_ioService);
-//                    socket.connect(*resolver.resolve(query));
-//                    localIPAddress = socket.local_endpoint().address().to_string();
-//                    socket.close();
-//                } catch (std::exception &e) {
-//                    return ("127.0.0.1");
-//                }
-//            }
-//
-//            return (localIPAddress);
-//
-//        }
-
         //
         // Extract host ip address and port information from passive command reply.
         //

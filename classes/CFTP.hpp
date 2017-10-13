@@ -245,7 +245,7 @@ namespace Antik {
             
             bool m_passiveMode { false }; // == true passive mode enabled, == false active mode
 
-             std::array<char, 32*1024> m_ioBuffer;  // io Buffer
+            std::array<char, 32*1024> m_ioBuffer;  // io Buffer
 
             Antik::Network::CSocket m_controlChannelSocket;
             Antik::Network::CSocket m_dataChannelSocket;
