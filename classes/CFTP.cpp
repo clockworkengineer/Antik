@@ -229,7 +229,7 @@ namespace Antik {
 
                 if ((m_commandStatusCode == 125) || (m_commandStatusCode == 150)) {
 
-                    m_dataChannelSocket.connected();
+                    m_dataChannelSocket.waitUntilConnected();
 
                     switch (transferType) {
                         case DataTransferType::download:
@@ -332,7 +332,7 @@ namespace Antik {
                 m_commandStatusCode = ftpResponse();
                 if (m_commandStatusCode == 227) {
                     extractPassiveAddressPort(m_commandResponse);
-                    m_dataChannelSocket.connect(m_dataChannelSocket.getHostAddress(), m_dataChannelSocket.getHostPort());
+                    m_dataChannelSocket.connect();
                 }
                 return (m_commandStatusCode == 227);
             } else {
@@ -433,7 +433,9 @@ namespace Antik {
 
             m_dataChannelSocket.setHostAddress(Antik::Network::CSocket::localIPAddress());;
 
-            m_controlChannelSocket.connect(m_serverName, m_serverPort);
+            m_controlChannelSocket.setHostAddress(m_serverName);
+            m_controlChannelSocket.setHostPort(m_serverPort);
+            m_controlChannelSocket.connect();
 
             m_commandStatusCode = ftpResponse();
 
