@@ -14,7 +14,7 @@
 // Program: ZIPArchiveInfo
 //
 // Description: This is a command line program to scan a ZIP archive and output 
-// informatio about it. All parameters and their meaning are obtained by running 
+// information about it. All parameters and their meaning are obtained by running 
 // the program with the parameter --help.
 //
 // ZIPArchiveInfo Example Application

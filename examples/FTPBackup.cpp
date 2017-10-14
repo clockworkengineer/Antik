@@ -6,7 +6,7 @@
  * 
  * Created on October 24, 2017, 2:33 PM
  *
- * Copyright 2016.
+ * Copyright 2017.
  *
  */
 
@@ -16,7 +16,7 @@
 // Description: Simple FTP backup program that takes a local directory and backs it up
 // to a specified FTP server using account details provided.
 //
-// Dependencies: C11++
+// Dependencies: C11++, Classes (CFTP, CSocket), Boost C++ Libraries.
 //
 // FTPBackup
 // Program Options:
