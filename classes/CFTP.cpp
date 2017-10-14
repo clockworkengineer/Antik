@@ -280,7 +280,7 @@ namespace Antik {
         //
         // Read FTP command response from control channel (return its status code).
         // It gathers the whole response even if it is extended (ie. starts with "ddd-"
-        // and end with line starting ddd.
+        // and ends with a line starting ddd.
         //
 
         std::uint16_t CFTP::ftpResponse() {
