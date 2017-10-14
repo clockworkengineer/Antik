@@ -15,13 +15,11 @@
 // 
 // Description: A class to connect to an FTP server using provided credentials
 // and enable the uploading/downloading of files along with assorted other commands.
-// It uses boost ASIO for all communication with the server but besides that it is just
-// standard C11++.
 //
 // Note: TLS/SSL connections are supported.
 //
 // Dependencies:   C11++        - Language standard features used.
-//                 BOOST ASIO   - Used to talk to FTP server.
+//                 CSocket   -  - Used to talk to FTP server.
 //
 
 // =================
@@ -218,7 +216,7 @@ namespace Antik {
         }
 
         //
-        // Transfer (file upload/ file download/ command reponse) over data channel.
+        // Transfer (file upload/ file download/ command response) over data channel.
         //
 
         void CFTP::transferOnDataChannel(const std::string &file, std::string &commandRespnse, DataTransferType transferType) {
@@ -281,12 +279,11 @@ namespace Antik {
 
         //
         // Read FTP command response from control channel (return its status code).
+        // It gathers the whole response even if it is extended (ie. starts with "ddd-"
+        // and end with line starting ddd.
         //
 
         std::uint16_t CFTP::ftpResponse() {
-
-            bool extendedResponse = false;
-            std::uint16_t statusCode;
 
             m_commandResponse.clear();
 
@@ -294,7 +291,7 @@ namespace Antik {
 
                 do {
 
-                     size_t bytesRead = m_controlChannelSocket.read(&m_ioBuffer[0], m_ioBuffer.size() - 1);
+                    size_t bytesRead = m_controlChannelSocket.read(&m_ioBuffer[0], m_ioBuffer.size() - 1);
                     if (bytesRead) {
                         m_ioBuffer[bytesRead] = '\0';
                         m_commandResponse.append(&m_ioBuffer[0]);
@@ -302,20 +299,13 @@ namespace Antik {
 
                 } while (!m_controlChannelSocket.closedByRemotePeer() && (m_commandResponse.back() != '\n'));
 
-                if (!extendedResponse && (m_commandResponse[3] == '-')) {
-                    extendedResponse = true;
-                    statusCode = std::stoi(m_commandResponse);
-                }
-
-                if (extendedResponse) {
-                    size_t multiLine;
-                    multiLine = m_commandResponse.rfind("\r\n" + std::to_string(statusCode) + " ");
-                    if (multiLine != std::string::npos) {
-                        extendedResponse = false;
+                if (m_commandResponse[3] == '-') {
+                    if (m_commandResponse.rfind("\r\n" + m_commandResponse.substr(0, 3) + " ") != std::string::npos) {
+                        break;
                     }
                 }
 
-            } while (extendedResponse);
+            } while (m_commandResponse[3] == '-');
 
             return (std::stoi(m_commandResponse));
 

@@ -72,7 +72,8 @@ namespace Antik {
         // ===============
 
         //
-        // Socket listener thread method for incoming connections.
+        // Socket listener thread method for incoming connections. At present it listens
+        // on a random port but sets m_hostPort.
         //
 
        void CSocket::connectionListener() {
@@ -82,6 +83,7 @@ namespace Antik {
             m_hostPort = std::to_string(acceptor.local_endpoint().port());
 
             m_isListenThreadRunning = true;
+            
             acceptor.accept(m_socket.next_layer(), m_socketError);
             if (m_socketError) {
                 m_isListenThreadRunning = false;
