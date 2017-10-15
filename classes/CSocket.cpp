@@ -86,7 +86,7 @@ namespace Antik {
 
             m_socket.reset(new SSLSocket(m_ioService, m_sslContext));
             if (!m_socket) {
-                std::cerr << "Failure : Could not create socket." << std::endl;
+                m_isListenThreadRunning = false;
                 throw Exception("Could not create socket.");
             }
 
