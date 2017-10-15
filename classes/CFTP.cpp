@@ -308,7 +308,7 @@ namespace Antik {
                     }
                 }
 
-            } while (m_commandResponse[3] == '-');
+            } while ( (m_commandResponse[3] == '-') && (!m_controlChannelSocket.closedByRemotePeer()));
             
             return (std::stoi(m_commandResponse));
 

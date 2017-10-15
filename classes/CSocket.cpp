@@ -194,6 +194,8 @@ namespace Antik {
 
         size_t CSocket::read(char *readBuffer, size_t bufferLength) {
 
+            size_t bytesRead { 0 };
+            
             // No socket present
 
             if (!m_socket) {
@@ -201,11 +203,17 @@ namespace Antik {
             }
 
             if (m_sslActive) {
-                return (m_socket->read_some(boost::asio::buffer(readBuffer, bufferLength), m_socketError));
+                bytesRead = m_socket->read_some(boost::asio::buffer(readBuffer, bufferLength), m_socketError);
             } else {
-                return (m_socket->next_layer().read_some(boost::asio::buffer(readBuffer, bufferLength), m_socketError));
+                bytesRead = m_socket->next_layer().read_some(boost::asio::buffer(readBuffer, bufferLength), m_socketError);
             }
 
+            if (m_socketError && m_socketError != boost::asio::error::eof) {
+                throw Exception(m_socketError.message());
+            }
+            
+            return(bytesRead);
+            
         }
 
         //
@@ -214,7 +222,7 @@ namespace Antik {
 
         size_t CSocket::write(const char *writeBuffer, size_t writeLength) {
 
-            size_t bytesWritten = 0;
+            size_t bytesWritten  { 0 };
 
             // No socket present
 
@@ -228,8 +236,8 @@ namespace Antik {
                 bytesWritten = m_socket->next_layer().write_some(boost::asio::buffer(writeBuffer, writeLength), m_socketError);
             }
 
-            if (getSocketError()) {
-                throw Exception(getSocketError().message());
+            if (m_socketError) {
+                throw Exception(m_socketError.message());
             }
 
             return (bytesWritten);
@@ -277,18 +285,11 @@ namespace Antik {
 
         //
         // Return true if socket closed by server otherwise false.
-        // Also throw exception for any socket error detected,
         //
 
         bool CSocket::closedByRemotePeer() {
 
-            if (m_socketError == boost::asio::error::eof) {
-                return (true); // Connection closed cleanly by peer.
-            } else if (m_socketError) {
-                throw Exception(m_socketError.message());
-            }
-
-            return (false);
+            return (m_socketError == boost::asio::error::eof);
 
         }
 
