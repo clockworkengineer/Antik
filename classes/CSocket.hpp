@@ -150,8 +150,8 @@ namespace Antik {
             std::atomic<bool> m_isListenThreadRunning{ false};           // Listen thread running flag
             std::shared_ptr<std::thread> m_socketListenThread{ nullptr}; // Connection listen thread
 
-            boost::asio::ssl::context sslContext{ m_ioService, boost::asio::ssl::context::tlsv12};
-            SSLSocket m_socket{m_ioService, sslContext};
+            boost::asio::ssl::context m_sslContext{ m_ioService, boost::asio::ssl::context::tlsv12};
+            std::shared_ptr<SSLSocket> m_socket; //{m_ioService, m_sslContext};
 
         };
 
