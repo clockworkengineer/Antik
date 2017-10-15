@@ -280,7 +280,8 @@ namespace Antik {
         //
         // Read FTP command response from control channel (return its status code).
         // It gathers the whole response even if it is extended (ie. starts with "ddd-"
-        // and ends with a line starting ddd.
+        // and ends with a line starting ddd. Can get multiple replies so just read single
+        // characters ( until get a better fix).
         //
 
         std::uint16_t CFTP::ftpResponse() {
@@ -291,7 +292,7 @@ namespace Antik {
 
                 do {
 
-                    size_t bytesRead = m_controlChannelSocket.read(&m_ioBuffer[0], m_ioBuffer.size() - 1);
+                    size_t bytesRead = m_controlChannelSocket.read(&m_ioBuffer[0],1);
                     if (bytesRead) {
                         m_ioBuffer[bytesRead] = '\0';
                         m_commandResponse.append(&m_ioBuffer[0]);
@@ -306,7 +307,7 @@ namespace Antik {
                 }
 
             } while (m_commandResponse[3] == '-');
-
+            
             return (std::stoi(m_commandResponse));
 
         }
