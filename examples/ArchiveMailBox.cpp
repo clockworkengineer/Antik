@@ -51,7 +51,7 @@
 #include <sstream>
 
 //
-// Antikythera Classes
+// Antik Classes
 //
 
 #include "CIMAP.hpp"

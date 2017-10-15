@@ -46,7 +46,7 @@
 #include <iostream>
 
 //
-// Antikythera Classes
+// Antik Classes
 //
 
 #include "CSMTP.hpp"

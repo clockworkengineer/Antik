@@ -48,7 +48,7 @@
 #include <thread>
 
 //
-// Antikythera Classes
+// Antik Classes
 //
 
 #include "CIMAP.hpp"

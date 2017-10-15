@@ -42,7 +42,7 @@
 #include <iomanip>
 
 //
-// Antikythera Classes
+// Antik Classes
 //
 
 #include "CZIP.hpp"

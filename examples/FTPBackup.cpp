@@ -39,7 +39,7 @@
 #include <iostream>
 
 //
-// Antikythera Classes
+// Antik Classes
 //
 
 #include "CFTP.hpp"

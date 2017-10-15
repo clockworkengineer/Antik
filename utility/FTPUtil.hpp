@@ -24,7 +24,7 @@
 #include <vector>
 
 //
-// Antikythera Classes
+// Antik Classes
 //
 
 #include "CFTP.hpp"

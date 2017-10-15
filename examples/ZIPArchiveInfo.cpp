@@ -38,7 +38,7 @@
 #include <iomanip>
 
 //
-// Antikythera Classes
+// Antik Classes
 //
 
 #include "CZIPIO.hpp"

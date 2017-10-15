@@ -24,7 +24,7 @@
 #include <mutex>
 
 //
-// Antik socket
+// Antik sockets
 //
 
 #include "CSocket.hpp"

@@ -21,10 +21,11 @@
 #include <stdexcept>
 
 //
-// libcurl
+// Antik sockets
 //
 
-#include <curl/curl.h>
+#include "CSocket.hpp"
+
 
 // =========
 // NAMESPACE
@@ -218,11 +219,6 @@ namespace Antik {
             // ===============
 
             //
-            // Generate curl error message and throw exception
-            //
-            void throwCurlError(std::string baseMessage);
-
-            //
             // Send IDLE/APPEND command (requires a special handler).
             //
 
@@ -230,7 +226,7 @@ namespace Antik {
             void sendCommandAPPEND(const std::string& commandLine);
 
             //
-            // Talks to server using curl_easy_send/recv()
+            // Talks to server using CSocket
             //
 
             void sendIMAPCommand(const std::string& commandLine);
@@ -248,16 +244,14 @@ namespace Antik {
             // =================
 
             bool m_connected{ false}; // == true then connected to server
+            
             std::string m_userName; // Email account user name
             std::string m_userPassword; // Email account user name password
             std::string m_serverURL; // IMAP server URL
+            
+            Antik::Network::CSocket m_imapServerSocket;
 
-            CURL *m_curlHandle{ nullptr}; // curl handle
-            CURLcode m_curlResult{ CURLE_OK}; // curl status
-            curl_socket_t m_curlSocketFD; // curl socket
-            static bool m_curlVerbosity; // curl verbosity setting 
-            char m_curlRxBuffer[CURL_MAX_WRITE_SIZE]; // curl rx buffer
-            char m_curlErrMsgBuffer[CURL_ERROR_SIZE]; // curl error string buffer
+            char m_ioBuffer[1024*32]; // io Buffer
 
             std::string m_commandResponse; // IMAP command response
 
