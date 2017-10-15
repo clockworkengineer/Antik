@@ -43,7 +43,6 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
-#include <future>
 
 // =========
 // NAMESPACE

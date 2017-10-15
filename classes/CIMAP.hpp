@@ -249,7 +249,7 @@ namespace Antik {
             std::string m_userPassword; // Email account user name password
             std::string m_serverURL; // IMAP server URL
             
-            Antik::Network::CSocket m_imapServerSocket;
+            Antik::Network::CSocket m_imapSocket;
 
             char m_ioBuffer[1024*32]; // io Buffer
 

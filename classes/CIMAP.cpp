@@ -84,7 +84,7 @@ namespace Antik {
 
             do {
 
-                bytesSent = m_imapServerSocket.write(&command[bytesCopied], command.length() - bytesCopied);
+                bytesSent = m_imapSocket.write(&command[bytesCopied], command.length() - bytesCopied);
                 bytesCopied += bytesSent;
 
             } while ((bytesCopied < command.length()));
@@ -106,7 +106,7 @@ namespace Antik {
             do {
 
 
-                recvLength = m_imapServerSocket.read(m_ioBuffer, sizeof (m_ioBuffer));
+                recvLength = m_imapSocket.read(m_ioBuffer, sizeof (m_ioBuffer));
 
                 m_ioBuffer[recvLength] = '\0';
                 commandResponse.append(m_ioBuffer);
@@ -212,8 +212,8 @@ namespace Antik {
 
             std::string server = serverURL.substr(serverURL.find("//") + 2);
 
-            m_imapServerSocket.setHostAddress(server.substr(0, server.find(":")));
-            m_imapServerSocket.setHostPort(serverURL.substr(serverURL.rfind(":") + 1));
+            m_imapSocket.setHostAddress(server.substr(0, server.find(":")));
+            m_imapSocket.setHostPort(serverURL.substr(serverURL.rfind(":") + 1));
 
 
         }
@@ -281,30 +281,19 @@ namespace Antik {
 
             // Connect and perform TLS handshake 
             
-            m_imapServerSocket.connect();
-            m_imapServerSocket.tlsHandshake();
+            m_imapSocket.connect();
+            m_imapSocket.tlsHandshake();
 
             m_connected = true;
             
             // Login using set credentials
 
-            std::string commandResponse = sendCommand("LOGIN " + this->m_userName + " " + this->m_userPassword);
-
-            CIMAPParse::COMMANDRESPONSE parsedResponse;
-
-            try {
-                parsedResponse = CIMAPParse::parseResponse(commandResponse);
-            } catch (CIMAPParse::Exception &e) {
-                std::cerr << "RESPONSE IN ERRROR: [" << commandResponse << "]" << std::endl;
-                throw (e);
-            }
-
+            CIMAPParse::COMMANDRESPONSE parsedResponse = CIMAPParse::parseResponse(sendCommand("LOGIN " + this->m_userName + " " + this->m_userPassword));
             if (parsedResponse->bBYESent) {
                 throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessage);
             } else if (parsedResponse->status != CIMAPParse::RespCode::OK) {
-                throw CIMAP::Exception(static_cast<std::string>("LOGIN ") + ": " + parsedResponse->errorMessage);
+                throw CIMAP::Exception(static_cast<std::string> ("LOGIN ") + ": " + parsedResponse->errorMessage);
             }
-
 
         }
 
@@ -318,7 +307,7 @@ namespace Antik {
                 throw Exception("Not connected to server.");
             }
 
-            m_imapServerSocket.close();
+            m_imapSocket.close();
             
             m_tagCount = 1;
             m_connected = false;
