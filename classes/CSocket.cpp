@@ -180,7 +180,7 @@ namespace Antik {
                 throw Exception("Could not create socket.");
             }
             
-            boost::asio::ip::tcp::resolver::query query(m_hostAddress, m_hostPort);
+            boost::asio::ip::tcp::resolver::query query { m_hostAddress, m_hostPort };        
             m_socket->next_layer().connect(*m_ioQueryResolver.resolve(query), m_socketError);
             if (m_socketError) {
                 throw Exception(m_socketError.message());
@@ -236,7 +236,7 @@ namespace Antik {
                 bytesWritten = m_socket->next_layer().write_some(boost::asio::buffer(writeBuffer, writeLength), m_socketError);
             }
 
-            if (m_socketError) {
+            if (m_socketError && m_socketError != boost::asio::error::eof) {
                 throw Exception(m_socketError.message());
             }
 
@@ -260,7 +260,9 @@ namespace Antik {
             if (m_socketError) {
                 throw Exception(m_socketError.message());
             }
+            
             m_sslActive = true;
+        
         }
 
         //
@@ -272,8 +274,14 @@ namespace Antik {
             if (m_socket && m_socket->next_layer().is_open()) {
                 if (m_sslActive) {
                     m_socket->shutdown(m_socketError);
+                    if (m_socketError) {
+                        throw Exception(m_socketError.message());
+                    }
                 }
-                m_socket->next_layer().close();
+                m_socket->next_layer().close(m_socketError);
+                if (m_socketError) {
+                    throw Exception(m_socketError.message());
+                }
                 m_socket.reset();
             }
 
