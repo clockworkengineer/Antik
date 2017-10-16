@@ -85,7 +85,7 @@ namespace Antik {
 
             m_isListenThreadRunning = true;
             
-            std::unique_ptr<SSLSocket> socket { new SSLSocket(m_ioService, m_sslContext) };
+            std::unique_ptr<SSLSocket> socket { new SSLSocket(m_ioService, *m_sslContext) };
             if (!socket) {
                 m_isListenThreadRunning = false;
                 throw Exception("Could not create socket.");
@@ -173,8 +173,8 @@ namespace Antik {
         //
 
         void CSocket::connect() {
-
-            std::unique_ptr<SSLSocket> socket { new SSLSocket(m_ioService, m_sslContext) };
+     
+            std::unique_ptr<SSLSocket> socket { new SSLSocket(m_ioService, *m_sslContext) };
             if (!socket) {
                 throw Exception("Could not create socket.");
             }
@@ -295,8 +295,6 @@ namespace Antik {
 
         }
 
-   
-
         //
         // Work out ip address for local machine. This is quite difficult to achieve but
         // this is the best code i have seen for doing it. It just tries to connect to
@@ -336,10 +334,6 @@ namespace Antik {
 
         bool CSocket::isSslEnabled() const {
             return m_sslEnabled;
-        }
-
-        boost::system::error_code CSocket::getSocketError() const {
-            return m_socketError;
         }
 
         void CSocket::setHostAddress(std::string hostAddress) {

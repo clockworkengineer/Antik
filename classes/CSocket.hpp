@@ -67,6 +67,8 @@ namespace Antik {
             //
 
             CSocket() {
+                // Default SSL context use TLS v1.2
+                m_sslContext.reset(new boost::asio::ssl::context(m_ioService, boost::asio::ssl::context::tlsv12));
             }
 
             // ==========
@@ -84,23 +86,34 @@ namespace Antik {
             
             static std::string localIPAddress();
 
-            // Socket I/O functions
+            // Socket IO methods connect, read/write and close
 
             void connect();
             size_t read(char *readBuffer, size_t bufferLength);
             size_t write(const char *writeBuffer, size_t writeLength);
             void close();
+            
+            // Socket TLS handshake
+            
             void tlsHandshake();
+            
+            // Socket closed by remote peer
+            
             bool closedByRemotePeer();
+            
+            // Listen and wait for remote connections
+            
             void listenForConnection();
             void waitUntilConnected();
+            
+            // Socket cleanup
+            
             void cleanup();
 
             // Private data accessors
             
             void setSslEnabled(bool sslActive);
             bool isSslEnabled() const;
-            boost::system::error_code getSocketError() const;
             void setHostAddress(std::string hostAddress);
             std::string getHostAddress() const;
             void setHostPort(std::string hostPort);
@@ -151,9 +164,8 @@ namespace Antik {
             std::atomic<bool> m_isListenThreadRunning{ false};           // Listen thread running flag
             std::unique_ptr<std::thread> m_socketListenThread{ nullptr}; // Connection listen thread
 
-            boost::asio::ssl::context m_sslContext{ m_ioService, boost::asio::ssl::context::tlsv12};    // Default TLS 1.2
-            
-            std::unique_ptr<SSLSocket> m_socket { nullptr };    // Socket allocated at run time 
+            std::unique_ptr<boost::asio::ssl::context> m_sslContext { nullptr };   // SSL context (initialised in constructor).          
+            std::unique_ptr<SSLSocket> m_socket { nullptr };                       // SSL socket allocated at run time 
 
         };
 
