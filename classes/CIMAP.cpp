@@ -14,8 +14,11 @@
 // Class: CIMAP
 // 
 // Description: A class to connect to an IMAP server, send commands
-// and receive string responses to them. It uses Boost::asio to provide 
+// and receive string responses to them. It uses CSocket to provide 
 // connection and command/response transport functionality. 
+//
+// Note: That it only connects using TLS/SSL and  server URLs that 
+// use the "imap://" prefix instead of "imaps://" will not work.
 //
 // Dependencies:   C11++     - Language standard features used.
 //                 CSocket   - Used to talk to IMAP server.
@@ -41,7 +44,7 @@
 #include <iostream>
 
 //
-// Antik IMAP pasrser
+// Antik IMAP parser
 //
 
 #include "CIMAPParse.hpp"
@@ -89,37 +92,33 @@ namespace Antik {
 
         //
         // Wait for reply from sent IMAP command. Append received data onto the end of 
-        // commandResponse and exit when command tag encountered.
+        // commandResponse and exit when command end tag line encountered.
         //
 
         void CIMAP::waitForIMAPCommandResponse(const std::string& commandTag, std::string& commandResponse) {
 
             std::string searchTag{ commandTag + " "};
-            size_t recvLength{ 0};
-
+            size_t eolPosition {0};
+            
             commandResponse.clear();
 
             do {
 
-                recvLength = m_imapSocket.read(m_ioBuffer, sizeof (m_ioBuffer));
+                m_ioBuffer.get()[m_imapSocket.read(m_ioBuffer.get(), m_ioBufferSize-1)] = '\0';
+                commandResponse.append(m_ioBuffer.get());
 
-                m_ioBuffer[recvLength] = '\0';
-                commandResponse.append(m_ioBuffer);
-
-                recvLength = commandResponse.length();
-                if (commandResponse.rfind(kEOL)==recvLength-2) {
-                    // Find the previous end of line and search for tag from there.
-                    // This cuts down search time on large buffered responses ie.
-                    // encoded attachments.
-                    size_t prevNewLinePos = commandResponse.rfind(kEOL, recvLength - 3);
-                    if (prevNewLinePos == std::string::npos) {
-                        prevNewLinePos = 0;
-                    }
-                    if (commandResponse.find(searchTag, prevNewLinePos) != std::string::npos) {
-                        break;
+                // Buffer terminated by end of line. 
+                // Find the previous end of line and search for tag from there.
+                // This cuts down search time on large buffered responses ie.
+                // encoded attachments.
+                
+                if ((eolPosition=commandResponse.rfind(kEOL))==commandResponse.length()-2) {
+                    eolPosition = commandResponse.rfind(kEOL, eolPosition-1);
+                    if (eolPosition == std::string::npos) eolPosition = 0;
+                    if (commandResponse.find(searchTag, eolPosition) != std::string::npos) {
+                        break; // END OF REPLY FOUND
                     }
                 }
-
 
             } while (true);
 
@@ -209,7 +208,6 @@ namespace Antik {
             m_imapSocket.setHostAddress(server.substr(0, server.find(":")));
             m_imapSocket.setHostPort(serverURL.substr(serverURL.rfind(":") + 1));
 
-
         }
 
         //
@@ -271,8 +269,11 @@ namespace Antik {
 
             if (m_connected) {
                 Exception("Already connected to a server.");
-                
             }
+            
+            // Allocate IO Buffer
+            
+            m_ioBuffer.reset(new char[m_ioBufferSize]);
             
             // Specify TLS version 1.2
             
@@ -282,7 +283,6 @@ namespace Antik {
             
             m_imapSocket.connect();
             m_imapSocket.tlsHandshake();
-
             m_connected = true;
             
             // Login using set credentials
@@ -310,6 +310,10 @@ namespace Antik {
             
             m_tagCount = 1;
             m_connected = false;
+                   
+            // Free IO Buffer
+            
+            m_ioBuffer.reset();
 
         }
 
@@ -346,11 +350,22 @@ namespace Antik {
         }
 
         //
+        // Set IO Buffer Size
+        //
+        
+        void CIMAP::setIOBufferSize(std::uint32_t bufferSize) {
+            
+            m_ioBufferSize = bufferSize;
+            m_ioBuffer.reset(new char[m_ioBufferSize]);
+            
+        }
+        
+        //
         // Main CIMAP object constructor. 
         //
 
         CIMAP::CIMAP() {
-
+            
         }
 
         //

@@ -26,7 +26,6 @@
 
 #include "CSocket.hpp"
 
-
 // =========
 // NAMESPACE
 // =========
@@ -182,7 +181,13 @@ namespace Antik {
             //
 
             void setTagPrefix(const std::string& tagPrefix);
+            
+            //
+            // Set IO Buffer Size
+            //
 
+            void setIOBufferSize(std::uint32_t bufferSize);
+            
             //
             // IMAP initialization and closedown processing
             //
@@ -199,13 +204,13 @@ namespace Antik {
             // ===========================
             // PRIVATE TYPES AND CONSTANTS
             // ===========================
-
+            
             //
-            // Wait on socket timeout in milliseconds
+            // IO buffer default size
             //
 
-            static const long kWaitOnSocketTimeOut{ 60000};
-
+            static const std::uint32_t kIODefaultBufferSize { 1024*32 };
+                      
             // ===========================================
             // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
             // ===========================================
@@ -231,7 +236,6 @@ namespace Antik {
 
             void sendIMAPCommand(const std::string& commandLine);
             void waitForIMAPCommandResponse(const std::string& commandTag, std::string& commandResponse);
-            int waitOnSocket(bool bRecv, long timeoutMS);
 
             //
             // Generate next command tag
@@ -245,18 +249,19 @@ namespace Antik {
 
             bool m_connected{ false}; // == true then connected to server
             
-            std::string m_userName; // Email account user name
+            std::string m_userName;     // Email account user name
             std::string m_userPassword; // Email account user name password
-            std::string m_serverURL; // IMAP server URL
+            std::string m_serverURL;    // IMAP server URL
             
-            Antik::Network::CSocket m_imapSocket;
-
-            char m_ioBuffer[1024*32]; // io Buffer
+            Antik::Network::CSocket m_imapSocket;   // IMAP CSocket
+            
+            std::unique_ptr<char> m_ioBuffer;                       // I/O Buffer
+            std::uint32_t m_ioBufferSize { kIODefaultBufferSize };  // I/O Buffer Size
 
             std::string m_commandResponse; // IMAP command response
 
-            std::uint64_t m_tagCount{ 1}; // Current command tag count
-            std::string m_currentTag; // Current command tag
+            std::uint64_t m_tagCount{ 1};                // Current command tag count
+            std::string m_currentTag;                    // Current command tag
             std::string m_tagPrefix{ kDefaultTagPrefix}; // Current command tag prefixes
 
         };
