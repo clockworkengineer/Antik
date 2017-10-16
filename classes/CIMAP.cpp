@@ -79,14 +79,10 @@ namespace Antik {
 
         void CIMAP::sendIMAPCommand(const std::string& command) {
 
-            size_t bytesSent { 0 };
             int bytesCopied { 0 };
 
             do {
-
-                bytesSent = m_imapSocket.write(&command[bytesCopied], command.length() - bytesCopied);
-                bytesCopied += bytesSent;
-
+                bytesCopied += m_imapSocket.write(&command[bytesCopied], command.length() - bytesCopied);
             } while ((bytesCopied < command.length()));
 
         }
@@ -105,15 +101,13 @@ namespace Antik {
 
             do {
 
-
                 recvLength = m_imapSocket.read(m_ioBuffer, sizeof (m_ioBuffer));
 
                 m_ioBuffer[recvLength] = '\0';
                 commandResponse.append(m_ioBuffer);
 
                 recvLength = commandResponse.length();
-                if ((commandResponse[recvLength - 2] == '\r') &&
-                        (commandResponse[recvLength - 1] == '\n')) {
+                if (commandResponse.rfind(kEOL)==recvLength-2) {
                     // Find the previous end of line and search for tag from there.
                     // This cuts down search time on large buffered responses ie.
                     // encoded attachments.
