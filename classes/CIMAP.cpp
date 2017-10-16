@@ -277,8 +277,13 @@ namespace Antik {
 
             if (m_connected) {
                 Exception("Already connected to a server.");
+                
             }
-
+            
+            // Specify TLS version 1.2
+            
+            m_imapSocket.setTLSVersion(Antik::Network::CSocket::TLSVerion::v1_2);
+            
             // Connect and perform TLS handshake 
             
             m_imapSocket.connect();
@@ -363,10 +368,10 @@ namespace Antik {
         }
 
         //
-        // CIMAP initialization (NOT NEEDED NOW).
+        // CIMAP initialization
         //
 
-        void CIMAP::init(bool bCurlVerbosity) {
+        void CIMAP::init(void) {
 
 
         }

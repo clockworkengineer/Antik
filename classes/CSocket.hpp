@@ -58,6 +58,17 @@ namespace Antik {
                 }
 
             };
+            
+            //
+            // TLS versions
+            //
+            
+            enum TLSVerion {
+                v1_0=0,
+                v1_1,
+                v1_2
+             };
+            
             // ============
             // CONSTRUCTORS
             // ============
@@ -85,6 +96,10 @@ namespace Antik {
             // Determine local machines IP address
             
             static std::string localIPAddress();
+            
+            // Set TLS version to use
+            
+            void setTLSVersion(TLSVerion version);
 
             // Socket IO methods connect, read/write and close
 
@@ -143,6 +158,8 @@ namespace Antik {
             // ===============
             // PRIVATE METHODS
             // ===============
+            
+            // Listen on a thread for a connection
 
             void connectionListener();
 
@@ -153,6 +170,8 @@ namespace Antik {
             bool m_sslActive{ false};       // == true SSL currently active
             bool m_sslEnabled { false };    // == true SSL enabled
 
+            TLSVerion m_tlsVersion { TLSVerion::v1_2 } ;     // SSL sockets TLS version
+            
             std::string m_hostAddress;   // Host ip address
             std::string m_hostPort;      // Host port address
 

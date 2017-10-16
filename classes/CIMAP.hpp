@@ -187,7 +187,7 @@ namespace Antik {
             // IMAP initialization and closedown processing
             //
 
-            static void init(bool bCurlVerbosity = false);
+            static void init(void);
             static void closedown(void);
 
             // ================

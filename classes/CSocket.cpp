@@ -203,12 +203,16 @@ namespace Antik {
                 throw Exception("No socket present.");
             }
 
+            // Read data
+            
             if (m_sslActive) {
                 bytesRead = m_socket->read_some(boost::asio::buffer(readBuffer, bufferLength), m_socketError);
             } else {
                 bytesRead = m_socket->next_layer().read_some(boost::asio::buffer(readBuffer, bufferLength), m_socketError);
             }
 
+            // Signal any non end of file  error
+            
             if (m_socketError && m_socketError != boost::asio::error::eof) {
                 throw Exception(m_socketError.message());
             }
@@ -231,12 +235,16 @@ namespace Antik {
                 throw Exception("No socket present.");
             }
 
+            // Write data
+            
             if (m_sslActive) {
                 bytesWritten = m_socket->write_some(boost::asio::buffer(writeBuffer, writeLength), m_socketError);
             } else {
                 bytesWritten = m_socket->next_layer().write_some(boost::asio::buffer(writeBuffer, writeLength), m_socketError);
             }
 
+            // Signal any non end of file error
+            
             if (m_socketError && m_socketError != boost::asio::error::eof) {
                 throw Exception(m_socketError.message());
             }
@@ -275,12 +283,18 @@ namespace Antik {
 
             std::unique_ptr<SSLSocket> socket{ std::move(m_socket)};
 
+            // Socket exists and is open
+            
             if (socket && socket->next_layer().is_open()) {
+            
+                // Shutdown TLS
                 
                 if (m_sslActive) {
                     m_sslActive = false;
                     socket->shutdown(m_socketError);
                 }
+                
+                // Close socket
                 
                 socket->next_layer().close(m_socketError);
                 if (m_socketError) {
@@ -289,12 +303,36 @@ namespace Antik {
 
             }
 
+            // Remove any listen thread
+            
             if (m_socketListenThread) {
                 m_socketListenThread.reset();
             }
 
         }
+        
+        //
+        // Set SSL context for the TLS version set
+        //
 
+        void CSocket::setTLSVersion(TLSVerion version) {
+        
+            m_tlsVersion = version;
+
+            switch (m_tlsVersion) {
+                case TLSVerion::v1_0:
+                    m_sslContext.reset(new boost::asio::ssl::context(m_ioService, boost::asio::ssl::context::tlsv1));
+                    break;
+                case TLSVerion::v1_1:
+                    m_sslContext.reset(new boost::asio::ssl::context(m_ioService, boost::asio::ssl::context::tlsv11));
+                    break;
+                case TLSVerion::v1_2:
+                    m_sslContext.reset(new boost::asio::ssl::context(m_ioService, boost::asio::ssl::context::tlsv12));
+                    break;
+            }
+            
+        }
+        
         //
         // Work out ip address for local machine. This is quite difficult to achieve but
         // this is the best code i have seen for doing it. It just tries to connect to
