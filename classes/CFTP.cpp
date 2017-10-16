@@ -439,7 +439,7 @@ namespace Antik {
                     m_commandStatusCode = ftpResponse();
                     if (m_commandStatusCode == 234) {
                         m_controlChannelSocket.tlsHandshake();
-                        m_dataChannelSocket.setSslActive(true);
+                        m_dataChannelSocket.setSslEnabled(true);
                         ftpCommand("PBSZ 0");
                         m_commandStatusCode = ftpResponse();
                         if (m_commandStatusCode == 200) {
@@ -483,8 +483,8 @@ namespace Antik {
 
             m_controlChannelSocket.close();
 
-            m_controlChannelSocket.setSslActive(false);
-            m_dataChannelSocket.setSslActive(false);
+            m_controlChannelSocket.setSslEnabled(false);
+            m_dataChannelSocket.setSslEnabled(false);
 
             return (m_commandStatusCode);
 

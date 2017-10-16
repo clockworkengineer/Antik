@@ -73,29 +73,31 @@ namespace Antik {
 
         //
         // Socket listener thread method for incoming connections. At present it listens
-        // on a random port but sets m_hostPort.
+        // on a random port but sets m_hostPort to its value. The connected socket is created
+        // local and moved to m_socket on success.
         //
 
         void CSocket::connectionListener() {
-
+            
             boost::asio::ip::tcp::acceptor acceptor(m_ioService, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 0));
-
+            
             m_hostPort = std::to_string(acceptor.local_endpoint().port());
 
             m_isListenThreadRunning = true;
-
-            m_socket.reset(new SSLSocket(m_ioService, m_sslContext));
-            if (!m_socket) {
+            
+            std::unique_ptr<SSLSocket> socket { new SSLSocket(m_ioService, m_sslContext) };
+            if (!socket) {
                 m_isListenThreadRunning = false;
                 throw Exception("Could not create socket.");
             }
 
-            acceptor.accept(m_socket->next_layer(), m_socketError);
+            acceptor.accept(socket->next_layer(), m_socketError);
             if (m_socketError) {
-                m_socket.reset();
                 m_isListenThreadRunning = false;
                 throw Exception(m_socketError.message());
             }
+            
+            m_socket = std::move(socket);
 
             m_isListenThreadRunning = false;
 
@@ -136,9 +138,11 @@ namespace Antik {
 
         void CSocket::listenForConnection() {
 
+            // Start connection listener thread and wait until its listening
+            
             m_socketListenThread.reset(new std::thread(&CSocket::connectionListener, this));
-            while (!m_isListenThreadRunning) { // Wait for until listening before sending PORT command
-                continue; // Could use conditional but use existing flag for now
+            while (!m_isListenThreadRunning) {
+                continue; 
             }
 
         }
@@ -149,12 +153,6 @@ namespace Antik {
 
         void CSocket::waitUntilConnected() {
 
-            // No socket present
-
-            if (!m_socket) {
-                throw Exception("No socket present.");
-            }
-
             // Listener thread is running (wait for it to finish)
 
             if (m_socketListenThread) {
@@ -163,28 +161,31 @@ namespace Antik {
 
             // TLS handshake
 
-            if (m_sslActive) {
+            if (m_sslEnabled) {
                 tlsHandshake();
             }
 
         }
 
         //
-        // Connect to a given host and port.
+        // Connect to a given host and port.The connecting socket is created
+        // local and moved to m_socket on success.
         //
 
         void CSocket::connect() {
 
-            m_socket.reset(new SSLSocket(m_ioService, m_sslContext));
-            if (!m_socket) {
+            std::unique_ptr<SSLSocket> socket { new SSLSocket(m_ioService, m_sslContext) };
+            if (!socket) {
                 throw Exception("Could not create socket.");
             }
             
             boost::asio::ip::tcp::resolver::query query { m_hostAddress, m_hostPort };        
-            m_socket->next_layer().connect(*m_ioQueryResolver.resolve(query), m_socketError);
+            socket->next_layer().connect(*m_ioQueryResolver.resolve(query), m_socketError);
             if (m_socketError) {
                 throw Exception(m_socketError.message());
             }
+            
+            m_socket = std::move(socket);
 
         }
 
@@ -266,23 +267,26 @@ namespace Antik {
         }
 
         //
-        // Closedown any running SSL and close socket.
+        // Closedown any running SSL and close socket. Move m_socket to local
+        // socket and close it down.
         //
 
         void CSocket::close() {
 
-            if (m_socket && m_socket->next_layer().is_open()) {
+            std::unique_ptr<SSLSocket> socket{ std::move(m_socket)};
+
+            if (socket && socket->next_layer().is_open()) {
+                
                 if (m_sslActive) {
-                    m_socket->shutdown(m_socketError);
-                    if (m_socketError) {
-                        throw Exception(m_socketError.message());
-                    }
+                    m_sslActive = false;
+                    socket->shutdown(m_socketError);
                 }
-                m_socket->next_layer().close(m_socketError);
+                
+                socket->next_layer().close(m_socketError);
                 if (m_socketError) {
                     throw Exception(m_socketError.message());
                 }
-                m_socket.reset();
+
             }
 
             if (m_socketListenThread) {
@@ -291,15 +295,7 @@ namespace Antik {
 
         }
 
-        //
-        // Return true if socket closed by server otherwise false.
-        //
-
-        bool CSocket::closedByRemotePeer() {
-
-            return (m_socketError == boost::asio::error::eof);
-
-        }
+   
 
         //
         // Work out ip address for local machine. This is quite difficult to achieve but
@@ -334,12 +330,12 @@ namespace Antik {
         // CLASS PRIVATE DATA ACCESSORS
         // ============================
 
-        void CSocket::setSslActive(bool sslActive) {
-            m_sslActive = sslActive;
+        void CSocket::setSslEnabled(bool sslEnabled) {
+            m_sslEnabled = sslEnabled;
         }
 
-        bool CSocket::isSslActive() const {
-            return m_sslActive;
+        bool CSocket::isSslEnabled() const {
+            return m_sslEnabled;
         }
 
         boost::system::error_code CSocket::getSocketError() const {

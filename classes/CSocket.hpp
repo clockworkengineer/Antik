@@ -98,8 +98,8 @@ namespace Antik {
 
             // Private data accessors
             
-            void setSslActive(bool sslActive);
-            bool isSslActive() const;
+            void setSslEnabled(bool sslActive);
+            bool isSslEnabled() const;
             boost::system::error_code getSocketError() const;
             void setHostAddress(std::string hostAddress);
             std::string getHostAddress() const;
@@ -137,7 +137,8 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
 
-            bool m_sslActive{ false};
+            bool m_sslActive{ false};       // == true SSL currently active
+            bool m_sslEnabled { false };    // == true SSL enabled
 
             std::string m_hostAddress;   // Host ip address
             std::string m_hostPort;      // Host port address
@@ -156,6 +157,15 @@ namespace Antik {
 
         };
 
+        //
+        // Return true if socket closed by server otherwise false.
+        //
+
+        inline bool CSocket::closedByRemotePeer() {
+
+            return (m_socketError == boost::asio::error::eof);
+
+        }
      
     } // namespace Network
 } // namespace Antik
