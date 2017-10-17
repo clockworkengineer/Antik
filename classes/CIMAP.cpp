@@ -98,29 +98,35 @@ namespace Antik {
         void CIMAP::waitForIMAPCommandResponse(const std::string& commandTag, std::string& commandResponse) {
 
             std::string searchTag{ commandTag + " "};
-            size_t eolPosition {0};
-            
+            size_t eolPosition{0};
+
             commandResponse.clear();
 
-            do {
+            for (;;) {
 
-                m_ioBuffer.get()[m_imapSocket.read(m_ioBuffer.get(), m_ioBufferSize-1)] = '\0';
+                m_ioBuffer.get()[m_imapSocket.read(m_ioBuffer.get(), m_ioBufferSize - 1)] = '\0';
                 commandResponse.append(m_ioBuffer.get());
+
+                // Socket closed by remote peer (exit);
+
+                if (m_imapSocket.closedByRemotePeer()) {
+                    break;
+                }
 
                 // Buffer terminated by end of line. 
                 // Find the previous end of line and search for tag from there.
                 // This cuts down search time on large buffered responses ie.
                 // encoded attachments.
-                
-                if ((eolPosition=commandResponse.rfind(kEOL))==commandResponse.length()-2) {
-                    eolPosition = commandResponse.rfind(kEOL, eolPosition-1);
+
+                if ((eolPosition = commandResponse.rfind(kEOL)) == commandResponse.length() - 2) {
+                    eolPosition = commandResponse.rfind(kEOL, eolPosition - 1);
                     if (eolPosition == std::string::npos) eolPosition = 0;
                     if (commandResponse.find(searchTag, eolPosition) != std::string::npos) {
                         break; // END OF REPLY FOUND
                     }
                 }
 
-            } while (true);
+            }
 
         }
 

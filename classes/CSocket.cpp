@@ -15,9 +15,9 @@
 // 
 // Description: Class for connecting to / listening for connections from remote peers
 // and the reading/writing of data using sockets. It supports both plain and TLS/SSL 
-// connections and  is implemented using BOOST:ASIO synchronous API calls.
-//
-// Note: TLS/SSL connections are supported.
+// connections and  is implemented using BOOST:ASIO synchronous API calls. At present it
+// only has basic TLS/SSL support and is geared more towards client support but this may
+// change in future.
 //
 // Dependencies:   C11++        - Language standard features used.
 //                 BOOST ASIO   - Used to talk to FTP server.
@@ -110,7 +110,8 @@ namespace Antik {
 
         //
         // Cleanup after socket connection. This includes stopping any unused listener
-        // thread and closing the socket if still open.
+        // thread and closing the socket if still open. Note: if the thread is still waiting
+        // for a connect it is woken up with a fake connect.
         //
 
         void CSocket::cleanup() {
@@ -123,7 +124,7 @@ namespace Antik {
                     boost::asio::connect(socket, m_ioQueryResolver.resolve(query));
                     socket.close();
                 } catch (std::exception &e) {
-                    throw Exception("Listener thread running when it should not be.");
+                    throw Exception("Could not wake listener thread with fake connect.");
                 }
                 m_socketListenThread->join();
             }
