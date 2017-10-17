@@ -293,11 +293,12 @@ namespace Antik {
             
             // Login using set credentials
 
-            CIMAPParse::COMMANDRESPONSE parsedResponse = CIMAPParse::parseResponse(sendCommand("LOGIN " + this->m_userName + " " + this->m_userPassword));
+            CIMAPParse::COMMANDRESPONSE parsedResponse = CIMAPParse::parseResponse(sendCommand(
+                    static_cast<std::string> (IMAP::kLOGIN) + " " + this->m_userName + " " + this->m_userPassword));
             if (parsedResponse->bBYESent) {
                 throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessage);
             } else if (parsedResponse->status != CIMAPParse::RespCode::OK) {
-                throw CIMAP::Exception(static_cast<std::string> ("LOGIN ") + ": " + parsedResponse->errorMessage);
+                throw CIMAP::Exception(static_cast<std::string> (IMAP::kLOGIN) + " : " + parsedResponse->errorMessage);
             }
 
         }

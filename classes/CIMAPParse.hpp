@@ -264,6 +264,7 @@ namespace Antik {
         static void parseCAPABILITY(CommandData& commandData);
         static void parseNOOP(CommandData& commandData);
         static void parseLOGOUT(CommandData& commandData);
+        static void parseLOGIN(CommandData& commandData);
         static void parseDefault(CommandData& commandData);
 
         // =================

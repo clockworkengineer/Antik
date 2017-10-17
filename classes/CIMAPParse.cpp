@@ -81,7 +81,8 @@ namespace Antik {
             { static_cast<int> (Commands::FETCH), parseFETCH},
             { static_cast<int> (Commands::NOOP), parseNOOP},
             { static_cast<int> (Commands::IDLE), parseNOOP},
-            { static_cast<int> (Commands::LOGOUT), parseLOGOUT}};
+            { static_cast<int> (Commands::LOGIN), parseLOGIN}
+         };
 
         //
         // IMAP command string to internal enum code map table.
@@ -220,7 +221,6 @@ namespace Antik {
 
         void CIMAPParse::parseCommon(const std::string& tag, const std::string& line, CommandResponse * resp) {
 
-
             if ((line[0] == kUntagged[0]) &&
                     (line.find(kRECENT) != std::string::npos)) {
 
@@ -248,7 +248,7 @@ namespace Antik {
                     resp->responseMap[kEXPUNGE] += " " + stringUntaggedNumber(line);
                 }
 
-            } else if (stringEqual(line, tag + " " + kOK)) {
+             } else if (stringEqual(line, tag + " " + kOK)) {
                 resp->status = RespCode::OK;
 
             } else if (stringEqual(line, tag + " " + kNO)) {
@@ -264,6 +264,9 @@ namespace Antik {
                     resp->bBYESent = true;
                 }
                 resp->errorMessage = line;
+
+            } else if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kOK)) {
+                resp->status = RespCode::OK;
 
             } else if ((stringEqual(line, static_cast<std::string> (kUntagged) + " " + kNO))
                     || (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kBAD))) {
@@ -481,6 +484,24 @@ namespace Antik {
 
         }
 
+        //
+        // Parse LOGIN Response.
+        //
+
+        void CIMAPParse::parseLOGIN(CommandData& commandData) {
+
+            for (std::string line; parseGetNextLine(commandData.commandRespStream, line);) {
+
+                if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kCAPABILITY)) {
+                    commandData.resp->responseMap.insert({kCAPABILITY, line.substr((static_cast<std::string> (kUntagged) + " " + kCAPABILITY).length() + 1)});
+                } else {
+                    parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
+                }
+
+            }
+
+        }
+        
         //
         // Parse NOOP/IDLE Response.
         //
