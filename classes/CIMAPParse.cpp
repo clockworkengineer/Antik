@@ -231,7 +231,35 @@ namespace Antik {
             return (false);
 
         }
-        
+ 
+        //
+        // Parse command response common status.
+        //
+
+        bool CIMAPParse::parseCommonStatus(const std::string& tag, const std::string& line, CommandResponse * resp) {
+
+            bool found=false;
+            
+            if (stringEqual(line, tag + " " + kOK)) {
+                resp->status = RespCode::OK;
+                found=true;
+
+            } else if (stringEqual(line, tag + " " + kNO)) {
+                resp->status = RespCode::NO;
+                found=true;
+
+            } else if (stringEqual(line, tag + " " + kBAD)) {
+                resp->status = RespCode::BAD;
+                found=true;
+            }
+            
+            if (found) {
+               resp->errorMessage = line;
+            }
+
+            return (found);
+
+        }
         //
         // Parse command response common fields including status and return response. This may include
         // un-tagged EXISTS/EXPUNGED/RECENT replies to the current command or server replies to changes
@@ -242,32 +270,17 @@ namespace Antik {
 
             if (parseCommonUntaggedNumeric(kRECENT, line, resp)||
                 parseCommonUntaggedNumeric(kEXISTS, line, resp)||
-                parseCommonUntaggedNumeric(kEXPUNGE, line, resp)) {
-                ;
-
-            } else if (stringEqual(line, tag + " " + kOK)) {
-                resp->status = RespCode::OK;
-
-            } else if (stringEqual(line, tag + " " + kNO)) {
-                resp->status = RespCode::NO;
-                resp->errorMessage = line;
-
-            } else if (stringEqual(line, tag + " " + kBAD)) {
-                resp->status = RespCode::BAD;
-                resp->errorMessage = line;
+                parseCommonUntaggedNumeric(kEXPUNGE, line, resp)||
+                parseCommonStatus(tag,line, resp)||
+                parseCommonStatus(kUntagged,line, resp)) {
+                
+                return;
 
             } else if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kBYE)) {
                 if (!resp->bBYESent) {
                     resp->bBYESent = true;
                 }
                 resp->errorMessage = line;
-
-            } else if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kOK)) {
-                resp->status = RespCode::OK;
-
-            } else if ((stringEqual(line, static_cast<std::string> (kUntagged) + " " + kNO))
-                    || (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kBAD))) {
-                std::cerr << line << std::endl;
 
             } else if (stringEqual(line, kUntagged)) {
                 std::cerr << "WARNING: un-handled response: " << line << std::endl; // WARN of any untagged that should be processed.
@@ -741,7 +754,7 @@ namespace Antik {
                 }
             }
 
-            Exception("commandCodeing() : Invalid command code.");
+            Exception("commandCodeString() : Invalid command code.");
 
             return (""); // Never reached.
 
