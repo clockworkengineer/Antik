@@ -81,7 +81,7 @@ namespace Antik {
             { static_cast<int> (Commands::FETCH), parseFETCH},
             { static_cast<int> (Commands::NOOP), parseNOOP},
             { static_cast<int> (Commands::IDLE), parseNOOP},
-            { static_cast<int> (Commands::LOGIN), parseLOGIN}
+            { static_cast<int> (Commands::LOGIN), parseCAPABILITY}
          };
 
         //
@@ -163,7 +163,7 @@ namespace Antik {
         // updated to remove the pair and also this function is only used in FETCH command parse as the 
         // response is processed over multiple lines and not line by line.
 
-        void CIMAPParse::parseing(const std::string& item, FetchRespData& fetchData, std::string& line) {
+        void CIMAPParse::parseString(const std::string& item, FetchRespData& fetchData, std::string& line) {
             std::string quoteding;
             line = line.substr(line.find(item) + item.length() + 1);
             quoteding = "\"" + stringBetween(line, '\"', '\"') + "\"";
@@ -214,6 +214,25 @@ namespace Antik {
         }
 
         //
+        // Parse command response common field with numeric value.
+        //
+
+        bool CIMAPParse::parseCommonUntaggedNumeric(const std::string& item, const std::string& line, CommandResponse * resp) {
+
+            if ((line[0] == kUntagged[0]) && (line.find(item) != std::string::npos)) {
+                if (resp->responseMap.find(item) == resp->responseMap.end()) {
+                    resp->responseMap.insert({item, stringUntaggedNumber(line)});
+                } else {
+                    resp->responseMap[item] += " " + stringUntaggedNumber(line);
+                }
+                return (true);
+            }
+
+            return (false);
+
+        }
+        
+        //
         // Parse command response common fields including status and return response. This may include
         // un-tagged EXISTS/EXPUNGED/RECENT replies to the current command or server replies to changes
         // in mailbox status.
@@ -221,34 +240,12 @@ namespace Antik {
 
         void CIMAPParse::parseCommon(const std::string& tag, const std::string& line, CommandResponse * resp) {
 
-            if ((line[0] == kUntagged[0]) &&
-                    (line.find(kRECENT) != std::string::npos)) {
+            if (parseCommonUntaggedNumeric(kRECENT, line, resp)||
+                parseCommonUntaggedNumeric(kEXISTS, line, resp)||
+                parseCommonUntaggedNumeric(kEXPUNGE, line, resp)) {
+                ;
 
-                if (resp->responseMap.find(kRECENT) == resp->responseMap.end()) {
-                    resp->responseMap.insert({kRECENT, stringUntaggedNumber(line)});
-                } else {
-                    resp->responseMap[kRECENT] += " " + stringUntaggedNumber(line);
-                }
-
-            } else if ((line[0] == kUntagged[0]) &&
-                    (line.find(kEXISTS) != std::string::npos)) {
-
-                if (resp->responseMap.find(kEXISTS) == resp->responseMap.end()) {
-                    resp->responseMap.insert({kEXISTS, stringUntaggedNumber(line)});
-                } else {
-                    resp->responseMap[kEXISTS] += " " + stringUntaggedNumber(line);
-                }
-
-            } else if ((line[0] == kUntagged[0]) &&
-                    (line.find(kEXPUNGE) != std::string::npos)) {
-
-                if (resp->responseMap.find(kEXPUNGE) == resp->responseMap.end()) {
-                    resp->responseMap.insert({kEXPUNGE, stringUntaggedNumber(line)});
-                } else {
-                    resp->responseMap[kEXPUNGE] += " " + stringUntaggedNumber(line);
-                }
-
-             } else if (stringEqual(line, tag + " " + kOK)) {
+            } else if (stringEqual(line, tag + " " + kOK)) {
                 resp->status = RespCode::OK;
 
             } else if (stringEqual(line, tag + " " + kNO)) {
@@ -483,24 +480,6 @@ namespace Antik {
             }
 
         }
-
-        //
-        // Parse LOGIN Response.
-        //
-
-        void CIMAPParse::parseLOGIN(CommandData& commandData) {
-
-            for (std::string line; parseGetNextLine(commandData.commandRespStream, line);) {
-
-                if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kCAPABILITY)) {
-                    commandData.resp->responseMap.insert({kCAPABILITY, line.substr((static_cast<std::string> (kUntagged) + " " + kCAPABILITY).length() + 1)});
-                } else {
-                    parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
-                }
-
-            }
-
-        }
         
         //
         // Parse NOOP/IDLE Response.
@@ -544,7 +523,7 @@ namespace Antik {
                         } else if (stringEqual(line, static_cast<std::string> (kBODY) + " ")) {
                             parseList(kBODY, fetchData, line);
                         } else if (stringEqual(line, static_cast<std::string> (kINTERNALDATE) + " ")) {
-                            parseing(kINTERNALDATE, fetchData, line);
+                            parseString(kINTERNALDATE, fetchData, line);
                         } else if (stringEqual(line, static_cast<std::string> (kRFC822SIZE) + " ")) {
                             parseNumber(kRFC822SIZE, fetchData, line);
                         } else if (stringEqual(line, static_cast<std::string> (kUID) + " ")) {

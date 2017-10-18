@@ -247,9 +247,10 @@ namespace Antik {
         static void parseCommon(const std::string& tag, const std::string& line, CommandResponse* statusResponse);
         static void parseOctets(const std::string& item, FetchRespData& fetchData, std::string& line, std::istringstream& responseStream);
         static void parseList(const std::string& item, FetchRespData& fetchData, std::string& line);
-        static void parseing(const std::string& item, FetchRespData& fetchData, std::string& line);
+        static void parseString(const std::string& item, FetchRespData& fetchData, std::string& line);
         static void parseNumber(const std::string& item, FetchRespData& fetchData, std::string& line);
-
+        static bool parseCommonUntaggedNumeric(const std::string& item, const std::string& line, CommandResponse * resp);
+        
         //
         // Command response parse methods
         //
@@ -264,7 +265,6 @@ namespace Antik {
         static void parseCAPABILITY(CommandData& commandData);
         static void parseNOOP(CommandData& commandData);
         static void parseLOGOUT(CommandData& commandData);
-        static void parseLOGIN(CommandData& commandData);
         static void parseDefault(CommandData& commandData);
 
         // =================
