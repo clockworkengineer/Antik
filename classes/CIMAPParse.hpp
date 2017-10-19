@@ -266,11 +266,8 @@ namespace Antik {
             static void parseSEARCH(CommandData& commandData);
             static void parseSELECT(CommandData& commandData);
             static void parseSTATUS(CommandData& commandData);
-            static void parseEXPUNGE(CommandData& commandData);
             static void parseSTORE(CommandData& commandData);
             static void parseCAPABILITY(CommandData& commandData);
-            static void parseNOOP(CommandData& commandData);
-            static void parseLOGOUT(CommandData& commandData);
             static void parseDefault(CommandData& commandData);
 
             // =================

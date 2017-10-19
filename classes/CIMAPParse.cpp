@@ -64,7 +64,8 @@ namespace Antik {
         // ========================
 
         //
-        // IMAP command code to parse response mapping table
+        // IMAP command code to parse response mapping table. Any commands without
+        // handlers present have an entry made using he default parser at runtime.
         //
 
         std::unordered_map<int, CIMAPParse::ParseFunction> CIMAPParse::m_parseCommmandMap
@@ -75,12 +76,9 @@ namespace Antik {
             { static_cast<int> (Commands::SELECT), parseSELECT},
             { static_cast<int> (Commands::EXAMINE), parseSELECT},
             { static_cast<int> (Commands::STATUS), parseSTATUS},
-            { static_cast<int> (Commands::EXPUNGE), parseEXPUNGE},
             { static_cast<int> (Commands::STORE), parseSTORE},
             { static_cast<int> (Commands::CAPABILITY), parseCAPABILITY},
             { static_cast<int> (Commands::FETCH), parseFETCH},
-            { static_cast<int> (Commands::NOOP), parseNOOP},
-            { static_cast<int> (Commands::IDLE), parseNOOP},
             { static_cast<int> (Commands::LOGIN), parseCAPABILITY}
          };
 
@@ -136,7 +134,7 @@ namespace Antik {
                 if (bLineRead) line.pop_back();
                 return (bLineRead);
             } else {
-                throw Exception("error parsing command response (run out of input).");
+                throw Exception("Error parsing command response (run out of input).");
             }
         }
 
@@ -291,7 +289,7 @@ namespace Antik {
             if (stringEqual(line, kUntagged)) {
                 std::cerr << "WARNING: un-handled response: " << line << std::endl; // WARN of any un-tagged that should be processed.
             } else {
-                throw Exception("error while parsing IMAP command [" + line + "]");
+                throw Exception("Error while parsing IMAP command [" + line + "]");
             }
 
         }
@@ -447,18 +445,6 @@ namespace Antik {
         }
 
         //
-        // Parse EXPUNGE Response.
-        //
-
-        void CIMAPParse::parseEXPUNGE(CommandData& commandData) {
-
-            for (std::string line; parseGetNextLine(commandData.commandRespStream, line);) {
-                parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
-            }
-
-        }
-
-        //
         // Parse STORE Response.
         //
 
@@ -499,18 +485,6 @@ namespace Antik {
 
         }
         
-        //
-        // Parse NOOP/IDLE Response.
-        //
-
-        void CIMAPParse::parseNOOP(CommandData& commandData) {
-
-            for (std::string line; parseGetNextLine(commandData.commandRespStream, line);) {
-                parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
-            }
-
-        }
-
         //
         // Parse FETCH Response
         //
@@ -553,7 +527,7 @@ namespace Antik {
                         } else if (stringEqual(line, static_cast<std::string> (kRFC822) + " ")) {
                             parseOctets(kRFC822, fetchData, line, commandData.commandRespStream);
                         } else {
-                            throw Exception("error while parsing FETCH command [" + line + "]");
+                            throw Exception("Error while parsing FETCH command [" + line + "]");
                         }
 
                         // Still data to process
@@ -568,7 +542,7 @@ namespace Antik {
                         } else {
                             commandData.commandRespStream.seekg(-lineLength, std::ios_base::cur); // Rewind read to get line
                             parseGetNextLine(commandData.commandRespStream, line);
-                            throw Exception("error while parsing FETCH command [" + line + "]");
+                            throw Exception("Error while parsing FETCH command [" + line + "]");
                         }
 
 
@@ -580,18 +554,6 @@ namespace Antik {
                     parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
                 }
 
-            }
-
-        }
-
-        //
-        // Parse LOGOUT Response
-        //
-
-        void CIMAPParse::parseLOGOUT(CommandData& commandData) {
-
-            for (std::string line; parseGetNextLine(commandData.commandRespStream, line);) {
-                parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
             }
 
         }
@@ -688,8 +650,11 @@ namespace Antik {
 
         //
         // Extract list  from command response line. Note: only check until 
-        // the end of line; the first character in lins is the start 
-        // of the list ie. a '('.
+        // the end of line; the first character in line is the start 
+        // of the list ie. a '('.  The code reads a line until the closing ')'
+        // is found and enables sublists to be enclosed within a list. IMAP
+        // responses can contain complex list structures and this is the most
+        // flexible method for dealing with this.
         //
 
         std::string CIMAPParse::stringList(const std::string& line) {
@@ -707,7 +672,11 @@ namespace Antik {
                 if (line[currentIndex] == '(') bracketCount++;
                 if (line[currentIndex] == ')') bracketCount--;
                 currentIndex++;
-            } while (bracketCount && (--lineLength > 0));
+            } while ((bracketCount>0) && (--lineLength > 0));
+            
+            if (bracketCount) {
+                throw Exception("List missing '(' or ')' in line [ "+line+"]");
+            }
 
             return (line.substr(startPosition, currentIndex - startPosition));
 
@@ -725,16 +694,28 @@ namespace Antik {
             std::istringstream responseStream { commandResponse };
             std::string commandLine;
 
+            // Read next line to parse
+            
             parseGetNextLine(responseStream, commandLine);
 
-            CommandData commandData{ stringTag(commandLine), m_stringToCodeMap[stringCommand(commandLine)], commandLine, responseStream};
-
+            // Extract code for command
+            
+            auto findCommandCode = m_stringToCodeMap.find(stringCommand(commandLine));         
+            if (findCommandCode == m_stringToCodeMap.end()) {
+                throw Exception("Could not find command code for "+stringCommand(commandLine));     
+            }
+            
+            // Create command parse/response  data
+            
+            CommandData commandData{ stringTag(commandLine), findCommandCode->second, commandLine, responseStream};
             commandData.resp.reset({new CommandResponse { commandData.commandCode } });
 
+            // Find parse function or use default if none present
+
             ParseFunction parseFn;
+
             auto findCommandFn = m_parseCommmandMap.find(static_cast<int> (commandData.commandCode));
-            
-            if(findCommandFn!=m_parseCommmandMap.end()) {   
+            if (findCommandFn != m_parseCommmandMap.end()) {
                 parseFn = m_parseCommmandMap[static_cast<int> (commandData.commandCode)];
             } else {
                 parseFn = m_parseCommmandMap[static_cast<int> (commandData.commandCode)] = parseDefault;
@@ -758,7 +739,7 @@ namespace Antik {
                 }
             }
 
-            Exception("commandCodeString() : Invalid command code.");
+            Exception("Invalid command code.");
 
             return (""); // Never reached.
 
