@@ -251,6 +251,12 @@ namespace Antik {
             } else if (stringEqual(line, tag + " " + kBAD)) {
                 resp->status = RespCode::BAD;
                 found=true;
+                
+            } else if (stringEqual(line, tag + " " + kBYE)) {
+                if (!resp->bBYESent) {
+                    resp->bBYESent = true;
+                }
+                found=true;
             }
             
             if (found) {
@@ -271,16 +277,10 @@ namespace Antik {
             if (parseCommonUntaggedNumeric(kRECENT, line, resp)||
                 parseCommonUntaggedNumeric(kEXISTS, line, resp)||
                 parseCommonUntaggedNumeric(kEXPUNGE, line, resp)||
-                parseCommonStatus(tag,line, resp)||
-                parseCommonStatus(kUntagged,line, resp)) {
+                parseCommonStatus(tag, line, resp)||
+                parseCommonStatus(kUntagged, line, resp)) {
                 
                 return;
-
-            } else if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kBYE)) {
-                if (!resp->bBYESent) {
-                    resp->bBYESent = true;
-                }
-                resp->errorMessage = line;
 
             } else if (stringEqual(line, kUntagged)) {
                 std::cerr << "WARNING: un-handled response: " << line << std::endl; // WARN of any untagged that should be processed.
@@ -722,18 +722,17 @@ namespace Antik {
 
             parseGetNextLine(responseStream, commandLine);
 
+            CommandData commandData{ stringTag(commandLine), m_stringToCodeMap[stringCommand(commandLine)], commandLine, responseStream};
+
+            commandData.resp.reset({new CommandResponse { commandData.commandCode } });
+
             ParseFunction parseFn;
-            CommandData commandData{ stringTag(commandLine),
-                m_stringToCodeMap[stringCommand(commandLine)],
-                commandLine, responseStream};
-
-            commandData.resp.reset({new CommandResponse
-                { commandData.commandCode}});
-
-            parseFn = m_parseCommmandMap[static_cast<int> (commandData.commandCode)];
-            if (!parseFn) {
-                m_parseCommmandMap[static_cast<int> (commandData.commandCode)] = parseDefault;
-                parseFn = parseDefault;
+            auto findCommandFn = m_parseCommmandMap.find(static_cast<int> (commandData.commandCode));
+            
+            if(findCommandFn!=m_parseCommmandMap.end()) {   
+                parseFn = m_parseCommmandMap[static_cast<int> (commandData.commandCode)];
+            } else {
+                parseFn = m_parseCommmandMap[static_cast<int> (commandData.commandCode)] = parseDefault;
             }
 
             parseFn(commandData);
