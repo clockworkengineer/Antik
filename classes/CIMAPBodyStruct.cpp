@@ -83,7 +83,7 @@ namespace Antik {
         } else if (std::isdigit(part[0])) {
             value = part.substr(0, part.find_first_of(' '));
             part = part.substr(part.find_first_of(' ') + 1);
-        } else if (CIMAPParse::stringEqual(part, kNIL)) {
+        } else if (CIMAPParse::stringStartsWith(part, kNIL)) {
             value = kNIL;
             part = part.substr(value.length() + 1);
         } else {
@@ -110,7 +110,7 @@ namespace Antik {
         parseNext(part, bodyPart.parsedPart->encoding);
         parseNext(part, bodyPart.parsedPart->size);
 
-        if (CIMAPParse::CIMAPParse::stringEqual(bodyPart.parsedPart->type, kTEXT)) {
+        if (CIMAPParse::CIMAPParse::stringStartsWith(bodyPart.parsedPart->type, kTEXT)) {
             parseNext(part, bodyPart.parsedPart->textLines);
         }
 
@@ -190,7 +190,7 @@ namespace Antik {
         std::unordered_map<std::string, std::string> dispositionMap;
         std::string disposition {bodyPart.parsedPart->disposition };
 
-        if (!CIMAPParse::stringEqual(disposition, kNIL)) {
+        if (!CIMAPParse::stringStartsWith(disposition, kNIL)) {
             disposition = disposition.substr(1);
             while (!disposition.empty()) {
                 std::string item, value;
@@ -208,7 +208,7 @@ namespace Antik {
             }
             if (!attachmentLabel.empty()) {
                 disposition = dispositionMap[attachmentLabel];
-                if (!CIMAPParse::stringEqual(disposition, kNIL)) {
+                if (!CIMAPParse::stringStartsWith(disposition, kNIL)) {
                     dispositionMap.clear();
                     disposition = disposition.substr(1);
                     while (!disposition.empty()) {

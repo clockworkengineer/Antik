@@ -161,7 +161,6 @@ namespace Antik {
 
             struct CommandData {
                 std::string tag; // Command tag
-                Commands commandCode; // Command code
                 std::string commandLine; // Full command line
                 std::istringstream& commandRespStream; // Command response stream (Note reference)
                 COMMANDRESPONSE resp; // Parsed command response structure
@@ -196,7 +195,7 @@ namespace Antik {
             //
 
             static std::string stringToUpper(const std::string& line);
-            static bool stringEqual(const std::string& line, const std::string& compare);
+            static bool stringStartsWith(const std::string& line, const std::string& compare);
 
             static std::string stringBetween(const std::string& line, const char first, const char last);
             static std::string stringTag(const std::string& line);

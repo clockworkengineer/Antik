@@ -238,19 +238,19 @@ namespace Antik {
 
             bool found=false;
             
-            if (stringEqual(line, tag + " " + kOK)) {
+            if (stringStartsWith(line, tag + " " + kOK)) {
                 resp->status = RespCode::OK;
                 found=true;
 
-            } else if (stringEqual(line, tag + " " + kNO)) {
+            } else if (stringStartsWith(line, tag + " " + kNO)) {
                 resp->status = RespCode::NO;
                 found=true;
 
-            } else if (stringEqual(line, tag + " " + kBAD)) {
+            } else if (stringStartsWith(line, tag + " " + kBAD)) {
                 resp->status = RespCode::BAD;
                 found=true;
                 
-            } else if (stringEqual(line, tag + " " + kBYE)) {
+            } else if (stringStartsWith(line, tag + " " + kBYE)) {
                 if (!resp->bBYESent) {
                     resp->bBYESent = true;
                 }
@@ -286,7 +286,7 @@ namespace Antik {
             
             // Un-handled un-tagged response or an error
             
-            if (stringEqual(line, kUntagged)) {
+            if (stringStartsWith(line, kUntagged)) {
                 std::cerr << "WARNING: un-handled response: " << line << std::endl; // WARN of any un-tagged that should be processed.
             } else {
                 throw Exception("Error while parsing IMAP command [" + line + "]");
@@ -310,26 +310,26 @@ namespace Antik {
 
             for (std::string line; parseGetNextLine(commandData.commandRespStream, line);) {
 
-                if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kOK + " [")) {
+                if (stringStartsWith(line, static_cast<std::string> (kUntagged) + " " + kOK + " [")) {
                     line = stringBetween(line, '[', ']');
                 }
 
-                if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kFLAGS)) {
+                if (stringStartsWith(line, static_cast<std::string> (kUntagged) + " " + kFLAGS)) {
                     commandData.resp->responseMap.insert({kFLAGS, stringList(line)});
 
-                } else if (stringEqual(line, kPERMANENTFLAGS)) {
+                } else if (stringStartsWith(line, kPERMANENTFLAGS)) {
                     commandData.resp->responseMap.insert({kPERMANENTFLAGS, stringList(line)});
 
-                } else if (stringEqual(line, kUIDVALIDITY)) {
+                } else if (stringStartsWith(line, kUIDVALIDITY)) {
                     commandData.resp->responseMap.insert({kUIDVALIDITY, stringBetween(line, ' ', ']')});
 
-                } else if (stringEqual(line, kUIDNEXT)) {
+                } else if (stringStartsWith(line, kUIDNEXT)) {
                     commandData.resp->responseMap.insert({kUIDNEXT, stringBetween(line, ' ', ']')});
 
-                } else if (stringEqual(line, kHIGHESTMODSEQ)) {
+                } else if (stringStartsWith(line, kHIGHESTMODSEQ)) {
                     commandData.resp->responseMap.insert({kHIGHESTMODSEQ, stringBetween(line, ' ', ']')});
 
-                } else if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kCAPABILITY)) {
+                } else if (stringStartsWith(line, static_cast<std::string> (kUntagged) + " " + kCAPABILITY)) {
                     line = line.substr(((static_cast<std::string> (kUntagged) + " " + kCAPABILITY).length()) + 1);
                     commandData.resp->responseMap.insert({kCAPABILITY, line});
 
@@ -355,7 +355,7 @@ namespace Antik {
 
             for (std::string line; parseGetNextLine(commandData.commandRespStream, line);) {
 
-                if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kSEARCH)) {
+                if (stringStartsWith(line, static_cast<std::string> (kUntagged) + " " + kSEARCH)) {
 
                     line = line.substr((static_cast<std::string> (kUntagged) + " " + kSEARCH).length());
 
@@ -388,8 +388,8 @@ namespace Antik {
 
                 ListRespData mailBoxEntry;
 
-                if ((stringEqual(line, static_cast<std::string> (kUntagged) + " " + kLIST)) ||
-                        (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kLSUB))) {
+                if ((stringStartsWith(line, static_cast<std::string> (kUntagged) + " " + kLIST)) ||
+                        (stringStartsWith(line, static_cast<std::string> (kUntagged) + " " + kLSUB))) {
                     mailBoxEntry.attributes = stringList(line);
                     mailBoxEntry.hierDel = stringBetween(line, '\"', '\"').front();
                     if (line.back() != '\"') {
@@ -417,7 +417,7 @@ namespace Antik {
 
             for (std::string line; parseGetNextLine(commandData.commandRespStream, line);) {
 
-                if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kSTATUS)) {
+                if (stringStartsWith(line, static_cast<std::string> (kUntagged) + " " + kSTATUS)) {
 
                     line = line.substr((static_cast<std::string> (kUntagged) + " " + kSTATUS).length() + 1);
 
@@ -475,7 +475,7 @@ namespace Antik {
 
             for (std::string line; parseGetNextLine(commandData.commandRespStream, line);) {
 
-                if (stringEqual(line, static_cast<std::string> (kUntagged) + " " + kCAPABILITY)) {
+                if (stringStartsWith(line, static_cast<std::string> (kUntagged) + " " + kCAPABILITY)) {
                     commandData.resp->responseMap.insert({kCAPABILITY, line.substr((static_cast<std::string> (kUntagged) + " " + kCAPABILITY).length() + 1)});
                 } else {
                     parseCommon(commandData.tag, line, static_cast<CommandResponse *> (commandData.resp.get()));
@@ -506,25 +506,25 @@ namespace Antik {
 
                     do {
 
-                        if (stringEqual(line, static_cast<std::string> (kBODYSTRUCTURE) + " ")) {
+                        if (stringStartsWith(line, static_cast<std::string> (kBODYSTRUCTURE) + " ")) {
                             parseList(kBODYSTRUCTURE, fetchData, line);
-                        } else if (stringEqual(line, static_cast<std::string> (kENVELOPE) + " ")) {
+                        } else if (stringStartsWith(line, static_cast<std::string> (kENVELOPE) + " ")) {
                             parseList(kENVELOPE, fetchData, line);
-                        } else if (stringEqual(line, static_cast<std::string> (kFLAGS) + " ")) {
+                        } else if (stringStartsWith(line, static_cast<std::string> (kFLAGS) + " ")) {
                             parseList(kFLAGS, fetchData, line);
-                        } else if (stringEqual(line, static_cast<std::string> (kBODY) + " ")) {
+                        } else if (stringStartsWith(line, static_cast<std::string> (kBODY) + " ")) {
                             parseList(kBODY, fetchData, line);
-                        } else if (stringEqual(line, static_cast<std::string> (kINTERNALDATE) + " ")) {
+                        } else if (stringStartsWith(line, static_cast<std::string> (kINTERNALDATE) + " ")) {
                             parseString(kINTERNALDATE, fetchData, line);
-                        } else if (stringEqual(line, static_cast<std::string> (kRFC822SIZE) + " ")) {
+                        } else if (stringStartsWith(line, static_cast<std::string> (kRFC822SIZE) + " ")) {
                             parseNumber(kRFC822SIZE, fetchData, line);
-                        } else if (stringEqual(line, static_cast<std::string> (kUID) + " ")) {
+                        } else if (stringStartsWith(line, static_cast<std::string> (kUID) + " ")) {
                             parseNumber(kUID, fetchData, line);
-                        } else if (stringEqual(line, static_cast<std::string> (kRFC822HEADER) + " ")) {
+                        } else if (stringStartsWith(line, static_cast<std::string> (kRFC822HEADER) + " ")) {
                             parseOctets(kRFC822HEADER, fetchData, line, commandData.commandRespStream);
-                        } else if (stringEqual(line, static_cast<std::string> (kBODY) + "[")) {
+                        } else if (stringStartsWith(line, static_cast<std::string> (kBODY) + "[")) {
                             parseOctets(kBODY, fetchData, line, commandData.commandRespStream);
-                        } else if (stringEqual(line, static_cast<std::string> (kRFC822) + " ")) {
+                        } else if (stringStartsWith(line, static_cast<std::string> (kRFC822) + " ")) {
                             parseOctets(kRFC822, fetchData, line, commandData.commandRespStream);
                         } else {
                             throw Exception("Error while parsing FETCH command [" + line + "]");
@@ -587,14 +587,14 @@ namespace Antik {
         }
 
         //
-        // Perform case-insensitive string compare (return true strings are equal, false otherwise)
+        // Return true if line starts with start string false otherwise (compare is case insensitive).
         //
 
-        bool CIMAPParse::stringEqual(const std::string& line, const std::string& compare) {
+        bool CIMAPParse::stringStartsWith(const std::string& line, const std::string& start) {
 
             int cnt01 { 0 };
-            if (line.length() < compare.length()) return (false);
-            for (auto &c : compare) if (std::toupper(c) != std::toupper(line[cnt01++])) return (false);
+            if (line.length() < start.length()) return (false);
+            for (auto &c : start) if (std::toupper(c) != std::toupper(line[cnt01++])) return (false);
             return (true);
 
         }
@@ -639,7 +639,7 @@ namespace Antik {
             std::size_t startOfCommand { line.find_first_of(' ') + 1 };
             std::size_t endOfCommand { line.find_first_of(' ', startOfCommand) };
 
-            if (stringEqual(line.substr(startOfCommand, endOfCommand - startOfCommand), kUID)) {
+            if (stringStartsWith(line.substr(startOfCommand, endOfCommand - startOfCommand), kUID)) {
                 startOfCommand = line.find_first_of(' ', startOfCommand) + 1;
                 endOfCommand = line.find_first_of(' ', startOfCommand);
             }
@@ -698,7 +698,7 @@ namespace Antik {
             
             parseGetNextLine(responseStream, commandLine);
 
-            // Extract code for command
+            // Extract parser code for command
             
             auto findCommandCode = m_stringToCodeMap.find(stringCommand(commandLine));         
             if (findCommandCode == m_stringToCodeMap.end()) {
@@ -707,18 +707,18 @@ namespace Antik {
             
             // Create command parse/response  data
             
-            CommandData commandData{ stringTag(commandLine), findCommandCode->second, commandLine, responseStream};
-            commandData.resp.reset({new CommandResponse { commandData.commandCode } });
+            CommandData commandData{ stringTag(commandLine),commandLine, responseStream};
+            commandData.resp.reset({new CommandResponse { findCommandCode->second } });
 
             // Find parse function or use default if none present
 
             ParseFunction parseFn;
 
-            auto findCommandFn = m_parseCommmandMap.find(static_cast<int> (commandData.commandCode));
+            auto findCommandFn = m_parseCommmandMap.find(static_cast<int> (findCommandCode->second));
             if (findCommandFn != m_parseCommmandMap.end()) {
-                parseFn = m_parseCommmandMap[static_cast<int> (commandData.commandCode)];
+                parseFn = m_parseCommmandMap[static_cast<int> (findCommandCode->second)];
             } else {
-                parseFn = m_parseCommmandMap[static_cast<int> (commandData.commandCode)] = parseDefault;
+                parseFn = m_parseCommmandMap[static_cast<int> (findCommandCode->second)] = parseDefault;
             }
 
             parseFn(commandData);
