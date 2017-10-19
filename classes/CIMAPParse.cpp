@@ -274,6 +274,8 @@ namespace Antik {
 
         void CIMAPParse::parseCommon(const std::string& tag, const std::string& line, CommandResponse * resp) {
 
+            // Handle command response common components
+            
             if (parseCommonUntaggedNumeric(kRECENT, line, resp)||
                 parseCommonUntaggedNumeric(kEXISTS, line, resp)||
                 parseCommonUntaggedNumeric(kEXPUNGE, line, resp)||
@@ -282,9 +284,12 @@ namespace Antik {
                 
                 return;
 
-            } else if (stringEqual(line, kUntagged)) {
-                std::cerr << "WARNING: un-handled response: " << line << std::endl; // WARN of any untagged that should be processed.
-
+            } 
+            
+            // Un-handled un-tagged response or an error
+            
+            if (stringEqual(line, kUntagged)) {
+                std::cerr << "WARNING: un-handled response: " << line << std::endl; // WARN of any un-tagged that should be processed.
             } else {
                 throw Exception("error while parsing IMAP command [" + line + "]");
             }
