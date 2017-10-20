@@ -163,7 +163,7 @@ namespace Antik {
 
         void CIMAPParse::parseString(const std::string& item, FetchRespData& fetchData, std::string& line) {
             std::string quoteding;
-            line = line.substr(line.find(item) + item.length() + 1);
+            line = line.substr(stringToUpper(line).find(item) + item.length() + 1);
             quoteding = "\"" + stringBetween(line, '\"', '\"') + "\"";
             line = line.substr(quoteding.length());
             fetchData.responseMap.insert({item, quoteding});
@@ -180,7 +180,7 @@ namespace Antik {
         void CIMAPParse::parseList(const std::string& item, FetchRespData& fetchData, std::string& line) {
 
             std::string list;
-            line = line.substr(line.find(item) + item.length() + 1);
+            line = line.substr(stringToUpper(line).find(item) + item.length() + 1);
             list = stringList(line);
             line = line.substr(list.length());
             fetchData.responseMap.insert({item, list});
@@ -217,7 +217,7 @@ namespace Antik {
 
         bool CIMAPParse::parseCommonUntaggedNumeric(const std::string& item, const std::string& line, CommandResponse * resp) {
 
-            if ((line[0] == kUntagged[0]) && (line.find(item) != std::string::npos)) {
+            if ((line[0] == kUntagged[0]) && (stringToUpper(line).find(item) != std::string::npos)) {
                 if (resp->responseMap.find(item) == resp->responseMap.end()) {
                     resp->responseMap.insert({item, stringUntaggedNumber(line)});
                 } else {
@@ -333,7 +333,7 @@ namespace Antik {
                     line = line.substr(((static_cast<std::string> (kUntagged) + " " + kCAPABILITY).length()) + 1);
                     commandData.resp->responseMap.insert({kCAPABILITY, line});
 
-                } else if (line.find(kUNSEEN) == 0) {
+                } else if (stringToUpper(line).find(kUNSEEN) == 0) {
                     commandData.resp->responseMap.insert({kUNSEEN, stringBetween(line, ' ', ']')});
 
                 } else {
@@ -454,7 +454,7 @@ namespace Antik {
 
                 StoreRespData storeData;
 
-                if (line.find(kFETCH) != std::string::npos) {
+                if (stringToUpper(line).find(kFETCH) != std::string::npos) {
                     storeData.index = std::strtoull(stringUntaggedNumber(line).c_str(), nullptr, 10);
                     storeData.flagsList = stringList(stringList(line).substr(1));
                     commandData.resp->storeList.push_back(std::move(storeData));
@@ -497,7 +497,7 @@ namespace Antik {
 
                 int lineLength = line.length() + std::strlen(kEOL);
 
-                if (line.find(static_cast<std::string> (kFETCH) + " (") != std::string::npos) {
+                if (stringToUpper(line).find(static_cast<std::string> (kFETCH) + " (") != std::string::npos) {
 
                     fetchData.index = std::strtoull(stringUntaggedNumber(line).c_str(), nullptr, 10);
                     line = line.substr(line.find_first_of('(') + 1);
@@ -578,11 +578,11 @@ namespace Antik {
         // Convert any lowercase characters in string to upper.
         //
 
-        std::string CIMAPParse::stringToUpper(const std::string& line) {
+        std::string CIMAPParse::stringToUpper(std::string line) {
 
-            std::string upperCase { line };
-            for (auto &c : upperCase) c = std::toupper(c);
-            return (upperCase);
+            std::transform(line.begin(), line.end(), line.begin(), [](unsigned char c) -> unsigned char { return std::toupper(c); });
+            
+            return (line);
 
         }
 
@@ -649,12 +649,11 @@ namespace Antik {
         }
 
         //
-        // Extract list  from command response line. Note: only check until 
-        // the end of line; the first character in line is the start 
-        // of the list ie. a '('.  The code reads a line until the closing ')'
-        // is found and enables sublists to be enclosed within a list. IMAP
-        // responses can contain complex list structures and this is the most
-        // flexible method for dealing with this.
+        // Extract list  from command response line.  The code reads a line until 
+        // the closing ')' (end of list) is found which enables sublists to be 
+        // enclosed within the list; a incorrect number of braces in the list is signalled
+        // with an exception. IMAP responses can contain complex list structures
+        // and this is the most flexible method for dealing with this.
         //
 
         std::string CIMAPParse::stringList(const std::string& line) {

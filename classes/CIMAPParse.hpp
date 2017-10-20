@@ -194,7 +194,7 @@ namespace Antik {
             // Command response parse string utility methods
             //
 
-            static std::string stringToUpper(const std::string& line);
+            static std::string stringToUpper(std::string line);
             static bool stringStartsWith(const std::string& line, const std::string& compare);
 
             static std::string stringBetween(const std::string& line, const char first, const char last);
