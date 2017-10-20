@@ -284,7 +284,7 @@ namespace Antik {
 
             } 
             
-            // Un-handled un-tagged response or an error
+            // Unknown un-tagged response or an error
             
             if (stringStartsWith(line, kUntagged)) {
                 std::cerr << "WARNING: un-handled response: " << line << std::endl; // WARN of any un-tagged that should be processed.

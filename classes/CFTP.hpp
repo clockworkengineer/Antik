@@ -112,7 +112,7 @@ namespace Antik {
 
             std::uint16_t connect(void);
             std::uint16_t disconnect(void);
-            bool getConnectedStatus(void) const;
+            bool isConnected(void) const;
             
             // Set FTP passive transfer mode 
             // == true passive mode otherwise active
@@ -219,7 +219,6 @@ namespace Antik {
             void uploadCommandResponse(std::string &commandResponse);
             void downloadFile(const std::string &file);
             void uploadFile(const std::string &file);
-
  
             // PORT/PASV related methods
             
@@ -245,7 +244,8 @@ namespace Antik {
             
             bool m_passiveMode { false }; // == true passive mode enabled, == false active mode
 
-            std::array<char, 32*1024> m_ioBuffer;  // io Buffer
+            std::unique_ptr<char> m_ioBuffer { nullptr };  // io Buffer
+            std::uint32_t m_ioBufferSize     { 64*1024 };
 
             Antik::Network::CSocket m_controlChannelSocket;
             Antik::Network::CSocket m_dataChannelSocket;

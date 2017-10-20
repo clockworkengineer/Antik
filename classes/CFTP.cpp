@@ -134,9 +134,9 @@ namespace Antik {
 
             do {
 
-                size_t bytesRead = m_dataChannelSocket.read(&m_ioBuffer[0], m_ioBuffer.size());
+                size_t bytesRead = m_dataChannelSocket.read(m_ioBuffer.get(), m_ioBufferSize);
                 if (bytesRead) {
-                    localFile.write(&m_ioBuffer[0], bytesRead);
+                    localFile.write(m_ioBuffer.get(), bytesRead);
                 }
 
             } while (!m_dataChannelSocket.closedByRemotePeer());
@@ -157,12 +157,12 @@ namespace Antik {
 
                 do {
 
-                    localFile.read(&m_ioBuffer[0], m_ioBuffer.size());
+                    localFile.read(m_ioBuffer.get(), m_ioBufferSize);
 
                     size_t bytesToWrite = localFile.gcount();
                     if (bytesToWrite) {
                         for (;;) {
-                            bytesToWrite -= m_dataChannelSocket.write(&m_ioBuffer[localFile.gcount() - bytesToWrite], bytesToWrite);
+                            bytesToWrite -= m_dataChannelSocket.write(&m_ioBuffer.get()[localFile.gcount() - bytesToWrite], bytesToWrite);
                             if ((bytesToWrite == 0) || m_dataChannelSocket.closedByRemotePeer()) {
                                 break;
                             }
@@ -181,10 +181,10 @@ namespace Antik {
 
             do {
 
-                size_t bytesRead = m_dataChannelSocket.read(&m_ioBuffer[0], m_ioBuffer.size() - 1);
+                size_t bytesRead = m_dataChannelSocket.read(m_ioBuffer.get(), m_ioBufferSize - 1);
                 if (bytesRead) {
-                    m_ioBuffer[bytesRead] = '\0';
-                    commandResponse.append(&m_ioBuffer[0]);
+                    m_ioBuffer.get()[bytesRead] = '\0';
+                    commandResponse.append(m_ioBuffer.get());
                 }
 
             } while (!m_dataChannelSocket.closedByRemotePeer());
@@ -368,7 +368,7 @@ namespace Antik {
         // Get current connection status with server
         //
 
-        bool CFTP::getConnectedStatus(void) const {
+        bool CFTP::isConnected(void) const {
 
             return (m_connected);
 
@@ -424,6 +424,10 @@ namespace Antik {
                 Exception("Already connected to a server.");
             }
 
+            // Allocate IO Buffer
+            
+            m_ioBuffer.reset(new char[m_ioBufferSize]);
+            
             m_dataChannelSocket.setHostAddress(Antik::Network::CSocket::localIPAddress());;
 
             m_controlChannelSocket.setHostAddress(m_serverName);
@@ -485,6 +489,10 @@ namespace Antik {
 
             m_controlChannelSocket.setSslEnabled(false);
             m_dataChannelSocket.setSslEnabled(false);
+            
+            // Free IO Buffer
+            
+            m_ioBuffer.reset();
 
             return (m_commandStatusCode);
 
