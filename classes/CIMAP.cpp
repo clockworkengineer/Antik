@@ -295,7 +295,7 @@ namespace Antik {
 
             CIMAPParse::COMMANDRESPONSE parsedResponse = CIMAPParse::parseResponse(sendCommand(
                     static_cast<std::string> (IMAP::kLOGIN) + " " + this->m_userName + " " + this->m_userPassword));
-            if (parsedResponse->bBYESent) {
+            if (parsedResponse->byeSent) {
                 throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessage);
             } else if (parsedResponse->status != CIMAPParse::RespCode::OK) {
                 throw CIMAP::Exception(static_cast<std::string> (IMAP::kLOGIN) + " : " + parsedResponse->errorMessage);

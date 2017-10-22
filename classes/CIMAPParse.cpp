@@ -236,32 +236,27 @@ namespace Antik {
 
         bool CIMAPParse::parseCommonStatus(const std::string& tag, const std::string& line, CommandResponse * resp) {
 
-            bool found=false;
+            bool responseParsed=false;
             
             if (stringStartsWith(line, tag + " " + kOK)) {
                 resp->status = RespCode::OK;
-                found=true;
-
+                responseParsed=true;
             } else if (stringStartsWith(line, tag + " " + kNO)) {
                 resp->status = RespCode::NO;
-                found=true;
-
+                responseParsed=true;
             } else if (stringStartsWith(line, tag + " " + kBAD)) {
                 resp->status = RespCode::BAD;
-                found=true;
-                
+                responseParsed=true;
             } else if (stringStartsWith(line, tag + " " + kBYE)) {
-                if (!resp->bBYESent) {
-                    resp->bBYESent = true;
-                }
-                found=true;
+                resp->byeSent = true;
+                responseParsed = true;
             }
             
-            if (found) {
+            if (responseParsed) {
                resp->errorMessage = line;
             }
 
-            return (found);
+            return (responseParsed);
 
         }
         //
@@ -652,8 +647,7 @@ namespace Antik {
         // Extract list  from command response line.  The code reads a line until 
         // the closing ')' (end of list) is found which enables sublists to be 
         // enclosed within the list; a incorrect number of braces in the list is signalled
-        // with an exception. IMAP responses can contain complex list structures
-        // and this is the most flexible method for dealing with this.
+        // with an exception. 
         //
 
         std::string CIMAPParse::stringList(const std::string& line) {

@@ -120,7 +120,7 @@ TEST_F(CIMAPParseTests, SELECTValid) {
     ASSERT_STREQ("14", parsedResponse->responseMap["UIDVALIDITY"].c_str());    
     ASSERT_STREQ("4554", parsedResponse->responseMap["UIDNEXT"].c_str());    
 
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
     
 }
 
@@ -142,7 +142,7 @@ TEST_F(CIMAPParseTests, SELECTInvalidMailBox) {
     EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::NO);
     ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessage.c_str());
 
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
     
 }
 
@@ -190,7 +190,7 @@ TEST_F(CIMAPParseTests, EXAMINEValid) {
     ASSERT_STREQ("18", parsedResponse->responseMap["UIDVALIDITY"].c_str());    
     ASSERT_STREQ("4584", parsedResponse->responseMap["UIDNEXT"].c_str());    
 
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
        
 }
 
@@ -212,7 +212,7 @@ TEST_F(CIMAPParseTests, EXAMINEInvalidMailBox) {
     EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::NO);
     ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessage.c_str());
 
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
        
 }
 
@@ -248,7 +248,7 @@ TEST_F(CIMAPParseTests, STATUSValid) {
     ASSERT_STREQ("14", parsedResponse->responseMap["UIDVALIDITY"].c_str());
     ASSERT_STREQ("2", parsedResponse->responseMap["UNSEEN"].c_str());
 
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
 
 }
 
@@ -270,7 +270,7 @@ TEST_F(CIMAPParseTests, STATUSInvalidMailBox) {
     EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::NO);
     ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessage.c_str());
 
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
        
 }
 
@@ -331,7 +331,7 @@ TEST_F(CIMAPParseTests, LISTValid) {
         checkListRespData(parsedResponse->mailBoxList[17], '/', "(\\HasNoChildren \\Trash)", "\"[Google Mail]/Trash\"");
     }
     
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
        
 }
 
@@ -367,7 +367,7 @@ TEST_F(CIMAPParseTests, SEARCHValid) {
         EXPECT_EQ(10, parsedResponse->indexes[9]);
     }
     
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
        
 }
 
@@ -403,7 +403,7 @@ TEST_F(CIMAPParseTests, UIDSEARCHValid) {
         EXPECT_EQ(1014, parsedResponse->indexes[9]);
     }
 
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
        
 }
 
@@ -464,7 +464,7 @@ TEST_F(CIMAPParseTests, LSUBValid) {
         checkListRespData(parsedResponse->mailBoxList[17], '/', "(\\HasNoChildren \\Trash)", "\"[Google Mail]/Trash\"");
     }
     
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
        
 }
 
@@ -492,7 +492,7 @@ TEST_F(CIMAPParseTests, EXPUNGEValid) {
     
     ASSERT_STREQ("3 3 3 8", parsedResponse->responseMap["EXPUNGE"].c_str());
             
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
 
 }
 
@@ -550,7 +550,7 @@ TEST_F(CIMAPParseTests, STOREValid) {
 
     }
 
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
        
 }
 
@@ -577,7 +577,7 @@ TEST_F(CIMAPParseTests, CAPABILITYValid) {
          "UIDPLUS COMPRESS=DEFLATE ENABLE MOVE CONDSTORE ESEARCH UTF8=ACCEPT LIST-EXTENDED "
          "LIST-STATUS LITERAL- APPENDLIMIT=35651584 SPECIAL-USE", parsedResponse->responseMap["CAPABILITY"].c_str());
     
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
 
 }
 
@@ -605,7 +605,7 @@ TEST_F(CIMAPParseTests, NOOPValid) {
         ASSERT_STREQ("8",parsedResponse->responseMap["EXISTS"].c_str());
     }
     
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
     
 }
 TEST_F(CIMAPParseTests, IDLEValid) {
@@ -632,7 +632,7 @@ TEST_F(CIMAPParseTests, IDLEValid) {
         ASSERT_STREQ("1",parsedResponse->responseMap["EXISTS"].c_str());
     }
    
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
     
 }
 
@@ -654,7 +654,7 @@ TEST_F(CIMAPParseTests, LOGOUTValid) {
 
     EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
     
-    EXPECT_TRUE(parsedResponse->bBYESent);
+    EXPECT_TRUE(parsedResponse->byeSent);
     
 }
 
@@ -696,7 +696,7 @@ TEST_F(CIMAPParseTests, FETCHValid) {
                     "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL)", parsedResponse->fetchList[0].responseMap["BODYSTRUCTURE"].c_str());
     }
     
-    EXPECT_FALSE(parsedResponse->bBYESent);
+    EXPECT_FALSE(parsedResponse->byeSent);
 
 }
 
@@ -739,7 +739,7 @@ TEST_F(CIMAPParseTests, FETCHValidWithBYE) {
                     "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL)", parsedResponse->fetchList[0].responseMap["BODYSTRUCTURE"].c_str());
     }
     
-    EXPECT_TRUE(parsedResponse->bBYESent);
+    EXPECT_TRUE(parsedResponse->byeSent);
     
 }
 

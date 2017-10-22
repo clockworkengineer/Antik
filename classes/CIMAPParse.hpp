@@ -57,9 +57,9 @@ namespace Antik {
 
             enum class Commands {
                 NONE = -1,
-                STARTTLS = 0, // Supported (through curl connect)
-                AUTHENTICATE, // Supported (through curl connect)
-                LOGIN, // Supported (through curl connect)
+                STARTTLS = 0, // Un-Supported (connect does tls handshakes automatically).
+                AUTHENTICATE, // Un-Supported
+                LOGIN, // Un-Supported (connect logs user in)
                 CAPABILITY, // Supported
                 SELECT, // Supported
                 EXAMINE, // Supported
@@ -140,11 +140,11 @@ namespace Antik {
                 {
                 }
 
-                Commands command{ Commands::NONE}; // Command enum code
-                RespCode status{ RespCode::NONE}; // Command enum status
-                std::string errorMessage; // Command error string
-                bool bBYESent{ false}; // ==true then BYE sent as part of response
-                CommandResponseMap responseMap; // Command response map 
+                Commands command{ Commands::NONE}; // Command code
+                RespCode status{ RespCode::NONE};  // Command status
+                std::string errorMessage;          // Command error string
+                bool byeSent{ false};              // ==true then BYE sent as part of response
+                CommandResponseMap responseMap;    // Command response map 
 
                 std::vector<std::uint64_t> indexes; // Vector of SEARCH index(s)/UID(s)
                 std::vector<ListRespData> mailBoxList; // Vector of LIST response data
