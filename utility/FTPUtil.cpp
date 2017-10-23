@@ -13,9 +13,10 @@
 //
 // Module: FTPUtil
 //
-// Description: FTP utility functions for the Antikythera class CFTP.
+// Description: FTP utility functions for the Antik class CFTP.
 // Perform selective and  more powerful operations not available directly through
-// single raw FTP commands.
+// single raw FTP commands. Any generated exceptions are not handled but passed back
+// up the call stack.
 // 
 // Dependencies: 
 // 
@@ -65,10 +66,22 @@ namespace Antik {
         // ================
 
         //
+        // Recursively parse a local directory and produce a list of files.
+        //
+
+        void listLocalRecursive(const string &directory, vector<string> &fileList) {
+
+            for (auto directoryEntry : fs::recursive_directory_iterator{directory}) {
+                fileList.push_back(directoryEntry.path().string());
+            }
+
+        }
+        
+        //
         // Recursively parse a remote server path passed in and pass back a list of directories/files found.
         //
         
-        void listFilesRecursive(CFTP &ftpServer, string directoryPath, vector<string> &fileList) {
+        void listFilesRecursive(CFTP &ftpServer, const string &directoryPath, vector<string> &fileList) {
 
             vector<string> serverFileList;
             uint16_t statusCode;

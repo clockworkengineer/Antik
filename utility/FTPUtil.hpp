@@ -31,8 +31,9 @@
 
 namespace Antik {
     namespace FTP {
-    
-      void listFilesRecursive(CFTP &ftpServer, std::string directoryPath, std::vector<std::string> &allFiles);
+ 
+      void listLocalRecursive(const std::string &directory, std::vector<std::string> &fileList);
+      void listFilesRecursive(CFTP &ftpServer, const std::string &directoryPath, std::vector<std::string> &allFiles);
       std::vector<std::string> getFiles(CFTP &ftpServer, const std::string &destinationPath, const std::vector<std::string> &fileList, bool safe = true, char postFix = '~');
       std::vector<std::string> putFiles(CFTP &ftpServer, const std::string &baseFolder);
       
