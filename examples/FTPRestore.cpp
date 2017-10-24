@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   FTPBackup.cpp
+ * File:   FTPRestore.cpp
  * 
  * Author: Robert Tizzard
  * 
@@ -11,14 +11,14 @@
  */
 
 //
-// Program: FTPBackup
+// Program: FTPRestore
 //
-// Description: Simple FTP backup program that takes a local directory and backs it up
-// to a specified FTP server using account details provided.
+// Description: Simple FTP restore program that takes a remote directory and restores it
+// to a local directory.
 //
 // Dependencies: C11++, Classes (CFTP, CSocket), Boost C++ Libraries.
 //
-// FTPBackup
+// FTPRestore
 // Program Options:
 //   --help                 Print help messages
 //   -c [ --config ] arg    Config File Name
@@ -26,7 +26,9 @@
 //   -p [ --port ] arg      FTP Server port
 //   -u [ --user ] arg      Account username
 //   -p [ --password ] arg  User password
-//   -l [ --local ] arg     Local Directory to backup
+//   -r [ --remote ] arg    Remote server directory to restore
+//   -l [ --local ] arg     Local directory to use as base for restore
+//
 
 // =============
 // INCLUDE FILES
@@ -68,7 +70,8 @@ struct ParamArgData {
     std::string userPassword; // FTP account user name password
     std::string serverName; // FTP server
     std::string serverPort; // FTP server port
-    std::string localDirectory; // Local directory to backup
+    std::string remoteDirectory; // FTP Remote to restore
+    std::string localDirectory; // Local directory to use as base for restore
     std::string configFileName; // Configuration file name
 };
 
@@ -101,7 +104,8 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
             ("port,o", po::value<std::string>(&argData.serverPort)->required(), "FTP Server port")
             ("user,u", po::value<std::string>(&argData.userName)->required(), "Account username")
             ("password,p", po::value<std::string>(&argData.userPassword)->required(), "User password")
-            ("local,l", po::value<std::string>(&argData.localDirectory)->required(), "Local directory to backup");
+            ("remote,r", po::value<std::string>(&argData.remoteDirectory)->required(), "Remote directory to restore")
+            ("local,l", po::value<std::string>(&argData.localDirectory)->required(), "Local directory as base for restore");
 
 }
 
@@ -135,7 +139,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         // Display options and exit with success
 
         if (vm.count("help")) {
-            std::cout << "FTPBackup" << std::endl << commandLine << std::endl;
+            std::cout << "FTPRestore" << std::endl << commandLine << std::endl;
             exit(EXIT_SUCCESS);
         }
 
@@ -153,7 +157,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         po::notify(vm);
 
     } catch (po::error& e) {
-        std::cerr << "FTPBackup Error: " << e.what() << std::endl << std::endl;
+        std::cerr << "FTPRestore Error: " << e.what() << std::endl << std::endl;
         std::cerr << commandLine << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -172,7 +176,7 @@ int main(int argc, char** argv) {
         CFTP ftpServer;
         std::uint16_t statusCode;
         std::vector<std::string>  fileList;
-        std::vector<std::string> backedUp;
+        std::vector<std::string> restoredFiles;
 
         // Read in command line parameters and process
 
@@ -181,6 +185,7 @@ int main(int argc, char** argv) {
         std::cout << "SERVER [" << argData.serverName << "]" << std::endl;
         std::cout << "SERVER PORT [" << argData.serverPort << "]" << std::endl;
         std::cout << "USER [" << argData.userName << "]" << std::endl;
+        std::cout << "REMOTE DIRECTORY [" << argData.remoteDirectory << "]" << std::endl;
         std::cout << "LOCAL DIRECTORY [" << argData.localDirectory << "]\n" << std::endl;
         
         ftpServer.setServerAndPort(argData.serverName, argData.serverPort);
@@ -200,24 +205,24 @@ int main(int argc, char** argv) {
             throw CFTP::Exception("Unable to connect status returned = " + ftpServer.getCommandResponse());
         }
 
-        // Get local directory file list
+        // Get remote directory file list
         
-        listLocalRecursive(argData.localDirectory, fileList);
+        listRemoteRecursive(ftpServer, argData.remoteDirectory, fileList);
         
-        // Copy file list  to FTP Server
+        // Restore files from  FTP Server
 
         if (!fileList.empty()) {
-            backedUp = putFiles(ftpServer, argData.localDirectory, fileList);
+            restoredFiles = getFiles(ftpServer, argData.localDirectory, fileList);
         }
 
         // Signal success or failure
         
-        if (!backedUp.empty()) {
-            for (auto file : backedUp) {
-                std::cout << "Sucessfully backed up [" << file << "]" << std::endl;
+        if (!restoredFiles.empty()) {
+            for (auto file : restoredFiles) {
+                std::cout << "Successfully restored [" << file << "]" << std::endl;
             }
         } else {
-            std::cout << "Backup failed."<< std::endl;
+            std::cout << "Restore failed."<< std::endl;
         }
 
         // Disconnect 
