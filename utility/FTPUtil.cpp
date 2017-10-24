@@ -69,9 +69,9 @@ namespace Antik {
         // Recursively parse a local directory and produce a list of files.
         //
 
-        void listLocalRecursive(const string &directory, vector<string> &fileList) {
+        void listLocalRecursive(const string &localDirectory, vector<string> &fileList) {
 
-            for (auto directoryEntry : fs::recursive_directory_iterator{directory}) {
+            for (auto directoryEntry : fs::recursive_directory_iterator{localDirectory}) {
                 fileList.push_back(directoryEntry.path().string());
             }
 
@@ -81,16 +81,16 @@ namespace Antik {
         // Recursively parse a remote server path passed in and pass back a list of directories/files found.
         //
         
-        void listFilesRecursive(CFTP &ftpServer, const string &directoryPath, vector<string> &fileList) {
+        void listRemoteRecursive(CFTP &ftpServer, const string &remoteDirectory, vector<string> &fileList) {
 
             vector<string> serverFileList;
             uint16_t statusCode;
 
-            statusCode = ftpServer.listFiles(directoryPath, serverFileList);
+            statusCode = ftpServer.listFiles(remoteDirectory, serverFileList);
             if (statusCode == 226) {
                 for (auto file : serverFileList) {
-                    if (directoryPath != file) {
-                        listFilesRecursive(ftpServer, file, fileList);
+                    if (remoteDirectory != file) {
+                        listRemoteRecursive(ftpServer, file, fileList);
                         fileList.push_back(file);
                     }
                 }
@@ -98,12 +98,12 @@ namespace Antik {
         }
         
         //
-        // Download all files passed in list from server to the destination path passed in; recreating any server directory
+        // Download all files passed in file list from server to the local path passed in; recreating any server directory
         // structure in situ. If safe == true then the file is downloaded to a filename with a postfix then the file is renamed
         // to its correct value on success. Returns a list of successfully downloaded files and directories created.
         //
 
-        vector<string> getFiles(CFTP &ftpServer, const string &destinationPath, const vector<string> &fileList, bool safe, char postFix) {
+        vector<string> getFiles(CFTP &ftpServer, const string &localDirectory, const vector<string> &fileList, bool safe, char postFix) {
 
             uint16_t statusCode;
             vector<string> successList;
@@ -113,7 +113,7 @@ namespace Antik {
             }
 
             for (auto file : fileList) {
-                fs::path destination{ destinationPath};
+                fs::path destination{ localDirectory};
                 destination /= file;
                 if (!fs::exists(destination.parent_path())) {
                     fs::create_directories(destination.parent_path());
@@ -133,49 +133,52 @@ namespace Antik {
             return (successList);
 
         }
-
+        
         //
-        // Take base folder and recursively traverse it uploading all files to server;  recreating 
-        // any local directory structure in situ on the server.
+        // Take local folder, file list and upload all files to server;  recreating 
+        // any local directory structure in situ on the server. Returns a list of successfully 
+        // uploaded files and directories created.
         //
         
-        vector<string> putFiles(CFTP &ftpServer, const string &baseFolder) {
+        vector<string> putFiles(CFTP &ftpServer, const string &localFolder,  const vector<string> &fileList) {
 
             vector<string> successList;
-            fs::path basePath{ baseFolder};
+            fs::path localPath{ localFolder};
 
-            for (auto dir : fs::recursive_directory_iterator{basePath}) {
+            for (auto file : fileList) {
+                
+                fs::path filePath { file };
 
-                if (fs::exists(dir.path())) {
+                if (fs::exists(filePath)) {
 
-                    string directory;
+                    string remoteDirectory;
                     bool putFile = false;
 
-                    if (fs::is_directory(dir.path())) {
-                        directory = dir.path().string().substr(basePath.parent_path().size());
+                    if (fs::is_directory(filePath)) {
+                        remoteDirectory = filePath.string().substr(localPath.parent_path().size());
                         putFile = false;
-                    } else if (fs::is_regular_file(dir.path())) {
-                        directory = dir.path().parent_path().string().substr(basePath.parent_path().size());
+                    } else if (fs::is_regular_file(filePath)) {
+                        remoteDirectory = filePath.parent_path().string().substr(localPath.parent_path().size());
                         putFile = true;
                     }
 
-                    if (!directory.empty()) {
+                    if (!remoteDirectory.empty()) {
 
-                        if (!ftpServer.isDirectory(directory)) {
+                        if (!ftpServer.isDirectory(remoteDirectory)) {
                             vector<string> directories;
-                            boost::split(directories, directory, boost::is_any_of("/"));
+                            boost::split(directories, remoteDirectory, boost::is_any_of("/"));
                             ftpServer.changeWorkingDirectory("/");
                             for (auto files : directories) {
                                 ftpServer.makeDirectory(files);
                                 ftpServer.changeWorkingDirectory(files);
                             }
-                            successList.push_back(directory);
+                            successList.push_back(remoteDirectory);
                         } else {
-                            ftpServer.changeWorkingDirectory(directory);
+                            ftpServer.changeWorkingDirectory(remoteDirectory);
                         }
                         if (putFile) {
-                            if (ftpServer.putFile(dir.path().filename().string(), dir.path().string()) == 226) {
-                                successList.push_back(dir.path().string());
+                            if (ftpServer.putFile(filePath.filename().string(), filePath.string()) == 226) {
+                                successList.push_back(filePath.string());
                             }
                         }
                     }
@@ -187,6 +190,7 @@ namespace Antik {
             return (successList);
 
         }
+        
     } // namespace FTP
 
 } // namespace Antik

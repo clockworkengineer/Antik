@@ -171,6 +171,7 @@ int main(int argc, char** argv) {
         ParamArgData argData;
         CFTP ftpServer;
         std::uint16_t statusCode;
+        std::vector<std::string>  fileList;
         std::vector<std::string> backedUp;
 
         // Read in command line parameters and process
@@ -199,9 +200,15 @@ int main(int argc, char** argv) {
             throw CFTP::Exception("Unable to connect status returned = " + ftpServer.getCommandResponse());
         }
 
-        // Copy local directory to FTP Server
+        // Get local directory file list
         
-        backedUp = putFiles(ftpServer, argData.localDirectory);
+        listLocalRecursive(argData.localDirectory, fileList);
+        
+        // Copy file list  to FTP Server
+
+        if (!fileList.empty()) {
+            backedUp = putFiles(ftpServer, argData.localDirectory, fileList);
+        }
 
         // Signal success or failure
         
