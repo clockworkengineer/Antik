@@ -505,10 +505,6 @@ namespace Antik {
 
         void CFTP::setPassiveTransferMode(bool passiveEnabled) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
-            }
-
             m_passiveMode = passiveEnabled;
 
         }

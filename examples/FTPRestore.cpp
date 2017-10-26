@@ -70,7 +70,7 @@ struct ParamArgData {
     std::string userPassword; // FTP account user name password
     std::string serverName; // FTP server
     std::string serverPort; // FTP server port
-    std::string remoteDirectory; // FTP Remote to restore
+    std::string remoteDirectory; // FTP remote directory to restore
     std::string localDirectory; // Local directory to use as base for restore
     std::string configFileName; // Configuration file name
 };
