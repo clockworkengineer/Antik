@@ -137,14 +137,20 @@ namespace Antik {
         //
         // Take local folder, file list and upload all files to server;  recreating 
         // any local directory structure in situ on the server. Returns a list of successfully 
-        // uploaded files and directories created.
+        // uploaded files and directories created.If safe == true then the file is uploaded to a 
+        // filename with a postfix then the file is renamed to its correct value on success. 
+        // Returns a list of successfully downloaded files and directories created.
         //
         
-        vector<string> putFiles(CFTP &ftpServer, const string &localFolder,  const vector<string> &fileList) {
+        vector<string> putFiles(CFTP &ftpServer, const string &localFolder,  const vector<string> &fileList, bool safe, char postFix) {
 
             vector<string> successList;
             fs::path localPath{ localFolder};
 
+            if (!safe) {
+                postFix = '\0';
+            }
+            
             for (auto file : fileList) {
                 
                 fs::path filePath { file };
@@ -177,7 +183,8 @@ namespace Antik {
                             ftpServer.changeWorkingDirectory(remoteDirectory);
                         }
                         if (putFile) {
-                            if (ftpServer.putFile(filePath.filename().string(), filePath.string()) == 226) {
+                            if (ftpServer.putFile(filePath.filename().string()+postFix, filePath.string()) == 226) {
+                                if (safe) ftpServer.renameFile(filePath.filename().string()+postFix, filePath.filename().string());
                                 successList.push_back(filePath.string());
                             }
                         }
