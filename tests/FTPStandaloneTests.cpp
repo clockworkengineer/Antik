@@ -15,8 +15,8 @@
 //
 // Description: Run a series of standalone tests on an FTP server using class CFTP.
 // This not only tests CFTP but the FTP servers (CogWheel, vsftp etc) response. The
-// of tests will grow over time and at the moment consist of both stress tests,
-// expected response.
+// of tests will grow over time and at the moment consist of both stress tests and
+// general tests such as file transfer.
 // 
 // Dependencies: C11++, Classes (CFTP).
 //               Linux, Boost C++ Libraries.
@@ -32,6 +32,8 @@
 //   -r [ --remote ] arg    Remote server directory
 //   -l [ --local ] arg     Local directory
 //   -f [ --files ] ard     List of files to use in test
+//   -t [ --stress ]  arg   Stress test repeat count
+//   -g [ --general ]  arg  General text repeat count
 
 // =============
 // INCLUDE FILES
@@ -81,8 +83,8 @@ struct ParamArgData {
     std::string localDirectory; // Local directory
     std::string configFileName; // Configuration file name
     std::vector<std::string> fileList; // File list
-    int stressTestCount = 0; // Stress test repeat count
-    int generalTestCount = 10; // General test repeat count
+    int stressTestCount {0 }; // Stress test repeat count
+    int generalTestCount { 0 }; // General test repeat count
 };
 
 // ===============
@@ -177,7 +179,11 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
 }
 
-static inline void displayResult(CFTP &ftpServer, std::set<std::uint16_t> expectedResults, int count = -1) {
+//
+// Check FTP command return status against expected  values and display any errors.
+//
+
+static inline void checkFTPCommandResponse(CFTP &ftpServer, std::set<std::uint16_t> expectedResults, int count = -1) {
 
     if (expectedResults.find(ftpServer.getCommandStatusCode()) == expectedResults.end()) {
         if (count != -1) std::cout << "COUNT [" << count << "]";
@@ -193,6 +199,10 @@ static inline void displayResult(CFTP &ftpServer, std::set<std::uint16_t> expect
 
 }
 
+//
+// Perform a stress test
+//
+
 static inline void stressTest(CFTP &ftpServer, int stressTestCount, std::set<std::uint16_t> expectedResults, std::function<void() > stressFn) {
 
     std::uint16_t statusCode = ftpServer.connect();
@@ -202,7 +212,7 @@ static inline void stressTest(CFTP &ftpServer, int stressTestCount, std::set<std
 
     for (auto cnt01 = 0; cnt01 < stressTestCount; cnt01++) {
         stressFn();
-        displayResult(ftpServer, expectedResults, cnt01);
+        checkFTPCommandResponse(ftpServer, expectedResults, cnt01);
     }
 
     ftpServer.disconnect();
@@ -296,7 +306,7 @@ int main(int argc, char** argv) {
             // Set binary transfer mode, set passive flag
 
             ftpServer.setBinaryTransfer(true);
-            displayResult(ftpServer,{200});
+            checkFTPCommandResponse(ftpServer,{200});
 
             ftpServer.setPassiveTransferMode(true);
 
@@ -304,37 +314,37 @@ int main(int argc, char** argv) {
 
             ftpServer.getCurrentWoringDirectory(workingDirectory);
             std::cout << "Current Working Directory = [" << workingDirectory << "]" << std::endl;
-            displayResult(ftpServer,{257});
+            checkFTPCommandResponse(ftpServer,{257});
 
             // List directory 
 
             ftpServer.list("", listOutput);
-            displayResult(ftpServer,{226});
+            checkFTPCommandResponse(ftpServer,{226});
 
             // Make directory "Test"
 
             ftpServer.makeDirectory("Test");
-            displayResult(ftpServer,{257});
+            checkFTPCommandResponse(ftpServer,{257});
 
             // Remove directory "Test"
 
             ftpServer.removeDirectory("Test");
-            displayResult(ftpServer,{250});
+            checkFTPCommandResponse(ftpServer,{250});
 
             // Remove directory not there
 
             ftpServer.removeDirectory("Test");
-            displayResult(ftpServer,{550});
+            checkFTPCommandResponse(ftpServer,{550});
 
             // Make directoory "Test" again
 
             ftpServer.makeDirectory("Test");
-            displayResult(ftpServer,{257});
+            checkFTPCommandResponse(ftpServer,{257});
 
             // Change directory to "Test"
 
             ftpServer.changeWorkingDirectory("Test");
-            displayResult(ftpServer,{250});
+            checkFTPCommandResponse(ftpServer,{250});
 
             std::cout << "Passive mode file transfers." << std::endl;
 
@@ -342,9 +352,9 @@ int main(int argc, char** argv) {
 
             for (auto file : argData.fileList) {
                 ftpServer.putFile(file, argData.localDirectory + file);
-                displayResult(ftpServer,{226});
+                checkFTPCommandResponse(ftpServer,{226});
                 ftpServer.getFile(file, argData.localDirectory + file);
-                displayResult(ftpServer,{226});
+                checkFTPCommandResponse(ftpServer,{226});
             }
 
             std::cout << "Active mode file transfers." << std::endl;
@@ -353,62 +363,62 @@ int main(int argc, char** argv) {
 
             for (auto file : argData.fileList) {
                 ftpServer.getFile(file, argData.localDirectory + file);
-                displayResult(ftpServer,{226});
+                checkFTPCommandResponse(ftpServer,{226});
                 ftpServer.putFile(file, argData.localDirectory + file);
-                displayResult(ftpServer,{226});
+                checkFTPCommandResponse(ftpServer,{226});
             }
 
             // Delete File
 
             ftpServer.deleteFile(argData.fileList[1]);
-            displayResult(ftpServer,{250});
+            checkFTPCommandResponse(ftpServer,{250});
 
             // Delete non-existent file
 
             ftpServer.deleteFile(argData.fileList[1]);
-            displayResult(ftpServer,{550});
+            checkFTPCommandResponse(ftpServer,{550});
 
             // Upload deleted file to server
 
             ftpServer.putFile(argData.fileList[1], argData.localDirectory + argData.fileList[1]);
-            displayResult(ftpServer,{226});
+            checkFTPCommandResponse(ftpServer,{226});
 
             // Get files size
 
             size_t fileSize;
             ftpServer.fileSize(argData.fileList[2], fileSize);
-            displayResult(ftpServer,{213});
+            checkFTPCommandResponse(ftpServer,{213});
             std::cout << "File Size = " << fileSize << std::endl;
 
             // Get size of non-existent file
 
             ftpServer.fileSize(argData.fileList[2] + "xx", fileSize);
-            displayResult(ftpServer,{550});
+            checkFTPCommandResponse(ftpServer,{550});
 
             // Get files last modified time
 
             CFTP::DateTime modifiedDateTime;
             ftpServer.getModifiedDateTime(argData.fileList[2], modifiedDateTime);
-            displayResult(ftpServer,{213});
+            checkFTPCommandResponse(ftpServer,{213});
 
             // Get files last modified time of non-existent file
 
             ftpServer.getModifiedDateTime(argData.fileList[2] + "xx", modifiedDateTime);
-            displayResult(ftpServer,{550});
+            checkFTPCommandResponse(ftpServer,{550});
             
             // Remove files
 
             for (auto file : argData.fileList) {
                 ftpServer.deleteFile(file);
-                displayResult(ftpServer,{250});
+                checkFTPCommandResponse(ftpServer,{250});
             }
             
             // Remove directory "Test"
 
-            ftpServer.changeWorkingDirectory("/");
-            displayResult(ftpServer,{250});                      
+            ftpServer.changeWorkingDirectory("../");
+            checkFTPCommandResponse(ftpServer,{250});                      
             ftpServer.removeDirectory("Test");
-            displayResult(ftpServer,{250});        
+            checkFTPCommandResponse(ftpServer,{250});        
 
             // Disconnect
             
