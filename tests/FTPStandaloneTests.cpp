@@ -336,7 +336,7 @@ int main(int argc, char** argv) {
             ftpServer.removeDirectory("Test");
             checkFTPCommandResponse(ftpServer,{550});
 
-            // Make directoory "Test" again
+            // Make directory "Test" again
 
             ftpServer.makeDirectory("Test");
             checkFTPCommandResponse(ftpServer,{257});
@@ -382,6 +382,21 @@ int main(int argc, char** argv) {
 
             ftpServer.putFile(argData.fileList[1], argData.localDirectory + argData.fileList[1]);
             checkFTPCommandResponse(ftpServer,{226});
+            
+            // Rename file 
+
+            ftpServer.renameFile(argData.fileList[1], argData.fileList[1]+"~");
+            checkFTPCommandResponse(ftpServer,{250});
+            
+            // Rename file back again
+
+            ftpServer.renameFile(argData.fileList[1]+"~", argData.fileList[1]);
+            checkFTPCommandResponse(ftpServer,{250});
+            
+            // Rename file that does not exist
+
+            ftpServer.renameFile(argData.fileList[1]+"~", argData.fileList[1]);
+            checkFTPCommandResponse(ftpServer,{550});
 
             // Get files size
 

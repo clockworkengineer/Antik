@@ -739,6 +739,27 @@ namespace Antik {
             return (m_commandStatusCode = ftpResponse());
 
         }
+        
+        //
+        // Rename remote FTP server file
+        //
+
+        std::uint16_t CFTP::renameFile(const std::string &srcFileName, const std::string &dstFileName) {
+            
+            if (!m_connected) {
+                throw Exception("Not connected to server.");
+            }
+
+            ftpCommand("RNFR " + srcFileName);
+            m_commandStatusCode = ftpResponse();
+            if (m_commandStatusCode == 350) {
+                ftpCommand("RNTO " + dstFileName);
+                m_commandStatusCode = ftpResponse();
+            }
+
+            return (m_commandStatusCode);
+
+        }
 
         //
         // Change current working directory on server.

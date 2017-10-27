@@ -142,9 +142,10 @@ namespace Antik {
             std::uint16_t makeDirectory(const std::string &directoryName);            
             std::uint16_t removeDirectory(const std::string &directoryName);
  
-            // FTP delete remote file, get size in bytes
+            // FTP delete/rename remote file, get size in bytes
             
             std::uint16_t deleteFile(const std::string &fileName);
+            std::uint16_t renameFile(const std::string &srcFileName, const std::string &dstFileName);
             std::uint16_t fileSize(const std::string &fileName, size_t &fileSize);
             
             // FTP get file last modified time
