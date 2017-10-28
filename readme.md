@@ -133,7 +133,7 @@ parsed responses are displayed if specified in program options.
   Simple FTP backup program that takes a local directory and backs it up to a specified FTP server using account details provided.
 
 1. **[FTPResore](https://github.com/clockworkengineer/Antikythera_mechanism/blob/master/examples/FTPResore.cpp)** 
- Simple FTP restore program that takes a remote FTP server directory and restores it to a local directory.
+ Simple FTP restore program (companion program to FTPBackup) that takes a remote FTP server directory and restores it to a local directory.
 
 # To do list #
 
