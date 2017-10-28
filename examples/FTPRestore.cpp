@@ -66,13 +66,13 @@ namespace fs = boost::filesystem;
 // Command line parameter data
 
 struct ParamArgData {
-    std::string userName; // FTP account user name
-    std::string userPassword; // FTP account user name password
-    std::string serverName; // FTP server
-    std::string serverPort; // FTP server port
+    std::string userName;        // FTP account user name
+    std::string userPassword;    // FTP account user name password
+    std::string serverName;      // FTP server
+    std::string serverPort;      // FTP server port
     std::string remoteDirectory; // FTP remote directory to restore
-    std::string localDirectory; // Local directory to use as base for restore
-    std::string configFileName; // Configuration file name
+    std::string localDirectory;  // Local directory to use as base for restore
+    std::string configFileName;  // Configuration file name
 };
 
 // ===============
@@ -174,8 +174,7 @@ int main(int argc, char** argv) {
 
         ParamArgData argData;
         CFTP ftpServer;
-        std::uint16_t statusCode;
-        std::vector<std::string>  fileList;
+        std::vector<std::string>  remoteFileList;
         std::vector<std::string> restoredFiles;
 
         // Read in command line parameters and process
@@ -187,6 +186,8 @@ int main(int argc, char** argv) {
         std::cout << "USER [" << argData.userName << "]" << std::endl;
         std::cout << "REMOTE DIRECTORY [" << argData.remoteDirectory << "]" << std::endl;
         std::cout << "LOCAL DIRECTORY [" << argData.localDirectory << "]\n" << std::endl;
+    
+        // Set server and port
         
         ftpServer.setServerAndPort(argData.serverName, argData.serverPort);
 
@@ -200,19 +201,18 @@ int main(int argc, char** argv) {
 
         // Connect
 
-        statusCode = ftpServer.connect();
-        if (statusCode != 230) {
+        if (ftpServer.connect() != 230) {
             throw CFTP::Exception("Unable to connect status returned = " + ftpServer.getCommandResponse());
         }
 
         // Get remote directory file list
         
-        listRemoteRecursive(ftpServer, argData.remoteDirectory, fileList);
+        listRemoteRecursive(ftpServer, argData.remoteDirectory, remoteFileList);
         
         // Restore files from  FTP Server
 
-        if (!fileList.empty()) {
-            restoredFiles = getFiles(ftpServer, argData.localDirectory, fileList);
+        if (!remoteFileList.empty()) {
+            restoredFiles = getFiles(ftpServer, argData.localDirectory, remoteFileList);
         }
 
         // Signal success or failure

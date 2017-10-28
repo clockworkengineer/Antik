@@ -64,12 +64,12 @@ namespace fs = boost::filesystem;
 // Command line parameter data
 
 struct ParamArgData {
-    std::string userName; // FTP account user name
-    std::string userPassword; // FTP account user name password
-    std::string serverName; // FTP server
-    std::string serverPort; // FTP server port
-    std::string localDirectory; // Local directory to backup
-    std::string configFileName; // Configuration file name
+    std::string userName;         // FTP account user name
+    std::string userPassword;     // FTP account user name password
+    std::string serverName;       // FTP server
+    std::string serverPort;       // FTP server port
+    std::string localDirectory;   // Local directory to backup
+    std::string configFileName;   // Configuration file name
 };
 
 // ===============
@@ -170,9 +170,8 @@ int main(int argc, char** argv) {
 
         ParamArgData argData;
         CFTP ftpServer;
-        std::uint16_t statusCode;
-        std::vector<std::string>  fileList;
-        std::vector<std::string> backedUp;
+        std::vector<std::string>  locaFileList;
+        std::vector<std::string> filesBackedUp;
 
         // Read in command line parameters and process
 
@@ -182,6 +181,8 @@ int main(int argc, char** argv) {
         std::cout << "SERVER PORT [" << argData.serverPort << "]" << std::endl;
         std::cout << "USER [" << argData.userName << "]" << std::endl;
         std::cout << "LOCAL DIRECTORY [" << argData.localDirectory << "]\n" << std::endl;
+        
+        // Set server and port
         
         ftpServer.setServerAndPort(argData.serverName, argData.serverPort);
 
@@ -195,25 +196,24 @@ int main(int argc, char** argv) {
 
         // Connect
 
-        statusCode = ftpServer.connect();
-        if (statusCode != 230) {
+        if (ftpServer.connect() != 230) {
             throw CFTP::Exception("Unable to connect status returned = " + ftpServer.getCommandResponse());
         }
 
         // Get local directory file list
         
-        listLocalRecursive(argData.localDirectory, fileList);
+        listLocalRecursive(argData.localDirectory, locaFileList);
         
         // Copy file list  to FTP Server
 
-        if (!fileList.empty()) {
-            backedUp = putFiles(ftpServer, argData.localDirectory, fileList);
+        if (!locaFileList.empty()) {
+            filesBackedUp = putFiles(ftpServer, argData.localDirectory, locaFileList);
         }
 
         // Signal success or failure
         
-        if (!backedUp.empty()) {
-            for (auto file : backedUp) {
+        if (!filesBackedUp.empty()) {
+            for (auto file : filesBackedUp) {
                 std::cout << "Sucessfully backed up [" << file << "]" << std::endl;
             }
         } else {
