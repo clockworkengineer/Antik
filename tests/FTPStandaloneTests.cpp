@@ -186,7 +186,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 static inline void checkFTPCommandResponse(CFTP &ftpServer, std::set<std::uint16_t> expectedResults, int count = -1) {
 
     if (expectedResults.find(ftpServer.getCommandStatusCode()) == expectedResults.end()) {
-        if (count != -1) std::cout << "COUNT [" << count << "]";
+        if (count != -1) std::cout << "Count [" << count << "]";
         std::cout << "Status code returned : [" << ftpServer.getCommandStatusCode() << "], when expecting [";
         for (auto result : expectedResults) std::cout << result;
         std::cout << "] [Failure]" << std::endl;
@@ -203,15 +203,15 @@ static inline void checkFTPCommandResponse(CFTP &ftpServer, std::set<std::uint16
 // Perform a stress test
 //
 
-static inline void stressTest(CFTP &ftpServer, int stressTestCount, std::set<std::uint16_t> expectedResults, std::function<void() > stressFn) {
+static inline void performStressTest(CFTP &ftpServer, int stressTestCount, std::set<std::uint16_t> expectedResults, 
+        std::function<void(CFTP &ftpServer) > stressTestFn) {
 
-    std::uint16_t statusCode = ftpServer.connect();
-    if (statusCode != 230) {
+    if (ftpServer.connect() != 230) {
         throw CFTP::Exception("Unable to connect status returned = " + ftpServer.getCommandResponse());
     }
 
     for (auto cnt01 = 0; cnt01 < stressTestCount; cnt01++) {
-        stressFn();
+        stressTestFn(ftpServer);
         checkFTPCommandResponse(ftpServer, expectedResults, cnt01);
     }
 
@@ -229,9 +229,6 @@ int main(int argc, char** argv) {
 
         ParamArgData argData;
         CFTP ftpServer;
-        std::string workingDirectory, listOutput;
-        std::uint16_t statusCode;
-        std::vector<std::string> fileList;
 
         // Read in command line parameters and process
 
@@ -265,32 +262,32 @@ int main(int argc, char** argv) {
         std::cout << "Passive mode list root " + std::to_string(argData.stressTestCount) + " times (stress test)" << std::endl;
 
         ftpServer.setPassiveTransferMode(true);
-        stressTest(ftpServer, argData.stressTestCount,{226}, [&listOutput, &ftpServer] () {
-            ftpServer.list("", listOutput); });
+        performStressTest(ftpServer, argData.stressTestCount,{226}, [] (CFTP &ftpServer) {
+            std::string listOutput; ftpServer.list("", listOutput); });
 
         // Active mode list root (stress test)
 
         std::cout << "Active mode list root " + std::to_string(argData.stressTestCount) + " times (stress test)" << std::endl;
 
         ftpServer.setPassiveTransferMode(false);
-        stressTest(ftpServer, argData.stressTestCount,{226}, [&listOutput, &ftpServer] () {
-            ftpServer.list("", listOutput); });
+        performStressTest(ftpServer, argData.stressTestCount,{226}, [] (CFTP &ftpServer) {
+            std::string listOutput; ftpServer.list("", listOutput); });
 
-        // Passive mode list non-existant path (stress test)
+        // Passive mode list non-existent path (stress test)
 
-        std::cout << "Passive mode list non-existant path " + std::to_string(argData.stressTestCount) + " times (stress test)" << std::endl;
+        std::cout << "Passive mode list non-existent path " + std::to_string(argData.stressTestCount) + " times (stress test)" << std::endl;
 
         ftpServer.setPassiveTransferMode(true);
-        stressTest(ftpServer, argData.stressTestCount,{226, 550}, [&listOutput, &ftpServer] () {
-            ftpServer.list("xxxx", listOutput); });
+        performStressTest(ftpServer, argData.stressTestCount,{226, 550}, [] (CFTP &ftpServer) {
+            std::string listOutput; ftpServer.list("xxxx", listOutput); });
 
-        // Active mode list non-existant path (stress test)
+        // Active mode list non-existent path (stress test)
 
-        std::cout << "Active mode list non-existant path " + std::to_string(argData.stressTestCount) + " times (stress test)" << std::endl;
+        std::cout << "Active mode list non-existent path " + std::to_string(argData.stressTestCount) + " times (stress test)" << std::endl;
 
         ftpServer.setPassiveTransferMode(false);
-        stressTest(ftpServer, argData.stressTestCount,{226, 550}, [&listOutput, &ftpServer] () {
-            ftpServer.list("xxxx", listOutput); });
+        performStressTest(ftpServer, argData.stressTestCount,{226, 550}, [] (CFTP &ftpServer) {
+            std::string listOutput; ftpServer.list("xxxx", listOutput); });
 
         // General tests
 
@@ -298,8 +295,7 @@ int main(int argc, char** argv) {
 
             // Connect
 
-            statusCode = ftpServer.connect();
-            if (statusCode != 230) {
+            if (ftpServer.connect() != 230) {
                 throw CFTP::Exception("Unable to connect status returned = " + ftpServer.getCommandResponse());
             }
 
@@ -312,12 +308,14 @@ int main(int argc, char** argv) {
 
             // Get current working directory 
 
+            std::string workingDirectory;
             ftpServer.getCurrentWoringDirectory(workingDirectory);
             std::cout << "Current Working Directory = [" << workingDirectory << "]" << std::endl;
             checkFTPCommandResponse(ftpServer,{257});
 
             // List directory 
 
+            std::string listOutput;
             ftpServer.list("", listOutput);
             checkFTPCommandResponse(ftpServer,{226});
 
