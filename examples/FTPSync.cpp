@@ -14,7 +14,7 @@
 // Program: FTPSync
 //
 // Description: Simple FTP program that takes a local directory and keeps it 
-// sycnhronized with a local server directory. Note: Im sure the sync can be done
+// sycnhronized with a remote server directory. Note: Im sure the sync can be done
 // in one pass (come back and look at later).
 //
 // Dependencies: C11++, Classes (CFTP, CSocket), Boost C++ Libraries.
