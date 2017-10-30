@@ -179,7 +179,7 @@ namespace Antik {
                             if (!safe) destinationFileName.pop_back();
                             if (ftpServer.putFile(destinationFileName, filePath.string()) == 226) {
                                 if (safe) ftpServer.renameFile(destinationFileName, filePath.filename().string());
-                                successList.push_back(filePath.string());
+                                successList.push_back(remoteDirectory+"/"+filePath.filename().string());
                             }
                         }
                     }
