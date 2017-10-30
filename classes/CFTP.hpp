@@ -68,12 +68,35 @@ namespace Antik {
             //
             
             struct DateTime {
+                
+                DateTime() { };
+
+                DateTime(std::tm *dateTime) {
+                    year = dateTime->tm_year + 1900;
+                    month = dateTime->tm_mon + 1;
+                    day = dateTime->tm_mday;
+                    hour = dateTime->tm_hour;
+                    minute = dateTime->tm_min;
+                    second = dateTime->tm_sec;
+                }
+                
                 std::uint8_t day;
                 std::uint8_t month;
                 std::uint16_t year;
                 std::uint8_t second;
                 std::uint8_t minute;
                 std::uint8_t hour;
+
+                bool operator<(DateTime const& other) {
+                    if (year != other.year)return (year < other.year);
+                    if (month != other.month)return (month < other.month);
+                    if (day != other.day)return (day < other.day);
+                    if (hour != other.hour)return (hour < other.hour);
+                    if (minute != other.minute)return (minute < other.minute);
+                    if (second != other.second)return (second < other.second);
+                    return (false);
+                }
+                
             };
 
             // ============
@@ -152,9 +175,10 @@ namespace Antik {
             
             std::uint16_t getModifiedDateTime(const std::string &filePath, DateTime &modifiedDateTime);
             
-            // FTP Is file a directory
+            // FTP Is file a directory, does file exist
             
             bool isDirectory(const std::string &fileName);
+            bool fileExists(const std::string &fileName);
             
             // Enable/Disable SSL
             

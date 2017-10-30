@@ -854,6 +854,28 @@ namespace Antik {
             return (false);
 
         }
+        
+        //
+        // Return true if passed in file exists false otherwise.
+        //
+
+        bool CFTP::fileExists(const std::string &fileName) {
+
+            if (!m_connected) {
+                throw Exception("Not connected to server.");
+            }
+
+            ftpCommand("SIZE " + fileName);
+
+            m_commandStatusCode = ftpResponse();
+
+            if (m_commandStatusCode == 213) {
+                return(true);
+            }
+
+            return (false);
+
+        }
 
         //
         // Set binary transfer mode ==true otherwise set ASCII
