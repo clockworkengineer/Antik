@@ -68,7 +68,14 @@ namespace Antik {
             //
             
             struct DateTime {
-                
+ 
+                std::uint8_t day;
+                std::uint8_t month;
+                std::uint16_t year;
+                std::uint8_t second;
+                std::uint8_t minute;
+                std::uint8_t hour;
+
                 DateTime() { };
 
                 DateTime(std::tm *dateTime) {
@@ -79,15 +86,8 @@ namespace Antik {
                     minute = dateTime->tm_min;
                     second = dateTime->tm_sec;
                 }
-                
-                std::uint8_t day;
-                std::uint8_t month;
-                std::uint16_t year;
-                std::uint8_t second;
-                std::uint8_t minute;
-                std::uint8_t hour;
 
-                bool operator<(DateTime const& other) {
+                bool operator < (const DateTime &other) {
                     if (year != other.year)return (year < other.year);
                     if (month != other.month)return (month < other.month);
                     if (day != other.day)return (day < other.day);
