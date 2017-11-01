@@ -157,6 +157,8 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         }
 
         po::notify(vm);
+        
+        if (argData.localDirectory.back() != '/')argData.localDirectory.push_back('/');
 
     } catch (po::error& e) {
         std::cerr << "FTPSync Error: " << e.what() << std::endl << std::endl;
@@ -170,16 +172,16 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Convert local file path to remote server path
 //
 
-static inline std::string localFileToRemote(const std::string &localDirectory, const std::string &localFilePath) {
-    return(localFilePath.substr(localDirectory.rfind('/')));
+static inline std::string localFileToRemote(ParamArgData &argData, const std::string &localFilePath) {
+    return(argData.remoteDirectory+localFilePath.substr(argData.localDirectory.rfind('/')));
 }
 
 //
 // Convert remote server file path to local path
 //
 
-static inline std::string remoteFileToLocal(const std::string &localDirectory, const std::string &remoteFilePath) {
-    return(localDirectory.substr(0, localDirectory.rfind('/'))+remoteFilePath);
+static inline std::string remoteFileToLocal(ParamArgData &argData, const std::string &remoteFilePath) {
+    return(argData.localDirectory+remoteFilePath.substr(argData.remoteDirectory.size()+1));
 }
 
 // ============================
@@ -223,11 +225,17 @@ int main(int argc, char** argv) {
             throw CFTP::Exception("Unable to connect status returned = " + ftpServer.getCommandResponse());
         }
 
+        // Create remote directory
+        
+        ftpServer.makeDirectory(argData.remoteDirectory);
+        ftpServer.changeWorkingDirectory(argData.remoteDirectory);
+        ftpServer.getCurrentWoringDirectory(argData.remoteDirectory);
+        
         // Get local and remote file lists
       
         listRemoteRecursive(ftpServer, argData.remoteDirectory, remoteFiles);
         listLocalRecursive(argData.localDirectory, localFiles);
-        
+
         // PASS 1) Copy new files to server
 
         std::cout << "*** Transferring any new files to server ***" << std::endl; 
@@ -236,23 +244,23 @@ int main(int argc, char** argv) {
         std::vector<std::string> newFilesTransfered;
         
         for (auto file : localFiles) {
-            if (find(remoteFiles.begin(), remoteFiles.end(), localFileToRemote(argData.localDirectory, file)) == remoteFiles.end()) {
+            if (find(remoteFiles.begin(), remoteFiles.end(), localFileToRemote(argData, file)) == remoteFiles.end()) {
                 newFiles.push_back(file);
             }
         }
-                 
+ 
         if (!newFiles.empty()) {
             newFilesTransfered = putFiles(ftpServer, argData.localDirectory, newFiles);
             std::cout << "Number of new files transfered [" << newFilesTransfered.size() << "]" << std::endl;
             std::copy(newFilesTransfered.begin(), newFilesTransfered.end(), std::back_inserter(remoteFiles));
         }
- 
+
         // PASS 2) Remove any deleted local files from server
 
         std::cout << "*** Removing any deleted local files from server ***" << std::endl; 
                
         for (auto file : remoteFiles) {
-            if (find(localFiles.begin(), localFiles.end(), remoteFileToLocal(argData.localDirectory, file))==localFiles.end()) {
+            if (find(localFiles.begin(), localFiles.end(), remoteFileToLocal(argData, file))==localFiles.end()) {
                 if (ftpServer.deleteFile(file) == 250) {
                     std::cout << "File [" << file << " ] removed from server." << std::endl;
                 } else if (ftpServer.removeDirectory(file) == 250) {
@@ -285,10 +293,10 @@ int main(int argc, char** argv) {
         for (auto file : localFiles) {
             if (fs::is_regular_file(file)) {
                 std::time_t localModifiedTime = fs::last_write_time(file);
-                if (remoteFileModifiedTimes[localFileToRemote(argData.localDirectory, file)] < 
+                if (remoteFileModifiedTimes[localFileToRemote(argData, file)] < 
                         static_cast<CFTP::DateTime>(std::localtime(&localModifiedTime))) {
-                    std::cout << "Server file " << localFileToRemote(argData.localDirectory, file) << " out of date." << std::endl;
-                    if (ftpServer.putFile(localFileToRemote(argData.localDirectory, file), file) == 226) {
+                    std::cout << "Server file " << localFileToRemote(argData, file) << " out of date." << std::endl;
+                    if (ftpServer.putFile(localFileToRemote(argData, file), file) == 226) {
                         std::cout << "File [" << file << " ] copied to server." << std::endl;
                     } else {
                         std::cerr << "File [" << file << " ] not copied to server." << std::endl;

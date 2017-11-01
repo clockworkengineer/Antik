@@ -76,11 +76,11 @@ namespace Antik {
             }
 
         }
-        
+
         //
         // Recursively parse a remote server path passed in and pass back a list of directories/files found.
         //
-        
+
         void listRemoteRecursive(CFTP &ftpServer, const string &remoteDirectory, vector<string> &fileList) {
 
             vector<string> serverFileList;
@@ -96,7 +96,7 @@ namespace Antik {
                 }
             }
         }
-        
+
         //
         // Download all files passed in file list from server to the local path passed in; recreating any server directory
         // structure in situ. If safe == true then the file is downloaded to a filename with a postfix then the file is renamed
@@ -131,22 +131,26 @@ namespace Antik {
             return (successList);
 
         }
-        
+
         //
         // Take local folder, file list and upload all files to server;  recreating 
         // any local directory structure in situ on the server. Returns a list of successfully 
         // uploaded files and directories created.If safe == true then the file is uploaded to a 
-        // filename with a postfix then the file is renamed to its correct value on success. 
+        // filename with a postfix then the file is renamed to its correct value on success.
+        // All files/directories are placed/created relative to the current working directory.
         //
-        
-        vector<string> putFiles(CFTP &ftpServer, const string &localFolder,  const vector<string> &fileList, bool safe, char postFix) {
+
+        vector<string> putFiles(CFTP &ftpServer, const string &localFolder, const vector<string> &fileList, bool safe, char postFix) {
 
             vector<string> successList;
             fs::path localPath{ localFolder};
-            
+            std::string currentWorkingDirectory;
+
+            ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
+
             for (auto file : fileList) {
-                
-                fs::path filePath { file };
+
+                fs::path filePath{ file};
 
                 if (fs::exists(filePath)) {
 
@@ -161,37 +165,51 @@ namespace Antik {
                         putFile = true;
                     }
 
+                    if (remoteDirectory[0] == '/') {
+                        remoteDirectory = remoteDirectory.substr(1);
+                    }
+
+                    ftpServer.changeWorkingDirectory(currentWorkingDirectory);
+                    
                     if (!remoteDirectory.empty()) {
                         if (!ftpServer.isDirectory(remoteDirectory)) {
                             vector<string> directories;
                             boost::split(directories, remoteDirectory, boost::is_any_of("/"));
-                            ftpServer.changeWorkingDirectory("/");
                             for (auto files : directories) {
-                                ftpServer.makeDirectory(files);
-                                ftpServer.changeWorkingDirectory(files);
+                                if (!files.empty()) {
+                                    ftpServer.makeDirectory(files);
+                                    ftpServer.changeWorkingDirectory(files);
+                                }
                             }
-                            successList.push_back(remoteDirectory);
+                            successList.push_back(currentWorkingDirectory  + "/" + remoteDirectory);
                         } else {
                             ftpServer.changeWorkingDirectory(remoteDirectory);
                         }
-                        if (putFile) {
-                            std::string destinationFileName { filePath.filename().string() + postFix };
-                            if (!safe) destinationFileName.pop_back();
-                            if (ftpServer.putFile(destinationFileName, filePath.string()) == 226) {
-                                if (safe) ftpServer.renameFile(destinationFileName, filePath.filename().string());
-                                successList.push_back(remoteDirectory+"/"+filePath.filename().string());
-                            }
+                    }
+                    
+                    if (putFile) {
+                        std::string destinationFileName{ filePath.filename().string() + postFix};
+                        if (!safe) destinationFileName.pop_back();
+                        if (ftpServer.putFile(destinationFileName, filePath.string()) == 226) {
+                            if (safe) ftpServer.renameFile(destinationFileName, filePath.filename().string());
+                            successList.push_back(currentWorkingDirectory + "/" + remoteDirectory + "/" + filePath.filename().string());
                         }
                     }
 
                 }
 
             }
+            
+            for (auto file : successList) {
+                std::cout << "Success " << file << std::endl;
+            }
+
+            ftpServer.changeWorkingDirectory(currentWorkingDirectory);
 
             return (successList);
 
         }
-        
+
     } // namespace FTP
 
 } // namespace Antik

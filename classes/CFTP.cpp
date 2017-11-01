@@ -793,7 +793,7 @@ namespace Antik {
 
             m_commandStatusCode = ftpResponse();
 
-            if (m_commandStatusCode == 250) {
+            if (m_commandStatusCode == 257) {
                 currentWoringDirectoryPath = m_commandResponse.substr(m_commandResponse.find_first_of('\"') + 1);
                 currentWoringDirectoryPath = currentWoringDirectoryPath.substr(0, currentWoringDirectoryPath.find_first_of('\"'));
             }
