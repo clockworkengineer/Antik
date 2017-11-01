@@ -227,7 +227,7 @@ int main(int argc, char** argv) {
 
         // Create remote directory
         
-        ftpServer.makeDirectory(argData.remoteDirectory);
+        makeRemotePath(ftpServer, argData.remoteDirectory);
         ftpServer.changeWorkingDirectory(argData.remoteDirectory);
         ftpServer.getCurrentWoringDirectory(argData.remoteDirectory);
         

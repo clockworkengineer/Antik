@@ -98,6 +98,26 @@ namespace Antik {
         }
 
         //
+        // Break path into its component directories and create path structure on
+        // remote FTP server.
+        //
+        
+        void makeRemotePath (CFTP &ftpServer, const string &remotePath) {
+            
+            vector<string> pathComponents;
+            
+            boost::split(pathComponents, remotePath, boost::is_any_of("/"));
+            
+            for (auto directory : pathComponents) {
+                if (!directory.empty()) {
+                    ftpServer.makeDirectory(directory);
+                    ftpServer.changeWorkingDirectory(directory);
+                }
+            } 
+            
+        }
+        
+        //
         // Download all files passed in file list from server to the local path passed in; recreating any server directory
         // structure in situ. If safe == true then the file is downloaded to a filename with a postfix then the file is renamed
         // to its correct value on success. Returns a list of successfully downloaded files and directories created.
@@ -137,17 +157,28 @@ namespace Antik {
         // any local directory structure in situ on the server. Returns a list of successfully 
         // uploaded files and directories created.If safe == true then the file is uploaded to a 
         // filename with a postfix then the file is renamed to its correct value on success.
-        // All files/directories are placed/created relative to the current working directory.
+        // All files/directories are placed/created relative to the server current working directory.
         //
 
         vector<string> putFiles(CFTP &ftpServer, const string &localFolder, const vector<string> &fileList, bool safe, char postFix) {
 
             vector<string> successList;
-            fs::path localPath{ localFolder};
+            size_t localPathLength { 0 };
             std::string currentWorkingDirectory;
 
+            // Find beginning of file name
+            
+            localPathLength = localFolder.rfind('/');
+            if (localPathLength == std::string::npos) {
+                localPathLength = 0;
+            }
+           
+            // Save current working directory
+            
             ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
 
+            // Process file/directory list
+            
             for (auto file : fileList) {
 
                 fs::path filePath{ file};
@@ -155,39 +186,43 @@ namespace Antik {
                 if (fs::exists(filePath)) {
 
                     string remoteDirectory;
-                    bool putFile = false;
+                    bool transferFile { false };
 
+                    // Create remote path and set file to be transfered flag
+                    
                     if (fs::is_directory(filePath)) {
-                        remoteDirectory = filePath.string().substr(localPath.parent_path().size());
-                        putFile = false;
+                        remoteDirectory = filePath.string();
                     } else if (fs::is_regular_file(filePath)) {
-                        remoteDirectory = filePath.parent_path().string().substr(localPath.parent_path().size());
-                        putFile = true;
+                        remoteDirectory = filePath.parent_path().string();
+                        transferFile = true;
+                    } else {
+                        continue; // Not valid for transfer NEXT FILE!
                     }
-
+                    
+                    remoteDirectory = remoteDirectory.substr(localPathLength);
+                    
+                    // Make sure that no paths are root based
+                    
                     if (remoteDirectory[0] == '/') {
                         remoteDirectory = remoteDirectory.substr(1);
                     }
 
+                    // Set current working directory and create any remote path needed
+                    
                     ftpServer.changeWorkingDirectory(currentWorkingDirectory);
                     
                     if (!remoteDirectory.empty()) {
                         if (!ftpServer.isDirectory(remoteDirectory)) {
-                            vector<string> directories;
-                            boost::split(directories, remoteDirectory, boost::is_any_of("/"));
-                            for (auto files : directories) {
-                                if (!files.empty()) {
-                                    ftpServer.makeDirectory(files);
-                                    ftpServer.changeWorkingDirectory(files);
-                                }
-                            }
+                            makeRemotePath(ftpServer, remoteDirectory);
                             successList.push_back(currentWorkingDirectory  + "/" + remoteDirectory);
                         } else {
                             ftpServer.changeWorkingDirectory(remoteDirectory);
                         }
                     }
                     
-                    if (putFile) {
+                    // Transfer file
+                    
+                    if (transferFile) {
                         std::string destinationFileName{ filePath.filename().string() + postFix};
                         if (!safe) destinationFileName.pop_back();
                         if (ftpServer.putFile(destinationFileName, filePath.string()) == 226) {
@@ -199,11 +234,9 @@ namespace Antik {
                 }
 
             }
-            
-            for (auto file : successList) {
-                std::cout << "Success " << file << std::endl;
-            }
 
+            // Restore saved current working directory
+            
             ftpServer.changeWorkingDirectory(currentWorkingDirectory);
 
             return (successList);
