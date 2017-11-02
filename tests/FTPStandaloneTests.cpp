@@ -29,7 +29,6 @@
 //   -p [ --port ] arg      FTP Server port
 //   -u [ --user ] arg      Account username
 //   -p [ --password ] arg  User password
-//   -r [ --remote ] arg    Remote server directory
 //   -l [ --local ] arg     Local directory
 //   -f [ --files ] ard     List of files to use in test
 //   -t [ --stress ]  arg   Stress test repeat count
@@ -79,7 +78,6 @@ struct ParamArgData {
     std::string userPassword; // FTP account user name password
     std::string serverName; // FTP server
     std::string serverPort; // FTP server port
-    std::string remoteDirectory; // FTP remote directory
     std::string localDirectory; // Local directory
     std::string configFileName; // Configuration file name
     std::vector<std::string> fileList; // File list
@@ -116,7 +114,6 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
             ("port,o", po::value<std::string>(&argData.serverPort)->required(), "FTP Server port")
             ("user,u", po::value<std::string>(&argData.userName)->required(), "Account username")
             ("password,p", po::value<std::string>(&argData.userPassword)->required(), "User password")
-            ("remote,r", po::value<std::string>(&argData.remoteDirectory)->required(), "Remote server directory")
             ("local,l", po::value<std::string>(&argData.localDirectory)->required(), "Local directory")
             ("files,f", po::value<std::vector < std::string >> (&argData.fileList)->multitoken()->required(), "Files")
             ("stress,t", po::value<int>(&argData.stressTestCount), "Stress test repeat count")
@@ -237,7 +234,6 @@ int main(int argc, char** argv) {
         std::cout << "SERVER [" << argData.serverName << "]" << std::endl;
         std::cout << "SERVER PORT [" << argData.serverPort << "]" << std::endl;
         std::cout << "USER [" << argData.userName << "]" << std::endl;
-        std::cout << "REMOTE DIRECTORY [" << argData.remoteDirectory << "]" << std::endl;
         std::cout << "LOCAL DIRECTORY [" << argData.localDirectory << "]" << std::endl;
         std::cout << "FILES ";
         for (auto file : argData.fileList) {
