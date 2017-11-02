@@ -211,7 +211,7 @@ int main(int argc, char** argv) {
 
         ftpServer.setServerAndPort(argData.serverName, argData.serverPort);
 
-        // Set mail account user name and password
+        // Set FTP account user name and password
 
         ftpServer.setUserAndPassword(argData.userName, argData.userPassword);
 
@@ -226,8 +226,14 @@ int main(int argc, char** argv) {
         }
 
         // Create remote directory
+
+        if (!ftpServer.isDirectory(argData.remoteDirectory)) {
+            makeRemotePath(ftpServer, argData.remoteDirectory);
+            if (!ftpServer.isDirectory(argData.remoteDirectory)) {
+                throw CFTP::Exception("Remote FTP server directory "+argData.remoteDirectory+" could not created.");
+            }
+        }
         
-        makeRemotePath(ftpServer, argData.remoteDirectory);
         ftpServer.changeWorkingDirectory(argData.remoteDirectory);
         ftpServer.getCurrentWoringDirectory(argData.remoteDirectory);
         
@@ -235,6 +241,14 @@ int main(int argc, char** argv) {
       
         listRemoteRecursive(ftpServer, argData.remoteDirectory, remoteFiles);
         listLocalRecursive(argData.localDirectory, localFiles);
+
+        if (remoteFiles.empty()) {
+            std::cout << "*** Remote server directory empty ***" << std::endl;
+        }
+        
+        if (localFiles.empty()) {
+            std::cout << "*** Local directory empty ***" << std::endl;
+        }
 
         // PASS 1) Copy new files to server
 
@@ -309,7 +323,7 @@ int main(int argc, char** argv) {
 
         ftpServer.disconnect();
 
-        std::cout << "*** Files Synchronized with server ***" << std::endl; 
+        std::cout << "*** Files synchronized with server ***" << std::endl; 
               
         //
         // Catch any errors

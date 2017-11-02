@@ -99,7 +99,9 @@ namespace Antik {
 
         //
         // Break path into its component directories and create path structure on
-        // remote FTP server.
+        // remote FTP server. Note: This done relative to the server currently set
+        // working directory and no errors are reported. To test for success/failure
+        // use CFTP::isDirectory() after call to see if it has been created.
         //
         
         void makeRemotePath (CFTP &ftpServer, const string &remotePath) {
