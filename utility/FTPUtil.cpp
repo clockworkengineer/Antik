@@ -101,15 +101,17 @@ namespace Antik {
         // Break path into its component directories and create path structure on
         // remote FTP server. Note: This done relative to the server currently set
         // working directory and no errors are reported. To test for success/failure
-        // use CFTP::isDirectory() after call to see if it has been created.
+        // use CFTP::fileExists() after call to see if it has been created.
         //
         
-        void makeRemotePath (CFTP &ftpServer, const string &remotePath) {
+        void makeRemotePath (CFTP &ftpServer, const string &remotePath, bool saveCWD) {
             
             vector<string> pathComponents;
             std::string currentWorkingDirectory;
             
-            ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
+            if (saveCWD) {
+                ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
+            }
               
             boost::split(pathComponents, remotePath, boost::is_any_of("/"));
             
@@ -121,8 +123,10 @@ namespace Antik {
                     ftpServer.changeWorkingDirectory(directory);
                 }
             }
-            
-            ftpServer.changeWorkingDirectory(currentWorkingDirectory);
+  
+            if (saveCWD) {
+                ftpServer.changeWorkingDirectory(currentWorkingDirectory);
+            }
             
         }
         
@@ -222,7 +226,7 @@ namespace Antik {
                     
                     if (!remoteDirectory.empty()) {
                         if (!ftpServer.isDirectory(remoteDirectory)) {
-                            makeRemotePath(ftpServer, remoteDirectory);
+                            makeRemotePath(ftpServer, remoteDirectory, false);
                             successList.push_back(currentWorkingDirectory  + "/" + remoteDirectory);
                         } else {
                             ftpServer.changeWorkingDirectory(remoteDirectory);
