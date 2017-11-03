@@ -227,10 +227,10 @@ int main(int argc, char** argv) {
 
         // Create remote directory
 
-        if (!ftpServer.isDirectory(argData.remoteDirectory)) {
+        if (!ftpServer.fileExists(argData.remoteDirectory)) {
             makeRemotePath(ftpServer, argData.remoteDirectory);
-            if (!ftpServer.isDirectory(argData.remoteDirectory)) {
-                throw CFTP::Exception("Remote FTP server directory "+argData.remoteDirectory+" could not created.");
+            if (!ftpServer.fileExists(argData.remoteDirectory)) {
+                throw CFTP::Exception("Remote FTP server directory " + argData.remoteDirectory + " could not created.");
             }
         }
         

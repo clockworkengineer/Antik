@@ -107,15 +107,22 @@ namespace Antik {
         void makeRemotePath (CFTP &ftpServer, const string &remotePath) {
             
             vector<string> pathComponents;
+            std::string currentWorkingDirectory;
             
+            ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
+              
             boost::split(pathComponents, remotePath, boost::is_any_of("/"));
+            
+            ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
             
             for (auto directory : pathComponents) {
                 if (!directory.empty()) {
                     ftpServer.makeDirectory(directory);
                     ftpServer.changeWorkingDirectory(directory);
                 }
-            } 
+            }
+            
+            ftpServer.changeWorkingDirectory(currentWorkingDirectory);
             
         }
         
