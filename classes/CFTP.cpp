@@ -865,12 +865,19 @@ namespace Antik {
                 throw Exception("Not connected to server.");
             }
 
-            ftpCommand("SIZE " + fileName);
+            ftpCommand("STAT " + fileName);
 
             m_commandStatusCode = ftpResponse();
 
+            // If 213 returned check the response is not empty; if it is
+            // file does not exist.
+            
             if (m_commandStatusCode == 213) {
-                return(true);
+                size_t statusCodePosition = m_commandResponse.find("\r\n") + 2;
+                if ((statusCodePosition != std::string::npos) &&
+                        (m_commandResponse[statusCodePosition] != '2')) {
+                    return (true);
+                }
             }
 
             return (false);
