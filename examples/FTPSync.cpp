@@ -27,8 +27,8 @@
 //   -p [ --port ] arg      FTP Server port
 //   -u [ --user ] arg      Account username
 //   -p [ --password ] arg  User password
-//   -r [ --remote ] arg    Remote server directory to restore
-//   -l [ --local ] arg     Local directory to use as base for restore
+//   -r [ --remote ] arg    Remote server directory
+//   -l [ --local ] arg     Local directory
 //
 
 // =============
