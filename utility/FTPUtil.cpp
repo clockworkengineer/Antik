@@ -62,19 +62,19 @@ namespace Antik {
         // ===============
         
         //
-        // Construct a remote path from three passed in parameters and just and simplicity replace all
-        // double path separators with just one.
+        // Construct a remote path from three passed in parameters and just for simplicity replace all
+        // double path separators with just one if any have been generated.
         //
         
         static inline std::string constructRemotePath (const std::string &currentWorkingDirectory, const std::string &remotePath, const string &remoteFileName) {
  
-            std::string  remoteDirectoryPath { currentWorkingDirectory+'/'+remotePath+'/'+remoteFileName };
+            std::string  remoteDirectoryPath { currentWorkingDirectory+kServerPathSep+remotePath+kServerPathSep+remoteFileName };
             string::size_type i {0 }; 
             
-            while((i = remoteDirectoryPath.find(std::string(2,'/'))) != string::npos) {
+            while((i = remoteDirectoryPath.find(std::string(2,kServerPathSep))) != string::npos) {
                 remoteDirectoryPath.erase(remoteDirectoryPath.begin()+i);
             }
-            if (remoteDirectoryPath.back()=='/') remoteDirectoryPath.pop_back();
+            if (remoteDirectoryPath.back()==kServerPathSep) remoteDirectoryPath.pop_back();
 
             return(remoteDirectoryPath);
             
@@ -132,7 +132,7 @@ namespace Antik {
                 ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
             }
               
-            boost::split(pathComponents, remotePath, boost::is_any_of("/"));
+            boost::split(pathComponents, remotePath, boost::is_any_of(std::string(1,kServerPathSep)));
             
             ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
             
@@ -202,7 +202,7 @@ namespace Antik {
             // Determine local path length for creating remote paths.
             
             localPathLength = localFolder.size();
-            if (localFolder.back()!='/') localPathLength++;      
+            if (localFolder.back()!=kServerPathSep) localPathLength++;      
            
             // Save current working directory
             
@@ -224,7 +224,7 @@ namespace Antik {
                     if (fs::is_directory(filePath)) {
                         remoteDirectory = filePath.string();
                     } else if (fs::is_regular_file(filePath)) {
-                        remoteDirectory = filePath.parent_path().string()+"/";
+                        remoteDirectory = filePath.parent_path().string()+kServerPathSep;
                         transferFile = true;
                     } else {
                         continue; // Not valid for transfer NEXT FILE!

@@ -22,6 +22,7 @@
 #include <thread>
 #include <memory>
 #include <mutex>
+#include <iomanip>
 
 //
 // Antik sockets
@@ -39,6 +40,8 @@ namespace Antik {
         // ==========================
         // PUBLIC TYPES AND CONSTANTS
         // ==========================
+        
+        const char kServerPathSep { '/' };
 
         // ================
         // CLASS DEFINITION
@@ -78,6 +81,15 @@ namespace Antik {
 
                 DateTime() { };
 
+                DateTime(const std::string &dateTime) {
+                    year = std::stoi(dateTime.substr(0, 4));
+                    month = std::stoi(dateTime.substr(4, 2));
+                    day = std::stoi(dateTime.substr(6, 2));
+                    hour = std::stoi(dateTime.substr(8, 2));
+                    minute = std::stoi(dateTime.substr(10, 2));
+                    second = std::stoi(dateTime.substr(12, 2));
+                }
+
                 DateTime(std::tm *dateTime) {
                     year = dateTime->tm_year + 1900;
                     month = dateTime->tm_mon + 1;
@@ -95,6 +107,17 @@ namespace Antik {
                     if (minute != other.minute)return (minute < other.minute);
                     if (second != other.second)return (second < other.second);
                     return (false);
+                }
+
+                operator std::string() {
+                    std::ostringstream streamDateTime;
+                    streamDateTime << year;
+                    streamDateTime << std::setw(2) << std::setfill('0') << static_cast<int>(month);
+                    streamDateTime << std::setw(2) << std::setfill('0') << static_cast<int>(day);
+                    streamDateTime << std::setw(2) << std::setfill('0') << static_cast<int>(hour);
+                    streamDateTime << std::setw(2) << std::setfill('0') << static_cast<int>(minute);
+                    streamDateTime << std::setw(2) << std::setfill('0') << static_cast<int>(second);
+                    return streamDateTime.str();
                 }
                 
             };
