@@ -210,7 +210,7 @@ static CIMAPParse::COMMANDRESPONSE parseCommandResponse(const std::string& comma
     }
 
     if (parsedResponse) {
-        if (parsedResponse->bBYESent) {
+        if (parsedResponse->byeSent) {
             throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessage);
         } else if (parsedResponse->status != CIMAPParse::RespCode::OK) {
             throw CIMAP::Exception(command + ": " + parsedResponse->errorMessage);

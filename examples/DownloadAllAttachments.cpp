@@ -229,7 +229,7 @@ static void getBodyStructAttachments(CIMAP& imap, std::uint64_t index, fs::path 
 
     if (!attachments->attachmentsList.empty()) {
         for (auto attachment : attachments->attachmentsList) {
-            if (CIMAPParse::stringEqual(attachment.encoding, CSMTP::kEncodingBase64)) {
+            if (CIMAPParse::stringStartsWith (attachment.encoding, CSMTP::kEncodingBase64)) {
                 attachment.index = std::to_string(index);
                 downloadAttachment(imap, destinationFolder, attachment);
             } else {
@@ -289,7 +289,7 @@ int main(int argc, char** argv) {
         parsedResponse = CIMAPParse::parseResponse(comandResponse);
         if (parsedResponse->status != CIMAPParse::RespCode::OK) {
             throw CIMAP::Exception("IMAP SELECT "+parsedResponse->errorMessage);
-        } else if (parsedResponse->bBYESent) {
+        } else if (parsedResponse->byeSent) {
             throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessage);
         }
 
@@ -299,7 +299,7 @@ int main(int argc, char** argv) {
         parsedResponse = CIMAPParse::parseResponse(comandResponse);
         if (parsedResponse->status != CIMAPParse::RespCode::OK) {
             throw CIMAP::Exception("IMAP FETCH "+parsedResponse->errorMessage);
-        }  else if (parsedResponse->bBYESent) {
+        }  else if (parsedResponse->byeSent) {
             throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessage);
         }
 

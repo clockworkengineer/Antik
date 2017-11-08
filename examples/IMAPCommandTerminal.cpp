@@ -83,7 +83,7 @@ struct ParamArgData {
 // Exit with error message/status
 //
 
-void exitWithError(std::string errMsg) {
+static void exitWithError(std::string errMsg) {
 
     // Closedown email, display error and exit.
 
@@ -97,7 +97,7 @@ void exitWithError(std::string errMsg) {
 // Add options common to both command line and config file
 //
 
-void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
+static void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
 
     commonOptions.add_options()
             ("server,s", po::value<std::string>(&argData.serverURL)->required(), "IMAP Server URL and port")
@@ -112,7 +112,7 @@ void addCommonOptions(po::options_description& commonOptions, ParamArgData& argD
 // Read in and process command line arguments using boost.
 //
 
-void procCmdLine(int argc, char** argv, ParamArgData &argData) {
+static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
     // Define and parse the program options
 
@@ -187,7 +187,7 @@ struct WalkData {
 // Body structure tree walk function  too display body details.
 //
 
-void walkFn(std::unique_ptr<CIMAPBodyStruct::BodyNode>& bodyNode, CIMAPBodyStruct::BodyPart& bodyPart, std::shared_ptr<void>& walkData) {
+static void walkFn(std::unique_ptr<CIMAPBodyStruct::BodyNode>& bodyNode, CIMAPBodyStruct::BodyPart& bodyPart, std::shared_ptr<void>& walkData) {
 
     auto wlkData = static_cast<WalkData *> (walkData.get());
 
@@ -232,11 +232,11 @@ void walkFn(std::unique_ptr<CIMAPBodyStruct::BodyNode>& bodyNode, CIMAPBodyStruc
 // Display parsed IMAP command response
 //
 
-void processIMAPResponse(CIMAP& imap, CIMAPParse::COMMANDRESPONSE& parsedResponse) {
+static void processIMAPResponse(CIMAP& imap, CIMAPParse::COMMANDRESPONSE& parsedResponse) {
 
     std::cout << std::string(120, '*') << std::endl;
 
-    if (parsedResponse->bBYESent) {
+    if (parsedResponse->byeSent) {
         std::cout << "BYE RECIEVED {" << parsedResponse->errorMessage << "}" << std::endl;
         return;
 
