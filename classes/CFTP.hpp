@@ -72,12 +72,12 @@ namespace Antik {
             
             struct DateTime {
  
-                std::uint8_t day;
-                std::uint8_t month;
-                std::uint16_t year;
-                std::uint8_t second;
-                std::uint8_t minute;
-                std::uint8_t hour;
+                std::uint8_t day { 0 };
+                std::uint8_t month { 0 };
+                std::uint16_t year { 0 };
+                std::uint8_t second { 0 };
+                std::uint8_t minute { 0 };
+                std::uint8_t hour { 0 };
 
                 DateTime() { };
 
@@ -111,7 +111,7 @@ namespace Antik {
 
                 operator std::string() {
                     std::ostringstream streamDateTime;
-                    streamDateTime << year;
+                    streamDateTime << std::setw(4) << std::setfill('0') << year;
                     streamDateTime << std::setw(2) << std::setfill('0') << static_cast<int>(month);
                     streamDateTime << std::setw(2) << std::setfill('0') << static_cast<int>(day);
                     streamDateTime << std::setw(2) << std::setfill('0') << static_cast<int>(hour);

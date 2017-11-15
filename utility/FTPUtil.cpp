@@ -150,19 +150,26 @@ namespace Antik {
         }
         
         //
-        // Download all files passed in file list from server to the local path passed in; recreating any server directory
+        // Download all files passed in file list from server to the local directory passed in; recreating any server directory
         // structure in situ. If safe == true then the file is downloaded to a filename with a postfix then the file is renamed
-        // to its correct value on success. Returns a list of successfully downloaded files and directories created.
+        // to its correct value on success. Returns a list of successfully downloaded files and directories created in the local
+        // directory. The local file name is calculated by removing the current working directory from each file in the list and
+        // appending it to the passed in local directory to get the full local file path.
         //
 
         vector<string> getFiles(CFTP &ftpServer, const string &localDirectory, const vector<string> &fileList, bool safe, char postFix) {
 
             uint16_t statusCode;
             vector<string> successList;
+            std::string currentWorkingDirectory;
 
+            // Save current working directory
+            
+            ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
+            
             for (auto file : fileList) {
                 fs::path destination{ localDirectory};
-                destination /= file;
+                destination /= file.substr(currentWorkingDirectory.size());
                 if (!fs::exists(destination.parent_path())) {
                     fs::create_directories(destination.parent_path());
                 }
@@ -172,10 +179,10 @@ namespace Antik {
                     statusCode = ftpServer.getFile(file, destinationFileName);
                     if (statusCode == 226) {
                         if (safe) fs::rename(destinationFileName, destination.string());
-                        successList.push_back(file); // File get ok so add to success
+                        successList.push_back(destination.string()); // File get ok so add to success
                     }
                 } else {
-                    successList.push_back(file); // File directory created so add to success
+                    successList.push_back(destination.string());     // File directory created so add to success
                 }
 
             }
@@ -185,15 +192,14 @@ namespace Antik {
         }
 
         //
-        // Take local folder, file list and upload all files to server;  recreating 
+        // Take local directory, file list and upload all files to server;  recreating 
         // any local directory structure in situ on the server. Returns a list of successfully 
         // uploaded files and directories created.If safe == true then the file is uploaded to a 
         // filename with a postfix then the file is renamed to its correct value on success.
         // All files/directories are placed/created relative to the server current working directory.
         // 
-        //
 
-        vector<string> putFiles(CFTP &ftpServer, const string &localFolder, const vector<string> &fileList, bool safe, char postFix) {
+        vector<string> putFiles(CFTP &ftpServer, const string &localDirectory, const vector<string> &fileList, bool safe, char postFix) {
 
             vector<string> successList;
             size_t localPathLength { 0 };
@@ -201,8 +207,8 @@ namespace Antik {
 
             // Determine local path length for creating remote paths.
             
-            localPathLength = localFolder.size();
-            if (localFolder.back()!=kServerPathSep) localPathLength++;      
+            localPathLength = localDirectory.size();
+            if (localDirectory.back()!=kServerPathSep) localPathLength++;      
            
             // Save current working directory
             
