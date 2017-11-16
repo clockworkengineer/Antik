@@ -849,6 +849,15 @@ namespace Antik {
                         (m_commandResponse[dirPosition] == 'd')) {
                     return (true);
                 }
+            } else if (m_commandStatusCode == 500) { // STAT command not supported try MLST
+                ftpCommand("MLST " + fileName);
+                m_commandStatusCode = ftpResponse();
+                if (m_commandStatusCode == 250) {
+                    size_t dirPosition = m_commandResponse.find("Type=dir;");
+                    if (dirPosition != std::string::npos) {
+                        return (true);
+                    }
+                }
             }
 
             return (false);
@@ -876,6 +885,12 @@ namespace Antik {
                 size_t statusCodePosition = m_commandResponse.find("\r\n") + 2;
                 if ((statusCodePosition != std::string::npos) &&
                         (m_commandResponse[statusCodePosition] != '2')) {
+                    return (true);
+                }
+            } else if (m_commandStatusCode == 500) { // STAT command not supported try MLST
+                ftpCommand("MLST " + fileName);
+                m_commandStatusCode = ftpResponse();
+                if (m_commandStatusCode == 250) {
                     return (true);
                 }
             }
