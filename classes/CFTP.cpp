@@ -657,7 +657,6 @@ namespace Antik {
             listOutput.clear();
 
             ftpCommand("MLST " + filePath);
-
             m_commandStatusCode = ftpResponse();
 
             if (m_commandStatusCode == 250) {
@@ -713,7 +712,6 @@ namespace Antik {
             }
 
             ftpCommand("SIZE " + fileName);
-
             m_commandStatusCode = ftpResponse();
 
             if (m_commandStatusCode == 213) {
@@ -790,7 +788,6 @@ namespace Antik {
             currentWoringDirectoryPath.clear();
 
             ftpCommand("PWD");
-
             m_commandStatusCode = ftpResponse();
 
             if (m_commandStatusCode == 257) {
@@ -839,25 +836,31 @@ namespace Antik {
                 throw Exception("Not connected to server.");
             }
 
-            ftpCommand("STAT " + fileName);
-
+            // Try MLST first then STAT
+            
+            ftpCommand("MLST " + fileName);          
             m_commandStatusCode = ftpResponse();
-
-            if (m_commandStatusCode == 213) {
-                size_t dirPosition = m_commandResponse.find("\r\n") + 2;
-                if ((dirPosition != std::string::npos) &&
-                        (m_commandResponse[dirPosition] == 'd')) {
+            
+            if (m_commandStatusCode == 250) {
+                
+                size_t dirPosition = m_commandResponse.find("Type=dir;");
+                if (dirPosition != std::string::npos) {
                     return (true);
                 }
-            } else if (m_commandStatusCode == 500) { // STAT command not supported try MLST
-                ftpCommand("MLST " + fileName);
+                
+            } else if (m_commandStatusCode == 500) {
+
+                ftpCommand("STAT " + fileName);
                 m_commandStatusCode = ftpResponse();
-                if (m_commandStatusCode == 250) {
-                    size_t dirPosition = m_commandResponse.find("Type=dir;");
-                    if (dirPosition != std::string::npos) {
+
+                if ((m_commandStatusCode == 213) || (m_commandStatusCode == 212)) {
+                    size_t dirPosition = m_commandResponse.find("\r\n") + 2;
+                    if ((dirPosition != std::string::npos) &&
+                            (m_commandResponse[dirPosition] == 'd')) {
                         return (true);
                     }
                 }
+                
             }
 
             return (false);
@@ -874,25 +877,30 @@ namespace Antik {
                 throw Exception("Not connected to server.");
             }
 
-            ftpCommand("STAT " + fileName);
-
+            // Try MLST first then STAT
+            
+            ftpCommand("MLST " + fileName);
             m_commandStatusCode = ftpResponse();
 
-            // If 213 returned check the response is not empty; if it is
-            // file does not exist.
-            
-            if (m_commandStatusCode == 213) {
-                size_t statusCodePosition = m_commandResponse.find("\r\n") + 2;
-                if ((statusCodePosition != std::string::npos) &&
-                        (m_commandResponse[statusCodePosition] != '2')) {
-                    return (true);
-                }
-            } else if (m_commandStatusCode == 500) { // STAT command not supported try MLST
-                ftpCommand("MLST " + fileName);
+            if (m_commandStatusCode == 250) {
+                return (true);
+
+            } else if (m_commandStatusCode == 500) {
+
+                ftpCommand("STAT " + fileName);
                 m_commandStatusCode = ftpResponse();
-                if (m_commandStatusCode == 250) {
-                    return (true);
+
+                // If 212/213 returned check the response is not empty; if it is
+                // file does not exist.
+
+                if ((m_commandStatusCode == 213) || (m_commandStatusCode == 212)) {
+                    size_t statusCodePosition = m_commandResponse.find("\r\n") + 2;
+                    if ((statusCodePosition != std::string::npos) &&
+                            (m_commandResponse[statusCodePosition] != '2')) {
+                        return (true);
+                    }
                 }
+
             }
 
             return (false);
@@ -900,7 +908,23 @@ namespace Antik {
         }
 
         //
-        // Set binary transfer mode ==true otherwise set ASCII
+        // Move up a directory
+        //
+
+        std::uint16_t CFTP::cdUp() {
+
+            if (!m_connected) {
+                throw Exception("Not connected to server.");
+            }
+
+            ftpCommand("CDUP");
+    
+            return (m_commandStatusCode = ftpResponse());
+
+        }
+        
+        //
+        // BinaryTransfer == true set binary transfer otherwise set ASCII
         //
 
         void CFTP::setBinaryTransfer(bool binaryTransfer) {
@@ -910,14 +934,14 @@ namespace Antik {
             }
 
             if (binaryTransfer) {
-                ftpCommand("MODE I");
+                ftpCommand("TYPE I");
             } else {
-                ftpCommand("MODE A");
+                ftpCommand("TYPE A");
             }
 
             m_commandStatusCode = ftpResponse();
 
-            if (m_commandStatusCode = 200) {
+            if (m_commandStatusCode == 200) {
                 m_binaryTransfer = binaryTransfer;
             }
 
@@ -926,6 +950,7 @@ namespace Antik {
         bool CFTP::isBinaryTransfer() const {
             return m_binaryTransfer;
         }
+        
         //
         // Main CFTP object constructor. 
         //

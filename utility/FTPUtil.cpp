@@ -60,24 +60,39 @@ namespace Antik {
         // ===============
         // LOCAL FUNCTIONS
         // ===============
-        
+              
         //
-        // Construct a remote path from three passed in parameters and just for simplicity replace all
+        // Construct a remote path name from three passed in parameters and just for simplicity replace all
         // double path separators with just one if any have been generated.
         //
-        
-        static inline std::string constructRemotePath (const std::string &currentWorkingDirectory, const std::string &remotePath, const string &remoteFileName) {
- 
-            std::string  remoteDirectoryPath { currentWorkingDirectory+kServerPathSep+remotePath+kServerPathSep+remoteFileName };
-            string::size_type i {0 }; 
-            
-            while((i = remoteDirectoryPath.find(std::string(2,kServerPathSep))) != string::npos) {
-                remoteDirectoryPath.erase(remoteDirectoryPath.begin()+i);
-            }
-            if (remoteDirectoryPath.back()==kServerPathSep) remoteDirectoryPath.pop_back();
 
-            return(remoteDirectoryPath);
-            
+        static inline std::string constructRemotePathName(const std::string &currentWorkingDirectory, const std::string &remotePath, const string &remoteFileName) {
+
+            std::string remoteDirectoryPath{ currentWorkingDirectory + kServerPathSep + remotePath + kServerPathSep + remoteFileName};
+            string::size_type i{0};
+
+            while ((i = remoteDirectoryPath.find(std::string(2, kServerPathSep))) != string::npos) {
+                remoteDirectoryPath.erase(remoteDirectoryPath.begin() + i);
+            }
+            if (remoteDirectoryPath.back() == kServerPathSep) remoteDirectoryPath.pop_back();
+
+            return (remoteDirectoryPath);
+
+        }
+
+        //
+        // Construct a remote path name from value returned from server list command. This may or may no have
+        // the absolute path name on front. If it does return it otherwise construct one that does.
+        //
+        
+        static inline std::string constructRemotePathName(const std::string &remotePath, const string &remoteFileName) {
+
+            if (remoteFileName.find(remotePath)==0) {
+                return(remoteFileName);
+            } else {
+                return (constructRemotePathName("", remotePath, remoteFileName));
+            }
+
         }
         
         // ================
@@ -98,22 +113,24 @@ namespace Antik {
 
         //
         // Recursively parse a remote server path passed in and pass back a list of directories/files found.
+        // For servers that do not return a fully qualified path name create one.
         //
 
         void listRemoteRecursive(CFTP &ftpServer, const string &remoteDirectory, vector<string> &fileList) {
 
             vector<string> serverFileList;
-            uint16_t statusCode;
-
-            statusCode = ftpServer.listFiles(remoteDirectory, serverFileList);
-            if (statusCode == 226) {
+                    
+            if (ftpServer.listFiles(remoteDirectory, serverFileList) == 226) {
                 for (auto file : serverFileList) {
-                    if (remoteDirectory != file) {
-                        listRemoteRecursive(ftpServer, file, fileList);
-                        fileList.push_back(file);
+                    std::string fullFilePath { constructRemotePathName(remoteDirectory, file) };
+                    fileList.push_back(fullFilePath);
+                    if (ftpServer.isDirectory(fullFilePath)) {
+                        listRemoteRecursive(ftpServer, fullFilePath, fileList);
                     }
+
                 }
             }
+                      
         }
 
         //
@@ -157,9 +174,8 @@ namespace Antik {
         // appending it to the passed in local directory to get the full local file path.
         //
 
-        vector<string> getFiles(CFTP &ftpServer, const string &localDirectory, const vector<string> &fileList, bool safe, char postFix) {
+        vector<string> getFiles(CFTP &ftpServer, const string &localDirectory, const vector<string> &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
 
-            uint16_t statusCode;
             vector<string> successList;
             std::string currentWorkingDirectory;
 
@@ -176,13 +192,14 @@ namespace Antik {
                 if (!ftpServer.isDirectory(file)) {
                     std::string destinationFileName{ destination.string() + postFix};
                     if (!safe) destinationFileName.pop_back();
-                    statusCode = ftpServer.getFile(file, destinationFileName);
-                    if (statusCode == 226) {
+                    if (ftpServer.getFile(file, destinationFileName) == 226) {
                         if (safe) fs::rename(destinationFileName, destination.string());
                         successList.push_back(destination.string()); // File get ok so add to success
+                        if (completionFn) completionFn (successList.back());
                     }
                 } else {
                     successList.push_back(destination.string());     // File directory created so add to success
+                    if (completionFn) completionFn (successList.back());
                 }
 
             }
@@ -199,7 +216,7 @@ namespace Antik {
         // All files/directories are placed/created relative to the server current working directory.
         // 
 
-        vector<string> putFiles(CFTP &ftpServer, const string &localDirectory, const vector<string> &fileList, bool safe, char postFix) {
+        vector<string> putFiles(CFTP &ftpServer, const string &localDirectory, const vector<string> &fileList, FileCompletionFn completionFn ,bool safe, char postFix) {
 
             vector<string> successList;
             size_t localPathLength { 0 };
@@ -245,7 +262,8 @@ namespace Antik {
                     if (!remoteDirectory.empty()) {
                         if (!ftpServer.isDirectory(remoteDirectory)) {
                             makeRemotePath(ftpServer, remoteDirectory, false);
-                            successList.push_back(constructRemotePath(currentWorkingDirectory, remoteDirectory, ""));
+                            successList.push_back(constructRemotePathName(currentWorkingDirectory, remoteDirectory, ""));
+                            if (completionFn) completionFn (successList.back());
                         } else {
                             ftpServer.changeWorkingDirectory(remoteDirectory);
                         }
@@ -258,7 +276,8 @@ namespace Antik {
                         if (!safe) destinationFileName.pop_back();
                         if (ftpServer.putFile(destinationFileName, filePath.string()) == 226) {
                             if (safe) ftpServer.renameFile(destinationFileName, filePath.filename().string());
-                            successList.push_back(constructRemotePath(currentWorkingDirectory, remoteDirectory, filePath.filename().string()));
+                            successList.push_back(constructRemotePathName(currentWorkingDirectory, remoteDirectory, filePath.filename().string()));
+                            if (completionFn) completionFn (successList.back());
                         }
                     }
 
