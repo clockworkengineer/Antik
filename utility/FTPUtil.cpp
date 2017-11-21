@@ -119,8 +119,14 @@ namespace Antik {
         void listRemoteRecursive(CFTP &ftpServer, const string &remoteDirectory, vector<string> &fileList) {
 
             vector<string> serverFileList;
-                    
-            if (ftpServer.listFiles(remoteDirectory, serverFileList) == 226) {
+            std::string currentWorkingDirectory;
+
+            // Save current working directory
+            
+            ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
+            
+            ftpServer.changeWorkingDirectory(remoteDirectory);
+            if (ftpServer.listFiles("", serverFileList) == 226) {
                 for (auto file : serverFileList) {
                     std::string fullFilePath { constructRemotePathName(remoteDirectory, file) };
                     fileList.push_back(fullFilePath);
@@ -130,7 +136,11 @@ namespace Antik {
 
                 }
             }
-                      
+  
+            // Restore saved current working directory
+            
+            ftpServer.changeWorkingDirectory(currentWorkingDirectory);
+            
         }
 
         //
@@ -144,7 +154,9 @@ namespace Antik {
             
             vector<string> pathComponents;
             std::string currentWorkingDirectory;
-            
+ 
+            // Save current working directory
+  
             if (saveCWD) {
                 ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
             }
@@ -159,6 +171,8 @@ namespace Antik {
                     ftpServer.changeWorkingDirectory(directory);
                 }
             }
+            
+            // Restore saved current working directory
   
             if (saveCWD) {
                 ftpServer.changeWorkingDirectory(currentWorkingDirectory);
