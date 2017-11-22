@@ -254,10 +254,10 @@ namespace Antik {
             
             bool sendTransferMode();
             
-            // FTP command channel I/O server
+            // FTP command channel I/O to server
             
             void ftpCommand(const std::string& commandLine);
-            std::uint16_t ftpResponse();
+            void ftpResponse();
             
             // Data channel I/O
  
@@ -265,7 +265,7 @@ namespace Antik {
             void transferOnDataChannel(std::string &commandRespnse);      
             void transferOnDataChannel(const std::string &file, std::string &commandRespnse, DataTransferType transferType);            
  
-            void uploadCommandResponse(std::string &commandResponse);
+            void downloadCommandResponse(std::string &commandResponse);
             void downloadFile(const std::string &file);
             void uploadFile(const std::string &file);
  

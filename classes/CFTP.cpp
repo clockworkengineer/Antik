@@ -176,8 +176,12 @@ namespace Antik {
             }
 
         }
+        
+        //
+        // Download response to command over data channel.
+        //
 
-        void CFTP::uploadCommandResponse(std::string &commandResponse) {
+        void CFTP::downloadCommandResponse(std::string &commandResponse) {
 
             do {
 
@@ -223,8 +227,6 @@ namespace Antik {
 
             try {
 
-                m_commandStatusCode = ftpResponse();
-
                 if ((m_commandStatusCode == 125) || (m_commandStatusCode == 150)) {
 
                     m_dataChannelSocket.waitUntilConnected();
@@ -237,13 +239,13 @@ namespace Antik {
                             uploadFile(file);
                             break;
                         case DataTransferType::commandResponse:
-                            uploadCommandResponse(commandRespnse);
+                            downloadCommandResponse(commandRespnse);
                             break;
                     }
 
                     m_dataChannelSocket.close();
 
-                    m_commandStatusCode = ftpResponse();
+                    ftpResponse();
 
                 }
 
@@ -252,7 +254,7 @@ namespace Antik {
                 throw;
             } catch (std::exception &e) {
                 m_dataChannelSocket.cleanup();
-                throw Exception(e.what());
+                throw;
             }
 
             m_dataChannelSocket.cleanup();
@@ -276,6 +278,8 @@ namespace Antik {
 
             m_lastCommand.pop_back();
             m_lastCommand.pop_back();
+            
+            ftpResponse();
 
         }
 
@@ -286,7 +290,7 @@ namespace Antik {
         // so just read single characters.
         //
 
-        std::uint16_t CFTP::ftpResponse() {
+        void CFTP::ftpResponse() {
             
             m_commandResponse.clear();
 
@@ -310,7 +314,9 @@ namespace Antik {
 
             } while ( (m_commandResponse[3] == '-') && (!m_controlChannelSocket.closedByRemotePeer()));
             
-            return (std::stoi(m_commandResponse));
+
+            m_commandStatusCode =  std::stoi(m_commandResponse);
+   
 
         }
 
@@ -322,7 +328,6 @@ namespace Antik {
 
             if (m_passiveMode) {
                 ftpCommand("PASV");
-                m_commandStatusCode = ftpResponse();
                 if (m_commandStatusCode == 227) {
                     extractPassiveAddressPort(m_commandResponse);
                     m_dataChannelSocket.connect();
@@ -332,7 +337,6 @@ namespace Antik {
                 m_dataChannelSocket.setHostAddress(Antik::Network::CSocket::localIPAddress());
                 m_dataChannelSocket.listenForConnection();
                 ftpCommand(createPortCommand());
-                m_commandStatusCode = ftpResponse();
                 return (m_commandStatusCode == 200);
             }
 
@@ -434,21 +438,18 @@ namespace Antik {
             m_controlChannelSocket.setHostPort(m_serverPort);
             m_controlChannelSocket.connect();
 
-            m_commandStatusCode = ftpResponse();
+            ftpResponse();
 
             if (m_commandStatusCode == 220) {
 
                 if (m_sslEnabled) {
                     ftpCommand("AUTH TLS");
-                    m_commandStatusCode = ftpResponse();
                     if (m_commandStatusCode == 234) {
                         m_controlChannelSocket.tlsHandshake();
                         m_dataChannelSocket.setSslEnabled(true);
                         ftpCommand("PBSZ 0");
-                        m_commandStatusCode = ftpResponse();
                         if (m_commandStatusCode == 200) {
                             ftpCommand("PROT P");
-                            m_commandStatusCode = ftpResponse();
                         }
                     }
 
@@ -457,11 +458,9 @@ namespace Antik {
                 m_connected = true;
 
                 ftpCommand("USER " + m_userName);
-                m_commandStatusCode = ftpResponse();
 
                 if (m_commandStatusCode == 331) {
                     ftpCommand("PASS " + m_userPassword);
-                    m_commandStatusCode = ftpResponse();
                 }
 
             }
@@ -481,7 +480,6 @@ namespace Antik {
             }
 
             ftpCommand("QUIT");
-            m_commandStatusCode = ftpResponse();
 
             m_connected = false;
 
@@ -657,7 +655,6 @@ namespace Antik {
             listOutput.clear();
 
             ftpCommand("MLST " + filePath);
-            m_commandStatusCode = ftpResponse();
 
             if (m_commandStatusCode == 250) {
                 listOutput = m_commandResponse.substr(m_commandResponse.find('\n') + 1);
@@ -680,8 +677,8 @@ namespace Antik {
             }
 
             ftpCommand("MKD " + directoryName);
-
-            return (m_commandStatusCode = ftpResponse());
+            
+            return (m_commandStatusCode);
 
         }
 
@@ -696,8 +693,8 @@ namespace Antik {
             }
 
             ftpCommand("RMD " + directoryName);
-
-            return (m_commandStatusCode = ftpResponse());
+            
+            return (m_commandStatusCode);
 
         }
 
@@ -712,7 +709,6 @@ namespace Antik {
             }
 
             ftpCommand("SIZE " + fileName);
-            m_commandStatusCode = ftpResponse();
 
             if (m_commandStatusCode == 213) {
                 fileSize = std::stoi(m_commandResponse.substr(m_commandResponse.find(' ') + 1));
@@ -733,8 +729,8 @@ namespace Antik {
             }
 
             ftpCommand("DELE " + fileName);
-
-            return (m_commandStatusCode = ftpResponse());
+            
+            return (m_commandStatusCode);
 
         }
         
@@ -749,10 +745,8 @@ namespace Antik {
             }
 
             ftpCommand("RNFR " + srcFileName);
-            m_commandStatusCode = ftpResponse();
             if (m_commandStatusCode == 350) {
                 ftpCommand("RNTO " + dstFileName);
-                m_commandStatusCode = ftpResponse();
             }
 
             return (m_commandStatusCode);
@@ -770,8 +764,8 @@ namespace Antik {
             }
 
             ftpCommand("CWD " + workingDirectoryPath);
-
-            return (m_commandStatusCode = ftpResponse());
+            
+            return (m_commandStatusCode);
 
         }
 
@@ -788,7 +782,6 @@ namespace Antik {
             currentWoringDirectoryPath.clear();
 
             ftpCommand("PWD");
-            m_commandStatusCode = ftpResponse();
 
             if (m_commandStatusCode == 257) {
                 currentWoringDirectoryPath = m_commandResponse.substr(m_commandResponse.find_first_of('\"') + 1);
@@ -810,7 +803,6 @@ namespace Antik {
             }
 
             ftpCommand("MDTM " + filePath);
-            m_commandStatusCode = ftpResponse();
 
             if (m_commandStatusCode == 213) {
                 std::string dateTime = m_commandResponse.substr(m_commandResponse.find(' ') + 1);
@@ -839,7 +831,6 @@ namespace Antik {
             // Try MLST first then STAT
             
             ftpCommand("MLST " + fileName);          
-            m_commandStatusCode = ftpResponse();
             
             if (m_commandStatusCode == 250) {
                 
@@ -851,8 +842,7 @@ namespace Antik {
             } else if (m_commandStatusCode == 500) {
 
                 ftpCommand("STAT " + fileName);
-                m_commandStatusCode = ftpResponse();
-
+                
                 if ((m_commandStatusCode == 213) || (m_commandStatusCode == 212)) {
                     size_t dirPosition = m_commandResponse.find("\r\n") + 2;
                     if ((dirPosition != std::string::npos) &&
@@ -880,7 +870,6 @@ namespace Antik {
             // Try MLST first then STAT
             
             ftpCommand("MLST " + fileName);
-            m_commandStatusCode = ftpResponse();
 
             if (m_commandStatusCode == 250) {
                 return (true);
@@ -888,7 +877,6 @@ namespace Antik {
             } else if (m_commandStatusCode == 500) {
 
                 ftpCommand("STAT " + fileName);
-                m_commandStatusCode = ftpResponse();
 
                 // If 212/213 returned check the response is not empty; if it is
                 // file does not exist.
@@ -918,8 +906,8 @@ namespace Antik {
             }
 
             ftpCommand("CDUP");
-    
-            return (m_commandStatusCode = ftpResponse());
+             
+            return (m_commandStatusCode);
 
         }
         
@@ -938,8 +926,6 @@ namespace Antik {
             } else {
                 ftpCommand("TYPE A");
             }
-
-            m_commandStatusCode = ftpResponse();
 
             if (m_commandStatusCode == 200) {
                 m_binaryTransfer = binaryTransfer;
