@@ -204,6 +204,10 @@ namespace Antik {
             bool isDirectory(const std::string &fileName);
             bool fileExists(const std::string &fileName);
             
+            // FTP server features
+            
+            std::vector<std::string> getServerFeatures(void);
+            
             // Enable/Disable SSL
             
             void setSslEnabled(bool sslEnabled);

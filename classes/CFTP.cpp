@@ -313,10 +313,16 @@ namespace Antik {
                 }
 
             } while ( (m_commandResponse[3] == '-') && (!m_controlChannelSocket.closedByRemotePeer()));
-            
 
-            m_commandStatusCode =  std::stoi(m_commandResponse);
-   
+            if (m_controlChannelSocket.closedByRemotePeer()) {
+                throw Exception("Control channel connection closed by peer.");
+            }
+
+            try {
+                m_commandStatusCode = std::stoi(m_commandResponse);
+            } catch (...) {
+                throw Exception("Invalid FTP command response status code.");
+            }
 
         }
 
@@ -932,9 +938,37 @@ namespace Antik {
             }
 
         }
-
+        
         bool CFTP::isBinaryTransfer() const {
             return m_binaryTransfer;
+        }
+        
+        //
+        // Return a vector of strings representing FTP server features.
+        //
+
+        std::vector<std::string> CFTP::getServerFeatures(void) {
+
+            std::vector<std::string> serverFeatures;
+            if (!m_connected) {
+                throw Exception("Not connected to server.");
+            }
+
+            ftpCommand("FEAT");
+            
+            if (m_commandStatusCode==211) {
+                   std::string feature;
+                   std::istringstream featureResponseStream{ m_commandResponse};
+                   std::getline(featureResponseStream, feature, '\n');
+                    while (std::getline(featureResponseStream, feature, '\n')) {
+                        feature.pop_back();
+                        serverFeatures.push_back(feature.substr(1));
+                    }
+                    serverFeatures.pop_back();
+            }
+     
+            return(serverFeatures);
+            
         }
         
         //
