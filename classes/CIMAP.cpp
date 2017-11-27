@@ -288,6 +288,7 @@ namespace Antik {
             // Connect and perform TLS handshake 
             
             m_imapSocket.connect();
+            m_imapSocket.setSslEnabled(true);
             m_imapSocket.tlsHandshake();
             m_connected = true;
             
@@ -295,6 +296,7 @@ namespace Antik {
 
             CIMAPParse::COMMANDRESPONSE parsedResponse = CIMAPParse::parseResponse(sendCommand(
                     static_cast<std::string> (IMAP::kLOGIN) + " " + this->m_userName + " " + this->m_userPassword));
+            
             if (parsedResponse->byeSent) {
                 throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessage);
             } else if (parsedResponse->status != CIMAPParse::RespCode::OK) {
@@ -314,7 +316,8 @@ namespace Antik {
             }
 
             m_imapSocket.close();
-            
+            m_imapSocket.setSslEnabled(false);
+                       
             m_tagCount = 1;
             m_connected = false;
                    

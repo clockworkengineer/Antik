@@ -206,7 +206,7 @@ namespace Antik {
             
             // FTP server features
             
-            std::vector<std::string> getServerFeatures(void);
+            std::vector<std::string> getServerFeatures();
             
             // Enable/Disable SSL
             
@@ -263,6 +263,10 @@ namespace Antik {
             void ftpCommand(const std::string& commandLine);
             void ftpResponse();
             
+            // Get FTP server features list
+            
+            void ftpServerFeatures(void);
+                   
             // Data channel I/O
  
             void transferOnDataChannel(const std::string &file, DataTransferType transferType);
@@ -304,6 +308,8 @@ namespace Antik {
             Antik::Network::CSocket m_dataChannelSocket;
 
             bool m_sslEnabled { false };
+            
+            std::vector<std::string> m_serverFeatures;
 
         };
 

@@ -348,6 +348,28 @@ namespace Antik {
 
         }
 
+        //
+        // Get FTP server features list.
+        //
+
+        void CFTP::ftpServerFeatures(void) {
+
+            ftpCommand("FEAT");
+
+            if (m_commandStatusCode == 211) {
+                std::string feature;
+                std::istringstream featureResponseStream{ m_commandResponse};
+                std::getline(featureResponseStream, feature, '\n');
+                m_serverFeatures.clear();
+                while (std::getline(featureResponseStream, feature, '\n')) {
+                    feature.pop_back();
+                    m_serverFeatures.push_back(feature.substr(1));
+                }
+                m_serverFeatures.pop_back();
+            }
+
+        }
+        
         // ==============
         // PUBLIC METHODS
         // ==============
@@ -447,10 +469,15 @@ namespace Antik {
             ftpResponse();
 
             if (m_commandStatusCode == 220) {
+                
+                // Fetch FTP server features list
+                
+                ftpServerFeatures();
 
                 if (m_sslEnabled) {
                     ftpCommand("AUTH TLS");
                     if (m_commandStatusCode == 234) {
+                        m_controlChannelSocket.setSslEnabled(true);
                         m_controlChannelSocket.tlsHandshake();
                         m_dataChannelSocket.setSslEnabled(true);
                         ftpCommand("PBSZ 0");
@@ -462,7 +489,7 @@ namespace Antik {
                 }
 
                 m_connected = true;
-
+                
                 ftpCommand("USER " + m_userName);
 
                 if (m_commandStatusCode == 331) {
@@ -944,31 +971,22 @@ namespace Antik {
         }
         
         //
-        // Return a vector of strings representing FTP server features.
+        // Return a vector of strings representing FTP server features. If empty
+        // try to get again as server may require to be logged in.
         //
 
-        std::vector<std::string> CFTP::getServerFeatures(void) {
+        std::vector<std::string> CFTP::getServerFeatures() {
 
-            std::vector<std::string> serverFeatures;
             if (!m_connected) {
                 throw Exception("Not connected to server.");
             }
 
-            ftpCommand("FEAT");
-            
-            if (m_commandStatusCode==211) {
-                   std::string feature;
-                   std::istringstream featureResponseStream{ m_commandResponse};
-                   std::getline(featureResponseStream, feature, '\n');
-                    while (std::getline(featureResponseStream, feature, '\n')) {
-                        feature.pop_back();
-                        serverFeatures.push_back(feature.substr(1));
-                    }
-                    serverFeatures.pop_back();
+            if (m_serverFeatures.empty()) {
+                ftpServerFeatures();
             }
-     
-            return(serverFeatures);
-            
+
+            return (m_serverFeatures);
+
         }
         
         //

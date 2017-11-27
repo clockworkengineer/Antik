@@ -160,11 +160,9 @@ namespace Antik {
                 m_socketListenThread->join();
             }
 
-            // TLS handshake
+            // TLS handshake if SSL enabled
 
-            if (m_sslEnabled) {
-                tlsHandshake();
-            }
+            tlsHandshake();
 
         }
 
@@ -255,11 +253,17 @@ namespace Antik {
         }
 
         //
-        // Perform TLS handshake on to enable SSL
+        // Perform TLS handshake if SSL enabled
         //
 
         void CSocket::tlsHandshake() {
+            
+            // If SSL not enabled return
 
+            if (!m_sslEnabled) {
+                return;
+            }
+                       
             // No socket present
 
             if (!m_socket) {
