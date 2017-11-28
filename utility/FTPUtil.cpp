@@ -60,7 +60,7 @@ namespace Antik {
         // ===============
         // LOCAL FUNCTIONS
         // ===============
-        
+
         //
         // Construct a remote path name from three passed in parameters and just for simplicity replace all
         // double path separators with just one if any have been generated.
@@ -84,17 +84,17 @@ namespace Antik {
         // Construct a remote path name from value returned from server list command. This may or may no have
         // the absolute path name on front. If it does return it otherwise construct one that does.
         //
-        
+
         static inline string constructRemotePathName(const string &remotePath, const string &remoteFileName) {
 
-            if (remoteFileName.find(remotePath)==0) {
-                return(remoteFileName);
+            if (remoteFileName.find(remotePath) == 0) {
+                return (remoteFileName);
             } else {
                 return (constructRemotePathName("", remotePath, remoteFileName));
             }
 
         }
-        
+
         // ================
         // PUBLIC FUNCTIONS
         // ================
@@ -122,13 +122,13 @@ namespace Antik {
             string currentWorkingDirectory;
 
             // Save current working directory
-            
+
             ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
-            
+
             ftpServer.changeWorkingDirectory(remoteDirectory);
             if (ftpServer.listFiles("", serverFileList) == 226) {
                 for (auto file : serverFileList) {
-                    string fullFilePath { constructRemotePathName(remoteDirectory, file) };
+                    string fullFilePath{ constructRemotePathName(remoteDirectory, file)};
                     fileList.push_back(fullFilePath);
                     if (ftpServer.isDirectory(fullFilePath)) {
                         listRemoteRecursive(ftpServer, fullFilePath, fileList);
@@ -136,11 +136,11 @@ namespace Antik {
 
                 }
             }
-  
+
             // Restore saved current working directory
-            
+
             ftpServer.changeWorkingDirectory(currentWorkingDirectory);
-            
+
         }
 
         //
@@ -149,37 +149,37 @@ namespace Antik {
         // working directory and no errors are reported. To test for success/failure
         // use CFTP::fileExists() after call to see if it has been created.
         //
-        
-        void makeRemotePath (CFTP &ftpServer, const string &remotePath, bool saveCWD) {
-            
+
+        void makeRemotePath(CFTP &ftpServer, const string &remotePath, bool saveCWD) {
+
             vector<string> pathComponents;
             string currentWorkingDirectory;
- 
+
             // Save current working directory
-  
+
             if (saveCWD) {
                 ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
             }
-              
-            boost::split(pathComponents, remotePath, boost::is_any_of(string(1,kServerPathSep)));
-            
+
+            boost::split(pathComponents, remotePath, boost::is_any_of(string(1, kServerPathSep)));
+
             ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
-            
+
             for (auto directory : pathComponents) {
                 if (!directory.empty()) {
                     ftpServer.makeDirectory(directory);
                     ftpServer.changeWorkingDirectory(directory);
                 }
             }
-            
+
             // Restore saved current working directory
-  
+
             if (saveCWD) {
                 ftpServer.changeWorkingDirectory(currentWorkingDirectory);
             }
-            
+
         }
-        
+
         //
         // Download all files passed in file list from server to the local directory passed in; recreating any server directory
         // structure in situ. If safe == true then the file is downloaded to a filename with a postfix then the file is renamed
@@ -194,53 +194,65 @@ namespace Antik {
             string currentWorkingDirectory;
 
             // Save current working directory
-            
+
             ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
-            
-            for (auto file : fileList) {
-                
-                fs::path destination{ localDirectory };
-                
-                destination /= file.substr(currentWorkingDirectory.size());
-                destination = destination.normalize();
-                if (!fs::exists(destination.parent_path())) { 
-                    fs::create_directories(destination.parent_path());
-                }
-                
-                if (!ftpServer.isDirectory(file)) {
-                    
-                    string destinationFileName{ destination.string() + postFix};
-                    if (!safe) {
-                        destinationFileName.pop_back();
+
+            try {
+
+                for (auto file : fileList) {
+
+                    fs::path destination{ localDirectory};
+
+                    destination /= file.substr(currentWorkingDirectory.size());
+                    destination = destination.normalize();
+                    if (!fs::exists(destination.parent_path())) {
+                        fs::create_directories(destination.parent_path());
                     }
-                    if (ftpServer.getFile(file, destinationFileName) == 226) {
-                        if (safe) {
-                            fs::rename(destinationFileName, destination.string());
+
+                    if (!ftpServer.isDirectory(file)) {
+
+                        string destinationFileName{ destination.string() + postFix};
+                        if (!safe) {
+                            destinationFileName.pop_back();
+                        }
+                        if (ftpServer.getFile(file, destinationFileName) == 226) {
+                            if (safe) {
+                                fs::rename(destinationFileName, destination.string());
+                            }
+                            successList.push_back(destination.string());
+                            if (completionFn) {
+                                completionFn(successList.back());
+                            }
+                        }
+
+                    } else {
+
+                        if (!fs::exists(destination)) {
+                            fs::create_directories(destination);
                         }
                         successList.push_back(destination.string());
                         if (completionFn) {
-                            completionFn (successList.back());
+                            completionFn(successList.back());
                         }
+
                     }
-                    
-                } else {
-                    
-                    if (!fs::exists(destination)) { 
-                        fs::create_directories(destination);
-                    }
-                    successList.push_back(destination.string());
-                    if (completionFn) {
-                        completionFn (successList.back());
-                    }
-                    
+
                 }
 
+                // Restore saved current working directory
+
+                ftpServer.changeWorkingDirectory(currentWorkingDirectory);
+
+            // On exception report and return with files that where successfully downloaded.
+
+            } catch (const CFTP::Exception &e) {
+                std::cerr << e.what();
+            } catch (const boost::filesystem::filesystem_error & e) {
+                std::cerr << string("BOOST file system exception occured: [") + e.what() + "]";
+            } catch (const exception &e) {
+                std::cerr << string("Standard exception occured: [") + e.what() + "]";
             }
 
-            // Restore saved current working directory
-            
-            ftpServer.changeWorkingDirectory(currentWorkingDirectory);
-            
             return (successList);
 
         }
@@ -253,86 +265,99 @@ namespace Antik {
         // All files/directories are placed/created relative to the server current working directory.
         // 
 
-        FileList putFiles(CFTP &ftpServer, const string &localDirectory, const FileList &fileList, FileCompletionFn completionFn ,bool safe, char postFix) {
+        FileList putFiles(CFTP &ftpServer, const string &localDirectory, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
 
             FileList successList;
-            size_t localPathLength { 0 };
+            size_t localPathLength{ 0};
             string currentWorkingDirectory;
 
             // Determine local path length for creating remote paths.
-            
+
             localPathLength = localDirectory.size();
-            if (localDirectory.back()!=kServerPathSep) localPathLength++;      
-           
+            if (localDirectory.back() != kServerPathSep) localPathLength++;
+
             // Save current working directory
-            
+
             ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
 
-            // Process file/directory list
-            
-            for (auto file : fileList) {
+            try {
 
-                fs::path filePath{ file};
+                // Process file/directory list
 
-                if (fs::exists(filePath)) {
+                for (auto file : fileList) {
 
-                    string remoteDirectory;
-                    bool transferFile { false };
+                    fs::path filePath{ file};
 
-                    // Create remote path and set file to be transfered flag
-                    
-                    if (fs::is_directory(filePath)) {
-                        remoteDirectory = filePath.string();
-                    } else if (fs::is_regular_file(filePath)) {
-                        remoteDirectory = filePath.parent_path().string()+kServerPathSep;
-                        transferFile = true;
-                    } else {
-                        continue; // Not valid for transfer NEXT FILE!
-                    }
-                    
-                    remoteDirectory = remoteDirectory.substr(localPathLength);
-                    
-                    // Set current working directory and create any remote path needed
-                    
-                    ftpServer.changeWorkingDirectory(currentWorkingDirectory);
-                    
-                    if (!remoteDirectory.empty()) {
-                        if (!ftpServer.isDirectory(remoteDirectory)) {
-                            makeRemotePath(ftpServer, remoteDirectory, false);
-                            successList.push_back(constructRemotePathName(currentWorkingDirectory, remoteDirectory, ""));
-                            if (completionFn) {
-                                completionFn (successList.back());
-                            }
+                    if (fs::exists(filePath)) {
+
+                        string remoteDirectory;
+                        bool transferFile{ false};
+
+                        // Create remote path and set file to be transfered flag
+
+                        if (fs::is_directory(filePath)) {
+                            remoteDirectory = filePath.string();
+                        } else if (fs::is_regular_file(filePath)) {
+                            remoteDirectory = filePath.parent_path().string() + kServerPathSep;
+                            transferFile = true;
                         } else {
-                            ftpServer.changeWorkingDirectory(remoteDirectory);
+                            continue; // Not valid for transfer NEXT FILE!
                         }
-                    }
-                    
-                    // Transfer file
-                    
-                    if (transferFile) {
-                        string destinationFileName{ filePath.filename().string() + postFix};
-                        if (!safe) { 
-                            destinationFileName.pop_back();
-                        }
-                        if (ftpServer.putFile(destinationFileName, filePath.string()) == 226) {
-                            if (safe) {
-                                ftpServer.renameFile(destinationFileName, filePath.filename().string());
+
+                        remoteDirectory = remoteDirectory.substr(localPathLength);
+
+                        // Set current working directory and create any remote path needed
+
+                        ftpServer.changeWorkingDirectory(currentWorkingDirectory);
+
+                        if (!remoteDirectory.empty()) {
+                            if (!ftpServer.isDirectory(remoteDirectory)) {
+                                makeRemotePath(ftpServer, remoteDirectory, false);
+                                successList.push_back(constructRemotePathName(currentWorkingDirectory, remoteDirectory, ""));
+                                if (completionFn) {
+                                    completionFn(successList.back());
+                                }
+                            } else {
+                                ftpServer.changeWorkingDirectory(remoteDirectory);
                             }
-                            successList.push_back(constructRemotePathName(currentWorkingDirectory, remoteDirectory, filePath.filename().string()));
-                            if (completionFn) { 
-                                completionFn (successList.back());
-                            }    
                         }
+
+                        // Transfer file
+
+                        if (transferFile) {
+                            string destinationFileName{ filePath.filename().string() + postFix};
+                            if (!safe) {
+                                destinationFileName.pop_back();
+                            }
+                            if (ftpServer.putFile(destinationFileName, filePath.string()) == 226) {
+                                if (safe) {
+                                    ftpServer.renameFile(destinationFileName, filePath.filename().string());
+                                }
+                                successList.push_back(constructRemotePathName(currentWorkingDirectory, remoteDirectory, filePath.filename().string()));
+                                if (completionFn) {
+                                    completionFn(successList.back());
+                                }
+                            }
+                        }
+
                     }
 
                 }
 
-            }
+                // Restore saved current working directory
 
-            // Restore saved current working directory
-            
-            ftpServer.changeWorkingDirectory(currentWorkingDirectory);
+                ftpServer.changeWorkingDirectory(currentWorkingDirectory);
+
+
+            // On exception report and return with files that where successfully uploaded.
+
+            } catch (const CFTP::Exception &e) {
+                std::cerr << e.what();
+            } catch (const boost::filesystem::filesystem_error & e) {
+                std::cerr << string("BOOST file system exception occured: [") + e.what() + "]";
+            } catch (const exception &e) {
+                std::cerr << string("Standard exception occured: [") + e.what() + "]";
+            }
 
             return (successList);
 
