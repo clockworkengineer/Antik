@@ -622,7 +622,7 @@ namespace Antik {
         // working directory if none is.
         //
 
-        std::uint16_t CFTP::listFiles(const std::string &directoryPath, std::vector<std::string> &fileList) {
+        std::uint16_t CFTP::listFiles(const std::string &directoryPath, FileList &fileList) {
 
             if (!m_connected) {
                 throw Exception("Not connected to server.");

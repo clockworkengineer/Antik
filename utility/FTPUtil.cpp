@@ -66,12 +66,12 @@ namespace Antik {
         // double path separators with just one if any have been generated.
         //
 
-        static inline std::string constructRemotePathName(const std::string &currentWorkingDirectory, const std::string &remotePath, const string &remoteFileName) {
+        static inline string constructRemotePathName(const string &currentWorkingDirectory, const string &remotePath, const string &remoteFileName) {
 
-            std::string remoteDirectoryPath{ currentWorkingDirectory + kServerPathSep + remotePath + kServerPathSep + remoteFileName};
+            string remoteDirectoryPath{ currentWorkingDirectory + kServerPathSep + remotePath + kServerPathSep + remoteFileName};
             string::size_type i{0};
 
-            while ((i = remoteDirectoryPath.find(std::string(2, kServerPathSep))) != string::npos) {
+            while ((i = remoteDirectoryPath.find(string(2, kServerPathSep))) != string::npos) {
                 remoteDirectoryPath.erase(remoteDirectoryPath.begin() + i);
             }
             if (remoteDirectoryPath.back() == kServerPathSep) remoteDirectoryPath.pop_back();
@@ -85,7 +85,7 @@ namespace Antik {
         // the absolute path name on front. If it does return it otherwise construct one that does.
         //
         
-        static inline std::string constructRemotePathName(const std::string &remotePath, const string &remoteFileName) {
+        static inline string constructRemotePathName(const string &remotePath, const string &remoteFileName) {
 
             if (remoteFileName.find(remotePath)==0) {
                 return(remoteFileName);
@@ -103,7 +103,7 @@ namespace Antik {
         // Recursively parse a local directory and produce a list of files.
         //
 
-        void listLocalRecursive(const string &localDirectory, vector<string> &fileList) {
+        void listLocalRecursive(const string &localDirectory, FileList &fileList) {
 
             for (auto directoryEntry : fs::recursive_directory_iterator{localDirectory}) {
                 fileList.push_back(directoryEntry.path().string());
@@ -116,10 +116,10 @@ namespace Antik {
         // For servers that do not return a fully qualified path name create one.
         //
 
-        void listRemoteRecursive(CFTP &ftpServer, const string &remoteDirectory, vector<string> &fileList) {
+        void listRemoteRecursive(CFTP &ftpServer, const string &remoteDirectory, FileList &fileList) {
 
-            vector<string> serverFileList;
-            std::string currentWorkingDirectory;
+            FileList serverFileList;
+            string currentWorkingDirectory;
 
             // Save current working directory
             
@@ -128,7 +128,7 @@ namespace Antik {
             ftpServer.changeWorkingDirectory(remoteDirectory);
             if (ftpServer.listFiles("", serverFileList) == 226) {
                 for (auto file : serverFileList) {
-                    std::string fullFilePath { constructRemotePathName(remoteDirectory, file) };
+                    string fullFilePath { constructRemotePathName(remoteDirectory, file) };
                     fileList.push_back(fullFilePath);
                     if (ftpServer.isDirectory(fullFilePath)) {
                         listRemoteRecursive(ftpServer, fullFilePath, fileList);
@@ -153,7 +153,7 @@ namespace Antik {
         void makeRemotePath (CFTP &ftpServer, const string &remotePath, bool saveCWD) {
             
             vector<string> pathComponents;
-            std::string currentWorkingDirectory;
+            string currentWorkingDirectory;
  
             // Save current working directory
   
@@ -161,7 +161,7 @@ namespace Antik {
                 ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
             }
               
-            boost::split(pathComponents, remotePath, boost::is_any_of(std::string(1,kServerPathSep)));
+            boost::split(pathComponents, remotePath, boost::is_any_of(string(1,kServerPathSep)));
             
             ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
             
@@ -188,10 +188,10 @@ namespace Antik {
         // appending it to the passed in local directory to get the full local file path.
         //
 
-        vector<string> getFiles(CFTP &ftpServer, const string &localDirectory, const vector<string> &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
+        FileList getFiles(CFTP &ftpServer, const string &localDirectory, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
 
-            vector<string> successList;
-            std::string currentWorkingDirectory;
+            FileList successList;
+            string currentWorkingDirectory;
 
             // Save current working directory
             
@@ -209,7 +209,7 @@ namespace Antik {
                 
                 if (!ftpServer.isDirectory(file)) {
                     
-                    std::string destinationFileName{ destination.string() + postFix};
+                    string destinationFileName{ destination.string() + postFix};
                     if (!safe) {
                         destinationFileName.pop_back();
                     }
@@ -253,11 +253,11 @@ namespace Antik {
         // All files/directories are placed/created relative to the server current working directory.
         // 
 
-        vector<string> putFiles(CFTP &ftpServer, const string &localDirectory, const vector<string> &fileList, FileCompletionFn completionFn ,bool safe, char postFix) {
+        FileList putFiles(CFTP &ftpServer, const string &localDirectory, const FileList &fileList, FileCompletionFn completionFn ,bool safe, char postFix) {
 
-            vector<string> successList;
+            FileList successList;
             size_t localPathLength { 0 };
-            std::string currentWorkingDirectory;
+            string currentWorkingDirectory;
 
             // Determine local path length for creating remote paths.
             
@@ -311,7 +311,7 @@ namespace Antik {
                     // Transfer file
                     
                     if (transferFile) {
-                        std::string destinationFileName{ filePath.filename().string() + postFix};
+                        string destinationFileName{ filePath.filename().string() + postFix};
                         if (!safe) { 
                             destinationFileName.pop_back();
                         }
