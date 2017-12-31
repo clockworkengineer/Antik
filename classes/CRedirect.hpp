@@ -46,15 +46,15 @@ namespace Antik {
         // Set stream to redirect
         //
 
-        CRedirect(std::ostream& outStream);
-        CRedirect(std::FILE* stdStream);
+        explicit CRedirect(std::ostream& outStream);
+        explicit CRedirect(std::FILE* stdStream);
 
         //
         // Set stream to redirect and start redirect
         //
 
-        CRedirect(std::ostream& outStream, std::string outfileName, std::ios_base::openmode mode = std::ios_base::out);
-        CRedirect(std::FILE* stdStream, std::string outfileName, const char *mode = "w");
+        explicit CRedirect(std::ostream& outStream, std::string outfileName, std::ios_base::openmode mode = std::ios_base::out);
+        explicit CRedirect(std::FILE* stdStream, std::string outfileName, const char *mode = "w");
 
         // ==========
         // DESTRUCTOR

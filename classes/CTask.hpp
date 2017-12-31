@@ -82,7 +82,7 @@ namespace Antik {
             // Main constructor
             //
 
-            CTask
+            explicit CTask
             (
                 const std::string& taskName, // Task name
                 const std::string& watchFolder, // Watch folder path

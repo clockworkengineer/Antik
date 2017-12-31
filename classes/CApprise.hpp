@@ -107,7 +107,7 @@ namespace Antik {
             // Main constructor
             //
 
-            CApprise
+            explicit CApprise
             (
                 const std::string& watchFolder, // Watch folder path
                 int watchDepth, // Watch depth -1=all,0=just watch folder,1=next level down etc.
@@ -118,7 +118,7 @@ namespace Antik {
             // Need to add/remove watches manually
             //
 
-            CApprise
+            explicit CApprise
             (
                 std::shared_ptr<CApprise::Options> options = nullptr // CApprise Options (OPTIONAL)
             );

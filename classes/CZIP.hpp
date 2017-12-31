@@ -79,7 +79,7 @@ namespace Antik {
             // CONSTRUCTORS
             // ============
 
-            CZIP(const std::string& zipFileName);
+            explicit CZIP(const std::string& zipFileName);
 
             // ==========
             // DESTRUCTOR
