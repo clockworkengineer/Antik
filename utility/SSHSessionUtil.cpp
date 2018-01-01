@@ -99,19 +99,21 @@ namespace Antik {
         bool sshVerifyKnownServer(CSSHSession &sshSession) {
 
             std::vector<unsigned char> keyHash;
+            CSSHSession::Key serverPublicKey;
             std::string reply;
             int returnCode;
 
             returnCode = sshSession.isServerKnown();
+            
+            serverPublicKey = sshSession.getPublicKey();
 
-            if (sshSession.getPublicKeyHash(keyHash) < 0) {
-                return (false);
-            }
+            sshSession.getPublicKeyHash(serverPublicKey, keyHash);
+            
+            sshSession.freeKey(serverPublicKey);
 
             switch (returnCode) {
 
                 case SSH_SERVER_KNOWN_OK:
-                    std::cout << "Host known." << std::endl;
                     break; /* ok */
 
                 case SSH_SERVER_KNOWN_CHANGED:

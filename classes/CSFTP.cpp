@@ -77,17 +77,12 @@ namespace Antik {
 
         CSFTP::CSFTP(CSSHSession &session) : m_session{session}
         {
-            int returnCode;
+   
             m_sftp = sftp_new(m_session.getSession());
             if (m_sftp == NULL) {
                 throw Exception ("Error allocating SFTP session: "+m_session.getError());
             }
-            returnCode = sftp_init(m_sftp);
-            if (returnCode != SSH_OK) {
-                sftp_free(m_sftp);
-                m_sftp=NULL;
-                throw Exception ("Error initializing SFTP session: "+sftp_get_error(m_sftp));
-            }
+   
             
         }
 
@@ -96,10 +91,28 @@ namespace Antik {
         //
 
         CSFTP::~CSFTP() {
-            
-            sftp_free(m_sftp);
-            m_sftp=NULL;
+
+            close();
                 
+        }
+
+        void CSFTP::open() {
+
+            if (sftp_init(m_sftp) != SSH_OK) {
+                sftp_free(m_sftp);
+                m_sftp = NULL;
+                throw Exception("Error initializing SFTP session: " + sftp_get_error(m_sftp));
+            }
+
+        }
+
+        void CSFTP::close() {
+
+            if (m_sftp) {
+                sftp_free(m_sftp);
+                m_sftp = NULL;
+            }
+
         }
 
         Antik::SSH::CSFTP::SFTPFile CSFTP::openFile(const std::string &fileName, int accessType, int mode) {

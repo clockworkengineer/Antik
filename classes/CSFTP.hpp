@@ -75,7 +75,6 @@ namespace Antik {
             
             typedef sftp_file SFTPFile;
             typedef sftp_dir STFPDirectory;
-          //  typedef sftp_attributes SFTPFileAttributes;
 
             // ============
             // CONSTRUCTORS
@@ -111,6 +110,9 @@ namespace Antik {
             bool isADirectory (const SFTPFileAttributes &fileAttributes);
             bool isARegularFile (const SFTPFileAttributes &fileAttributes);
             bool isASymbolicLink(const SFTPFileAttributes &fileAttributes);
+            
+            void open();
+            void close();
    
             sftp_session getSFTP() const;
             CSSHSession& getSession() const;

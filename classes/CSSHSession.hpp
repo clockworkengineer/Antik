@@ -66,7 +66,7 @@ namespace Antik {
                 }
 
                 std::string getMessage() {
-                    return static_cast<std::string> ("CSHHSession Failure: ") + errorMessage;
+                    return static_cast<std::string> ("CSSHSession Failure: ") + errorMessage;
                 }
 
             private:
@@ -75,6 +75,8 @@ namespace Antik {
 
             };
 
+            typedef ssh_key Key;
+            
             // ============
             // CONSTRUCTORS
             // ============
@@ -114,8 +116,10 @@ namespace Antik {
             int isServerKnown();
             void writeKnownHost();
              
-            int getPublicKeyHash(std::vector<unsigned char> &keyHash);
+            Key getPublicKey();
+            void getPublicKeyHash(Key serverPublicKey, std::vector<unsigned char> &keyHash);
             std::string convertKeyHashToHex(std::vector<unsigned char> &keyHash);
+            void freeKey(Key keyToFree);
 
             std::string getBanner() const;
             std::string getDisconnectMessage() const;
