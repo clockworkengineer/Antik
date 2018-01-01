@@ -1,5 +1,5 @@
 /*
- * File:   CSFTP.hpp
+ * File:   CSFTP.hpp(Work In Progress)
  * 
  * Author: Robert Tizzard
  * 
@@ -97,6 +97,9 @@ namespace Antik {
             // PUBLIC METHODS
             // ==============
             
+            void open();
+            void close();
+  
             SFTPFile openFile(const std::string &fileName, int accessType, int mode);
             size_t readFile(SFTPFile fileDesc, void *readBuffer, size_t bytesToRead);
             size_t writeFile(SFTPFile fileDesc, void *writeBuffer, size_t bytesToWrite);
@@ -110,10 +113,7 @@ namespace Antik {
             bool isADirectory (const SFTPFileAttributes &fileAttributes);
             bool isARegularFile (const SFTPFileAttributes &fileAttributes);
             bool isASymbolicLink(const SFTPFileAttributes &fileAttributes);
-            
-            void open();
-            void close();
-   
+    
             sftp_session getSFTP() const;
             CSSHSession& getSession() const;
                         

@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   CSSHSession.cpp
+ * File:   CSSHSession.cpp(Work In Progress)
  * 
  * Author: Robert Tizzard
  * 
@@ -16,7 +16,7 @@
 // Description:
 //
 // Dependencies:   C11++        - Language standard features used.
-//                 libssh       - Used to talk to SSH server.
+//                 libssh       - Used to talk to SSH server (https://www.libssh.org/)
 //
 
 // =================
@@ -88,7 +88,7 @@ namespace Antik {
 
             if (m_session) {
                 ssh_free(m_session);
-                m_session = nullptr;
+                m_session = NULL;
             }
 
         }

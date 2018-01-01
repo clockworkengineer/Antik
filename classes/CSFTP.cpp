@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   CSFTP.cpp
+ * File:   CSFTP.cpp(Work In Progress)
  * 
  * Author: Robert Tizzard
  * 
@@ -15,10 +15,8 @@
 // 
 // Description:
 //
-// Note: TLS/SSL connections are supported.
-//
 // Dependencies:   C11++        - Language standard features used.
-//                 CSocket   -  - Used to talk to FTP server.
+//                 libssh       - Used to talk to SSH server (https://www.libssh.org/)
 //
 
 // =================
