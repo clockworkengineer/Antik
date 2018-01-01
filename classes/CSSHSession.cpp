@@ -75,7 +75,9 @@ namespace Antik {
         //
 
         CSSHSession::CSSHSession() {
+            
             m_session = ssh_new();
+            
         }
 
         //
@@ -83,102 +85,109 @@ namespace Antik {
         //
 
         CSSHSession::~CSSHSession() {
+            
             if (m_session) { 
                 ssh_free(m_session);
                 m_session=nullptr;
             }
+            
         }
 
-        int CSSHSession::setServer(const std::string &server) {
+        void CSSHSession::setServer(const std::string &server) {
             
             m_server = server;
-            m_lastReturnedCode = ssh_options_set(m_session, SSH_OPTIONS_HOST, &m_server[0]);
-            return(m_lastReturnedCode);
-            
+            if (ssh_options_set(m_session, SSH_OPTIONS_HOST, m_server.c_str()) != SSH_OK) {
+                throw Exception(*this);
+            }
+                      
         }
 
-        int CSSHSession::setPort(unsigned int port) {
+        void CSSHSession::setPort(unsigned int port) {
             
             m_port = port;
-            m_lastReturnedCode = ssh_options_set(m_session, SSH_OPTIONS_PORT, &m_port);
-            return(m_lastReturnedCode);
+            if (ssh_options_set(m_session, SSH_OPTIONS_PORT, &m_port) != SSH_OK) {
+                throw Exception(*this);
+            }
             
         }
 
-        int CSSHSession::setUser(const std::string &user) {
+        void CSSHSession::setUser(const std::string &user) {
             
             m_user = user;
-            m_lastReturnedCode = ssh_options_set(m_session, SSH_OPTIONS_USER, &m_user[0]);
-            return(m_lastReturnedCode);
+            if (ssh_options_set(m_session, SSH_OPTIONS_USER, m_user.c_str()) != SSH_OK) {
+                throw Exception(*this);
+            }
             
         }
 
-        int CSSHSession::setUserPassword(const std::string &password) {
+        void CSSHSession::setUserPassword(const std::string &password) {
             
             m_password = password;        
-            return(m_lastReturnedCode=SSH_OK);
 
         }
 
-        int CSSHSession::connect() {
+        void CSSHSession::connect() {
             
-            m_lastReturnedCode = ssh_connect(m_session);
-            return(m_lastReturnedCode);
+            if (ssh_connect(m_session) != SSH_OK) {
+                throw Exception(*this);
+            }
             
         }
 
-        int CSSHSession::disconnect() {
+        void CSSHSession::disconnect(bool silent) {
             
-            m_lastReturnedCode = ssh_connect(m_session);
-            return(m_lastReturnedCode);
+            if (silent) {
+               ssh_silent_disconnect(m_session);
+            } else {
+               ssh_disconnect(m_session);
+            }
             
         }
 
         int CSSHSession::userAuthorizationList() {
             
-            return(ssh_userauth_list(m_session, NULL));
+           return(ssh_userauth_list(m_session, NULL));
             
         }
         
         int CSSHSession::userAuthorizationNone() {
             
-            m_lastReturnedCode = ssh_userauth_none(m_session, NULL);
-            return(m_lastReturnedCode);
+            return(ssh_userauth_none(m_session, NULL));
                         
         }
 
         int CSSHSession::userAuthorizationWithPassword() {
             
-            m_lastReturnedCode = ssh_userauth_password(m_session, NULL, &m_password[0]);
-            return(m_lastReturnedCode);
+            return(ssh_userauth_password(m_session, NULL, m_password.c_str()));
             
         }
 
         int CSSHSession::userAuthorizationWithPublicKeyAuto() {
             
-            m_lastReturnedCode = ssh_userauth_publickey_auto(m_session, NULL, NULL);
-            return(m_lastReturnedCode);
+            return(ssh_userauth_publickey_auto(m_session, NULL, NULL));
             
         }
         
         int CSSHSession::userAuthorizationWithPublicKey() {
-            m_lastReturnedCode = SSH_AUTH_DENIED;
-            return(m_lastReturnedCode);
+            
+            return(SSH_AUTH_DENIED);
+            
         }
 
         int CSSHSession::userAuthorizationWithKeyboardInteractive() {
-            m_lastReturnedCode = SSH_AUTH_DENIED;
-            return (m_lastReturnedCode);
+            
+            return(SSH_AUTH_DENIED);
+            
         }
         
         int CSSHSession::isServerKnown() {
-            
-            m_lastReturnedCode = ssh_is_server_known(m_session);
-            return(m_lastReturnedCode);
+           
+            return(ssh_is_server_known(m_session));
             
         }
         
          int CSSHSession::getPublicKeyHash(std::vector<unsigned char> &keyHash) {
+             
             unsigned char *hash = NULL;
             int hlen;
             hlen = ssh_get_pubkey_hash(m_session, &hash);
@@ -187,9 +196,11 @@ namespace Antik {
                 free(hash);
             }
             return (hlen);
+            
         }
          
         std::string CSSHSession::convertKeyHashToHex(std::vector<unsigned char> &keyHash) {
+            
             char *hexa = NULL;
             std::string convertedHash;
             hexa = ssh_get_hexa(&keyHash[0], keyHash.size());
@@ -198,50 +209,75 @@ namespace Antik {
                 free(hexa);
             }
             return (convertedHash);
+            
         }
          
-         int CSSHSession::writeKnownHost() {
+         void CSSHSession::writeKnownHost() {
              
-            m_lastReturnedCode = ssh_write_knownhost(m_session);
-            return(m_lastReturnedCode);
+            if (ssh_write_knownhost(m_session)!=SSH_OK) {
+                 throw Exception(*this);              
+            }
             
          }
          
-         std::string CSSHSession::getBanner() {
+         std::string CSSHSession::getBanner() const {
 
             std::string sessionBanner;
-            
             char *banner = ssh_get_issue_banner(m_session);
             if (banner) {
                 sessionBanner.assign(&banner[0], &banner[std::strlen(banner)]);
                 free(banner);
-            }
-            
+            }        
             return(sessionBanner);
      
          }
+
+        std::string CSSHSession::getDisconnectMessage() const {
+            
+            std::string disconnectMessage;         
+            const char *message = ssh_get_disconnect_message(m_session);
+            if (message) {
+                disconnectMessage.assign(&message[0], &message[std::strlen(message)]);
+            } else {
+                disconnectMessage = getError();
+            }         
+            return(disconnectMessage);
+            
+        }
          
-        int CSSHSession::getSSHVersion() {
+        int CSSHSession::getSSHVersion() const {
 
             return(ssh_get_version(m_session));
             
         }
+
+        int CSSHSession::getStatus() const {
+
+            return (ssh_get_status(m_session));
+
+        }
+
+        bool CSSHSession::isConnected() const {
+
+            return (ssh_is_connected(m_session));
+
+        }
          
-         std::string CSSHSession::getError() {
+         std::string CSSHSession::getError() const {
              
              return(ssh_get_error(m_session));
              
          }
 
+        int CSSHSession::getErrorCode() const {
+            
+            return (ssh_get_error_code(m_session));
+            
+        }
+                     
         ssh_session CSSHSession::getSession() const {
             
             return m_session;
-            
-        }
-
-        int CSSHSession::getLastReturnCode() const {
-            
-            return m_lastReturnedCode;
             
         }
               

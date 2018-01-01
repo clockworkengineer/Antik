@@ -48,14 +48,30 @@ namespace Antik {
             // ==========================
 
             //
-            // Class exception
+            // Class exception        
             //
 
-            struct Exception : public std::runtime_error {
-
-                Exception(std::string const& message)
-                : std::runtime_error("CSSHSession Failure: " + message) {
+            struct Exception {
+                
+                Exception(const std::string &message) : errorCode{SSH_OK},errorMessage{ message }
+                {
                 }
+                
+                Exception(CSSHSession &session) : errorCode{session.getErrorCode()}, errorMessage{ session.getError()}
+                {
+                }
+
+                int getCode() {
+                    return errorCode;
+                }
+
+                std::string getMessage() {
+                    return static_cast<std::string> ("CSHHSession Failure: ") + errorMessage;
+                }
+
+            private:
+                int errorCode;
+                std::string errorMessage;
 
             };
 
@@ -79,13 +95,13 @@ namespace Antik {
             // PUBLIC METHODS
             // ==============
         
-            int setServer(const std::string &server);
-            int setPort(unsigned int port);
-            int setUser(const std::string &user);
-            int setUserPassword(const std::string &password);
+            void setServer(const std::string &server);
+            void setPort(unsigned int port);
+            void setUser(const std::string &user);
+            void setUserPassword(const std::string &password);
             
-            int connect();
-            int disconnect();
+            void connect();
+            void disconnect(bool silent=false);
             
             int userAuthorizationList();
             int userAuthorizationNone();
@@ -96,19 +112,22 @@ namespace Antik {
             virtual int userAuthorizationWithKeyboardInteractive();
             
             int isServerKnown();
-            int writeKnownHost();
+            void writeKnownHost();
              
             int getPublicKeyHash(std::vector<unsigned char> &keyHash);
             std::string convertKeyHashToHex(std::vector<unsigned char> &keyHash);
 
-            std::string getBanner();
+            std::string getBanner() const;
+            std::string getDisconnectMessage() const;
             
-            int getSSHVersion();
+            int getSSHVersion() const;
+            int getStatus() const;
+            bool isConnected() const;
             
-            std::string getError();
+            std::string getError() const;
+            int getErrorCode() const;
             
             ssh_session getSession() const;
-            int getLastReturnCode() const;
             
             // ================
             // PUBLIC VARIABLES
@@ -139,7 +158,6 @@ namespace Antik {
             // =================
 
             ssh_session m_session;
-            int m_lastReturnedCode;
             
             std::string m_server;
             unsigned int  m_port { 22 };
