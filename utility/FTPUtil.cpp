@@ -29,11 +29,17 @@
 // =============
 
 //
+// C++ STL
+//
+
+#include <iostream>
+
+//
 // FTP utility definitions
 //
 
 #include "FTPUtil.hpp"
-#include <iostream>
+
 //
 // Boost file system, string and iterators
 //

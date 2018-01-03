@@ -97,7 +97,7 @@ namespace Antik {
 
             m_server = server;
             if (ssh_options_set(m_session, SSH_OPTIONS_HOST, m_server.c_str()) != SSH_OK) {
-                throw Exception(*this);
+                throw Exception(*this, __func__);
             }
 
         }
@@ -106,7 +106,7 @@ namespace Antik {
 
             m_port = port;
             if (ssh_options_set(m_session, SSH_OPTIONS_PORT, &m_port) != SSH_OK) {
-                throw Exception(*this);
+                throw Exception(*this, __func__);
             }
 
         }
@@ -115,7 +115,7 @@ namespace Antik {
 
             m_user = user;
             if (ssh_options_set(m_session, SSH_OPTIONS_USER, m_user.c_str()) != SSH_OK) {
-                throw Exception(*this);
+                throw Exception(*this, __func__);
             }
 
         }
@@ -129,7 +129,7 @@ namespace Antik {
         void CSSHSession::connect() {
 
             if (ssh_connect(m_session) != SSH_OK) {
-                throw Exception(*this);
+                throw Exception(*this, __func__);
             }
 
         }
@@ -208,7 +208,7 @@ namespace Antik {
                 keyHash.assign(&hash[0], &hash[hlen]);
                 ssh_clean_pubkey_hash(&hash);
             } else {
-                throw Exception(*this);
+                throw Exception(*this, __func__);
             }
 
         }
@@ -229,7 +229,7 @@ namespace Antik {
         void CSSHSession::writeKnownHost() {
 
             if (ssh_write_knownhost(m_session) != SSH_OK) {
-                throw Exception(*this);
+                throw Exception(*this, __func__);
             }
 
         }

@@ -28,6 +28,8 @@
 #include <fcntl.h>
 #include <libssh/sftp.h>
 
+#include "CSSHSession.hpp"
+
 // =========
 // NAMESPACE
 // =========
@@ -36,11 +38,11 @@ namespace Antik {
     namespace SSH {
 
         class CSSHSession;
-        
+
         // ==========================
         // PUBLIC TYPES AND CONSTANTS
         // ==========================
-        
+
         // ================
         // CLASS DEFINITION
         // ================
@@ -56,28 +58,46 @@ namespace Antik {
             // Class exception
             //
 
-            struct Exception : public std::runtime_error {
-
-                Exception(std::string const& message)
-                : std::runtime_error("CSFTP Failure: " + message) {
+            struct Exception {
+                Exception(CSFTP &sftp, const std::string &functionName) : m_errorCode{sftp.getSession().getErrorCode()},
+                m_errorMessage{ sftp.getSession().getError()}, m_sftpErrorCode{ sftp.getErrorCode()},
+                m_functionName{functionName}
+                {
                 }
+
+                int getCode() const {
+                    return m_errorCode;
+                }
+
+                std::string getMessage() const {
+                    return static_cast<std::string> ("CSFTP Failure: (") + m_functionName + ") [" + m_errorMessage + "]";
+                }
+
+                int sftpGetCode() const {
+                    return m_sftpErrorCode;
+                }
+
+            private:
+                std::string m_functionName;
+                int m_errorCode{ SSH_OK};
+                std::string m_errorMessage;
+                int m_sftpErrorCode{SSH_FX_OK};
 
             };
 
-   
-            struct SFTPFileAttributes {
+            struct FileAttributes {
                 std::string name;
                 uint32_t flags;
                 uint8_t type;
                 uint64_t size;
                 uint32_t permissions;
             };
-            
-            typedef sftp_file SFTPFile;
-            typedef sftp_dir STFPDirectory;
-            typedef mode_t SFTPFilePermissions;
-            typedef uid_t SFTPFileOwner;
-            typedef gid_t SFTPFileGroup;
+
+            typedef sftp_file File;
+            typedef sftp_dir Directory;
+            typedef mode_t FilePermissions;
+            typedef uid_t FileOwner;
+            typedef gid_t FileGroup;
 
             // ============
             // CONSTRUCTORS
@@ -99,46 +119,54 @@ namespace Antik {
             // ==============
             // PUBLIC METHODS
             // ==============
-            
+
             void open();
             void close();
-  
-            SFTPFile openFile(const std::string &fileName, int accessType, int mode);
-            size_t readFile(SFTPFile fileDesc, void *readBuffer, size_t bytesToRead);
-            size_t writeFile(SFTPFile fileDesc, void *writeBuffer, size_t bytesToWrite);
-            int closeFile(SFTPFile fileDesc);
-            
-            STFPDirectory openDirectory(const std::string &directoryPath);
-            bool readDirectory(STFPDirectory &directoryHandle, SFTPFileAttributes &fileAttributes);
-            int endOfDirectory(STFPDirectory &directoryHandle);	
-            int closeDirectory(STFPDirectory &directoryHandle);
-            
-            int changePermissions(const SFTPFileAttributes &fileAttributes, const SFTPFilePermissions &filePermissions);
-            int changeOwnerGroup(const SFTPFileAttributes &fileAttributes, const SFTPFileOwner &owner, const SFTPFileGroup &group);
-            void getFileAttributes(const SFTPFile &fileDesc, SFTPFileAttributes &fileAttributes);
-            void getLinkAttributes(const std::string &linkPath, SFTPFileAttributes &fileAttributes);
-            
-            int createDirectory(const std::string &directoryPath, const SFTPFilePermissions &filePermissions);
-            int removeDirectory(const std::string &directoryPath);
-            
-            std::string readLink(const std::string &linkPath);
-            int renameFile(const std::string &sourceFile, const std::string &destinationFile);
 
-            void rewindFile(SFTPFile fileDesc);
-            int seekFile(SFTPFile fileDesc, uint32_t offset);
-            int seekFile64(SFTPFile fileDesc, uint64_t offset);
-            
-            int serverVsersion();
-                
-            bool isADirectory (const SFTPFileAttributes &fileAttributes);
-            bool isARegularFile (const SFTPFileAttributes &fileAttributes);
-            bool isASymbolicLink(const SFTPFileAttributes &fileAttributes);
-            
-            int getErrorCode();
-    
+            File openFile(const std::string &fileName, int accessType, int mode);
+            size_t readFile(File fileDesc, void *readBuffer, size_t bytesToRead);
+            size_t writeFile(File fileDesc, void *writeBuffer, size_t bytesToWrite);
+            void closeFile(File fileDesc);
+
+            Directory openDirectory(const std::string &directoryPath);
+            bool readDirectory(Directory &directoryHandle, FileAttributes &fileAttributes);
+            bool endOfDirectory(Directory &directoryHandle);
+            void closeDirectory(Directory &directoryHandle);
+
+            void changePermissions(const FileAttributes &fileAttributes, const FilePermissions &filePermissions);
+            void changeOwnerGroup(const FileAttributes &fileAttributes, const FileOwner &owner, const FileGroup &group);
+            void getFileAttributes(const File &fileDesc, FileAttributes &fileAttributes);
+            void setFileAttributes(const File &fileDesc, const FileAttributes &fileAttributes);
+            void getLinkAttributes(const std::string &linkPath, FileAttributes &fileAttributes);
+
+            void createDirectory(const std::string &directoryPath, const FilePermissions &filePermissions);
+            void removeDirectory(const std::string &directoryPath);
+
+            void createLink(const std::string &targetPath, const std::string &linkPath);
+            void removeLink(const std::string &filePath);
+
+            std::string readLink(const std::string &linkPath);
+            void renameFile(const std::string &sourceFile, const std::string &destinationFile);
+
+            void rewindFile(File fileDesc);
+            void seekFile(File fileDesc, uint32_t offset);
+            void seekFile64(File fileDesc, uint64_t offset);
+            uint32_t currentFilePostion(File fileDesc);
+            uint64_t currentFilePostion64(File fileDesc);
+
+            std::string canonicalizePath(const std::string &pathName);
+
+            int getServerVersion()const;
+
+            bool isADirectory(const FileAttributes &fileAttributes);
+            bool isARegularFile(const FileAttributes &fileAttributes);
+            bool isASymbolicLink(const FileAttributes &fileAttributes);
+
+            int getErrorCode() const;
+
             sftp_session getSFTP() const;
             CSSHSession& getSession() const;
-                        
+
             // ================
             // PUBLIC VARIABLES
             // ================
@@ -148,8 +176,8 @@ namespace Antik {
             // ===========================
             // PRIVATE TYPES AND CONSTANTS
             // ===========================
-          
-                        
+
+
             // ===========================================
             // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
             // ===========================================
@@ -161,15 +189,16 @@ namespace Antik {
             // ===============
             // PRIVATE METHODS
             // ===============
-                   
-            void convertToFileAttributes(sftp_attributes file, SFTPFileAttributes &fileAttributes);
-            
+
+            void convertSshFileToFileAttributes(sftp_attributes file, FileAttributes &fileAttributes);
+            void convertFileAttributesToSshFile(sftp_attributes file, const FileAttributes &fileAttributes);
+
             // =================
             // PRIVATE VARIABLES
             // =================
 
             CSSHSession &m_session;
-                        
+
             sftp_session m_sftp;
 
 

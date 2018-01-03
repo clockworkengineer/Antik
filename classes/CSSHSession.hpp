@@ -52,26 +52,24 @@ namespace Antik {
             //
 
             struct Exception {
-                
-                Exception(const std::string &message) : errorCode{SSH_OK},errorMessage{ message }
-                {
-                }
-                
-                Exception(CSSHSession &session) : errorCode{session.getErrorCode()}, errorMessage{ session.getError()}
+
+                Exception(CSSHSession &session, const std::string functionName) : m_errorCode{session.getErrorCode()}, 
+                m_errorMessage{ session.getError()}, m_functionName{functionName}
                 {
                 }
 
                 int getCode() {
-                    return errorCode;
+                    return m_errorCode;
                 }
 
                 std::string getMessage() {
-                    return static_cast<std::string> ("CSSHSession Failure: ") + errorMessage;
+                    return static_cast<std::string> ("CSSHSession Failure: (") +m_functionName + ") [" + m_errorMessage + "]";
                 }
 
             private:
-                int errorCode;
-                std::string errorMessage;
+                std::string m_functionName;
+                int m_errorCode;
+                std::string m_errorMessage;
 
             };
 

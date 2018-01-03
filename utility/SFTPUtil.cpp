@@ -29,11 +29,17 @@
 // =============
 
 //
+// C++ STL
+//
+
+#include <iostream>
+#include <system_error>
+
+//
 // FTP utility definitions
 //
 
 #include "SFTPUtil.hpp"
-#include <iostream>
 
 // =========
 // NAMESPACE
@@ -60,141 +66,141 @@ namespace Antik {
         // Good chunk size
 #define MAX_XFER_BUF_SIZE 16384
 
-        int sftpGetFile(CSFTP &sftp, const string &srcFile, const string &dstFile) {
+        void sftpGetFile(CSFTP &sftp, const string &srcFile, const string &dstFile) {
 
-            CSFTP::SFTPFile remoteFile;
+            CSFTP::File remoteFile;
             ofstream localFile;
             char buffer[MAX_XFER_BUF_SIZE];
-            int bytesRead, bytesWritten, returnCode;
+            int bytesRead{0}, bytesWritten {0}, returnCode{0};
 
-            remoteFile = sftp.openFile(srcFile, O_RDONLY, 0);
-            if (remoteFile == NULL) {
-                cerr << "Can't open file for reading: " + sftp.getSession().getError() << endl;
-                return SSH_ERROR;
-            }
+            try {
 
-            localFile.open(dstFile, ios_base::out | ios_base::binary | ios_base::trunc);
-            if (!localFile) {
-                cerr << "Can't open file for writing: " << strerror(errno) << endl;
+                remoteFile = sftp.openFile(srcFile, O_RDONLY, 0);
+
+                localFile.open(dstFile, ios_base::out | ios_base::binary | ios_base::trunc);
+                if (!localFile) {
+                    sftp.closeFile(remoteFile);
+                    throw system_error(errno,std::system_category());
+                }
+
+                for (;;) {
+                    bytesRead = sftp.readFile(remoteFile, buffer, sizeof (buffer));
+                    if (bytesRead == 0) {
+                        break; // EOF
+                    }
+                    localFile.write(buffer, bytesRead);
+                    bytesWritten += bytesRead;
+                    if (bytesWritten != localFile.tellp()) {
+                        sftp.closeFile(remoteFile);
+                        throw system_error(errno, std::system_category());
+                    }
+                }
+
                 sftp.closeFile(remoteFile);
-                return SSH_ERROR;
-            }
+                
+                localFile.close();
 
-            for (;;) {
-                bytesRead = sftp.readFile(remoteFile, buffer, sizeof (buffer));
-                if (bytesRead == 0) {
-                    break; // EOF
-                } else if (bytesRead < 0) {
-                    cerr << "Error while reading file: " + sftp.getSession().getError() << endl;
-                    sftp.closeFile(remoteFile);
-                    return SSH_ERROR;
+            } catch (const CSFTP::Exception &e) {
+               if (localFile.is_open()) {
+                    localFile.close();
                 }
-                localFile.write(buffer, bytesRead);
-                bytesWritten += bytesRead;
-                if (bytesWritten != localFile.tellp()) {
-                    cerr << "Error writing: " << strerror(errno) << endl;
-                    sftp.closeFile(remoteFile);
-                    return SSH_ERROR;
+                throw;
+            } catch (const system_error &e) {
+               if (localFile.is_open()) {
+                    localFile.close();
                 }
+                throw;
             }
-
-            returnCode = sftp.closeFile(remoteFile);
-            if (returnCode != SSH_OK) {
-                cerr << "Can't close the read file: " + sftp.getSession().getError() << endl;
-                return returnCode;
-            }
-
-            return SSH_OK;
 
         }
 
-        int sftpPutFile(CSFTP &sftp, const string &srcFile, const string &dstFile) {
+        void sftpPutFile(CSFTP &sftp, const string &srcFile, const string &dstFile) {
 
-            CSFTP::SFTPFile remoteFile;
+            CSFTP::File remoteFile;
             ifstream localFile;
             char buffer[MAX_XFER_BUF_SIZE];
             int bytesWritten{0}, returnCode{0};
 
-            localFile.open(srcFile, ios_base::in | ios_base::binary);
-            if (!localFile) {
-                cerr << "Can't open file for writing: " << strerror(errno) << endl;
-                return SSH_ERROR;
-            }
+            try {
 
-            remoteFile = sftp.openFile(dstFile, O_CREAT | O_WRONLY | O_TRUNC, 0);
-            if (remoteFile == NULL) {
-                localFile.close();
-                cerr << "Can't open file for reading: " + sftp.getSession().getError() << endl;
-                return SSH_ERROR;
-            }
+                localFile.open(srcFile, ios_base::in | ios_base::binary);
+                if (!localFile) {
+                    throw system_error(errno, std::system_category());
+                }
 
-            for (;;) {
+                remoteFile = sftp.openFile(dstFile, O_CREAT | O_WRONLY | O_TRUNC, 0);
 
-                localFile.read(buffer, sizeof (buffer));
+                for (;;) {
 
-                if (localFile.gcount()) {
-                    bytesWritten = sftp.writeFile(remoteFile, buffer, localFile.gcount());
-                    if (bytesWritten < 0) {
-                        cerr << "Error while writing file: " + sftp.getSession().getError() << endl;
-                        sftp.closeFile(remoteFile);
-                        return SSH_ERROR;
+                    localFile.read(buffer, sizeof (buffer));
+
+                    if (localFile.gcount()) {
+                        bytesWritten = sftp.writeFile(remoteFile, buffer, localFile.gcount());
+                        if (bytesWritten < 0) {
+                            sftp.closeFile(remoteFile);
+                            throw system_error(errno, std::system_category());
+                        }
                     }
+
+                    if (bytesWritten != localFile.gcount()) {
+                        sftp.closeFile(remoteFile);
+                        throw system_error(errno, std::system_category());
+                    }
+
+                    if (!localFile) break;
+
                 }
 
-                if (bytesWritten != localFile.gcount()) {
-                    cerr << "Error writing: " << strerror(errno) << endl;
-                    sftp.closeFile(remoteFile);
-                    return SSH_ERROR;
+                sftp.closeFile(remoteFile);
+                
+                localFile.close();
+
+            } catch (const CSFTP::Exception &e) {
+                if (localFile.is_open()) {
+                    localFile.close();
                 }
-
-                if (!localFile) break;
-
+                throw;
+            } catch (const system_error &e) {
+                if (localFile.is_open()) {
+                    localFile.close();
+                }
+                throw;
             }
 
-            returnCode = sftp.closeFile(remoteFile);
-            if (returnCode != SSH_OK) {
-                cerr << "Can't close the read file: " + sftp.getSession().getError() << endl;
-                return returnCode;
-            }
-
-            return SSH_OK;
 
         }
 
-        int sftpGetDirectoryContents(CSFTP &sftp, const string &directoryPath, vector<CSFTP::SFTPFileAttributes> &directoryContents, bool recursive) {
+        int sftpGetDirectoryContents(CSFTP &sftp, const string &directoryPath, vector<CSFTP::FileAttributes> &directoryContents, bool recursive) {
 
-            CSFTP::STFPDirectory directoryHandle;
-            CSFTP::SFTPFileAttributes fileAttributes;
+            CSFTP::Directory directoryHandle;
+            CSFTP::FileAttributes fileAttributes;
             int returnCode;
 
-            directoryHandle = sftp.openDirectory(directoryPath);
+            try {
 
-            if (!directoryHandle) {
-                cerr << "Directory not opened: " + sftp.getSession().getError() << endl;
-                return SSH_ERROR;
-            }
+                directoryHandle = sftp.openDirectory(directoryPath);
 
-            while (sftp.readDirectory(directoryHandle, fileAttributes)) {
-                if ((fileAttributes.name != ".") && (fileAttributes.name != "..")) {
-                    fileAttributes.name = directoryPath + "/" + fileAttributes.name;
-                    if (sftp.isADirectory(fileAttributes) && recursive) {
-                        sftpGetDirectoryContents(sftp, fileAttributes.name, directoryContents, recursive);
+                while (sftp.readDirectory(directoryHandle, fileAttributes)) {
+                    if ((fileAttributes.name != ".") && (fileAttributes.name != "..")) {
+                        fileAttributes.name = directoryPath + "/" + fileAttributes.name;
+                        if (sftp.isADirectory(fileAttributes) && recursive) {
+                            sftpGetDirectoryContents(sftp, fileAttributes.name, directoryContents, recursive);
+                        }
+                        directoryContents.push_back(fileAttributes);
                     }
-                    directoryContents.push_back(fileAttributes);
                 }
-            }
 
-            if (!sftp.endOfDirectory(directoryHandle)) {
-                cerr << "Can't list directory: " + sftp.getSession().getError() << endl;
+                if (!sftp.endOfDirectory(directoryHandle)) {
+                    sftp.closeDirectory(directoryHandle);
+                    throw CSFTP::Exception(sftp, __func__);
+                }
+
                 sftp.closeDirectory(directoryHandle);
-                return SSH_ERROR;
+
+            } catch (const CSFTP::Exception &e) {
+                throw;
             }
 
-            returnCode = sftp.closeDirectory(directoryHandle);
-            if (returnCode != SSH_OK) {
-                cerr << "Can't close directory: " + sftp.getSession().getError() << endl;
-                return returnCode;
-            }
 
         }
 

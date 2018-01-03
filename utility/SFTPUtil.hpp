@@ -34,9 +34,9 @@
 namespace Antik {
     namespace SSH {
 
-        int sftpGetFile(CSFTP &sftp, const std::string &srcFile, const std::string &dstFile);
-        int sftpPutFile(CSFTP &sftp, const std::string &srcFile, const std::string &dstFile);
-        int sftpGetDirectoryContents(CSFTP &sftp, const std::string &directoryPath, std::vector<CSFTP::SFTPFileAttributes> &directoryContents, bool recursive = false);
+        void sftpGetFile(CSFTP &sftp, const std::string &srcFile, const std::string &dstFile);
+        void sftpPutFile(CSFTP &sftp, const std::string &srcFile, const std::string &dstFile);
+        int sftpGetDirectoryContents(CSFTP &sftp, const std::string &directoryPath, std::vector<CSFTP::FileAttributes> &directoryContents, bool recursive = false);
 
     } // namespace SSH
 } // namespace Antik
