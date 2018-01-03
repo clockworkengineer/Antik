@@ -65,6 +65,17 @@ namespace Antik {
         // PRIVATE METHODS
         // ===============
         
+        void CSFTP::convertToFileAttributes(sftp_attributes file, SFTPFileAttributes &fileAttributes) {
+            
+            fileAttributes.name.assign(&file->name[0], &file->name[std::strlen(file->name)]);
+            fileAttributes.flags = file->flags;
+            fileAttributes.permissions = file->permissions;
+            fileAttributes.size = file->size;
+            fileAttributes.type = file->type;
+            sftp_attributes_free(file);
+            
+        }
+        
         // ==============
         // PUBLIC METHODS
         // ==============
@@ -80,7 +91,6 @@ namespace Antik {
             if (m_sftp == NULL) {
                 throw Exception ("Error allocating SFTP session: "+m_session.getError());
             }
-   
             
         }
 
@@ -150,12 +160,7 @@ namespace Antik {
             file = sftp_readdir(m_sftp, directoryHandle);
             
             if (file) {
-                fileAttributes.name.assign(&file->name[0], &file->name[std::strlen(file->name)]);
-                fileAttributes.flags = file->flags;
-                fileAttributes.permissions = file->permissions;
-                fileAttributes.size = file->size;
-                fileAttributes.type = file->type;
-                sftp_attributes_free(file);
+                convertToFileAttributes(file, fileAttributes);
                 return(true);
             }
             
@@ -189,6 +194,102 @@ namespace Antik {
 
         bool CSFTP::isARegularFile(const SFTPFileAttributes &fileAttributes) {
              return(fileAttributes.type==1);
+        }
+        
+        int CSFTP::changePermissions(const SFTPFileAttributes &fileAttributes, const SFTPFilePermissions &filePermissions) {
+            
+            return(sftp_chmod(m_sftp, fileAttributes.name.c_str(), filePermissions));
+            
+        }
+
+        int CSFTP::changeOwnerGroup(const SFTPFileAttributes &fileAttributes, const SFTPFileOwner &owner, const SFTPFileGroup &group) {
+            return (sftp_chown(m_sftp, fileAttributes.name.c_str(), owner, group));
+        }
+        
+        void CSFTP::getFileAttributes(const SFTPFile &fileDesc, SFTPFileAttributes &fileAttributes) {
+            
+            sftp_attributes file = sftp_fstat(fileDesc);
+            
+            if (file) {
+                this->convertToFileAttributes(file, fileAttributes);
+            }
+            
+        }
+        
+        void CSFTP::getLinkAttributes(const std::string &linkPath, SFTPFileAttributes &fileAttributes) {
+            
+            sftp_attributes file = sftp_lstat(m_sftp, linkPath.c_str());
+            
+            if (file) {
+                this->convertToFileAttributes(file, fileAttributes);
+            }
+            
+        }
+        
+        int CSFTP::createDirectory(const std::string &directoryPath, const SFTPFilePermissions &filePermissions) {
+            
+            return(sftp_mkdir(m_sftp, directoryPath.c_str(),filePermissions ));
+            
+        }
+
+        int CSFTP::removeDirectory(const std::string &directoryPath) {
+
+            return (sftp_rmdir(m_sftp, directoryPath.c_str()));
+            
+        }
+        
+        std::string CSFTP::readLink(const std::string &linkPath) {
+            
+            std::string finalPath;
+            char *file;
+            
+            file = sftp_readlink(m_sftp, linkPath.c_str());
+            
+            if (file){
+                finalPath.assign(&file[0],&file[std::strlen(file)]);
+                free(file);
+            }
+            
+            return(finalPath);
+	
+        }
+        
+        int CSFTP::renameFile(const std::string &sourceFile, const std::string &destinationFile) {
+            
+            return(sftp_rename(m_sftp,sourceFile.c_str(), destinationFile.c_str() ));
+            
+        }
+        
+        void CSFTP::rewindFile (SFTPFile fileDesc) {
+            
+            sftp_rewind(fileDesc);
+            
+        }
+        
+        int CSFTP::seekFile (SFTPFile fileDesc, uint32_t offset) {
+            
+            return(sftp_seek(fileDesc, offset));
+            
+        }
+        
+        int CSFTP::seekFile64 (SFTPFile fileDesc, uint64_t offset) {
+            
+            return(sftp_seek64(fileDesc, offset));
+            
+        }
+
+        int CSFTP::serverVsersion() {
+
+            return (sftp_server_version(m_sftp));
+
+        }
+        
+        int CSFTP::getErrorCode() {
+            
+            int errorCode=sftp_get_error(m_sftp);
+            
+            return(errorCode);
+            
         }
             
         sftp_session CSFTP::getSFTP() const {

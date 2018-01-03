@@ -75,6 +75,9 @@ namespace Antik {
             
             typedef sftp_file SFTPFile;
             typedef sftp_dir STFPDirectory;
+            typedef mode_t SFTPFilePermissions;
+            typedef uid_t SFTPFileOwner;
+            typedef gid_t SFTPFileGroup;
 
             // ============
             // CONSTRUCTORS
@@ -107,12 +110,31 @@ namespace Antik {
             
             STFPDirectory openDirectory(const std::string &directoryPath);
             bool readDirectory(STFPDirectory &directoryHandle, SFTPFileAttributes &fileAttributes);
-            int endOfDirectory(STFPDirectory &directoryHandle);
+            int endOfDirectory(STFPDirectory &directoryHandle);	
             int closeDirectory(STFPDirectory &directoryHandle);
             
+            int changePermissions(const SFTPFileAttributes &fileAttributes, const SFTPFilePermissions &filePermissions);
+            int changeOwnerGroup(const SFTPFileAttributes &fileAttributes, const SFTPFileOwner &owner, const SFTPFileGroup &group);
+            void getFileAttributes(const SFTPFile &fileDesc, SFTPFileAttributes &fileAttributes);
+            void getLinkAttributes(const std::string &linkPath, SFTPFileAttributes &fileAttributes);
+            
+            int createDirectory(const std::string &directoryPath, const SFTPFilePermissions &filePermissions);
+            int removeDirectory(const std::string &directoryPath);
+            
+            std::string readLink(const std::string &linkPath);
+            int renameFile(const std::string &sourceFile, const std::string &destinationFile);
+
+            void rewindFile(SFTPFile fileDesc);
+            int seekFile(SFTPFile fileDesc, uint32_t offset);
+            int seekFile64(SFTPFile fileDesc, uint64_t offset);
+            
+            int serverVsersion();
+                
             bool isADirectory (const SFTPFileAttributes &fileAttributes);
             bool isARegularFile (const SFTPFileAttributes &fileAttributes);
             bool isASymbolicLink(const SFTPFileAttributes &fileAttributes);
+            
+            int getErrorCode();
     
             sftp_session getSFTP() const;
             CSSHSession& getSession() const;
@@ -140,7 +162,8 @@ namespace Antik {
             // PRIVATE METHODS
             // ===============
                    
-           
+            void convertToFileAttributes(sftp_attributes file, SFTPFileAttributes &fileAttributes);
+            
             // =================
             // PRIVATE VARIABLES
             // =================
