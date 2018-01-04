@@ -35,11 +35,18 @@
 #include <iostream>
 #include <system_error>
 
+
 //
 // FTP utility definitions
 //
 
 #include "SFTPUtil.hpp"
+
+//
+// Boost file system
+//
+
+#include <boost/filesystem.hpp>
 
 // =========
 // NAMESPACE
@@ -54,6 +61,8 @@ namespace Antik {
 
         using namespace std;
 
+        namespace fs = boost::filesystem;
+        
         // ===============
         // LOCAL FUNCTIONS
         // ===============
@@ -64,31 +73,31 @@ namespace Antik {
         // ================
 
         // Good chunk size
-#define MAX_XFER_BUF_SIZE 16384
 
-        void sftpGetFile(CSFTP &sftp, const string &srcFile, const string &dstFile) {
+        void sftpGetFile(CSFTP &sftp, const string &sourceFile, const string &destinationFile) {
 
             CSFTP::File remoteFile;
             ofstream localFile;
-            char buffer[MAX_XFER_BUF_SIZE];
-            int bytesRead{0}, bytesWritten {0}, returnCode{0};
+            int bytesRead{0}, bytesWritten {0};
+            CSFTP::FileAttributes fileAttributes; 
 
             try {
 
-                remoteFile = sftp.openFile(srcFile, O_RDONLY, 0);
+                remoteFile = sftp.openFile(sourceFile, O_RDONLY, 0);
+                sftp.getFileAttributes(remoteFile, fileAttributes);
 
-                localFile.open(dstFile, ios_base::out | ios_base::binary | ios_base::trunc);
+                localFile.open(destinationFile, ios_base::out | ios_base::binary | ios_base::trunc);
                 if (!localFile) {
                     sftp.closeFile(remoteFile);
                     throw system_error(errno,std::system_category());
                 }
 
                 for (;;) {
-                    bytesRead = sftp.readFile(remoteFile, buffer, sizeof (buffer));
+                    bytesRead = sftp.readFile(remoteFile, sftp.getIoBuffer().get(), sftp.getIoBufferSize());
                     if (bytesRead == 0) {
                         break; // EOF
                     }
-                    localFile.write(buffer, bytesRead);
+                    localFile.write(sftp.getIoBuffer().get(), bytesRead);
                     bytesWritten += bytesRead;
                     if (bytesWritten != localFile.tellp()) {
                         sftp.closeFile(remoteFile);
@@ -99,6 +108,8 @@ namespace Antik {
                 sftp.closeFile(remoteFile);
                 
                 localFile.close();
+                
+                fs::permissions(destinationFile, static_cast<fs::perms> (fileAttributes.permissions));
 
             } catch (const CSFTP::Exception &e) {
                if (localFile.is_open()) {
@@ -114,28 +125,30 @@ namespace Antik {
 
         }
 
-        void sftpPutFile(CSFTP &sftp, const string &srcFile, const string &dstFile) {
+        void sftpPutFile(CSFTP &sftp, const string &sourceFile, const string &destinationFile) {
 
             CSFTP::File remoteFile;
             ifstream localFile;
-            char buffer[MAX_XFER_BUF_SIZE];
-            int bytesWritten{0}, returnCode{0};
+            fs::file_status fileStatus;
+            int bytesWritten{0};
 
             try {
 
-                localFile.open(srcFile, ios_base::in | ios_base::binary);
+                localFile.open(sourceFile, ios_base::in | ios_base::binary);
                 if (!localFile) {
                     throw system_error(errno, std::system_category());
                 }
-
-                remoteFile = sftp.openFile(dstFile, O_CREAT | O_WRONLY | O_TRUNC, 0);
+                
+                fileStatus = fs::status(sourceFile);
+               
+                remoteFile = sftp.openFile(destinationFile, O_CREAT | O_WRONLY | O_TRUNC, fileStatus.permissions());
 
                 for (;;) {
 
-                    localFile.read(buffer, sizeof (buffer));
+                    localFile.read(sftp.getIoBuffer().get(), sftp.getIoBufferSize());
 
                     if (localFile.gcount()) {
-                        bytesWritten = sftp.writeFile(remoteFile, buffer, localFile.gcount());
+                        bytesWritten = sftp.writeFile(remoteFile, sftp.getIoBuffer().get(), localFile.gcount());
                         if (bytesWritten < 0) {
                             sftp.closeFile(remoteFile);
                             throw system_error(errno, std::system_category());
@@ -170,11 +183,10 @@ namespace Antik {
 
         }
 
-        int sftpGetDirectoryContents(CSFTP &sftp, const string &directoryPath, vector<CSFTP::FileAttributes> &directoryContents, bool recursive) {
+        void sftpGetDirectoryContents(CSFTP &sftp, const string &directoryPath, vector<CSFTP::FileAttributes> &directoryContents, bool recursive) {
 
             CSFTP::Directory directoryHandle;
             CSFTP::FileAttributes fileAttributes;
-            int returnCode;
 
             try {
 

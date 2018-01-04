@@ -20,6 +20,7 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <memory>
 
 //
 // Libssh
@@ -84,15 +85,36 @@ namespace Antik {
                 int m_sftpErrorCode{SSH_FX_OK};
 
             };
+  
+  
+ 
+//    ssh_string acl;
+//    uint32_t extended_count;
+//    ssh_string extended_type;
+//    ssh_string extended_data;
 
             struct FileAttributes {
                 std::string name;
+                std::string longName;
                 uint32_t flags;
                 uint8_t type;
                 uint64_t size;
                 uint32_t permissions;
+                uint32_t uid;
+                uint32_t gid;
+                std::string owner;
+                std::string group;
+                uint64_t atime64;
+                uint32_t atime;
+                uint32_t atime_nseconds;
+                uint64_t createtime;
+                uint32_t createtime_nseconds;
+                uint64_t mtime64;
+                uint32_t mtime;
+                uint32_t mtime_nseconds;
             };
 
+      //      typedef std::shared_ptr<sftp_attributes> FileAttributes;
             typedef sftp_file File;
             typedef sftp_dir Directory;
             typedef mode_t FilePermissions;
@@ -166,6 +188,9 @@ namespace Antik {
 
             sftp_session getSFTP() const;
             CSSHSession& getSession() const;
+            std::shared_ptr<char> getIoBuffer() const;
+            void setIoBufferSize(std::uint32_t ioBufferSize);
+            std::uint32_t getIoBufferSize() const;
 
             // ================
             // PUBLIC VARIABLES
@@ -200,7 +225,9 @@ namespace Antik {
             CSSHSession &m_session;
 
             sftp_session m_sftp;
-
+            
+            std::shared_ptr<char> m_ioBuffer { nullptr };  // io Buffer
+            std::uint32_t m_ioBufferSize     { 64*1024 };
 
         };
 
