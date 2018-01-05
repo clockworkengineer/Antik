@@ -154,7 +154,7 @@ namespace Antik {
 
         }
 
-        size_t CSFTP::readFile(File &fileHandle, void *readBuffer, size_t bytesToRead) {
+        size_t CSFTP::readFile(const File &fileHandle, void *readBuffer, size_t bytesToRead) {
 
             size_t bytesRead = sftp_read(fileHandle.get(), readBuffer, bytesToRead);
 
@@ -166,7 +166,7 @@ namespace Antik {
 
         }
 
-        size_t CSFTP::writeFile(File &fileHandle, void *writeBuffer, size_t bytesToWrite) {
+        size_t CSFTP::writeFile(const File &fileHandle, void *writeBuffer, size_t bytesToWrite) {
 
             size_t bytesWritten = sftp_write(fileHandle.get(), writeBuffer, bytesToWrite);
 
@@ -198,7 +198,7 @@ namespace Antik {
 
         }
 
-        bool CSFTP::readDirectory(Directory &directoryHandle, FileAttributes &fileAttributes) {
+        bool CSFTP::readDirectory(const Directory &directoryHandle, FileAttributes &fileAttributes) {
 
             sftp_attributes file { sftp_readdir(m_sftp, directoryHandle.get()) };
 
@@ -211,7 +211,7 @@ namespace Antik {
 
         }
 
-        bool CSFTP::endOfDirectory(Directory &directoryHandle) {
+        bool CSFTP::endOfDirectory(const Directory &directoryHandle) {
 
             return (sftp_dir_eof(directoryHandle.get()));
 
@@ -343,13 +343,13 @@ namespace Antik {
 
         }
 
-        void CSFTP::rewindFile(File &fileHandle) {
+        void CSFTP::rewindFile(const File &fileHandle) {
 
             sftp_rewind(fileHandle.get());
 
         }
 
-        void CSFTP::seekFile(File &fileHandle, uint32_t offset) {
+        void CSFTP::seekFile(const File &fileHandle, uint32_t offset) {
 
             if (sftp_seek(fileHandle.get(), offset) < 0) {
                 throw Exception(*this, __func__);
@@ -357,7 +357,7 @@ namespace Antik {
 
         }
 
-        void CSFTP::seekFile64(File &fileHandle, uint64_t offset) {
+        void CSFTP::seekFile64(const File &fileHandle, uint64_t offset) {
 
             if (sftp_seek64(fileHandle.get(), offset) < 0) {
                 throw Exception(*this, __func__);
@@ -365,7 +365,7 @@ namespace Antik {
 
         }
 
-        uint32_t CSFTP::currentFilePostion(File &fileHandle) {
+        uint32_t CSFTP::currentFilePostion(const File &fileHandle) {
 
             int32_t position = sftp_tell(fileHandle.get());
 
@@ -377,7 +377,7 @@ namespace Antik {
 
         }
 
-        uint64_t CSFTP::currentFilePostion64(File &fileHandle) {
+        uint64_t CSFTP::currentFilePostion64(const File &fileHandle) {
 
             int64_t position = sftp_tell64(fileHandle.get());
 

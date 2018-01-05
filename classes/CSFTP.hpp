@@ -114,16 +114,35 @@ namespace Antik {
             };
 
             struct FileAttributesDeleter {
-  
+
                 void operator()(sftp_attributes fileAttributes) const {
                     sftp_attributes_free(fileAttributes);
                 }
 
             };
 
+            struct FileDeleter {
+
+                void operator()(sftp_file file) const {
+                    if (file) {
+                        sftp_close(file);
+                    }
+                }
+
+            };
+
+            struct DirectoryDeleter {
+
+                void operator()(sftp_dir directory) const {
+                    sftp_closedir(directory);
+                }
+
+            };
+
             typedef std::unique_ptr<sftp_attributes_struct, FileAttributesDeleter> FileAttributes;
-            typedef std::unique_ptr<sftp_file_struct> File;
-            typedef std::unique_ptr<sftp_dir_struct> Directory;
+            typedef std::unique_ptr<sftp_file_struct, FileDeleter> File;
+            typedef std::unique_ptr<sftp_dir_struct, DirectoryDeleter> Directory;
+            
             typedef mode_t FilePermissions;
             typedef uid_t FileOwner;
             typedef gid_t FileGroup;
@@ -153,13 +172,13 @@ namespace Antik {
             void close();
 
             File openFile(const std::string &fileName, int accessType, int mode);
-            size_t readFile(File &fileHandle, void *readBuffer, size_t bytesToRead);
-            size_t writeFile(File &fileHandle, void *writeBuffer, size_t bytesToWrite);
+            size_t readFile(const File &fileHandle, void *readBuffer, size_t bytesToRead);
+            size_t writeFile(const File &fileHandle, void *writeBuffer, size_t bytesToWrite);
             void closeFile(File &fileHandle);
 
             Directory openDirectory(const std::string &directoryPath);
-            bool readDirectory(Directory &directoryHandle, FileAttributes &fileAttributes);
-            bool endOfDirectory(Directory &directoryHandle);
+            bool readDirectory(const Directory &directoryHandle, FileAttributes &fileAttributes);
+            bool endOfDirectory(const Directory &directoryHandle);
             void closeDirectory(Directory &directoryHandle);
 
             void changePermissions(const FileAttributes &fileAttributes, const FilePermissions &filePermissions);
@@ -177,11 +196,11 @@ namespace Antik {
             std::string readLink(const std::string &linkPath);
             void renameFile(const std::string &sourceFile, const std::string &destinationFile);
 
-            void rewindFile(File &fileHandle);
-            void seekFile(File &fileHandle, uint32_t offset);
-            void seekFile64(File &fileHandle, uint64_t offset);
-            uint32_t currentFilePostion(File &fileHandle);
-            uint64_t currentFilePostion64(File &fileHandle);
+            void rewindFile(const File &fileHandle);
+            void seekFile(const File &fileHandle, uint32_t offset);
+            void seekFile64(const File &fileHandle, uint64_t offset);
+            uint32_t currentFilePostion(const File &fileHandle);
+            uint64_t currentFilePostion64(const File &fileHandle);
 
             std::string canonicalizePath(const std::string &pathName);
 
@@ -222,9 +241,6 @@ namespace Antik {
             // PRIVATE METHODS
             // ===============
 
-            void convertSshFileToFileAttributes(sftp_attributes file, FileAttributes &fileAttributes);
-            void convertFileAttributesToSshFile(sftp_attributes file, const FileAttributes &fileAttributes);
-
             // =================
             // PRIVATE VARIABLES
             // =================
@@ -233,8 +249,8 @@ namespace Antik {
 
             sftp_session m_sftp;
             
-            std::shared_ptr<char> m_ioBuffer { nullptr };  // io Buffer
-            std::uint32_t m_ioBufferSize     { 64*1024 };
+            std::shared_ptr<char> m_ioBuffer { nullptr };  // IO buffer
+            std::uint32_t m_ioBufferSize     { 64*1024 };  // IO buffer size
 
         };
 
