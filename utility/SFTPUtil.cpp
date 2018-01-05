@@ -62,7 +62,7 @@ namespace Antik {
         using namespace std;
 
         namespace fs = boost::filesystem;
-        
+
         // ===============
         // LOCAL FUNCTIONS
         // ===============
@@ -72,24 +72,22 @@ namespace Antik {
         // PUBLIC FUNCTIONS
         // ================
 
-        // Good chunk size
-
         void sftpGetFile(CSFTP &sftp, const string &sourceFile, const string &destinationFile) {
 
             CSFTP::File remoteFile;
             ofstream localFile;
-            int bytesRead{0}, bytesWritten {0};
-            CSFTP::FileAttributes fileAttributes; 
 
             try {
+
+                CSFTP::FileAttributes fileAttributes;
+                int bytesRead{0}, bytesWritten{0};
 
                 remoteFile = sftp.openFile(sourceFile, O_RDONLY, 0);
                 sftp.getFileAttributes(remoteFile, fileAttributes);
 
                 localFile.open(destinationFile, ios_base::out | ios_base::binary | ios_base::trunc);
                 if (!localFile) {
-                    sftp.closeFile(remoteFile);
-                    throw system_error(errno,std::system_category());
+                    throw system_error(errno, std::system_category());
                 }
 
                 for (;;) {
@@ -100,25 +98,24 @@ namespace Antik {
                     localFile.write(sftp.getIoBuffer().get(), bytesRead);
                     bytesWritten += bytesRead;
                     if (bytesWritten != localFile.tellp()) {
-                        sftp.closeFile(remoteFile);
-                        throw system_error(errno, std::system_category());
+                        throw CSFTP::Exception(sftp, __func__);
                     }
                 }
 
                 sftp.closeFile(remoteFile);
-                
+
                 localFile.close();
-                
+
                 fs::permissions(destinationFile, static_cast<fs::perms> (fileAttributes->permissions));
 
             } catch (const CSFTP::Exception &e) {
-               if (localFile.is_open()) {
-                    localFile.close();
+                if (remoteFile.get()) {
+                    sftp.closeFile(remoteFile);
                 }
                 throw;
             } catch (const system_error &e) {
-               if (localFile.is_open()) {
-                    localFile.close();
+                if (remoteFile.get()) {
+                    sftp.closeFile(remoteFile);
                 }
                 throw;
             }
@@ -129,18 +126,19 @@ namespace Antik {
 
             CSFTP::File remoteFile;
             ifstream localFile;
-            fs::file_status fileStatus;
-            int bytesWritten{0};
 
             try {
+
+                fs::file_status fileStatus;
+                int bytesWritten{0};
 
                 localFile.open(sourceFile, ios_base::in | ios_base::binary);
                 if (!localFile) {
                     throw system_error(errno, std::system_category());
                 }
-                
+
                 fileStatus = fs::status(sourceFile);
-               
+
                 remoteFile = sftp.openFile(destinationFile, O_CREAT | O_WRONLY | O_TRUNC, fileStatus.permissions());
 
                 for (;;) {
@@ -150,14 +148,12 @@ namespace Antik {
                     if (localFile.gcount()) {
                         bytesWritten = sftp.writeFile(remoteFile, sftp.getIoBuffer().get(), localFile.gcount());
                         if (bytesWritten < 0) {
-                            sftp.closeFile(remoteFile);
-                            throw system_error(errno, std::system_category());
+                            throw CSFTP::Exception(sftp, __func__);
                         }
                     }
 
                     if (bytesWritten != localFile.gcount()) {
-                        sftp.closeFile(remoteFile);
-                        throw system_error(errno, std::system_category());
+                        throw CSFTP::Exception(sftp, __func__);
                     }
 
                     if (!localFile) break;
@@ -165,17 +161,17 @@ namespace Antik {
                 }
 
                 sftp.closeFile(remoteFile);
-                
+
                 localFile.close();
 
             } catch (const CSFTP::Exception &e) {
-                if (localFile.is_open()) {
-                    localFile.close();
+                if (remoteFile.get()) {
+                    sftp.closeFile(remoteFile);
                 }
                 throw;
             } catch (const system_error &e) {
-                if (localFile.is_open()) {
-                    localFile.close();
+                if (remoteFile.get()) {
+                    sftp.closeFile(remoteFile);
                 }
                 throw;
             }
@@ -185,16 +181,16 @@ namespace Antik {
 
         void sftpGetFileList(CSFTP &sftp, const string &directoryPath, vector<std::string> &fileList, bool recursive) {
 
-            CSFTP::Directory directoryHandle;
-            CSFTP::FileAttributes fileAttributes;
-            std::string filePath;
+          try {
 
-            try {
+                CSFTP::Directory directoryHandle;
+                CSFTP::FileAttributes fileAttributes;
+                std::string filePath;
 
                 directoryHandle = sftp.openDirectory(directoryPath);
 
                 while (sftp.readDirectory(directoryHandle, fileAttributes)) {
-                    if ((static_cast<string>(fileAttributes->name) != ".") && (static_cast<string>(fileAttributes->name) != "..")) {
+                    if ((static_cast<string> (fileAttributes->name) != ".") && (static_cast<string> (fileAttributes->name) != "..")) {
                         filePath = directoryPath + "/" + fileAttributes->name;
                         if (sftp.isADirectory(fileAttributes) && recursive) {
                             sftpGetFileList(sftp, filePath, fileList, recursive);

@@ -61,6 +61,7 @@ namespace Antik {
             //
 
             struct Exception {
+                
                 Exception(CSFTP &sftp, const std::string &functionName) : m_errorCode{sftp.getSession().getErrorCode()},
                 m_errorMessage{ sftp.getSession().getError()}, m_sftpErrorCode{ sftp.getErrorCode()},
                 m_functionName{functionName}
