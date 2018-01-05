@@ -88,31 +88,6 @@ namespace Antik {
 
             };
 
-            struct FileInfo {
-                std::string name;
-                std::string longName;
-                uint32_t flags;
-                uint8_t type;
-                uint64_t size;
-                uint32_t permissions;
-                uint32_t uid;
-                uint32_t gid;
-                std::string owner;
-                std::string group;
-                uint64_t atime64;
-                uint32_t atime;
-                uint32_t atime_nseconds;
-                uint64_t createtime;
-                uint32_t createtime_nseconds;
-                uint64_t mtime64;
-                uint32_t mtime;
-                uint32_t mtime_nseconds;
-                ssh_string acl;
-                uint32_t extended_count;
-                ssh_string extended_type;
-                ssh_string extended_data;
-            };
-
             struct FileAttributesDeleter {
 
                 void operator()(sftp_attributes fileAttributes) const {
@@ -184,7 +159,7 @@ namespace Antik {
             void changePermissions(const FileAttributes &fileAttributes, const FilePermissions &filePermissions);
             void changeOwnerGroup(const FileAttributes &fileAttributes, const FileOwner &owner, const FileGroup &group);
             void getFileAttributes(const File &fileHandle, FileAttributes &fileAttributes);
-            void setFileAttributes(const File &fileHandle, const FileAttributes &fileAttributes);
+            void setFileAttributes(const std::string &filePath, const FileAttributes &fileAttributes);
             void getLinkAttributes(const std::string &linkPath, FileAttributes &fileAttributes);
 
             void createDirectory(const std::string &directoryPath, const FilePermissions &filePermissions);

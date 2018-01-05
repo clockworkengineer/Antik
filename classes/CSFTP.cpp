@@ -65,28 +65,6 @@ namespace Antik {
         // PRIVATE METHODS
         // ===============
 
-        //        void CSFTP::convertSshFileToFileAttributes(sftp_attributes file, FileAttributes &fileAttributes) {
-        //
-        //            if (file->name) {
-        //                fileAttributes.name.assign(&file->name[0], &file->name[std::strlen(file->name)]);
-        //            }
-        //            fileAttributes.flags = file->flags;
-        //            fileAttributes.type = file->type;
-        //            if (fileAttributes.flags & 0x1) {
-        //                fileAttributes.size = file->size;
-        //            }
-        //            if (fileAttributes.flags & 0x4) {
-        //                fileAttributes.permissions = file->permissions;
-        //            }
-        //            
-        //            sftp_attributes_free(file);
-        //
-        //        }
-        //
-        //        void CSFTP::convertFileAttributesToSshFile(sftp_attributes file, const FileAttributes &fileAttributes) {
-        //
-        //        }
-
         // ==============
         // PUBLIC METHODS
         // ==============
@@ -227,18 +205,18 @@ namespace Antik {
 
         bool CSFTP::isADirectory(const FileAttributes &fileAttributes) {
 
-            return (fileAttributes->type == 2);
+            return (fileAttributes->type == SSH_FILEXFER_TYPE_DIRECTORY);
 
         }
 
         bool CSFTP::isASymbolicLink(const FileAttributes &fileAttributes) {
 
-            return (fileAttributes->type == 3);
+            return (fileAttributes->type == SSH_FILEXFER_TYPE_SYMLINK);
 
         }
 
         bool CSFTP::isARegularFile(const FileAttributes &fileAttributes) {
-            return (fileAttributes->type == 1);
+            return (fileAttributes->type == SSH_FILEXFER_TYPE_REGULAR);
         }
 
         void CSFTP::changePermissions(const FileAttributes &fileAttributes, const FilePermissions &filePermissions) {
@@ -269,7 +247,11 @@ namespace Antik {
 
         }
 
-        void CSFTP::setFileAttributes(const File &fileHandle, const FileAttributes &fileAttributes) {
+        void CSFTP::setFileAttributes(const std::string &filePath, const FileAttributes &fileAttributes) {
+
+            if (sftp_setstat(m_sftp, filePath.c_str(), fileAttributes.get()) < 0) {
+                throw Exception(*this, __func__);
+            }
 
         }
 
