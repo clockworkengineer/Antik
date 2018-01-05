@@ -65,27 +65,27 @@ namespace Antik {
         // PRIVATE METHODS
         // ===============
 
-        void CSFTP::convertSshFileToFileAttributes(sftp_attributes file, FileAttributes &fileAttributes) {
-
-            if (file->name) {
-                fileAttributes.name.assign(&file->name[0], &file->name[std::strlen(file->name)]);
-            }
-            fileAttributes.flags = file->flags;
-            fileAttributes.type = file->type;
-            if (fileAttributes.flags & 0x1) {
-                fileAttributes.size = file->size;
-            }
-            if (fileAttributes.flags & 0x4) {
-                fileAttributes.permissions = file->permissions;
-            }
-            
-            sftp_attributes_free(file);
-
-        }
-
-        void CSFTP::convertFileAttributesToSshFile(sftp_attributes file, const FileAttributes &fileAttributes) {
-
-        }
+        //        void CSFTP::convertSshFileToFileAttributes(sftp_attributes file, FileAttributes &fileAttributes) {
+        //
+        //            if (file->name) {
+        //                fileAttributes.name.assign(&file->name[0], &file->name[std::strlen(file->name)]);
+        //            }
+        //            fileAttributes.flags = file->flags;
+        //            fileAttributes.type = file->type;
+        //            if (fileAttributes.flags & 0x1) {
+        //                fileAttributes.size = file->size;
+        //            }
+        //            if (fileAttributes.flags & 0x4) {
+        //                fileAttributes.permissions = file->permissions;
+        //            }
+        //            
+        //            sftp_attributes_free(file);
+        //
+        //        }
+        //
+        //        void CSFTP::convertFileAttributesToSshFile(sftp_attributes file, const FileAttributes &fileAttributes) {
+        //
+        //        }
 
         // ==============
         // PUBLIC METHODS
@@ -122,9 +122,9 @@ namespace Antik {
                 m_sftp = NULL;
                 throw Exception(*this, __func__);
             }
-            
+
             // Allocate IO Buffer
-            
+
             m_ioBuffer.reset(new char[m_ioBufferSize]);
 
         }
@@ -135,18 +135,18 @@ namespace Antik {
                 sftp_free(m_sftp);
                 m_sftp = NULL;
             }
-            
+
             // Free IO Buffer
-            
+
             m_ioBuffer.reset();
 
         }
 
         Antik::SSH::CSFTP::File CSFTP::openFile(const std::string &fileName, int accessType, int mode) {
 
-            File fileHandle = sftp_open(m_sftp, fileName.c_str(), accessType, mode);
+            File fileHandle { sftp_open(m_sftp, fileName.c_str(), accessType, mode) };
 
-            if (fileHandle == NULL) {
+            if (fileHandle.get() == NULL) {
                 throw Exception(*this, __func__);
             }
 
@@ -154,9 +154,9 @@ namespace Antik {
 
         }
 
-        size_t CSFTP::readFile(File fileHandle, void *readBuffer, size_t bytesToRead) {
+        size_t CSFTP::readFile(File &fileHandle, void *readBuffer, size_t bytesToRead) {
 
-            size_t bytesRead = sftp_read(fileHandle, readBuffer, bytesToRead);
+            size_t bytesRead = sftp_read(fileHandle.get(), readBuffer, bytesToRead);
 
             if (bytesRead < 0) {
                 throw Exception(*this, __func__);
@@ -166,9 +166,9 @@ namespace Antik {
 
         }
 
-        size_t CSFTP::writeFile(File fileHandle, void *writeBuffer, size_t bytesToWrite) {
+        size_t CSFTP::writeFile(File &fileHandle, void *writeBuffer, size_t bytesToWrite) {
 
-            size_t bytesWritten = sftp_write(fileHandle, writeBuffer, bytesToWrite);
+            size_t bytesWritten = sftp_write(fileHandle.get(), writeBuffer, bytesToWrite);
 
             if (bytesWritten < 0) {
                 throw Exception(*this, __func__);
@@ -178,9 +178,9 @@ namespace Antik {
 
         }
 
-        void CSFTP::closeFile(File fileHandle) {
+        void CSFTP::closeFile(File &fileHandle) {
 
-            if (sftp_close(fileHandle) == SSH_ERROR) {
+            if (sftp_close(fileHandle.release()) == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
 
@@ -188,9 +188,9 @@ namespace Antik {
 
         Antik::SSH::CSFTP::Directory CSFTP::openDirectory(const std::string &directoryPath) {
 
-            Directory directory = sftp_opendir(m_sftp, directoryPath.c_str());
+            Directory directory { sftp_opendir(m_sftp, directoryPath.c_str()) };
 
-            if (directory == NULL) {
+            if (directory.get() == NULL) {
                 throw Exception(*this, __func__);
             }
 
@@ -200,12 +200,10 @@ namespace Antik {
 
         bool CSFTP::readDirectory(Directory &directoryHandle, FileAttributes &fileAttributes) {
 
-            sftp_attributes file;
-
-            file = sftp_readdir(m_sftp, directoryHandle);
+            sftp_attributes file { sftp_readdir(m_sftp, directoryHandle.get()) };
 
             if (file) {
-                convertSshFileToFileAttributes(file, fileAttributes);
+                fileAttributes.reset(file);
                 return (true);
             }
 
@@ -215,13 +213,13 @@ namespace Antik {
 
         bool CSFTP::endOfDirectory(Directory &directoryHandle) {
 
-            return (sftp_dir_eof(directoryHandle));
+            return (sftp_dir_eof(directoryHandle.get()));
 
         }
 
         void CSFTP::closeDirectory(Directory &directoryHandle) {
 
-            if (sftp_closedir(directoryHandle) == SSH_ERROR) {
+            if (sftp_closedir(directoryHandle.release()) == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
 
@@ -229,23 +227,23 @@ namespace Antik {
 
         bool CSFTP::isADirectory(const FileAttributes &fileAttributes) {
 
-            return (fileAttributes.type == 2);
+            return (fileAttributes->type == 2);
 
         }
 
         bool CSFTP::isASymbolicLink(const FileAttributes &fileAttributes) {
 
-            return (fileAttributes.type == 3);
+            return (fileAttributes->type == 3);
 
         }
 
         bool CSFTP::isARegularFile(const FileAttributes &fileAttributes) {
-            return (fileAttributes.type == 1);
+            return (fileAttributes->type == 1);
         }
 
         void CSFTP::changePermissions(const FileAttributes &fileAttributes, const FilePermissions &filePermissions) {
 
-            if (sftp_chmod(m_sftp, fileAttributes.name.c_str(), filePermissions) < 0) {
+            if (sftp_chmod(m_sftp, fileAttributes->name, filePermissions) < 0) {
                 throw Exception(*this, __func__);
             }
 
@@ -253,7 +251,7 @@ namespace Antik {
 
         void CSFTP::changeOwnerGroup(const FileAttributes &fileAttributes, const FileOwner &owner, const FileGroup &group) {
 
-            if (sftp_chown(m_sftp, fileAttributes.name.c_str(), owner, group) < 0) {
+            if (sftp_chown(m_sftp, fileAttributes->name, owner, group) < 0) {
                 throw Exception(*this, __func__);
             }
 
@@ -261,13 +259,13 @@ namespace Antik {
 
         void CSFTP::getFileAttributes(const File &fileHandle, FileAttributes &fileAttributes) {
 
-            sftp_attributes file = sftp_fstat(fileHandle);
+            sftp_attributes file { sftp_fstat(fileHandle.get()) };
 
             if (file == NULL) {
                 throw Exception(*this, __func__);
             }
 
-            this->convertSshFileToFileAttributes(file, fileAttributes);
+            fileAttributes.reset(file);
 
         }
 
@@ -283,7 +281,7 @@ namespace Antik {
                 throw Exception(*this, __func__);
             }
 
-            this->convertSshFileToFileAttributes(file, fileAttributes);
+            fileAttributes.reset(file);
 
         }
 
@@ -345,31 +343,31 @@ namespace Antik {
 
         }
 
-        void CSFTP::rewindFile(File fileHandle) {
+        void CSFTP::rewindFile(File &fileHandle) {
 
-            sftp_rewind(fileHandle);
+            sftp_rewind(fileHandle.get());
 
         }
 
-        void CSFTP::seekFile(File fileHandle, uint32_t offset) {
+        void CSFTP::seekFile(File &fileHandle, uint32_t offset) {
 
-            if (sftp_seek(fileHandle, offset) < 0) {
+            if (sftp_seek(fileHandle.get(), offset) < 0) {
                 throw Exception(*this, __func__);
             }
 
         }
 
-        void CSFTP::seekFile64(File fileHandle, uint64_t offset) {
+        void CSFTP::seekFile64(File &fileHandle, uint64_t offset) {
 
-            if (sftp_seek64(fileHandle, offset) < 0) {
+            if (sftp_seek64(fileHandle.get(), offset) < 0) {
                 throw Exception(*this, __func__);
             }
 
         }
 
-        uint32_t CSFTP::currentFilePostion(File fileHandle) {
+        uint32_t CSFTP::currentFilePostion(File &fileHandle) {
 
-            int32_t position = sftp_tell(fileHandle);
+            int32_t position = sftp_tell(fileHandle.get());
 
             if (position < 0) {
                 throw Exception(*this, __func__);
@@ -379,9 +377,9 @@ namespace Antik {
 
         }
 
-        uint64_t CSFTP::currentFilePostion64(File fileHandle) {
+        uint64_t CSFTP::currentFilePostion64(File &fileHandle) {
 
-            int64_t position = sftp_tell64(fileHandle);
+            int64_t position = sftp_tell64(fileHandle.get());
 
             if (position < 0) {
                 throw Exception(*this, __func__);

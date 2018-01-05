@@ -109,7 +109,7 @@ namespace Antik {
                 
                 localFile.close();
                 
-                fs::permissions(destinationFile, static_cast<fs::perms> (fileAttributes.permissions));
+                fs::permissions(destinationFile, static_cast<fs::perms> (fileAttributes->permissions));
 
             } catch (const CSFTP::Exception &e) {
                if (localFile.is_open()) {
@@ -194,11 +194,12 @@ namespace Antik {
                 directoryHandle = sftp.openDirectory(directoryPath);
 
                 while (sftp.readDirectory(directoryHandle, fileAttributes)) {
-                    if ((fileAttributes.name != ".") && (fileAttributes.name != "..")) {
-                        filePath = directoryPath + "/" + fileAttributes.name;
+                    if ((static_cast<string>(fileAttributes->name) != ".") && (static_cast<string>(fileAttributes->name) != "..")) {
+                        filePath = directoryPath + "/" + fileAttributes->name;
                         if (sftp.isADirectory(fileAttributes) && recursive) {
                             sftpGetFileList(sftp, filePath, fileList, recursive);
                         }
+                        std::cout << filePath << endl;
                         fileList.push_back(filePath);
                     }
                 }

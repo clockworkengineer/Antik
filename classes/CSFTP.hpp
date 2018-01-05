@@ -21,6 +21,7 @@
 #include <string>
 #include <cstring>
 #include <memory>
+#include <functional>
 
 //
 // Libssh
@@ -85,15 +86,8 @@ namespace Antik {
                 int m_sftpErrorCode{SSH_FX_OK};
 
             };
-  
-  
- 
-//    ssh_string acl;
-//    uint32_t extended_count;
-//    ssh_string extended_type;
-//    ssh_string extended_data;
 
-            struct FileAttributes {
+            struct FileInfo {
                 std::string name;
                 std::string longName;
                 uint32_t flags;
@@ -112,11 +106,23 @@ namespace Antik {
                 uint64_t mtime64;
                 uint32_t mtime;
                 uint32_t mtime_nseconds;
+                ssh_string acl;
+                uint32_t extended_count;
+                ssh_string extended_type;
+                ssh_string extended_data;
             };
 
-      //      typedef std::shared_ptr<sftp_attributes> FileAttributes;
-            typedef sftp_file File;
-            typedef sftp_dir Directory;
+            struct FileAttributesDeleter {
+  
+                void operator()(sftp_attributes fileAttributes) const {
+                    sftp_attributes_free(fileAttributes);
+                }
+
+            };
+
+            typedef std::unique_ptr<sftp_attributes_struct, FileAttributesDeleter> FileAttributes;
+            typedef std::unique_ptr<sftp_file_struct> File;
+            typedef std::unique_ptr<sftp_dir_struct> Directory;
             typedef mode_t FilePermissions;
             typedef uid_t FileOwner;
             typedef gid_t FileGroup;
@@ -146,9 +152,9 @@ namespace Antik {
             void close();
 
             File openFile(const std::string &fileName, int accessType, int mode);
-            size_t readFile(File fileHandle, void *readBuffer, size_t bytesToRead);
-            size_t writeFile(File fileHandle, void *writeBuffer, size_t bytesToWrite);
-            void closeFile(File fileHandle);
+            size_t readFile(File &fileHandle, void *readBuffer, size_t bytesToRead);
+            size_t writeFile(File &fileHandle, void *writeBuffer, size_t bytesToWrite);
+            void closeFile(File &fileHandle);
 
             Directory openDirectory(const std::string &directoryPath);
             bool readDirectory(Directory &directoryHandle, FileAttributes &fileAttributes);
@@ -170,11 +176,11 @@ namespace Antik {
             std::string readLink(const std::string &linkPath);
             void renameFile(const std::string &sourceFile, const std::string &destinationFile);
 
-            void rewindFile(File fileHandle);
-            void seekFile(File fileHandle, uint32_t offset);
-            void seekFile64(File fileHandle, uint64_t offset);
-            uint32_t currentFilePostion(File fileHandle);
-            uint64_t currentFilePostion64(File fileHandle);
+            void rewindFile(File &fileHandle);
+            void seekFile(File &fileHandle, uint32_t offset);
+            void seekFile64(File &fileHandle, uint64_t offset);
+            uint32_t currentFilePostion(File &fileHandle);
+            uint64_t currentFilePostion64(File &fileHandle);
 
             std::string canonicalizePath(const std::string &pathName);
 
