@@ -144,19 +144,19 @@ namespace Antik {
 
         Antik::SSH::CSFTP::File CSFTP::openFile(const std::string &fileName, int accessType, int mode) {
 
-            File fileDesc = sftp_open(m_sftp, fileName.c_str(), accessType, mode);
+            File fileHandle = sftp_open(m_sftp, fileName.c_str(), accessType, mode);
 
-            if (fileDesc == NULL) {
+            if (fileHandle == NULL) {
                 throw Exception(*this, __func__);
             }
 
-            return (fileDesc);
+            return (fileHandle);
 
         }
 
-        size_t CSFTP::readFile(File fileDesc, void *readBuffer, size_t bytesToRead) {
+        size_t CSFTP::readFile(File fileHandle, void *readBuffer, size_t bytesToRead) {
 
-            size_t bytesRead = sftp_read(fileDesc, readBuffer, bytesToRead);
+            size_t bytesRead = sftp_read(fileHandle, readBuffer, bytesToRead);
 
             if (bytesRead < 0) {
                 throw Exception(*this, __func__);
@@ -166,9 +166,9 @@ namespace Antik {
 
         }
 
-        size_t CSFTP::writeFile(File fileDesc, void *writeBuffer, size_t bytesToWrite) {
+        size_t CSFTP::writeFile(File fileHandle, void *writeBuffer, size_t bytesToWrite) {
 
-            size_t bytesWritten = sftp_write(fileDesc, writeBuffer, bytesToWrite);
+            size_t bytesWritten = sftp_write(fileHandle, writeBuffer, bytesToWrite);
 
             if (bytesWritten < 0) {
                 throw Exception(*this, __func__);
@@ -178,9 +178,9 @@ namespace Antik {
 
         }
 
-        void CSFTP::closeFile(File fileDesc) {
+        void CSFTP::closeFile(File fileHandle) {
 
-            if (sftp_close(fileDesc) == SSH_ERROR) {
+            if (sftp_close(fileHandle) == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
 
@@ -259,9 +259,9 @@ namespace Antik {
 
         }
 
-        void CSFTP::getFileAttributes(const File &fileDesc, FileAttributes &fileAttributes) {
+        void CSFTP::getFileAttributes(const File &fileHandle, FileAttributes &fileAttributes) {
 
-            sftp_attributes file = sftp_fstat(fileDesc);
+            sftp_attributes file = sftp_fstat(fileHandle);
 
             if (file == NULL) {
                 throw Exception(*this, __func__);
@@ -271,7 +271,7 @@ namespace Antik {
 
         }
 
-        void CSFTP::setFileAttributes(const File &fileDesc, const FileAttributes &fileAttributes) {
+        void CSFTP::setFileAttributes(const File &fileHandle, const FileAttributes &fileAttributes) {
 
         }
 
@@ -345,31 +345,31 @@ namespace Antik {
 
         }
 
-        void CSFTP::rewindFile(File fileDesc) {
+        void CSFTP::rewindFile(File fileHandle) {
 
-            sftp_rewind(fileDesc);
+            sftp_rewind(fileHandle);
 
         }
 
-        void CSFTP::seekFile(File fileDesc, uint32_t offset) {
+        void CSFTP::seekFile(File fileHandle, uint32_t offset) {
 
-            if (sftp_seek(fileDesc, offset) < 0) {
+            if (sftp_seek(fileHandle, offset) < 0) {
                 throw Exception(*this, __func__);
             }
 
         }
 
-        void CSFTP::seekFile64(File fileDesc, uint64_t offset) {
+        void CSFTP::seekFile64(File fileHandle, uint64_t offset) {
 
-            if (sftp_seek64(fileDesc, offset) < 0) {
+            if (sftp_seek64(fileHandle, offset) < 0) {
                 throw Exception(*this, __func__);
             }
 
         }
 
-        uint32_t CSFTP::currentFilePostion(File fileDesc) {
+        uint32_t CSFTP::currentFilePostion(File fileHandle) {
 
-            int32_t position = sftp_tell(fileDesc);
+            int32_t position = sftp_tell(fileHandle);
 
             if (position < 0) {
                 throw Exception(*this, __func__);
@@ -379,9 +379,9 @@ namespace Antik {
 
         }
 
-        uint64_t CSFTP::currentFilePostion64(File fileDesc) {
+        uint64_t CSFTP::currentFilePostion64(File fileHandle) {
 
-            int64_t position = sftp_tell64(fileDesc);
+            int64_t position = sftp_tell64(fileHandle);
 
             if (position < 0) {
                 throw Exception(*this, __func__);

@@ -146,9 +146,9 @@ namespace Antik {
             void close();
 
             File openFile(const std::string &fileName, int accessType, int mode);
-            size_t readFile(File fileDesc, void *readBuffer, size_t bytesToRead);
-            size_t writeFile(File fileDesc, void *writeBuffer, size_t bytesToWrite);
-            void closeFile(File fileDesc);
+            size_t readFile(File fileHandle, void *readBuffer, size_t bytesToRead);
+            size_t writeFile(File fileHandle, void *writeBuffer, size_t bytesToWrite);
+            void closeFile(File fileHandle);
 
             Directory openDirectory(const std::string &directoryPath);
             bool readDirectory(Directory &directoryHandle, FileAttributes &fileAttributes);
@@ -157,8 +157,8 @@ namespace Antik {
 
             void changePermissions(const FileAttributes &fileAttributes, const FilePermissions &filePermissions);
             void changeOwnerGroup(const FileAttributes &fileAttributes, const FileOwner &owner, const FileGroup &group);
-            void getFileAttributes(const File &fileDesc, FileAttributes &fileAttributes);
-            void setFileAttributes(const File &fileDesc, const FileAttributes &fileAttributes);
+            void getFileAttributes(const File &fileHandle, FileAttributes &fileAttributes);
+            void setFileAttributes(const File &fileHandle, const FileAttributes &fileAttributes);
             void getLinkAttributes(const std::string &linkPath, FileAttributes &fileAttributes);
 
             void createDirectory(const std::string &directoryPath, const FilePermissions &filePermissions);
@@ -170,11 +170,11 @@ namespace Antik {
             std::string readLink(const std::string &linkPath);
             void renameFile(const std::string &sourceFile, const std::string &destinationFile);
 
-            void rewindFile(File fileDesc);
-            void seekFile(File fileDesc, uint32_t offset);
-            void seekFile64(File fileDesc, uint64_t offset);
-            uint32_t currentFilePostion(File fileDesc);
-            uint64_t currentFilePostion64(File fileDesc);
+            void rewindFile(File fileHandle);
+            void seekFile(File fileHandle, uint32_t offset);
+            void seekFile64(File fileHandle, uint64_t offset);
+            uint32_t currentFilePostion(File fileHandle);
+            uint64_t currentFilePostion64(File fileHandle);
 
             std::string canonicalizePath(const std::string &pathName);
 

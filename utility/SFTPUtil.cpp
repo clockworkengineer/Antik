@@ -183,10 +183,11 @@ namespace Antik {
 
         }
 
-        void sftpGetDirectoryContents(CSFTP &sftp, const string &directoryPath, vector<CSFTP::FileAttributes> &directoryContents, bool recursive) {
+        void sftpGetFileList(CSFTP &sftp, const string &directoryPath, vector<std::string> &fileList, bool recursive) {
 
             CSFTP::Directory directoryHandle;
             CSFTP::FileAttributes fileAttributes;
+            std::string filePath;
 
             try {
 
@@ -194,11 +195,11 @@ namespace Antik {
 
                 while (sftp.readDirectory(directoryHandle, fileAttributes)) {
                     if ((fileAttributes.name != ".") && (fileAttributes.name != "..")) {
-                        fileAttributes.name = directoryPath + "/" + fileAttributes.name;
+                        filePath = directoryPath + "/" + fileAttributes.name;
                         if (sftp.isADirectory(fileAttributes) && recursive) {
-                            sftpGetDirectoryContents(sftp, fileAttributes.name, directoryContents, recursive);
+                            sftpGetFileList(sftp, filePath, fileList, recursive);
                         }
-                        directoryContents.push_back(fileAttributes);
+                        fileList.push_back(filePath);
                     }
                 }
 

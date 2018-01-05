@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <vector>
 
 //
 // Antik Classes
@@ -36,7 +37,7 @@ namespace Antik {
 
         void sftpGetFile(CSFTP &sftp, const std::string &sourceFile, const std::string &destinationFile);
         void sftpPutFile(CSFTP &sftp, const std::string &sourceFile, const std::string &destinationFile);
-        void sftpGetDirectoryContents(CSFTP &sftp, const std::string &directoryPath, std::vector<CSFTP::FileAttributes> &directoryContents, bool recursive = false);
+        void sftpGetFileList(CSFTP &sftp, const std::string &directoryPath, std::vector<std::string> &fileList, bool recursive = false);
 
     } // namespace SSH
 } // namespace Antik
