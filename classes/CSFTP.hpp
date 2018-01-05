@@ -89,34 +89,39 @@ namespace Antik {
             };
 
             struct FileAttributesDeleter {
-
                 void operator()(sftp_attributes fileAttributes) const {
                     sftp_attributes_free(fileAttributes);
                 }
-
             };
 
             struct FileDeleter {
-
                 void operator()(sftp_file file) const {
                     if (file) {
                         sftp_close(file);
                     }
                 }
-
             };
 
             struct DirectoryDeleter {
-
                 void operator()(sftp_dir directory) const {
-                    sftp_closedir(directory);
+                    if (directory) {
+                        sftp_closedir(directory);
+                    }
                 }
+            };
 
+            struct FileSystemInfoDeleter {
+                void operator()(sftp_statvfs_t statvfs) const {
+                    if (statvfs) {
+                        sftp_statvfs_free(statvfs);
+                    }
+                }
             };
 
             typedef std::unique_ptr<sftp_attributes_struct, FileAttributesDeleter> FileAttributes;
             typedef std::unique_ptr<sftp_file_struct, FileDeleter> File;
             typedef std::unique_ptr<sftp_dir_struct, DirectoryDeleter> Directory;
+            typedef std::unique_ptr<sftp_statvfs_struct, FileSystemInfoDeleter> FileSystemInfo;
             
             typedef mode_t FilePermissions;
             typedef uid_t FileOwner;
@@ -179,6 +184,9 @@ namespace Antik {
             uint64_t currentFilePostion64(const File &fileHandle);
 
             std::string canonicalizePath(const std::string &pathName);
+            
+            void getFileSystemInfo(const File &fileHandle, FileSystemInfo &fileSystem);
+            void getFileSystemInfo(const std::string &fileSystemName, FileSystemInfo &fileSystem);
 
             int getServerVersion()const;
 
