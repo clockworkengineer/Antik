@@ -159,6 +159,7 @@ namespace Antik {
             void changePermissions(const FileAttributes &fileAttributes, const FilePermissions &filePermissions);
             void changeOwnerGroup(const FileAttributes &fileAttributes, const FileOwner &owner, const FileGroup &group);
             void getFileAttributes(const File &fileHandle, FileAttributes &fileAttributes);
+            void getFileAttributes(const std::string &filePath, FileAttributes &fileAttributes);
             void setFileAttributes(const std::string &filePath, const FileAttributes &fileAttributes);
             void getLinkAttributes(const std::string &linkPath, FileAttributes &fileAttributes);
 
