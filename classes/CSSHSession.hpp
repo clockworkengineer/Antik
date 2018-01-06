@@ -113,6 +113,13 @@ namespace Antik {
             
             int isServerKnown();
             void writeKnownHost();
+            std::string dumpKnownHost();
+            
+            std::string getCipherIn();
+            std::string getCipherOut();
+            std::string getHMACIn();
+            std::string getHMACOut();
+    
              
             Key getPublicKey();
             void getPublicKeyHash(Key serverPublicKey, std::vector<unsigned char> &keyHash);
@@ -120,9 +127,12 @@ namespace Antik {
             void freeKey(Key keyToFree);
 
             std::string getBanner() const;
+            std::string getClientBanner() const;
+            std::string getServerBanner() const;
             std::string getDisconnectMessage() const;
             
             int getSSHVersion() const;
+            int getOpenSSHVersion() const;
             int getStatus() const;
             bool isConnected() const;
             

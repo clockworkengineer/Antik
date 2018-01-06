@@ -21,7 +21,7 @@
 #include <string>
 #include <cstring>
 #include <memory>
-#include <functional>
+//#include <functional>
 
 //
 // Libssh

@@ -432,7 +432,7 @@ namespace Antik {
             if (sftp_utimes(m_sftp, filePath.c_str(), newTimeValues) < 0) {
                 throw Exception(*this, __func__);
             }
-            
+
         }
 
         int CSFTP::getExtensionCount() {

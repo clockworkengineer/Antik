@@ -29,7 +29,7 @@
 namespace Antik {
     namespace SSH {
 
-        int sshUserAuthorize(CSSHSession &session);
+        bool sshUserAuthorize(CSSHSession &session);
         bool sshVerifyKnownServer(CSSHSession &sshSession);
         
     } // namespace SSH

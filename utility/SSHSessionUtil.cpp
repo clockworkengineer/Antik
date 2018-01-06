@@ -57,47 +57,41 @@ namespace Antik {
         // PUBLIC FUNCTIONS
         // ================
 
-        int sshUserAuthorize(CSSHSession &session) {
+        bool sshUserAuthorize(CSSHSession &session) {
 
             int authorizationMethod;
-            int returnCode;
-
-            returnCode = session.userAuthorizationNone();
-            if (returnCode == SSH_AUTH_SUCCESS || returnCode == SSH_AUTH_ERROR) {
-                return returnCode;
-            }
+   
+            if (session.userAuthorizationNone() == SSH_AUTH_SUCCESS) {
+                return (true);
+            } 
 
             authorizationMethod = session.userAuthorizationList();
 
             if (authorizationMethod & SSH_AUTH_METHOD_NONE) {
-                returnCode = session.userAuthorizationNone();
-                if (returnCode == SSH_AUTH_SUCCESS) {
-                    return returnCode;
+                if (session.userAuthorizationNone() == SSH_AUTH_SUCCESS) {
+                    return (true);
                 }
             }
 
             if (authorizationMethod & SSH_AUTH_METHOD_PUBLICKEY) {
-                returnCode = session.userAuthorizationWithPublicKeyAuto();
-                if (returnCode == SSH_AUTH_SUCCESS) {
-                    return returnCode;
+                if (session.userAuthorizationWithPublicKeyAuto() == SSH_AUTH_SUCCESS) {
+                    return (true);
                 }
             }
 
             if (authorizationMethod & SSH_AUTH_METHOD_INTERACTIVE) {
-                returnCode = session.userAuthorizationWithKeyboardInteractive();
-                if (returnCode == SSH_AUTH_SUCCESS) {
-                    return returnCode;
+                if (session.userAuthorizationWithKeyboardInteractive() == SSH_AUTH_SUCCESS) {
+                    return (true);
                 }
             }
 
             if (authorizationMethod & SSH_AUTH_METHOD_PASSWORD) {
-                returnCode = session.userAuthorizationWithPassword();
-                if (returnCode == SSH_AUTH_SUCCESS) {
-                    return returnCode;
+                if (session.userAuthorizationWithPassword() == SSH_AUTH_SUCCESS) {
+                    return (true);
                 }
             }
 
-            return SSH_AUTH_ERROR;
+            return (false);
 
         }
 
@@ -109,11 +103,11 @@ namespace Antik {
             int returnCode;
 
             returnCode = sshSession.isServerKnown();
-            
+
             serverPublicKey = sshSession.getPublicKey();
 
             sshSession.getPublicKeyHash(serverPublicKey, keyHash);
-            
+
             sshSession.freeKey(serverPublicKey);
 
             switch (returnCode) {

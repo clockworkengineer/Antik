@@ -152,25 +152,49 @@ namespace Antik {
 
         int CSSHSession::userAuthorizationNone() {
 
-            return (ssh_userauth_none(m_session, NULL));
+            int returnCode = ssh_userauth_none(m_session, NULL);
+
+            if (returnCode == SSH_AUTH_ERROR) {
+                throw Exception(*this, __func__);
+            }
+
+            return (returnCode);
 
         }
 
         int CSSHSession::userAuthorizationWithPassword() {
 
-            return (ssh_userauth_password(m_session, NULL, m_password.c_str()));
+            int returnCode = ssh_userauth_password(m_session, NULL, m_password.c_str());
+
+            if (returnCode == SSH_AUTH_ERROR) {
+                throw Exception(*this, __func__);
+            }
+
+            return (returnCode);
 
         }
 
         int CSSHSession::userAuthorizationWithPublicKeyAuto() {
 
-            return (ssh_userauth_publickey_auto(m_session, NULL, NULL));
+            int returnCode = ssh_userauth_publickey_auto(m_session, NULL, NULL);
+
+            if (returnCode == SSH_AUTH_ERROR) {
+                throw Exception(*this, __func__);
+            }
+
+            return (returnCode);
 
         }
 
         int CSSHSession::userAuthorizationWithPublicKey() {
 
-            return (userAuthorizationWithPublicKeyAuto());
+            int returnCode  = userAuthorizationWithPublicKeyAuto();
+
+            if (returnCode == SSH_AUTH_ERROR) {
+                throw Exception(*this, __func__);
+            }
+
+            return (returnCode);
 
         }
 
@@ -245,6 +269,28 @@ namespace Antik {
             return (sessionBanner);
 
         }
+        
+       std::string CSSHSession::getClientBanner() const {
+
+            std::string clientBanner;
+            const char *banner = ssh_get_clientbanner(m_session);
+            if (banner) {
+                clientBanner.assign(&banner[0], &banner[std::strlen(banner)]);
+            }
+            return (clientBanner);
+
+        }
+       
+        std::string CSSHSession::getServerBanner() const {
+
+            std::string serverBanner;
+            const char *banner = ssh_get_serverbanner(m_session);
+            if (banner) {
+                serverBanner.assign(&banner[0], &banner[std::strlen(banner)]);
+            }
+            return (serverBanner);
+
+        }
 
         std::string CSSHSession::getDisconnectMessage() const {
 
@@ -258,10 +304,38 @@ namespace Antik {
             return (disconnectMessage);
 
         }
+       
+        std::string CSSHSession::getCipherIn() {
+            std::string cipherIn;
+            const char *cipher = ssh_get_cipher_in(m_session);
+            if (cipher) {
+                cipherIn.assign(&cipher[0], &cipher[std::strlen(cipher)]);
+            } else {
+                throw Exception(*this, __func__);
+            }
+            return (cipherIn);
+        }
+
+        std::string CSSHSession::getCipherOut() {
+            std::string cipherOut;
+            const char *cipher = ssh_get_cipher_in(m_session);
+            if (cipher) {
+                cipherOut.assign(&cipher[0], &cipher[std::strlen(cipher)]);
+            } else {
+                throw Exception(*this, __func__);
+            }
+            return (cipherOut);
+        }
 
         int CSSHSession::getSSHVersion() const {
 
             return (ssh_get_version(m_session));
+
+        }
+        
+        int CSSHSession::getOpenSSHVersion() const {
+
+            return (ssh_get_openssh_version(m_session));
 
         }
 
