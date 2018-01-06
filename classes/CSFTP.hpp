@@ -89,28 +89,29 @@ namespace Antik {
             };
 
             struct FileAttributesDeleter {
+
                 void operator()(sftp_attributes fileAttributes) const {
                     sftp_attributes_free(fileAttributes);
                 }
             };
 
             struct FileDeleter {
+
                 void operator()(sftp_file file) const {
-                    if (file) {
-                        sftp_close(file);
-                    }
+                    sftp_close(file);
                 }
             };
 
             struct DirectoryDeleter {
+
                 void operator()(sftp_dir directory) const {
-                    if (directory) {
-                        sftp_closedir(directory);
-                    }
+                    sftp_closedir(directory);
+
                 }
             };
 
             struct FileSystemInfoDeleter {
+
                 void operator()(sftp_statvfs_t statvfs) const {
                     if (statvfs) {
                         sftp_statvfs_free(statvfs);
@@ -126,6 +127,7 @@ namespace Antik {
             typedef mode_t FilePermissions;
             typedef uid_t FileOwner;
             typedef gid_t FileGroup;
+            typedef timeval Time;
 
             // ============
             // CONSTRUCTORS
@@ -187,6 +189,8 @@ namespace Antik {
             
             void getFileSystemInfo(const File &fileHandle, FileSystemInfo &fileSystem);
             void getFileSystemInfo(const std::string &fileSystemName, FileSystemInfo &fileSystem);
+            
+            void changeFileModificationAccessTimes(const std::string &filePath, const Time *newTimeValues);
 
             int getServerVersion()const;
 
