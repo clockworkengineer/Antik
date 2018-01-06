@@ -113,9 +113,7 @@ namespace Antik {
             struct FileSystemInfoDeleter {
 
                 void operator()(sftp_statvfs_t statvfs) const {
-                    if (statvfs) {
-                        sftp_statvfs_free(statvfs);
-                    }
+                     sftp_statvfs_free(statvfs);
                 }
             };
 
@@ -197,6 +195,11 @@ namespace Antik {
             bool isADirectory(const FileAttributes &fileAttributes);
             bool isARegularFile(const FileAttributes &fileAttributes);
             bool isASymbolicLink(const FileAttributes &fileAttributes);
+            
+            int getExtensionCount();
+            std::string getExtensionName(int index);
+            std::string getExtensionData(int index);
+            bool extensionSupported(const std::string &name, const std::string &data);
 
             int getErrorCode() const;
 

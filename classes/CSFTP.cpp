@@ -435,6 +435,53 @@ namespace Antik {
             
         }
 
+        int CSFTP::getExtensionCount() {
+            
+            return(sftp_extensions_get_count(m_sftp));
+
+        }
+
+        std::string CSFTP::getExtensionName(int index) {
+            
+            std::string extentionName;
+            const char *name;
+            
+            name = sftp_extensions_get_name (m_sftp, index); 
+            
+           if (name == NULL) {
+                throw Exception(*this, __func__);
+            }
+
+            extentionName.assign(&name[0], &name[std::strlen(name)]);
+            
+            return(extentionName);
+
+        }
+        
+           std::string CSFTP::getExtensionData(int index) {
+            
+            std::string extensionData;
+            const char *data;
+            
+            data = sftp_extensions_get_data (m_sftp, index); 
+            
+           if (data == NULL) {
+                throw Exception(*this, __func__);
+            }
+
+            extensionData.assign(&data[0], &data[std::strlen(data)]);
+            
+            return(extensionData);
+
+
+        }
+
+        bool CSFTP::extensionSupported(const std::string &name, const std::string &data) {
+            
+            return(m_sftp, name.c_str(), data.c_str());
+            
+        }
+  
         int CSFTP::getServerVersion() const {
 
             return (sftp_server_version(m_sftp));
