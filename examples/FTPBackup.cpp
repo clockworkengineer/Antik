@@ -170,8 +170,8 @@ int main(int argc, char** argv) {
 
         ParamArgData argData;
         CFTP ftpServer;
-        std::vector<std::string>  locaFileList;
-        std::vector<std::string> filesBackedUp;
+        FileList  locaFileList;
+        FileList filesBackedUp;
 
         // Read in command line parameters and process
 

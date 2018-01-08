@@ -252,11 +252,11 @@ namespace Antik {
             // On exception report and return with files that where successfully downloaded.
 
             } catch (const CFTP::Exception &e) {
-                std::cerr << e.what();
+                std::cerr << e.what() << std::endl;
             } catch (const boost::filesystem::filesystem_error & e) {
-                std::cerr << string("BOOST file system exception occured: [") + e.what() + "]";
+                std::cerr << string("BOOST file system exception occured: [") + e.what() + "]" << std::endl;
             } catch (const exception &e) {
-                std::cerr << string("Standard exception occured: [") + e.what() + "]";
+                std::cerr << string("Standard exception occured: [") + e.what() + "]" << std::endl;
             }
 
             return (successList);
@@ -358,11 +358,11 @@ namespace Antik {
             // On exception report and return with files that where successfully uploaded.
 
             } catch (const CFTP::Exception &e) {
-                std::cerr << e.what();
+                std::cerr << e.what() << std::endl;
             } catch (const boost::filesystem::filesystem_error & e) {
-                std::cerr << string("BOOST file system exception occured: [") + e.what() + "]";
+                std::cerr << string("BOOST file system exception occured: [") + e.what() + "]" << std::endl;
             } catch (const exception &e) {
-                std::cerr << string("Standard exception occured: [") + e.what() + "]";
+                std::cerr << string("Standard exception occured: [") + e.what() + "]" << std::endl;
             }
 
             return (successList);

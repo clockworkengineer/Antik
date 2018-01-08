@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   FTPRestore.cpp
+ * File:   SFTPBackup.cpp
  * 
  * Author: Robert Tizzard
  * 
@@ -11,14 +11,14 @@
  */
 
 //
-// Program: FTPRestore
+// Program: SFTPBackup
 //
-// Description: Simple FTP restore program that takes a remote directory and restores it
-// to a local directory.
+// Description: Simple SFTP backup program that takes a local directory and backs it up
+// to a specified SFTP server using account details provided.
 //
-// Dependencies: C11++, Classes (CFTP, CSocket), Boost C++ Libraries.
+// Dependencies: C11++, Classes (CSFTP, CSSHSession), Boost C++ Libraries.
 //
-// FTPRestore
+// SFTPBackup
 // Program Options:
 //   --help                 Print help messages
 //   -c [ --config ] arg    Config File Name
@@ -27,8 +27,7 @@
 //   -u [ --user ] arg      Account username
 //   -p [ --password ] arg  User password
 //   -r [ --remote ] arg    Remote server directory to restore
-//   -l [ --local ] arg     Local directory to use as base for restore
-//
+//   -l [ --local ] arg     Local Directory to backup
 
 // =============
 // INCLUDE FILES
@@ -44,10 +43,11 @@
 // Antik Classes
 //
 
-#include "CFTP.hpp"
+#include "SSHSessionUtil.hpp"
+#include "SFTPUtil.hpp"
 #include "FTPUtil.hpp"
 
-using namespace Antik::FTP;
+using namespace Antik::SSH;
 
 //
 // Boost program options  & file system library
@@ -66,13 +66,13 @@ namespace fs = boost::filesystem;
 // Command line parameter data
 
 struct ParamArgData {
-    std::string userName;        // FTP account user name
-    std::string userPassword;    // FTP account user name password
-    std::string serverName;      // FTP server
-    std::string serverPort;      // FTP server port
-    std::string remoteDirectory; // FTP remote directory to restore
-    std::string localDirectory;  // Local directory to use as base for restore
-    std::string configFileName;  // Configuration file name
+    std::string userName;         // SSH account user name
+    std::string userPassword;     // SSH account user name password
+    std::string serverName;       // SSH server
+    std::string serverPort;       // SSH server port
+    std::string remoteDirectory;  // SSH remote directory to restore
+    std::string localDirectory;   // Local directory to backup
+    std::string configFileName;   // Configuration file name
 };
 
 // ===============
@@ -100,12 +100,12 @@ static void exitWithError(std::string errMsg) {
 static void addCommonOptions(po::options_description& commonOptions, ParamArgData& argData) {
 
     commonOptions.add_options()
-            ("server,s", po::value<std::string>(&argData.serverName)->required(), "FTP Server name")
-            ("port,o", po::value<std::string>(&argData.serverPort)->required(), "FTP Server port")
+            ("server,s", po::value<std::string>(&argData.serverName)->required(), "SSH Server name")
+            ("port,o", po::value<std::string>(&argData.serverPort)->required(), "SSH Server port")
             ("user,u", po::value<std::string>(&argData.userName)->required(), "Account username")
             ("password,p", po::value<std::string>(&argData.userPassword)->required(), "User password")
-            ("remote,r", po::value<std::string>(&argData.remoteDirectory)->required(), "Remote directory to restore")
-            ("local,l", po::value<std::string>(&argData.localDirectory)->required(), "Local directory as base for restore");
+            ("remote,r", po::value<std::string>(&argData.remoteDirectory)->required(), "Remote directory for backup")
+            ("local,l", po::value<std::string>(&argData.localDirectory)->required(), "Local directory to backup");
 
 }
 
@@ -139,7 +139,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         // Display options and exit with success
 
         if (vm.count("help")) {
-            std::cout << "FTPRestore" << std::endl << commandLine << std::endl;
+            std::cout << "SFTPBackup" << std::endl << commandLine << std::endl;
             exit(EXIT_SUCCESS);
         }
 
@@ -157,7 +157,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         po::notify(vm);
 
     } catch (po::error& e) {
-        std::cerr << "FTPRestore Error: " << e.what() << std::endl << std::endl;
+        std::cerr << "SFTPBackup Error: " << e.what() << std::endl << std::endl;
         std::cerr << commandLine << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -173,10 +173,10 @@ int main(int argc, char** argv) {
     try {
 
         ParamArgData argData;
-        CFTP ftpServer;
-        FileList  remoteFileList;
-        FileList restoredFiles;
-
+        CSSHSession sshSession;
+        FileList locaFileList;
+        FileList filesBackedUp;
+ 
         // Read in command line parameters and process
 
         procCmdLine(argc, argv, argData);
@@ -184,58 +184,77 @@ int main(int argc, char** argv) {
         std::cout << "SERVER [" << argData.serverName << "]" << std::endl;
         std::cout << "SERVER PORT [" << argData.serverPort << "]" << std::endl;
         std::cout << "USER [" << argData.userName << "]" << std::endl;
-        std::cout << "REMOTE DIRECTORY [" << argData.remoteDirectory << "]" << std::endl;
-        std::cout << "LOCAL DIRECTORY [" << argData.localDirectory << "]\n" << std::endl;
-    
+        std::cout << "LOCAL DIRECTORY [" << argData.localDirectory << "]" << std::endl;
+        std::cout << "REMOTE DIRECTORY [" << argData.remoteDirectory << "]\n" << std::endl;
+        
         // Set server and port
         
-        ftpServer.setServerAndPort(argData.serverName, argData.serverPort);
+        sshSession.setServer(argData.serverName);
+        sshSession.setPort(std::stoi(argData.serverPort));
 
-        // Set mail account user name and password
+        // Set account user name and password
 
-        ftpServer.setUserAndPassword(argData.userName, argData.userPassword);
+        sshSession.setUser(argData.userName);
+        sshSession.setUserPassword(argData.userPassword);
 
-        // Enable SSL
+         // Connect to server
 
-        ftpServer.setSslEnabled(true);
+        sshSession.connect();
 
-        // Connect
+        // Verify the server's identity
 
-        if (ftpServer.connect() != 230) {
-            throw CFTP::Exception("Unable to connect status returned = " + ftpServer.getCommandResponse());
+        if (!sshVerifyKnownServer(sshSession)) {
+            throw std::runtime_error("Unable to verify server.");
+        } else {
+            std::cout << "Server verified..." << std::endl;
         }
 
-        // Get remote directory file list
-        
-        listRemoteRecursive(ftpServer, argData.remoteDirectory, remoteFileList);
-        
-        // Restore files from  FTP Server
+        // Authenticate ourselves
 
-        if (!remoteFileList.empty()) {
-            restoredFiles = getFiles(ftpServer, argData.localDirectory, remoteFileList);
+        if (!sshUserAuthorize(sshSession)) {
+            throw std::runtime_error("Server unable to authorize client");
+        } else {
+            std::cout << "Client authorized..." << std::endl;
+        }
+
+        // Create and open SFTP session
+        
+        CSFTP sftpServer { sshSession };
+        
+        sftpServer.open();
+        
+        // Get local directory file list
+        
+        Antik::FTP::listLocalRecursive(argData.localDirectory, locaFileList);
+        
+        // Copy file list to SFTP Server
+
+        if (!locaFileList.empty()) {
+            filesBackedUp = putFiles(sftpServer, argData.localDirectory, argData.remoteDirectory, locaFileList);
         }
 
         // Signal success or failure
         
-        if (!restoredFiles.empty()) {
-            for (auto file : restoredFiles) {
-                std::cout << "Successfully restored [" << file << "]" << std::endl;
+        if (!filesBackedUp.empty()) {
+            for (auto file : filesBackedUp) {
+                std::cout << "Sucessfully backed up [" << file << "]" << std::endl;
             }
         } else {
-            std::cout << "Restore failed."<< std::endl;
+            std::cout << "Backup failed."<< std::endl;
         }
 
         // Disconnect 
         
-        ftpServer.disconnect();
+        sftpServer.close();
+        sshSession.disconnect();
 
     //
     // Catch any errors
     //    
 
-    } catch (CFTP::Exception &e) {
-        exitWithError(e.what());
-    } catch (std::exception &e) {
+    } catch (CSFTP::Exception &e) {
+        exitWithError(e.getMessage());
+    } catch (std::runtime_error &e) {
         exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
     }
 

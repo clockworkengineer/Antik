@@ -34,10 +34,10 @@ namespace Antik {
  
       typedef std::function<void(std::string)> FileCompletionFn;
       void makeRemotePath (CFTP &ftpServer, const std::string &remotePath, bool saveCWD=true);
-      void listLocalRecursive(const std::string &localDirectory, std::vector<std::string> &fileList);
-      void listRemoteRecursive(CFTP &ftpServer, const std::string &remoteDirecory, std::vector<std::string> &fileList);
-      std::vector<std::string> getFiles(CFTP &ftpServer, const std::string &localDirectory, const std::vector<std::string> &fileList, FileCompletionFn completionFn=nullptr, bool safe = false, char postFix = '~');
-      std::vector<std::string> putFiles(CFTP &ftpServer, const std::string &localDirectory, const std::vector<std::string> &fileList, FileCompletionFn completionFn=nullptr, bool safe = false, char postFix = '~');
+      void listLocalRecursive(const std::string &localDirectory, FileList &fileList);
+      void listRemoteRecursive(CFTP &ftpServer, const std::string &remoteDirecory, FileList&fileList);
+      std::vector<std::string> getFiles(CFTP &ftpServer, const std::string &localDirectory, const FileList &fileList, FileCompletionFn completionFn=nullptr, bool safe = false, char postFix = '~');
+      std::vector<std::string> putFiles(CFTP &ftpServer, const std::string &localDirectory, const FileList &fileList, FileCompletionFn completionFn=nullptr, bool safe = false, char postFix = '~');
       
     } // namespace FTP
 } // namespace Antik

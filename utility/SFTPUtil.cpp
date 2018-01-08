@@ -34,6 +34,7 @@
 
 #include <iostream>
 #include <system_error>
+#include <set>
 
 
 //
@@ -43,10 +44,11 @@
 #include "SFTPUtil.hpp"
 
 //
-// Boost file system
+// Boost file system, string
 //
 
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 // =========
 // NAMESPACE
@@ -67,12 +69,51 @@ namespace Antik {
         // LOCAL FUNCTIONS
         // ===============
 
+        static bool pathExists(CSFTP &sftpServer, const std::string &remotePath) {
+
+            try {
+
+                CSFTP::FileAttributes fileAttributes;
+                sftpServer.getFileAttributes(remotePath, fileAttributes);
+                return (true);
+
+            } catch (CSFTP::Exception &e) {
+
+                if (e.sftpGetCode() != SSH_FX_NO_SUCH_FILE) {
+                    throw;
+                }
+
+            }
+
+            return (false);
+
+        }
+
+        static void makeRemotePath(CSFTP &sftpServer, const std::string &remotePath, const CSFTP::FilePermissions &permissions) {
+
+            vector<string> pathComponents;
+            fs::path currentPath{ "/"};
+
+            boost::split(pathComponents, remotePath, boost::is_any_of(string(1, kServerPathSep)));
+
+            for (auto directory : pathComponents) {
+                currentPath /= directory;
+                if (!directory.empty()) {
+                    if (!pathExists(sftpServer, currentPath.string())) {
+                        sftpServer.createDirectory(currentPath.string(), permissions);
+                    }
+
+                }
+            }
+
+
+        }
 
         // ================
         // PUBLIC FUNCTIONS
         // ================
 
-        void sftpGetFile(CSFTP &sftp, const string &sourceFile, const string &destinationFile) {
+        void getFile(CSFTP &sftp, const string &sourceFile, const string &destinationFile) {
 
             CSFTP::File remoteFile;
             ofstream localFile;
@@ -122,7 +163,7 @@ namespace Antik {
 
         }
 
-        void sftpPutFile(CSFTP &sftp, const string &sourceFile, const string &destinationFile) {
+        void putFile(CSFTP &sftp, const string &sourceFile, const string &destinationFile) {
 
             CSFTP::File remoteFile;
             ifstream localFile;
@@ -147,13 +188,9 @@ namespace Antik {
 
                     if (localFile.gcount()) {
                         bytesWritten = sftp.writeFile(remoteFile, sftp.getIoBuffer().get(), localFile.gcount());
-                        if (bytesWritten < 0) {
+                        if ((bytesWritten < 0)||(bytesWritten != localFile.gcount())) {
                             throw CSFTP::Exception(sftp, __func__);
                         }
-                    }
-
-                    if (bytesWritten != localFile.gcount()) {
-                        throw CSFTP::Exception(sftp, __func__);
                     }
 
                     if (!localFile) break;
@@ -179,9 +216,9 @@ namespace Antik {
 
         }
 
-        void sftpGetFileList(CSFTP &sftp, const string &directoryPath, vector<std::string> &fileList, bool recursive) {
+        void listRemote(CSFTP &sftp, const string &directoryPath, vector<std::string> &fileList, bool recursive) {
 
-          try {
+            try {
 
                 CSFTP::Directory directoryHandle;
                 CSFTP::FileAttributes fileAttributes;
@@ -193,7 +230,7 @@ namespace Antik {
                     if ((static_cast<string> (fileAttributes->name) != ".") && (static_cast<string> (fileAttributes->name) != "..")) {
                         filePath = directoryPath + "/" + fileAttributes->name;
                         if (sftp.isADirectory(fileAttributes) && recursive) {
-                            sftpGetFileList(sftp, filePath, fileList, recursive);
+                            listRemote(sftp, filePath, fileList, recursive);
                         }
                         std::cout << filePath << endl;
                         fileList.push_back(filePath);
@@ -211,6 +248,95 @@ namespace Antik {
                 throw;
             }
 
+
+        }
+
+        FileList getFiles(CSFTP &ftpServer, const string &localDirectory, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
+
+        }
+
+        FileList putFiles(CSFTP &sftpServer, const string &localDirectory, const string &remoteDirectory, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
+
+            CSFTP::FileAttributes remoteDirectoryAttributes;
+            FileList successList;
+            size_t localPathLength{ 0};
+ 
+            // Create any directories using root path permissions
+
+            sftpServer.getFileAttributes(remoteDirectory, remoteDirectoryAttributes);
+
+            // Determine local path length for creating remote paths.
+
+            localPathLength = localDirectory.size();
+            if (localDirectory.back() != kServerPathSep) localPathLength++;
+
+            try {
+
+                // Process file/directory list
+
+                for (auto file : fileList) {
+
+                    fs::path filePath{ file};
+
+                    if (fs::exists(filePath)) {
+
+                        string fullRemotePath;
+                        bool transferFile{ false};
+
+                        // Create remote full remote path and set file to be transfered flag
+
+                        if (fs::is_directory(filePath)) {
+                            fullRemotePath = filePath.string();
+                        } else if (fs::is_regular_file(filePath)) {
+                            fullRemotePath = filePath.parent_path().string() + kServerPathSep;
+                            transferFile = true;
+                        } else {
+                            continue; // Not valid for transfer NEXT FILE!
+                        }
+
+                        fullRemotePath = remoteDirectory + fullRemotePath.substr(localPathLength);
+
+                        if (!pathExists(sftpServer, fullRemotePath)) {
+                            makeRemotePath(sftpServer, fullRemotePath, remoteDirectoryAttributes->permissions);
+                            successList.push_back(fullRemotePath);
+                            if (completionFn) {
+                                completionFn(successList.back());
+                            }
+                        }
+
+                        // Transfer file
+
+                        if (transferFile) {
+                            string destinationFileName{ fullRemotePath + filePath.filename().string() + postFix};
+                            if (!safe) {
+                                destinationFileName.pop_back();
+                            }
+                            putFile(sftpServer, filePath.string(), destinationFileName);
+                            if (safe) {
+                                sftpServer.renameFile(destinationFileName, destinationFileName.substr(0,destinationFileName.size()-1));
+                            }
+                            successList.push_back(destinationFileName.substr(0,destinationFileName.size()-1));
+                            if (completionFn) {
+                                completionFn(successList.back());
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            // On exception report and return with files that where successfully uploaded.
+
+            } catch (const CSFTP::Exception &e) {
+                std::cerr << e.getMessage() << std::endl;
+            } catch (const boost::filesystem::filesystem_error & e) {
+                std::cerr << string("BOOST file system exception occured: [") + e.what() + "]" << std::endl;
+            } catch (const exception &e) {
+                std::cerr << string("Standard exception occured: [") + e.what() + "]" << std::endl;
+            }
+
+            return (successList);
 
         }
 
