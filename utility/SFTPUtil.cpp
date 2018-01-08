@@ -109,6 +109,22 @@ namespace Antik {
 
         }
 
+        static bool isDirectory(CSFTP &sftpServer, const std::string &remotePath) {
+
+            //         try {
+            //
+            CSFTP::FileAttributes fileAttributes;
+            sftpServer.getFileAttributes(remotePath, fileAttributes);
+            return (sftpServer.isADirectory(fileAttributes));
+            //
+            //            } catch (CSFTP::Exception &e) {
+            //
+            //            }
+            //
+            //            return (false);
+
+        }
+
         // ================
         // PUBLIC FUNCTIONS
         // ================
@@ -188,7 +204,7 @@ namespace Antik {
 
                     if (localFile.gcount()) {
                         bytesWritten = sftp.writeFile(remoteFile, sftp.getIoBuffer().get(), localFile.gcount());
-                        if ((bytesWritten < 0)||(bytesWritten != localFile.gcount())) {
+                        if ((bytesWritten < 0) || (bytesWritten != localFile.gcount())) {
                             throw CSFTP::Exception(sftp, __func__);
                         }
                     }
@@ -216,7 +232,7 @@ namespace Antik {
 
         }
 
-        void listRemote(CSFTP &sftp, const string &directoryPath, vector<std::string> &fileList, bool recursive) {
+        void listRemoteRecursive(CSFTP &sftp, const string &directoryPath, vector<std::string> &fileList) {
 
             try {
 
@@ -228,11 +244,12 @@ namespace Antik {
 
                 while (sftp.readDirectory(directoryHandle, fileAttributes)) {
                     if ((static_cast<string> (fileAttributes->name) != ".") && (static_cast<string> (fileAttributes->name) != "..")) {
-                        filePath = directoryPath + "/" + fileAttributes->name;
-                        if (sftp.isADirectory(fileAttributes) && recursive) {
-                            listRemote(sftp, filePath, fileList, recursive);
+                        std::string filePath{ directoryPath};
+                        if (filePath.back() == kServerPathSep) filePath.pop_back();
+                        filePath += string(1, kServerPathSep) + fileAttributes->name;
+                        if (sftp.isADirectory(fileAttributes)) {
+                            listRemoteRecursive(sftp, filePath, fileList);
                         }
-                        std::cout << filePath << endl;
                         fileList.push_back(filePath);
                     }
                 }
@@ -251,7 +268,65 @@ namespace Antik {
 
         }
 
-        FileList getFiles(CSFTP &ftpServer, const string &localDirectory, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
+        FileList getFiles(CSFTP &sftpServer, const string &localDirectory, const string &remoteDirectory, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
+
+            FileList successList;
+
+            try {
+
+                for (auto file : fileList) {
+
+                    fs::path destination{ localDirectory};
+
+                    destination /= file.substr(remoteDirectory.size());
+                    destination = destination.normalize();
+                    if (!fs::exists(destination.parent_path())) {
+                        fs::create_directories(destination.parent_path());
+                    }
+
+                    if (!isDirectory(sftpServer, file)) {
+
+                        string destinationFileName{ destination.string() + postFix};
+                        if (!safe) {
+                            destinationFileName.pop_back();
+                        }
+                        getFile(sftpServer, file, destinationFileName);
+                        if (safe) {
+                            fs::rename(destinationFileName, destination.string());
+                        }
+                        successList.push_back(destination.string());
+                        if (completionFn) {
+                            completionFn(successList.back());
+                        }
+
+
+                    } else {
+
+                        if (!fs::exists(destination)) {
+                            fs::create_directories(destination);
+                        }
+                        successList.push_back(destination.string());
+                        if (completionFn) {
+                            completionFn(successList.back());
+                        }
+
+                    }
+
+                }
+
+            // On exception report and return with files that where successfully downloaded.
+
+            } catch (const CSFTP::Exception &e) {
+                std::cerr << e.getMessage() << std::endl;
+            } catch (const boost::filesystem::filesystem_error & e) {
+                std::cerr << string("BOOST file system exception occured: [") + e.what() + "]" << std::endl;
+            } catch (const exception &e) {
+                std::cerr << string("Standard exception occured: [") + e.what() + "]" << std::endl;
+            }
+
+            return (successList);
+
+
 
         }
 
@@ -260,7 +335,7 @@ namespace Antik {
             CSFTP::FileAttributes remoteDirectoryAttributes;
             FileList successList;
             size_t localPathLength{ 0};
- 
+
             // Create any directories using root path permissions
 
             sftpServer.getFileAttributes(remoteDirectory, remoteDirectoryAttributes);
@@ -313,9 +388,9 @@ namespace Antik {
                             }
                             putFile(sftpServer, filePath.string(), destinationFileName);
                             if (safe) {
-                                sftpServer.renameFile(destinationFileName, destinationFileName.substr(0,destinationFileName.size()-1));
+                                sftpServer.renameFile(destinationFileName, destinationFileName.substr(0, destinationFileName.size() - 1));
                             }
-                            successList.push_back(destinationFileName.substr(0,destinationFileName.size()-1));
+                            successList.push_back(destinationFileName.substr(0, destinationFileName.size() - 1));
                             if (completionFn) {
                                 completionFn(successList.back());
                             }
