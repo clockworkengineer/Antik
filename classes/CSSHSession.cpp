@@ -13,7 +13,9 @@
 //
 // Class: CSSHSession
 // 
-// Description:
+// Description: A class for connecting to a SSH server, verifying the server and authorizing 
+// the client and managing the sessions created. If a client wishes to override one of the
+// three main client authorization methods then it can be used as a base class.
 //
 // Dependencies:   C11++        - Language standard features used.
 //                 libssh       - Used to talk to SSH server (https://www.libssh.org/)
@@ -93,6 +95,10 @@ namespace Antik {
 
         }
 
+        //
+        // Set SSH server name.
+        //
+
         void CSSHSession::setServer(const std::string &server) {
 
             m_server = server;
@@ -101,6 +107,10 @@ namespace Antik {
             }
 
         }
+
+        //
+        // Set SSH server port.
+        //
 
         void CSSHSession::setPort(unsigned int port) {
 
@@ -111,6 +121,10 @@ namespace Antik {
 
         }
 
+        //
+        // Set user.
+        //
+
         void CSSHSession::setUser(const std::string &user) {
 
             m_user = user;
@@ -120,11 +134,19 @@ namespace Antik {
 
         }
 
+        //
+        // Set user password.
+        //
+
         void CSSHSession::setUserPassword(const std::string &password) {
 
             m_password = password;
 
         }
+
+        //
+        // Connect to SSH server.
+        //
 
         void CSSHSession::connect() {
 
@@ -133,6 +155,10 @@ namespace Antik {
             }
 
         }
+
+        //
+        // Disconnect SSH session.
+        //
 
         void CSSHSession::disconnect(bool silent) {
 
@@ -144,11 +170,19 @@ namespace Antik {
 
         }
 
+        //
+        // Get available server user(client) authorization options.
+        //
+
         int CSSHSession::userAuthorizationList() {
 
             return (ssh_userauth_list(m_session, NULL));
 
         }
+
+        //
+        // No user authorization.
+        //
 
         int CSSHSession::userAuthorizationNone() {
 
@@ -162,6 +196,10 @@ namespace Antik {
 
         }
 
+        //
+        // Password user authorization. (Virtual: May be overridden)
+        //
+
         int CSSHSession::userAuthorizationWithPassword() {
 
             int returnCode = ssh_userauth_password(m_session, NULL, m_password.c_str());
@@ -173,6 +211,10 @@ namespace Antik {
             return (returnCode);
 
         }
+
+        //
+        // Automatic public key user authorization. 
+        //  
 
         int CSSHSession::userAuthorizationWithPublicKeyAuto() {
 
@@ -186,9 +228,13 @@ namespace Antik {
 
         }
 
+        //
+        // Public key user authorization. (Virtual: May be overridden)
+        //  
+
         int CSSHSession::userAuthorizationWithPublicKey() {
 
-            int returnCode  = userAuthorizationWithPublicKeyAuto();
+            int returnCode = userAuthorizationWithPublicKeyAuto();
 
             if (returnCode == SSH_AUTH_ERROR) {
                 throw Exception(*this, __func__);
@@ -198,17 +244,29 @@ namespace Antik {
 
         }
 
+        //
+        // Keyboard interactive  user authorization. (Virtual: May be overridden)
+        //  
+
         int CSSHSession::userAuthorizationWithKeyboardInteractive() {
 
             return (SSH_AUTH_DENIED);
 
         }
 
+        //
+        // Check whether the server is known.
+        //
+
         int CSSHSession::isServerKnown() {
 
             return (ssh_is_server_known(m_session));
 
         }
+
+        //
+        // Return sessions server public key.
+        //
 
         Antik::SSH::CSSHSession::Key CSSHSession::getPublicKey() {
             Key serverPublicKey;
@@ -218,11 +276,19 @@ namespace Antik {
             return (serverPublicKey);
         }
 
+        //
+        // Free a key.
+        //
+
         void CSSHSession::freeKey(Key keyToFree) {
 
             ssh_key_free(keyToFree);
 
         }
+
+        //
+        // Generate hash for passed in server public key/
+        //
 
         void CSSHSession::getPublicKeyHash(Antik::SSH::CSSHSession::Key serverPublicKey, std::vector<unsigned char> &keyHash) {
 
@@ -237,6 +303,10 @@ namespace Antik {
 
         }
 
+        //
+        // Convert hash value to vector of hex characters.
+        //
+
         std::string CSSHSession::convertKeyHashToHex(std::vector<unsigned char> &keyHash) {
 
             char *hexa = NULL;
@@ -250,6 +320,10 @@ namespace Antik {
 
         }
 
+        //
+        // Write current server key/hash away to local configuration file for later sessions.
+        //
+
         void CSSHSession::writeKnownHost() {
 
             if (ssh_write_knownhost(m_session) != SSH_OK) {
@@ -257,6 +331,10 @@ namespace Antik {
             }
 
         }
+
+        //
+        // Get server issue banner.
+        //
 
         std::string CSSHSession::getBanner() const {
 
@@ -269,8 +347,12 @@ namespace Antik {
             return (sessionBanner);
 
         }
-        
-       std::string CSSHSession::getClientBanner() const {
+
+        //
+        // Get client banner.
+        //
+
+        std::string CSSHSession::getClientBanner() const {
 
             std::string clientBanner;
             const char *banner = ssh_get_clientbanner(m_session);
@@ -280,7 +362,11 @@ namespace Antik {
             return (clientBanner);
 
         }
-       
+        
+        //
+        // Get server banner.
+        // 
+
         std::string CSSHSession::getServerBanner() const {
 
             std::string serverBanner;
@@ -292,6 +378,10 @@ namespace Antik {
 
         }
 
+        //
+        // Get server disconnect message.
+        //
+        
         std::string CSSHSession::getDisconnectMessage() const {
 
             std::string disconnectMessage;
@@ -304,7 +394,11 @@ namespace Antik {
             return (disconnectMessage);
 
         }
-       
+
+        //
+        // Return string representing name of current input cipher.
+        //
+        
         std::string CSSHSession::getCipherIn() {
             std::string cipherIn;
             const char *cipher = ssh_get_cipher_in(m_session);
@@ -316,6 +410,10 @@ namespace Antik {
             return (cipherIn);
         }
 
+        //
+        // Return string representing name of current output cipher.
+        //
+        
         std::string CSSHSession::getCipherOut() {
             std::string cipherOut;
             const char *cipher = ssh_get_cipher_in(m_session);
@@ -327,11 +425,19 @@ namespace Antik {
             return (cipherOut);
         }
 
+        //
+        // Get SSH version.
+        //
+        
         int CSSHSession::getSSHVersion() const {
 
             return (ssh_get_version(m_session));
 
         }
+
+        //
+        // Get OpenSSH version.
+        //
         
         int CSSHSession::getOpenSSHVersion() const {
 
@@ -339,17 +445,29 @@ namespace Antik {
 
         }
 
+        //
+        // Return current status of session.
+        //
+        
         int CSSHSession::getStatus() const {
 
             return (ssh_get_status(m_session));
 
         }
 
+        //
+        // Return true if session connected.
+        //
+        
         bool CSSHSession::isConnected() const {
 
             return (ssh_is_connected(m_session));
 
         }
+        
+        //
+        // Return last SSH error message.
+        //
 
         std::string CSSHSession::getError() const {
 
@@ -357,12 +475,19 @@ namespace Antik {
 
         }
 
+        //
+        // Return last SSH error code.
+        //
+
         int CSSHSession::getErrorCode() const {
 
             return (ssh_get_error_code(m_session));
 
         }
 
+        //
+        // Return internal libssh session reference,
+        //
         ssh_session CSSHSession::getSession() const {
 
             return m_session;

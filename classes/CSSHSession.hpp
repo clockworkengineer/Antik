@@ -67,12 +67,16 @@ namespace Antik {
                 }
 
             private:
-                std::string m_functionName;
-                int m_errorCode;
-                std::string m_errorMessage;
+                std::string m_functionName;     // Current function name
+                int m_errorCode;                // SSH error code
+                std::string m_errorMessage;     // SSH error message
 
             };
 
+            //
+            // Map libssh data structures to local class types
+            //
+            
             typedef ssh_key Key;
             
             // ============
@@ -95,46 +99,91 @@ namespace Antik {
             // PUBLIC METHODS
             // ==============
         
+            //
+            // Set session details
+            //
+            
             void setServer(const std::string &server);
             void setPort(unsigned int port);
             void setUser(const std::string &user);
             void setUserPassword(const std::string &password);
             
+            //
+            // Connect/disconnect sessions
+            //
+            
             void connect();
             void disconnect(bool silent=false);
+            
+            //
+            // User authorization functions
+            //
             
             int userAuthorizationList();
             int userAuthorizationNone();
             int userAuthorizationWithPublicKeyAuto();
-            
+  
+            //
+            // Overridable user authorization functions
+            //
+  
             virtual int userAuthorizationWithPassword();
             virtual int userAuthorizationWithPublicKey();
             virtual int userAuthorizationWithKeyboardInteractive();
+     
+            //
+            // Verify server
+            //
             
             int isServerKnown();
+            
+            //
+            // Write server details away to local config
+            //
+            
             void writeKnownHost();
-            std::string dumpKnownHost();
+            
+            //
+            // Get names of session cipher in/out methods
+            //
             
             std::string getCipherIn();
             std::string getCipherOut();
-            std::string getHMACIn();
-            std::string getHMACOut();
-    
-             
+            
+            //
+            // Public key methods
+            //
+            
             Key getPublicKey();
             void getPublicKeyHash(Key serverPublicKey, std::vector<unsigned char> &keyHash);
             std::string convertKeyHashToHex(std::vector<unsigned char> &keyHash);
             void freeKey(Key keyToFree);
 
+            //
+            // Get various banners and disconnect message
+            //
+            
             std::string getBanner() const;
             std::string getClientBanner() const;
             std::string getServerBanner() const;
             std::string getDisconnectMessage() const;
-            
+     
+            //
+            // Get SSH/OpenSSH versions
+            //
             int getSSHVersion() const;
             int getOpenSSHVersion() const;
+            
+            //
+            // Session status methods
+            //
+            
             int getStatus() const;
             bool isConnected() const;
+            
+            //
+            // Get SSH error code and message
+            //
             
             std::string getError() const;
             int getErrorCode() const;
@@ -169,12 +218,12 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
 
-            ssh_session m_session;
+            ssh_session m_session;          // Session
             
-            std::string m_server;
-            unsigned int  m_port { 22 };
-            std::string m_user;
-            std::string m_password;
+            std::string m_server;           // SSH server name
+            unsigned int  m_port { 22 };    // SSH server port
+            std::string m_user;             // SSH server login account name
+            std::string m_password;         // SSH server login account password
 
         };
 
