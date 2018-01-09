@@ -15,8 +15,7 @@
 //
 // Description: SFTP utility functions for the Antik class CSFTP.
 // Perform selective and  more powerful operations not available directly through
-// single raw SFTP commands. Any generated exceptions are not handled but passed back
-// up the call stack.
+// single raw SFTP commands.
 // 
 // Dependencies: 
 // 
@@ -69,7 +68,7 @@ namespace Antik {
         // LOCAL FUNCTIONS
         // ===============
 
-        static bool pathExists(CSFTP &sftpServer, const std::string &remotePath) {
+        static bool fileExists(CSFTP &sftpServer, const std::string &remotePath) {
 
             try {
 
@@ -99,7 +98,7 @@ namespace Antik {
             for (auto directory : pathComponents) {
                 currentPath /= directory;
                 if (!directory.empty()) {
-                    if (!pathExists(sftpServer, currentPath.string())) {
+                    if (!fileExists(sftpServer, currentPath.string())) {
                         sftpServer.createDirectory(currentPath.string(), permissions);
                     }
 
@@ -111,17 +110,17 @@ namespace Antik {
 
         static bool isDirectory(CSFTP &sftpServer, const std::string &remotePath) {
 
-            //         try {
-            //
             CSFTP::FileAttributes fileAttributes;
             sftpServer.getFileAttributes(remotePath, fileAttributes);
             return (sftpServer.isADirectory(fileAttributes));
-            //
-            //            } catch (CSFTP::Exception &e) {
-            //
-            //            }
-            //
-            //            return (false);
+
+        }
+
+        static bool isRegularFile(CSFTP &sftpServer, const std::string &remotePath) {
+
+            CSFTP::FileAttributes fileAttributes;
+            sftpServer.getFileAttributes(remotePath, fileAttributes);
+            return (sftpServer.isARegularFile(fileAttributes));
 
         }
 
@@ -268,53 +267,51 @@ namespace Antik {
 
         }
 
-        FileList getFiles(CSFTP &sftpServer, const string &localDirectory, const string &remoteDirectory, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
+        FileList getFiles(CSFTP &sftpServer, FileMapper &fileMapper, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
 
             FileList successList;
 
             try {
 
-                for (auto file : fileList) {
+                for (auto remoteFile : fileList) {
 
-                    fs::path destination{ localDirectory};
+                    std::string localFilePath{ fileMapper.toLocal(remoteFile)};
 
-                    destination /= file.substr(remoteDirectory.size());
-                    destination = destination.normalize();
-                    if (!fs::exists(destination.parent_path())) {
-                        fs::create_directories(destination.parent_path());
-                    }
+                    if (isRegularFile(sftpServer, remoteFile)) {
 
-                    if (!isDirectory(sftpServer, file)) {
+                        string destinationFileName{ localFilePath + postFix};
 
-                        string destinationFileName{ destination.string() + postFix};
+                        if (!fs::exists(fs::path(localFilePath).parent_path())) {
+                            fs::create_directories(fs::path(localFilePath).parent_path());
+                        }
+
                         if (!safe) {
                             destinationFileName.pop_back();
                         }
-                        getFile(sftpServer, file, destinationFileName);
+                        getFile(sftpServer, remoteFile, destinationFileName);
                         if (safe) {
-                            fs::rename(destinationFileName, destination.string());
-                        }
-                        successList.push_back(destination.string());
-                        if (completionFn) {
-                            completionFn(successList.back());
+                            fs::rename(destinationFileName, localFilePath);
                         }
 
+
+                    } else if (isDirectory(sftpServer, remoteFile)) {
+
+                        if (!fs::exists(localFilePath)) {
+                            fs::create_directories(localFilePath);
+                        }
 
                     } else {
+                        continue;
+                    }
 
-                        if (!fs::exists(destination)) {
-                            fs::create_directories(destination);
-                        }
-                        successList.push_back(destination.string());
-                        if (completionFn) {
-                            completionFn(successList.back());
-                        }
-
+                    successList.push_back(localFilePath);
+                    if (completionFn) {
+                        completionFn(successList.back());
                     }
 
                 }
 
-            // On exception report and return with files that where successfully downloaded.
+                // On exception report and return with files that where successfully downloaded.
 
             } catch (const CSFTP::Exception &e) {
                 std::cerr << e.getMessage() << std::endl;
@@ -330,67 +327,65 @@ namespace Antik {
 
         }
 
-        FileList putFiles(CSFTP &sftpServer, const string &localDirectory, const string &remoteDirectory, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
+        FileList putFiles(CSFTP &sftpServer, FileMapper &fileMapper, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
 
-            CSFTP::FileAttributes remoteDirectoryAttributes;
             FileList successList;
-            size_t localPathLength{ 0};
+            CSFTP::FileAttributes remoteDirectoryAttributes;
 
             // Create any directories using root path permissions
 
-            sftpServer.getFileAttributes(remoteDirectory, remoteDirectoryAttributes);
+            sftpServer.getFileAttributes(fileMapper.getRemoteDirectory(), remoteDirectoryAttributes);
 
             // Determine local path length for creating remote paths.
 
-            localPathLength = localDirectory.size();
-            if (localDirectory.back() != kServerPathSep) localPathLength++;
 
             try {
 
                 // Process file/directory list
 
-                for (auto file : fileList) {
+                for (auto localFile : fileList) {
 
-                    fs::path filePath{ file};
+                    if (fs::exists(localFile)) {
 
-                    if (fs::exists(filePath)) {
-
-                        string fullRemotePath;
+                        string remoteFilePath;
                         bool transferFile{ false};
 
                         // Create remote full remote path and set file to be transfered flag
 
-                        if (fs::is_directory(filePath)) {
-                            fullRemotePath = filePath.string();
-                        } else if (fs::is_regular_file(filePath)) {
-                            fullRemotePath = filePath.parent_path().string() + kServerPathSep;
+                        if (fs::is_directory(localFile)) {
+                            remoteFilePath = fileMapper.toRemote(localFile);
+                        } else if (fs::is_regular_file(localFile)) {
+                            remoteFilePath = fileMapper.toRemote(fs::path(localFile).parent_path().string());
                             transferFile = true;
                         } else {
                             continue; // Not valid for transfer NEXT FILE!
                         }
 
-                        fullRemotePath = remoteDirectory + fullRemotePath.substr(localPathLength);
-
-                        if (!pathExists(sftpServer, fullRemotePath)) {
-                            makeRemotePath(sftpServer, fullRemotePath, remoteDirectoryAttributes->permissions);
-                            successList.push_back(fullRemotePath);
+                        if (!fileExists(sftpServer, remoteFilePath)) {
+                            makeRemotePath(sftpServer, remoteFilePath, remoteDirectoryAttributes->permissions);
+                            successList.push_back(remoteFilePath);
                             if (completionFn) {
                                 completionFn(successList.back());
                             }
                         }
 
+                        remoteFilePath = fileMapper.toRemote(localFile);
+
                         // Transfer file
 
                         if (transferFile) {
-                            string destinationFileName{ fullRemotePath + filePath.filename().string() + postFix};
+                            string destinationFilePath{ remoteFilePath + postFix};
                             if (!safe) {
-                                destinationFileName.pop_back();
+                                destinationFilePath.pop_back();
                             }
-                            putFile(sftpServer, filePath.string(), destinationFileName);
+                            putFile(sftpServer, localFile, destinationFilePath);
                             if (safe) {
-                                sftpServer.renameFile(destinationFileName, destinationFileName.substr(0, destinationFileName.size() - 1));
+                                if (fileExists(sftpServer, remoteFilePath)) {
+                                    sftpServer.removeLink(remoteFilePath);
+                                }
+                                sftpServer.renameFile(destinationFilePath, remoteFilePath);
                             }
-                            successList.push_back(destinationFileName.substr(0, destinationFileName.size() - 1));
+                            successList.push_back(remoteFilePath);
                             if (completionFn) {
                                 completionFn(successList.back());
                             }
@@ -401,7 +396,7 @@ namespace Antik {
 
                 }
 
-            // On exception report and return with files that where successfully uploaded.
+           // On exception report and return with files that where successfully uploaded.
 
             } catch (const CSFTP::Exception &e) {
                 std::cerr << e.getMessage() << std::endl;

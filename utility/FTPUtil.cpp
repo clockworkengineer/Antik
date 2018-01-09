@@ -15,8 +15,7 @@
 //
 // Description: FTP utility functions for the Antik class CFTP.
 // Perform selective and  more powerful operations not available directly through
-// single raw FTP commands. Any generated exceptions are not handled but passed back
-// up the call stack.
+// single raw FTP commands.
 // 
 // Dependencies: 
 // 

@@ -218,9 +218,10 @@ int main(int argc, char** argv) {
             std::cout << "Client authorized..." << std::endl;
         }
 
-        // Create and open SFTP session
+       // Create, open SFTP session and initialise file mapper
         
         CSFTP sftpServer { sshSession };
+        FileMapper fileMapper{ argData.localDirectory, argData.remoteDirectory};
         
         sftpServer.open();
 
@@ -228,10 +229,10 @@ int main(int argc, char** argv) {
         
         listRemoteRecursive(sftpServer, argData.remoteDirectory, remoteFileList);
         
-        // Restore files from  FTP Server
+        // Restore files from  SFTP Server
 
         if (!remoteFileList.empty()) {
-            restoredFiles = getFiles(sftpServer, argData.localDirectory, argData.remoteDirectory, remoteFileList);
+            restoredFiles = getFiles(sftpServer, fileMapper, remoteFileList);
         }
 
         // Signal success or failure
