@@ -161,8 +161,8 @@ namespace Antik {
             bool endOfDirectory(const Directory &directoryHandle);
             void closeDirectory(Directory &directoryHandle);
 
-            void changePermissions(const FileAttributes &fileAttributes, const FilePermissions &filePermissions);
-            void changeOwnerGroup(const FileAttributes &fileAttributes, const FileOwner &owner, const FileGroup &group);
+            void changePermissions(const std::string &filePath, const FilePermissions &filePermissions);
+            void changeOwnerGroup(const std::string &filePath, const FileOwner &owner, const FileGroup &group);
             void getFileAttributes(const File &fileHandle, FileAttributes &fileAttributes);
             void getFileAttributes(const std::string &filePath, FileAttributes &fileAttributes);
             void setFileAttributes(const std::string &filePath, const FileAttributes &fileAttributes);

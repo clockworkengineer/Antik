@@ -18,7 +18,7 @@
 // three main client authorization methods then it can be used as a base class.
 //
 // Dependencies:   C11++        - Language standard features used.
-//                 libssh       - Used to talk to SSH server (https://www.libssh.org/)
+//                 libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.6.3)
 //
 
 // =================

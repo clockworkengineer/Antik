@@ -13,10 +13,11 @@
 //
 // Class: CSFTP
 // 
-// Description:
+// Description A class to open an SFTP session with a server over SSH and issue SFTP
+// commands on remote files.
 //
 // Dependencies:   C11++        - Language standard features used.
-//                 libssh       - Used to talk to SSH server (https://www.libssh.org/)
+//                 libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.6.3).
 //
 
 // =================
@@ -93,6 +94,10 @@ namespace Antik {
 
         }
 
+        //
+        // Open up connection to SFTP server.
+        //
+        
         void CSFTP::open() {
 
             if (sftp_init(m_sftp) != SSH_OK) {
@@ -107,6 +112,10 @@ namespace Antik {
 
         }
 
+        //
+        // Close connection with SFTP server.
+        //
+        
         void CSFTP::close() {
 
             if (m_sftp) {
@@ -120,7 +129,11 @@ namespace Antik {
 
         }
 
-        Antik::SSH::CSFTP::File CSFTP::openFile(const std::string &fileName, int accessType, int mode) {
+        //
+        // Open a remote file for IO.
+        //
+        
+        CSFTP::File CSFTP::openFile(const std::string &fileName, int accessType, int mode) {
 
             File fileHandle { sftp_open(m_sftp, fileName.c_str(), accessType, mode) };
 
@@ -131,6 +144,10 @@ namespace Antik {
             return (fileHandle);
 
         }
+        
+        //
+        // Read from a remote file.
+        //
 
         size_t CSFTP::readFile(const File &fileHandle, void *readBuffer, size_t bytesToRead) {
 
@@ -143,6 +160,10 @@ namespace Antik {
             return (bytesRead);
 
         }
+        
+        //
+        // Write to a remote file.
+        //
 
         size_t CSFTP::writeFile(const File &fileHandle, void *writeBuffer, size_t bytesToWrite) {
 
@@ -156,6 +177,10 @@ namespace Antik {
 
         }
 
+        //
+        // Close a remote file.
+        //
+        
         void CSFTP::closeFile(File &fileHandle) {
 
             if (sftp_close(fileHandle.release()) == SSH_ERROR) {
@@ -164,7 +189,11 @@ namespace Antik {
 
         }
 
-        Antik::SSH::CSFTP::Directory CSFTP::openDirectory(const std::string &directoryPath) {
+        //
+        // Open a remote directory for reading.
+        //
+        
+        CSFTP::Directory CSFTP::openDirectory(const std::string &directoryPath) {
 
             Directory directory { sftp_opendir(m_sftp, directoryPath.c_str()) };
 
@@ -176,6 +205,10 @@ namespace Antik {
 
         }
 
+        //
+        // Read a files directory entry (return true on success).
+        //
+        
         bool CSFTP::readDirectory(const Directory &directoryHandle, FileAttributes &fileAttributes) {
 
             sftp_attributes file { sftp_readdir(m_sftp, directoryHandle.get()) };
@@ -189,11 +222,19 @@ namespace Antik {
 
         }
 
+        //
+        // Return  true if the end of a directory file has been reached,
+        //
+        
         bool CSFTP::endOfDirectory(const Directory &directoryHandle) {
 
             return (sftp_dir_eof(directoryHandle.get()));
 
         }
+        
+        //
+        // Close remote directory file.
+        //
 
         void CSFTP::closeDirectory(Directory &directoryHandle) {
 
@@ -203,11 +244,19 @@ namespace Antik {
 
         }
 
+        //
+        // Return true if remote file attributes belongs to a directory.
+        //
+        
         bool CSFTP::isADirectory(const FileAttributes &fileAttributes) {
 
             return (fileAttributes->type == SSH_FILEXFER_TYPE_DIRECTORY);
 
         }
+        
+        //
+        // Return true if remote file attributes belongs to a symbolic link.
+        //
 
         bool CSFTP::isASymbolicLink(const FileAttributes &fileAttributes) {
 
@@ -215,26 +264,42 @@ namespace Antik {
 
         }
 
+        //
+        // Return true if remote file attributes belongs to a regular file.
+        //
+        
         bool CSFTP::isARegularFile(const FileAttributes &fileAttributes) {
             return (fileAttributes->type == SSH_FILEXFER_TYPE_REGULAR);
         }
+        
+        //
+        // Change the permissions on a remote file.
+        //
 
-        void CSFTP::changePermissions(const FileAttributes &fileAttributes, const FilePermissions &filePermissions) {
+        void CSFTP::changePermissions(const std::string &filePath, const FilePermissions &filePermissions) {
 
-            if (sftp_chmod(m_sftp, fileAttributes->name, filePermissions) < 0) {
+            if (sftp_chmod(m_sftp, filePath.c_str(), filePermissions) < 0) {
+                throw Exception(*this, __func__);
+            }
+
+        }
+        
+        //
+        // Change to owner/group of a remote file.
+        //
+
+        void CSFTP::changeOwnerGroup(const std::string &filePath, const FileOwner &owner, const FileGroup &group) {
+
+            if (sftp_chown(m_sftp, filePath.c_str(), owner, group) < 0) {
                 throw Exception(*this, __func__);
             }
 
         }
 
-        void CSFTP::changeOwnerGroup(const FileAttributes &fileAttributes, const FileOwner &owner, const FileGroup &group) {
-
-            if (sftp_chown(m_sftp, fileAttributes->name, owner, group) < 0) {
-                throw Exception(*this, __func__);
-            }
-
-        }
-
+        //
+        // Get the attributes of a file from file handle passed in.
+        //
+        
         void CSFTP::getFileAttributes(const File &fileHandle, FileAttributes &fileAttributes) {
 
             sftp_attributes file { sftp_fstat(fileHandle.get()) };
@@ -246,6 +311,10 @@ namespace Antik {
             fileAttributes.reset(file);
 
         }
+        
+        //
+        // Get the attributes of a file from file name passed in.
+        //
         
         void CSFTP::getFileAttributes(const std::string &filePath, FileAttributes &fileAttributes) {
 
@@ -259,6 +328,10 @@ namespace Antik {
 
         }
 
+        //
+        // Set the attributes of a file.
+        //
+  
         void CSFTP::setFileAttributes(const std::string &filePath, const FileAttributes &fileAttributes) {
 
             if (sftp_setstat(m_sftp, filePath.c_str(), fileAttributes.get()) < 0) {
@@ -267,6 +340,10 @@ namespace Antik {
 
         }
 
+        //
+        // Get the attributes of a file that is the target of a symbolic link.
+        //
+ 
         void CSFTP::getLinkAttributes(const std::string &linkPath, FileAttributes &fileAttributes) {
 
             sftp_attributes file = sftp_lstat(m_sftp, linkPath.c_str());
@@ -279,6 +356,10 @@ namespace Antik {
 
         }
 
+        //
+        // Create a remote directory.
+        //
+        
         void CSFTP::createDirectory(const std::string &directoryPath, const FilePermissions &filePermissions) {
 
             if (sftp_mkdir(m_sftp, directoryPath.c_str(), filePermissions)) {
@@ -287,6 +368,10 @@ namespace Antik {
 
         }
 
+        //
+        // Remove a remote directory.
+        //
+        
         void CSFTP::removeDirectory(const std::string &directoryPath) {
 
             if (sftp_rmdir(m_sftp, directoryPath.c_str()) < 0) {
@@ -295,6 +380,10 @@ namespace Antik {
 
         }
 
+        //
+        // Return the file name that is the target of a link.
+        //
+        
         std::string CSFTP::readLink(const std::string &linkPath) {
 
             std::string finalPath;
@@ -312,6 +401,10 @@ namespace Antik {
             return (finalPath);
 
         }
+        
+        //
+        // Create a remote symbolic link.
+        //
 
         void CSFTP::createLink(const std::string &targetPath, const std::string &linkPath) {
 
@@ -320,6 +413,10 @@ namespace Antik {
             }
 
         }
+        
+        //
+        // Remove a remote file.
+        //
 
         void CSFTP::removeLink(const std::string &filePath) {
 
@@ -328,6 +425,10 @@ namespace Antik {
             }
 
         }
+        
+        //
+        // Rename a remote file.
+        //
 
         void CSFTP::renameFile(const std::string &sourceFile, const std::string &destinationFile) {
 
@@ -337,11 +438,19 @@ namespace Antik {
 
         }
 
+        //
+        // Rewind a file to its start position.
+        //
+        
         void CSFTP::rewindFile(const File &fileHandle) {
 
             sftp_rewind(fileHandle.get());
 
         }
+        
+        //
+        // Move to a specified offset within a file.
+        //
 
         void CSFTP::seekFile(const File &fileHandle, uint32_t offset) {
 
@@ -351,6 +460,10 @@ namespace Antik {
 
         }
 
+        //
+        // Move to a specified offset within a file (64 bit). 
+        //
+
         void CSFTP::seekFile64(const File &fileHandle, uint64_t offset) {
 
             if (sftp_seek64(fileHandle.get(), offset) < 0) {
@@ -359,6 +472,10 @@ namespace Antik {
 
         }
 
+        //
+        // Get the current offset within a file.
+        //
+        
         uint32_t CSFTP::currentFilePostion(const File &fileHandle) {
 
             int32_t position = sftp_tell(fileHandle.get());
@@ -371,6 +488,10 @@ namespace Antik {
 
         }
 
+        //
+        // Get the current offset within a file (64 bit).
+        //
+ 
         uint64_t CSFTP::currentFilePostion64(const File &fileHandle) {
 
             int64_t position = sftp_tell64(fileHandle.get());
