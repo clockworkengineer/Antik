@@ -253,6 +253,8 @@ int main(int argc, char** argv) {
     // Catch any errors
     //    
 
+    } catch (CSSHSession::Exception &e) {
+        exitWithError(e.getMessage());
     } catch (CSFTP::Exception &e) {
         exitWithError(e.getMessage());
     } catch (std::runtime_error &e) {

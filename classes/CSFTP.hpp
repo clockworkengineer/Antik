@@ -93,7 +93,7 @@ namespace Antik {
             };
 
             //
-            // Custom deleter for re-mapped libssh data structures.
+            // Custom deleter for re-mapped libssh sftp data structures.
             //
             
             struct FileAttributesDeleter {
@@ -138,10 +138,10 @@ namespace Antik {
             // Re-map some linux types used (possibly make these more abstract at a later date).
             //
             
-            typedef mode_t FilePermissions;     // File permission
-            typedef uid_t FileOwner;            // File owner
-            typedef gid_t FileGroup;            // File group
-            typedef timeval Time;               // Time
+            typedef mode_t FilePermissions;     // File permission (boost::filesystem status for portable way to get)
+            typedef uid_t FileOwner;            // File owner (Linux specific)
+            typedef gid_t FileGroup;            // File group (Linux specific)
+            typedef timeval Time;               // Time (Needs  some work).
 
             // ============
             // CONSTRUCTORS

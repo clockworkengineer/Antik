@@ -162,14 +162,8 @@ namespace Antik {
                 fs::permissions(destinationFile, static_cast<fs::perms> (fileAttributes->permissions));
 
             } catch (const CSFTP::Exception &e) {
-//                if (remoteFile) {
-//                    sftp.closeFile(remoteFile);
-//                }
                 throw;
             } catch (const system_error &e) {
-//                if (remoteFile) {
-//                    sftp.closeFile(remoteFile);
-//                }
                 throw;
             }
 
@@ -214,14 +208,8 @@ namespace Antik {
                 localFile.close();
 
             } catch (const CSFTP::Exception &e) {
-//                if (remoteFile) {
-//                    sftp.closeFile(remoteFile);
-//                }
                 throw;
             } catch (const system_error &e) {
-//                if (remoteFile) {
-//                    sftp.closeFile(remoteFile);
-//                }
                 throw;
             }
 

@@ -149,7 +149,7 @@ namespace Antik {
         //
 
         void CSSHSession::connect() {
-
+          
             if (ssh_connect(m_session) != SSH_OK) {
                 throw Exception(*this, __func__);
             }
@@ -270,9 +270,11 @@ namespace Antik {
 
         Antik::SSH::CSSHSession::Key CSSHSession::getPublicKey() {
             Key serverPublicKey;
-            if (ssh_get_publickey(m_session, &serverPublicKey) < 0) {
+            ssh_key key;
+            if (ssh_get_publickey(m_session, &key) < 0) {
                 return (serverPublicKey);
             }
+            serverPublicKey.reset(key);
             return (serverPublicKey);
         }
 
@@ -280,9 +282,9 @@ namespace Antik {
         // Free a key.
         //
 
-        void CSSHSession::freeKey(Key keyToFree) {
+        void CSSHSession::freeKey(Key &keyToFree) {
 
-            ssh_key_free(keyToFree);
+            ssh_key_free(keyToFree.release());
 
         }
 
@@ -290,11 +292,11 @@ namespace Antik {
         // Generate hash for passed in server public key/
         //
 
-        void CSSHSession::getPublicKeyHash(Antik::SSH::CSSHSession::Key serverPublicKey, std::vector<unsigned char> &keyHash) {
+        void CSSHSession::getPublicKeyHash(Antik::SSH::CSSHSession::Key &serverPublicKey, std::vector<unsigned char> &keyHash) {
 
             unsigned char *hash = NULL;
             size_t hlen;
-            if (ssh_get_publickey_hash(serverPublicKey, SSH_PUBLICKEY_HASH_SHA1, &hash, &hlen) >= 0) {
+            if (ssh_get_publickey_hash(serverPublicKey.get(), SSH_PUBLICKEY_HASH_SHA1, &hash, &hlen) >= 0) {
                 keyHash.assign(&hash[0], &hash[hlen]);
                 ssh_clean_pubkey_hash(&hash);
             } else {
@@ -488,10 +490,20 @@ namespace Antik {
         //
         // Return internal libssh session reference,
         //
+        
         ssh_session CSSHSession::getSession() const {
 
             return m_session;
 
+        }
+
+        //
+        // Set libssh logging verbosity
+        //
+        
+        void CSSHSession::setLogging(int logging) {
+            m_logging = logging;
+            ssh_options_set(m_session, SSH_OPTIONS_LOG_VERBOSITY, &m_logging);
         }
 
     } // namespace CSSH
