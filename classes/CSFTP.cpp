@@ -26,6 +26,7 @@
 
 #include "CSFTP.hpp"
 #include "CSSHSession.hpp"
+#include <iostream>
 
 // ====================
 // CLASS IMPLEMENTATION
@@ -97,7 +98,7 @@ namespace Antik {
         //
         // Open up connection to SFTP server.
         //
-        
+
         void CSFTP::open() {
 
             if (sftp_init(m_sftp) != SSH_OK) {
@@ -115,7 +116,7 @@ namespace Antik {
         //
         // Close connection with SFTP server.
         //
-        
+
         void CSFTP::close() {
 
             if (m_sftp) {
@@ -132,10 +133,10 @@ namespace Antik {
         //
         // Open a remote file for IO.
         //
-        
+
         CSFTP::File CSFTP::openFile(const std::string &fileName, int accessType, int mode) {
 
-            File fileHandle { sftp_open(m_sftp, fileName.c_str(), accessType, mode) };
+            File fileHandle{ sftp_open(m_sftp, fileName.c_str(), accessType, mode)};
 
             if (fileHandle.get() == NULL) {
                 throw Exception(*this, __func__);
@@ -144,7 +145,7 @@ namespace Antik {
             return (fileHandle);
 
         }
-        
+
         //
         // Read from a remote file.
         //
@@ -153,14 +154,14 @@ namespace Antik {
 
             size_t bytesRead = sftp_read(fileHandle.get(), readBuffer, bytesToRead);
 
-            if (bytesRead < 0) {
+            if (static_cast<int>(bytesRead) < 0) {
                 throw Exception(*this, __func__);
             }
 
             return (bytesRead);
 
         }
-        
+
         //
         // Write to a remote file.
         //
@@ -169,7 +170,7 @@ namespace Antik {
 
             size_t bytesWritten = sftp_write(fileHandle.get(), writeBuffer, bytesToWrite);
 
-            if (bytesWritten < 0) {
+            if (static_cast<int>(bytesWritten) < 0) {
                 throw Exception(*this, __func__);
             }
 
@@ -180,7 +181,7 @@ namespace Antik {
         //
         // Close a remote file.
         //
-        
+
         void CSFTP::closeFile(File &fileHandle) {
 
             if (sftp_close(fileHandle.release()) == SSH_ERROR) {
@@ -192,10 +193,10 @@ namespace Antik {
         //
         // Open a remote directory for reading.
         //
-        
+
         CSFTP::Directory CSFTP::openDirectory(const std::string &directoryPath) {
 
-            Directory directory { sftp_opendir(m_sftp, directoryPath.c_str()) };
+            Directory directory{ sftp_opendir(m_sftp, directoryPath.c_str())};
 
             if (directory.get() == NULL) {
                 throw Exception(*this, __func__);
@@ -208,10 +209,10 @@ namespace Antik {
         //
         // Read a files directory entry (return true on success).
         //
-        
+
         bool CSFTP::readDirectory(const Directory &directoryHandle, FileAttributes &fileAttributes) {
 
-            sftp_attributes file { sftp_readdir(m_sftp, directoryHandle.get()) };
+            sftp_attributes file{ sftp_readdir(m_sftp, directoryHandle.get())};
 
             if (file) {
                 fileAttributes.reset(file);
@@ -225,13 +226,13 @@ namespace Antik {
         //
         // Return  true if the end of a directory file has been reached,
         //
-        
+
         bool CSFTP::endOfDirectory(const Directory &directoryHandle) {
 
             return (sftp_dir_eof(directoryHandle.get()));
 
         }
-        
+
         //
         // Close remote directory file.
         //
@@ -247,13 +248,13 @@ namespace Antik {
         //
         // Return true if remote file attributes belongs to a directory.
         //
-        
+
         bool CSFTP::isADirectory(const FileAttributes &fileAttributes) {
 
             return (fileAttributes->type == SSH_FILEXFER_TYPE_DIRECTORY);
 
         }
-        
+
         //
         // Return true if remote file attributes belongs to a symbolic link.
         //
@@ -267,11 +268,11 @@ namespace Antik {
         //
         // Return true if remote file attributes belongs to a regular file.
         //
-        
+
         bool CSFTP::isARegularFile(const FileAttributes &fileAttributes) {
             return (fileAttributes->type == SSH_FILEXFER_TYPE_REGULAR);
         }
-        
+
         //
         // Change the permissions on a remote file.
         //
@@ -283,7 +284,7 @@ namespace Antik {
             }
 
         }
-        
+
         //
         // Change to owner/group of a remote file.
         //
@@ -299,10 +300,10 @@ namespace Antik {
         //
         // Get the attributes of a file from file handle passed in.
         //
-        
+
         void CSFTP::getFileAttributes(const File &fileHandle, FileAttributes &fileAttributes) {
 
-            sftp_attributes file { sftp_fstat(fileHandle.get()) };
+            sftp_attributes file{ sftp_fstat(fileHandle.get())};
 
             if (file == NULL) {
                 throw Exception(*this, __func__);
@@ -311,14 +312,14 @@ namespace Antik {
             fileAttributes.reset(file);
 
         }
-        
+
         //
         // Get the attributes of a file from file name passed in.
         //
-        
+
         void CSFTP::getFileAttributes(const std::string &filePath, FileAttributes &fileAttributes) {
 
-            sftp_attributes file { sftp_stat( m_sftp, filePath.c_str()) };
+            sftp_attributes file{ sftp_stat(m_sftp, filePath.c_str())};
 
             if (file == NULL) {
                 throw Exception(*this, __func__);
@@ -331,7 +332,7 @@ namespace Antik {
         //
         // Set the attributes of a file.
         //
-  
+
         void CSFTP::setFileAttributes(const std::string &filePath, const FileAttributes &fileAttributes) {
 
             if (sftp_setstat(m_sftp, filePath.c_str(), fileAttributes.get()) < 0) {
@@ -343,7 +344,7 @@ namespace Antik {
         //
         // Get the attributes of a file that is the target of a symbolic link.
         //
- 
+
         void CSFTP::getLinkAttributes(const std::string &linkPath, FileAttributes &fileAttributes) {
 
             sftp_attributes file = sftp_lstat(m_sftp, linkPath.c_str());
@@ -359,7 +360,7 @@ namespace Antik {
         //
         // Create a remote directory.
         //
-        
+
         void CSFTP::createDirectory(const std::string &directoryPath, const FilePermissions &filePermissions) {
 
             if (sftp_mkdir(m_sftp, directoryPath.c_str(), filePermissions)) {
@@ -371,7 +372,7 @@ namespace Antik {
         //
         // Remove a remote directory.
         //
-        
+
         void CSFTP::removeDirectory(const std::string &directoryPath) {
 
             if (sftp_rmdir(m_sftp, directoryPath.c_str()) < 0) {
@@ -383,7 +384,7 @@ namespace Antik {
         //
         // Return the file name that is the target of a link.
         //
-        
+
         std::string CSFTP::readLink(const std::string &linkPath) {
 
             std::string finalPath;
@@ -401,7 +402,7 @@ namespace Antik {
             return (finalPath);
 
         }
-        
+
         //
         // Create a remote symbolic link.
         //
@@ -413,7 +414,7 @@ namespace Antik {
             }
 
         }
-        
+
         //
         // Remove a remote file.
         //
@@ -425,7 +426,7 @@ namespace Antik {
             }
 
         }
-        
+
         //
         // Rename a remote file.
         //
@@ -441,13 +442,13 @@ namespace Antik {
         //
         // Rewind a file to its start position.
         //
-        
+
         void CSFTP::rewindFile(const File &fileHandle) {
 
             sftp_rewind(fileHandle.get());
 
         }
-        
+
         //
         // Move to a specified offset within a file.
         //
@@ -475,7 +476,7 @@ namespace Antik {
         //
         // Get the current offset within a file.
         //
-        
+
         uint32_t CSFTP::currentFilePostion(const File &fileHandle) {
 
             int32_t position = sftp_tell(fileHandle.get());
@@ -491,7 +492,7 @@ namespace Antik {
         //
         // Get the current offset within a file (64 bit).
         //
- 
+
         uint64_t CSFTP::currentFilePostion64(const File &fileHandle) {
 
             int64_t position = sftp_tell64(fileHandle.get());
@@ -505,6 +506,10 @@ namespace Antik {
 
         }
 
+        //
+        // Return a canonicalized path for a remote file.
+        //
+        
         std::string CSFTP::canonicalizePath(const std::string &pathName) {
 
             std::string finalPath;
@@ -524,30 +529,42 @@ namespace Antik {
 
         }
         
+        //
+        // Return system information about mounted file system.
+        // 
+
         void CSFTP::getFileSystemInfo(const File &fileHandle, FileSystemInfo &fileSystem) {
 
-            sftp_statvfs_t  file { sftp_fstatvfs(fileHandle.get())};
+            sftp_statvfs_t file{ sftp_fstatvfs(fileHandle.get())};
 
             if (file == NULL) {
                 throw Exception(*this, __func__);
             }
 
             fileSystem.reset(file);
-            
+
         }
+
+        //
+        // Return system information about mounted file system.
+        // 
         
         void CSFTP::getFileSystemInfo(const std::string &fileSystemName, FileSystemInfo &fileSystem) {
 
-            sftp_statvfs_t  file { sftp_statvfs(m_sftp, fileSystemName.c_str())};
+            sftp_statvfs_t file{ sftp_statvfs(m_sftp, fileSystemName.c_str())};
 
             if (file == NULL) {
                 throw Exception(*this, __func__);
             }
 
             fileSystem.reset(file);
-            
+
         }
         
+        //
+        // Change last access/modified time for a file.
+        // 
+
         void CSFTP::changeFileModificationAccessTimes(const std::string &filePath, const Time *newTimeValues) {
 
             if (sftp_utimes(m_sftp, filePath.c_str(), newTimeValues) < 0) {
@@ -556,59 +573,83 @@ namespace Antik {
 
         }
 
+        //
+        // Get server SFTP extension count
+        //
+        
         int CSFTP::getExtensionCount() {
-            
-            return(sftp_extensions_get_count(m_sftp));
+
+            return (sftp_extensions_get_count(m_sftp));
 
         }
 
+        //
+        // Get a given server SFTP extension name
+        //
+        
         std::string CSFTP::getExtensionName(int index) {
-            
+
             std::string extentionName;
             const char *name;
-            
-            name = sftp_extensions_get_name (m_sftp, index); 
-            
-           if (name == NULL) {
+
+            name = sftp_extensions_get_name(m_sftp, index);
+
+            if (name == NULL) {
                 throw Exception(*this, __func__);
             }
 
             extentionName.assign(&name[0], &name[std::strlen(name)]);
-            
-            return(extentionName);
+
+            return (extentionName);
 
         }
+
+        //
+        // Get a given server SFTP extension data
+        //
         
-           std::string CSFTP::getExtensionData(int index) {
-            
+        std::string CSFTP::getExtensionData(int index) {
+
             std::string extensionData;
             const char *data;
-            
-            data = sftp_extensions_get_data (m_sftp, index); 
-            
-           if (data == NULL) {
+
+            data = sftp_extensions_get_data(m_sftp, index);
+
+            if (data == NULL) {
                 throw Exception(*this, __func__);
             }
 
             extensionData.assign(&data[0], &data[std::strlen(data)]);
-            
-            return(extensionData);
+
+            return (extensionData);
 
 
         }
 
+        //
+        // Return true if a specified extension is supported.
+        //
+        
         bool CSFTP::extensionSupported(const std::string &name, const std::string &data) {
-            
-            return(m_sftp, name.c_str(), data.c_str());
-            
+
+            return (m_sftp, name.c_str(), data.c_str());
+
         }
-  
+
+        //
+        // Get SFTP server version.
+        //
+        
         int CSFTP::getServerVersion() const {
 
             return (sftp_server_version(m_sftp));
 
         }
 
+        //
+        // Get SFTP error code for last command.
+        //
+        
         int CSFTP::getErrorCode() const {
 
             int errorCode = sftp_get_error(m_sftp);
@@ -617,14 +658,10 @@ namespace Antik {
 
         }
 
-        sftp_session CSFTP::getSFTP() const {
-            return m_sftp;
-        }
-
-        CSSHSession& CSFTP::getSession() const {
-            return m_session;
-        }
-
+        //
+        // Set/Get IO buffer parameters.
+        //
+        
         std::shared_ptr<char> CSFTP::getIoBuffer() const {
             return m_ioBuffer;
         }
@@ -636,6 +673,18 @@ namespace Antik {
 
         std::uint32_t CSFTP::getIoBufferSize() const {
             return m_ioBufferSize;
+        }
+        
+        //
+        // Get internal libssh ssh/sftp session data structure pointers.
+        //
+        
+        sftp_session CSFTP::getSFTP() const {
+            return m_sftp;
+        }
+
+        CSSHSession& CSFTP::getSession() const {
+            return m_session;
         }
 
     } // namespace SSH

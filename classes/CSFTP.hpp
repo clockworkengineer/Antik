@@ -21,13 +21,17 @@
 #include <string>
 #include <cstring>
 #include <memory>
-//#include <functional>
+
+//
+// Linux
+//
+
+#include <fcntl.h>
 
 //
 // Libssh
 //
 
-#include <fcntl.h>
 #include <libssh/sftp.h>
 
 #include "CSSHSession.hpp"
@@ -81,13 +85,17 @@ namespace Antik {
                 }
 
             private:
-                std::string m_functionName;
-                int m_errorCode{ SSH_OK};
-                std::string m_errorMessage;
-                int m_sftpErrorCode{SSH_FX_OK};
+                std::string m_functionName;     // Current function name
+                int m_errorCode{ SSH_OK};       // SSH error code
+                std::string m_errorMessage;     // SSH error message
+                int m_sftpErrorCode{SSH_FX_OK}; // SFTP error code
 
             };
 
+            //
+            // Custom deleter for re-mapped libssh data structures.
+            //
+            
             struct FileAttributesDeleter {
 
                 void operator()(sftp_attributes fileAttributes) const {
@@ -117,15 +125,23 @@ namespace Antik {
                 }
             };
 
+            //
+            // Encapsulate libssh sftp data in unique pointers.
+            //
+            
             typedef std::unique_ptr<sftp_attributes_struct, FileAttributesDeleter> FileAttributes;
             typedef std::unique_ptr<sftp_file_struct, FileDeleter> File;
             typedef std::unique_ptr<sftp_dir_struct, DirectoryDeleter> Directory;
             typedef std::unique_ptr<sftp_statvfs_struct, FileSystemInfoDeleter> FileSystemInfo;
             
-            typedef mode_t FilePermissions;
-            typedef uid_t FileOwner;
-            typedef gid_t FileGroup;
-            typedef timeval Time;
+            //
+            // Re-map some linux types used (possibly make these more abstract at a later date).
+            //
+            
+            typedef mode_t FilePermissions;     // File permission
+            typedef uid_t FileOwner;            // File owner
+            typedef gid_t FileGroup;            // File group
+            typedef timeval Time;               // Time
 
             // ============
             // CONSTRUCTORS
@@ -147,67 +163,117 @@ namespace Antik {
             // ==============
             // PUBLIC METHODS
             // ==============
+            
+            //
+            // Open/Close SFTP session.
+            //
 
             void open();
             void close();
+            
+            //
+            // File IO
+            //
 
             File openFile(const std::string &fileName, int accessType, int mode);
             size_t readFile(const File &fileHandle, void *readBuffer, size_t bytesToRead);
             size_t writeFile(const File &fileHandle, void *writeBuffer, size_t bytesToWrite);
             void closeFile(File &fileHandle);
+            void rewindFile(const File &fileHandle);
+            void seekFile(const File &fileHandle, uint32_t offset);
+            void seekFile64(const File &fileHandle, uint64_t offset);
+            uint32_t currentFilePostion(const File &fileHandle);
+            uint64_t currentFilePostion64(const File &fileHandle);
+            
+            //
+            // Directory IO
+            //
 
             Directory openDirectory(const std::string &directoryPath);
             bool readDirectory(const Directory &directoryHandle, FileAttributes &fileAttributes);
             bool endOfDirectory(const Directory &directoryHandle);
             void closeDirectory(Directory &directoryHandle);
 
+            //
+            // Set/Get file attributes
+            //
+            
             void changePermissions(const std::string &filePath, const FilePermissions &filePermissions);
             void changeOwnerGroup(const std::string &filePath, const FileOwner &owner, const FileGroup &group);
             void getFileAttributes(const File &fileHandle, FileAttributes &fileAttributes);
             void getFileAttributes(const std::string &filePath, FileAttributes &fileAttributes);
             void setFileAttributes(const std::string &filePath, const FileAttributes &fileAttributes);
             void getLinkAttributes(const std::string &linkPath, FileAttributes &fileAttributes);
+            bool isADirectory(const FileAttributes &fileAttributes);
+            bool isARegularFile(const FileAttributes &fileAttributes);
+            bool isASymbolicLink(const FileAttributes &fileAttributes);        
+            void changeFileModificationAccessTimes(const std::string &filePath, const Time *newTimeValues);
+          
+            //
+            // Create/Remove directories.
+            //
 
             void createDirectory(const std::string &directoryPath, const FilePermissions &filePermissions);
             void removeDirectory(const std::string &directoryPath);
 
-            void createLink(const std::string &targetPath, const std::string &linkPath);
+            //
+            // Create/Remove(delete) symbolic link). Get target file of link.
+            //
+            
+            void createLink(const std::string &targetPath, const std::string &linkPath);         
             void removeLink(const std::string &filePath);
-
             std::string readLink(const std::string &linkPath);
+            
+            //
+            // Rename file
+            //
+            
             void renameFile(const std::string &sourceFile, const std::string &destinationFile);
 
-            void rewindFile(const File &fileHandle);
-            void seekFile(const File &fileHandle, uint32_t offset);
-            void seekFile64(const File &fileHandle, uint64_t offset);
-            uint32_t currentFilePostion(const File &fileHandle);
-            uint64_t currentFilePostion64(const File &fileHandle);
-
             std::string canonicalizePath(const std::string &pathName);
+            
+            //
+            // Get mounted volume information
+            //
             
             void getFileSystemInfo(const File &fileHandle, FileSystemInfo &fileSystem);
             void getFileSystemInfo(const std::string &fileSystemName, FileSystemInfo &fileSystem);
             
-            void changeFileModificationAccessTimes(const std::string &filePath, const Time *newTimeValues);
-
+            //
+            // Get SFTP server version.
+            // 
+            
             int getServerVersion()const;
-
-            bool isADirectory(const FileAttributes &fileAttributes);
-            bool isARegularFile(const FileAttributes &fileAttributes);
-            bool isASymbolicLink(const FileAttributes &fileAttributes);
+            
+            //
+            // Get server extension information.
+            //
             
             int getExtensionCount();
             std::string getExtensionName(int index);
             std::string getExtensionData(int index);
             bool extensionSupported(const std::string &name, const std::string &data);
 
+            //
+            // get last SFTP command error code.
+            //
+            
             int getErrorCode() const;
-
-            sftp_session getSFTP() const;
-            CSSHSession& getSession() const;
+           
+            //
+            // Set IO buffer parameters.
+            //
+            
             std::shared_ptr<char> getIoBuffer() const;
             void setIoBufferSize(std::uint32_t ioBufferSize);
             std::uint32_t getIoBufferSize() const;
+
+            //
+            // Get internal libssh ssh/sftp session data structure pointers.
+            //
+
+            sftp_session getSFTP() const;
+            CSSHSession& getSession() const;
 
             // ================
             // PUBLIC VARIABLES
@@ -241,7 +307,7 @@ namespace Antik {
             sftp_session m_sftp;
             
             std::shared_ptr<char> m_ioBuffer { nullptr };  // IO buffer
-            std::uint32_t m_ioBufferSize     { 64*1024 };  // IO buffer size
+            std::uint32_t m_ioBufferSize     { 32*1024 };  // IO buffer size
 
         };
 
