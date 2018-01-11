@@ -18,6 +18,7 @@
 // Dependencies: 
 // 
 // C11++              : Use of C11++ features.
+// Antik classes      : CSSHSession
 //
 
 // =============
@@ -57,7 +58,13 @@ namespace Antik {
         // PUBLIC FUNCTIONS
         // ================
 
-        bool sshUserAuthorize(CSSHSession &session) {
+        //
+        // Authorize a user(client) with SSH server. It gets a list of methods supported
+        // by the server and tries each one until it passes (returning true).If none are
+        // successful then return false. As a fall back alway try password last.
+        //
+        
+        bool userAuthorize(CSSHSession &session) {
 
             int authorizationMethod;
    
@@ -95,7 +102,13 @@ namespace Antik {
 
         }
 
-        bool sshVerifyKnownServer(CSSHSession &sshSession) {
+        //
+        // Verify whether a server is known to client. If its public key is already known then return
+        // true. If host entry not found or server not known ask user if they accept is public key hash
+        // and write away if they do.
+        //
+        
+        bool verifyKnownServer(CSSHSession &sshSession) {
 
             std::vector<unsigned char> keyHash;
             CSSHSession::Key serverPublicKey;
@@ -107,8 +120,6 @@ namespace Antik {
             serverPublicKey = sshSession.getPublicKey();
 
             sshSession.getPublicKeyHash(serverPublicKey, keyHash);
-
-            sshSession.freeKey(serverPublicKey);
 
             switch (returnCode) {
 

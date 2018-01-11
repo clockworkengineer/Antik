@@ -22,7 +22,8 @@
 // Dependencies: 
 // 
 // C11++              : Use of C11++ features.
-// Boost              : File system, string, iterators.
+// Antik classes      : CSFTP
+// Boost              : File system.
 //
 
 // =============

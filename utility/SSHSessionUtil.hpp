@@ -17,10 +17,6 @@
 // =============
 
 //
-// C++ STL
-//
-
-//
 // Antik Classes
 //
 
@@ -29,8 +25,8 @@
 namespace Antik {
     namespace SSH {
 
-        bool sshUserAuthorize(CSSHSession &session);
-        bool sshVerifyKnownServer(CSSHSession &sshSession);
+        bool userAuthorize(CSSHSession &session);
+        bool verifyKnownServer(CSSHSession &sshSession);
         
     } // namespace SSH
 } // namespace Antik

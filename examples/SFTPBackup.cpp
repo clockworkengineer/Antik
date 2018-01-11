@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
 
         // Verify the server's identity
 
-        if (!sshVerifyKnownServer(sshSession)) {
+        if (!verifyKnownServer(sshSession)) {
             throw std::runtime_error("Unable to verify server.");
         } else {
             std::cout << "Server verified..." << std::endl;
@@ -211,7 +211,7 @@ int main(int argc, char** argv) {
 
         // Authenticate ourselves
 
-        if (!sshUserAuthorize(sshSession)) {
+        if (!userAuthorize(sshSession)) {
             throw std::runtime_error("Server unable to authorize client");
         } else {
             std::cout << "Client authorized..." << std::endl;
