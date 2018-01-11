@@ -15,7 +15,9 @@
 //
 // Description: SFTP utility functions for the Antik class CSFTP.
 // Perform selective and  more powerful operations not available directly through
-// single raw SFTP commands.
+// single raw SFTP commands. These functions are different from the FTP variants
+// in that they use a FileMapper to convert paths and also deal in absolute paths
+// and not the current working directory ( does not exist in SFTP).
 // 
 // Dependencies: 
 // 
@@ -65,6 +67,10 @@ namespace Antik {
         // LOCAL FUNCTIONS
         // ===============
 
+        //
+        // Return true if a given remote files exists.
+        //
+        
         static bool fileExists(CSFTP &sftpServer, const std::string &remotePath) {
 
             try {
@@ -85,10 +91,15 @@ namespace Antik {
 
         }
 
+        //
+        // Break path into its component directories and create path structure on
+        // remote FTP server.
+        //
+        
         static void makeRemotePath(CSFTP &sftpServer, const std::string &remotePath, const CSFTP::FilePermissions &permissions) {
 
             vector<string> pathComponents;
-            fs::path currentPath{ "/"};
+            fs::path currentPath{ string(1, kServerPathSep) };
 
             boost::split(pathComponents, remotePath, boost::is_any_of(string(1, kServerPathSep)));
 
@@ -105,6 +116,10 @@ namespace Antik {
 
         }
 
+        //
+        // Return true if a given remote path is a directory.
+        //
+        
         static bool isDirectory(CSFTP &sftpServer, const std::string &remotePath) {
 
             CSFTP::FileAttributes fileAttributes;
@@ -113,6 +128,10 @@ namespace Antik {
 
         }
 
+        //
+        // Return true if a given remote path is a regular file.
+        //
+        
         static bool isRegularFile(CSFTP &sftpServer, const std::string &remotePath) {
 
             CSFTP::FileAttributes fileAttributes;
@@ -125,6 +144,12 @@ namespace Antik {
         // PUBLIC FUNCTIONS
         // ================
 
+        //
+        // Upload a file from remote SFTP server assigning it the same permissions as the remote file.
+        // SFTP does not directly support file upload/download so this function is not part of the
+        // CSFTP class.
+        //
+        
         void getFile(CSFTP &sftp, const string &sourceFile, const string &destinationFile) {
 
             CSFTP::File remoteFile;
@@ -168,6 +193,13 @@ namespace Antik {
             }
 
         }
+        
+        //
+        // Download a file to remote SFTP server assigning it the same permissions as the local file. 
+        // It will be created with the owner and group of the currently logged in SSH account.
+        // SFTP does not directly support file upload/download so this function is not part of the
+        // CSFTP class.
+        //
 
         void putFile(CSFTP &sftp, const string &sourceFile, const string &destinationFile) {
 
@@ -215,8 +247,12 @@ namespace Antik {
 
 
         }
-
-        void listRemoteRecursive(CSFTP &sftp, const string &directoryPath, vector<std::string> &fileList) {
+        
+        //
+        // Recursively parse a remote server path passed in and pass back a list of directories/files found.
+        //
+        
+        void listRemoteRecursive(CSFTP &sftp, const string &directoryPath, vector<std::string> &remoteFileList) {
 
             try {
 
@@ -232,9 +268,9 @@ namespace Antik {
                         if (filePath.back() == kServerPathSep) filePath.pop_back();
                         filePath += string(1, kServerPathSep) + fileAttributes->name;
                         if (sftp.isADirectory(fileAttributes)) {
-                            listRemoteRecursive(sftp, filePath, fileList);
+                            listRemoteRecursive(sftp, filePath, remoteFileList);
                         }
-                        fileList.push_back(filePath);
+                        remoteFileList.push_back(filePath);
                     }
                 }
 
@@ -252,13 +288,20 @@ namespace Antik {
 
         }
 
-        FileList getFiles(CSFTP &sftpServer, FileMapper &fileMapper, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
+        //
+        // Download all files passed in file list from server to the local directory passed in; recreating any server directory
+        // structure in situ. If safe == true then the file is downloaded to a filename with a postfix then the file is renamed
+        // to its correct value on success. Returns a list of successfully downloaded files and directories created in the local
+        // directory.
+        //
+        
+        FileList getFiles(CSFTP &sftpServer, FileMapper &fileMapper, const FileList &remoteFileList, FileCompletionFn completionFn, bool safe, char postFix) {
 
             FileList successList;
 
             try {
 
-                for (auto remoteFile : fileList) {
+                for (auto remoteFile : remoteFileList) {
 
                     std::string localFilePath{ fileMapper.toLocal(remoteFile)};
 
@@ -308,27 +351,30 @@ namespace Antik {
 
             return (successList);
 
-
-
         }
+        
+        //
+        // Take local directory, file list and upload all files to server;  recreating 
+        // any local directory structure in situ on the server. Returns a list of successfully 
+        // uploaded files and directories created.If safe == true then the file is uploaded to a 
+        // filename with a postfix then the file is renamed to its correct value on success.
+        // 
 
-        FileList putFiles(CSFTP &sftpServer, FileMapper &fileMapper, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
+        FileList putFiles(CSFTP &sftpServer, FileMapper &fileMapper, const FileList &localFileList, FileCompletionFn completionFn, bool safe, char postFix) {
 
             FileList successList;
-            CSFTP::FileAttributes remoteDirectoryAttributes;
-
-            // Create any directories using root path permissions
-
-            sftpServer.getFileAttributes(fileMapper.getRemoteDirectory(), remoteDirectoryAttributes);
-
-            // Determine local path length for creating remote paths.
-
 
             try {
 
+                CSFTP::FileAttributes remoteDirectoryAttributes;
+
+                // Create any directories using root path permissions
+
+                sftpServer.getFileAttributes(fileMapper.getRemoteDirectory(), remoteDirectoryAttributes);
+
                 // Process file/directory list
 
-                for (auto localFile : fileList) {
+                for (auto localFile : localFileList) {
 
                     if (fs::exists(localFile)) {
 

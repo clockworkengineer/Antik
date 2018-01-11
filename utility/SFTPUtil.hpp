@@ -41,20 +41,28 @@
 namespace Antik {
     namespace SSH {
 
+        //
         // Container for list of file paths
+        //
         
         typedef std::vector<std::string> FileList;
         
+        //
         // Server path separator
+        //
         
         const char kServerPathSep { '/' };
         
+        //
         // File transfer complete function
+        //
         
         typedef std::function<void(std::string)> FileCompletionFn;
         
+        //
         // Map files from to/from local/remote directories
-
+        //
+        
         class FileMapper {
         public:
             explicit FileMapper(const std::string &localDirectory, const std::string &remoteDirectory) :
@@ -88,11 +96,17 @@ namespace Antik {
             
         };
         
+        //
         // Get/put files to SFTP server
+        //
         
         FileList getFiles(CSFTP &ftpServer,FileMapper &fileMapper, const FileList &fileList, FileCompletionFn completionFn=nullptr, bool safe = false, char postFix = '~');
         FileList putFiles(CSFTP &ftpServer, FileMapper &fileMapper, const FileList &fileList, FileCompletionFn completionFn=nullptr, bool safe = false, char postFix = '~');
   
+        //
+        // Get/put a single file to SFTP server
+        //
+        
         void getFile(CSFTP &sftp, const std::string &sourceFile, const std::string &destinationFile);
         void putFile(CSFTP &sftp, const std::string &sourceFile, const std::string &destinationFile);
         

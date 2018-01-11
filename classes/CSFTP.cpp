@@ -15,7 +15,7 @@
 // 
 // Description A class to open an SFTP session with a server over SSH and issue SFTP
 // commands on remote files. It is very much a wrapper class for libssh sftp functionality
-// but it does wrap the main data structures in unique pointers with there own custom deleters.
+// but it wraps the main data structures in unique pointers with there own custom deleters.
 // It also tries to hide as much of its implementation using libssh as possible and use/return 
 // C11++ data structures and exceptions.
 //
@@ -29,7 +29,6 @@
 
 #include "CSFTP.hpp"
 #include "CSSHSession.hpp"
-#include <iostream>
 
 // ====================
 // CLASS IMPLEMENTATION

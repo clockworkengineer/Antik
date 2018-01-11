@@ -68,7 +68,7 @@ namespace Antik {
 
             private:
                 std::string m_functionName; // Current function name
-                int m_errorCode; // SSH error code
+                int m_errorCode;            // SSH error code
                 std::string m_errorMessage; // SSH error message
 
             };
