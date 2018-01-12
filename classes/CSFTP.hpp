@@ -23,6 +23,12 @@
 #include <memory>
 
 //
+// Antik Classes
+//
+
+#include "CSSHSession.hpp"
+
+//
 // Linux
 //
 
@@ -33,8 +39,6 @@
 //
 
 #include <libssh/sftp.h>
-
-#include "CSSHSession.hpp"
 
 // =========
 // NAMESPACE
@@ -141,7 +145,7 @@ namespace Antik {
             typedef mode_t FilePermissions;     // File permission (boost::filesystem status for portable way to get)
             typedef uid_t FileOwner;            // File owner (Linux specific)
             typedef gid_t FileGroup;            // File group (Linux specific)
-            typedef timeval Time;               // Time (Needs  some work).
+            typedef timeval Time;               // Time (Needs some work).
 
             // ============
             // CONSTRUCTORS

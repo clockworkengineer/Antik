@@ -72,7 +72,7 @@ namespace Antik {
         // Return true if a given remote files exists.
         //
         
-        static bool fileExists(CSFTP &sftpServer, const std::string &remotePath) {
+        static bool fileExists(CSFTP &sftpServer, const string &remotePath) {
 
             try {
 
@@ -97,7 +97,7 @@ namespace Antik {
         // remote FTP server.
         //
         
-        static void makeRemotePath(CSFTP &sftpServer, const std::string &remotePath, const CSFTP::FilePermissions &permissions) {
+        static void makeRemotePath(CSFTP &sftpServer, const string &remotePath, const CSFTP::FilePermissions &permissions) {
 
             vector<string> pathComponents;
             fs::path currentPath{ string(1, kServerPathSep) };
@@ -121,7 +121,7 @@ namespace Antik {
         // Return true if a given remote path is a directory.
         //
         
-        static bool isDirectory(CSFTP &sftpServer, const std::string &remotePath) {
+        static bool isDirectory(CSFTP &sftpServer, const string &remotePath) {
 
             CSFTP::FileAttributes fileAttributes;
             sftpServer.getFileAttributes(remotePath, fileAttributes);
@@ -133,7 +133,7 @@ namespace Antik {
         // Return true if a given remote path is a regular file.
         //
         
-        static bool isRegularFile(CSFTP &sftpServer, const std::string &remotePath) {
+        static bool isRegularFile(CSFTP &sftpServer, const string &remotePath) {
 
             CSFTP::FileAttributes fileAttributes;
             sftpServer.getFileAttributes(remotePath, fileAttributes);
@@ -166,7 +166,7 @@ namespace Antik {
 
                 localFile.open(destinationFile, ios_base::out | ios_base::binary | ios_base::trunc);
                 if (!localFile) {
-                    throw system_error(errno, std::system_category());
+                    throw system_error(errno, system_category());
                 }
 
                 for (;;) {
@@ -214,7 +214,7 @@ namespace Antik {
 
                 localFile.open(sourceFile, ios_base::in | ios_base::binary);
                 if (!localFile) {
-                    throw system_error(errno, std::system_category());
+                    throw system_error(errno, system_category());
                 }
 
                 fileStatus = fs::status(sourceFile);
@@ -253,19 +253,19 @@ namespace Antik {
         // Recursively parse a remote server path passed in and pass back a list of directories/files found.
         //
         
-        void listRemoteRecursive(CSFTP &sftp, const string &directoryPath, vector<std::string> &remoteFileList) {
+        void listRemoteRecursive(CSFTP &sftp, const string &directoryPath, vector<string> &remoteFileList) {
 
             try {
 
                 CSFTP::Directory directoryHandle;
                 CSFTP::FileAttributes fileAttributes;
-                std::string filePath;
+                string filePath;
 
                 directoryHandle = sftp.openDirectory(directoryPath);
 
                 while (sftp.readDirectory(directoryHandle, fileAttributes)) {
                     if ((static_cast<string> (fileAttributes->name) != ".") && (static_cast<string> (fileAttributes->name) != "..")) {
-                        std::string filePath{ directoryPath};
+                        string filePath{ directoryPath};
                         if (filePath.back() == kServerPathSep) filePath.pop_back();
                         filePath += string(1, kServerPathSep) + fileAttributes->name;
                         if (sftp.isADirectory(fileAttributes)) {
@@ -304,7 +304,7 @@ namespace Antik {
 
                 for (auto remoteFile : remoteFileList) {
 
-                    std::string localFilePath{ fileMapper.toLocal(remoteFile)};
+                    string localFilePath{ fileMapper.toLocal(remoteFile)};
 
                     if (isRegularFile(sftpServer, remoteFile)) {
 
@@ -343,11 +343,11 @@ namespace Antik {
                 // On exception report and return with files that where successfully downloaded.
 
             } catch (const CSFTP::Exception &e) {
-                std::cerr << e.getMessage() << std::endl;
+                cerr << e.getMessage() << endl;
             } catch (const boost::filesystem::filesystem_error & e) {
-                std::cerr << string("BOOST file system exception occured: [") + e.what() + "]" << std::endl;
+                cerr << string("BOOST file system exception occured: [") + e.what() + "]" << endl;
             } catch (const exception &e) {
-                std::cerr << string("Standard exception occured: [") + e.what() + "]" << std::endl;
+                cerr << string("Standard exception occured: [") + e.what() + "]" << endl;
             }
 
             return (successList);
@@ -431,11 +431,11 @@ namespace Antik {
            // On exception report and return with files that where successfully uploaded.
 
             } catch (const CSFTP::Exception &e) {
-                std::cerr << e.getMessage() << std::endl;
+                cerr << e.getMessage() << endl;
             } catch (const boost::filesystem::filesystem_error & e) {
-                std::cerr << string("BOOST file system exception occured: [") + e.what() + "]" << std::endl;
+                cerr << string("BOOST file system exception occured: [") + e.what() + "]" << endl;
             } catch (const exception &e) {
-                std::cerr << string("Standard exception occured: [") + e.what() + "]" << std::endl;
+                cerr << string("Standard exception occured: [") + e.what() + "]" << endl;
             }
 
             return (successList);

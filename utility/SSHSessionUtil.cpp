@@ -110,9 +110,9 @@ namespace Antik {
         
         bool verifyKnownServer(CSSHSession &sshSession) {
 
-            std::vector<unsigned char> keyHash;
+            vector<unsigned char> keyHash;
             CSSHSession::Key serverPublicKey;
-            std::string reply;
+            string reply;
             int returnCode;
 
             returnCode = sshSession.isServerKnown();
@@ -127,25 +127,25 @@ namespace Antik {
                     break; /* ok */
 
                 case SSH_SERVER_KNOWN_CHANGED:
-                    std::cerr << "Host key for server changed: it is now:\n" << sshSession.convertKeyHashToHex(keyHash) << std::endl;
-                    std::cerr << "For security reasons, connection will be stopped" << std::endl;
+                    cerr << "Host key for server changed: it is now:\n" << sshSession.convertKeyHashToHex(keyHash) << endl;
+                    cerr << "For security reasons, connection will be stopped" << endl;
                     return (false);
 
                 case SSH_SERVER_FOUND_OTHER:
-                    std::cerr << "The host key for this server was not found but an other type of key exists.\n";
-                    std::cerr << "An attacker might change the default server key to confuse your client into ";
-                    std::cerr << "thinking the key does not exist" << std::endl;
+                    cerr << "The host key for this server was not found but an other type of key exists.\n";
+                    cerr << "An attacker might change the default server key to confuse your client into ";
+                    cerr << "thinking the key does not exist" << endl;
                     return (false);
 
                 case SSH_SERVER_FILE_NOT_FOUND:
-                    std::cerr << "Could not find known host file.\n";
-                    std::cerr << "If you accept the host key here, the file will be automatically created." << std::endl;
+                    cerr << "Could not find known host file.\n";
+                    cerr << "If you accept the host key here, the file will be automatically created." << endl;
                     /* fallback to SSH_SERVER_NOT_KNOWN behavior */
 
                 case SSH_SERVER_NOT_KNOWN:
-                    std::cerr << "The server is unknown. Do you trust the host key?\n";
-                    std::cerr << "Public key hash: " << sshSession.convertKeyHashToHex(keyHash) << std::endl;
-                    std::cin >> reply;
+                    cerr << "The server is unknown. Do you trust the host key?\n";
+                    cerr << "Public key hash: " << sshSession.convertKeyHashToHex(keyHash) << endl;
+                    cin >> reply;
                     if (reply != "yes") {
                         return (false);
                     }
@@ -153,7 +153,7 @@ namespace Antik {
                     break;
 
                 case SSH_SERVER_ERROR:
-                    std::cerr << "Error: " << sshSession.getError() << std::endl;
+                    cerr << "Error: " << sshSession.getError() << endl;
                     return (false);
 
             }
