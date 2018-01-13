@@ -25,6 +25,7 @@
 //
 
 #include <libssh/libssh.h>
+#include <libssh/callbacks.h> // Threading intialisation
 
 // =========
 // NAMESPACE
@@ -111,6 +112,12 @@ namespace Antik {
             // PUBLIC METHODS
             // ==============
 
+            //
+            // Initialisation
+            //
+            
+            static void initialise();
+            
             //
             // Set session details
             //

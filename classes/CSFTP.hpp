@@ -315,7 +315,7 @@ namespace Antik {
 
         };
 
-    } // namespace FTP
+    } // namespace SSH
 } // namespace Antik
 
 #endif /* CSFTP_HPP */
