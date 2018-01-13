@@ -16,6 +16,7 @@
 // Description:
 //
 // Dependencies:   C11++        - Language standard features used.
+//                 libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.6.3)
 //
 
 // =================
@@ -181,9 +182,9 @@ namespace Antik {
         }
 
         void CSSHChannel::setEnvironmentVariable(const std::string &variable, const std::string &value) {
-          int returnCode=ssh_channel_request_env(m_channel, variable.c_str(), value.c_str());
-            if (returnCode==SSH_ERROR) {
-                 throw Exception(*this, __func__);             
+            int returnCode = ssh_channel_request_env(m_channel, variable.c_str(), value.c_str());
+            if (returnCode == SSH_ERROR) {
+                throw Exception(*this, __func__);
             }
         }
           

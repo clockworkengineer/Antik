@@ -59,11 +59,11 @@ namespace Antik {
                 {
                 }
 
-                int getCode() {
+                int getCode() const {
                     return m_errorCode;
                 }
 
-                std::string getMessage() {
+                std::string getMessage() const {
                     return static_cast<std::string> ("CSSHSession Failure: (") + m_functionName + ") [" + m_errorMessage + "]";
                 }
 

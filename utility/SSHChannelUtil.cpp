@@ -33,6 +33,7 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
+#include <system_error>
 
 // POSIX terminal control definitions
 
@@ -61,30 +62,46 @@ namespace Antik {
         // LOCAL FUNCTIONS
         // ===============
 
-        static void readShellInput(CSSHChannel &channel, std::atomic<bool> &stopShellInput) {
+        static void readShellInput(CSSHChannel &channel, std::atomic<bool> &stopShellInput, std::exception_ptr &thrownException) {
 
-            struct termios terminalSettings, savedTerminalSettings;
+            try {
 
-            tcgetattr(0, &terminalSettings);
-            savedTerminalSettings = terminalSettings;
-            cfmakeraw(&terminalSettings);
-            terminalSettings.c_cc[VMIN] = 0;
-            terminalSettings.c_cc[VTIME] = 0;
-            tcsetattr(0, TCSANOW, &terminalSettings);
+                struct termios terminalSettings, savedTerminalSettings;
 
-            while (!stopShellInput) {
-                char singleChar = std::getchar();
-                if (singleChar != EOF) {
-                    char ioBuffer[1]{singleChar};
-                    channel.write(ioBuffer, 1);
+                if (tcgetattr(0, &terminalSettings) == -1) {
+                    throw system_error(errno, system_category(),  __func__);
                 }
-                std::this_thread::sleep_for(std::chrono::microseconds(5));
+
+                savedTerminalSettings = terminalSettings;
+
+                cfmakeraw(&terminalSettings);
+                terminalSettings.c_cc[VMIN] = 0;
+                terminalSettings.c_cc[VTIME] = 0;
+
+                if (tcsetattr(0, TCSANOW, &terminalSettings) == -1) {
+                    throw system_error(errno, system_category(), __func__);
+                }
+
+                while (!stopShellInput) {
+                    char singleChar = std::getchar();
+                    if (singleChar != EOF) {
+                        char ioBuffer[1]{singleChar};
+                        channel.write(ioBuffer, 1);
+                    } else {
+                        std::this_thread::sleep_for(std::chrono::microseconds(5));
+                    }
+                }
+
+                if (tcsetattr(0, TCSANOW, &savedTerminalSettings) == -1) {
+                    throw system_error(errno, system_category(), __func__);
+                }
+
+            } catch (...) {
+                thrownException = std::current_exception();
             }
-
-            tcsetattr(0, TCSANOW, &savedTerminalSettings);
-
+            
         }
-              
+
         // ================
         // PUBLIC FUNCTIONS
         // ================
@@ -95,41 +112,50 @@ namespace Antik {
             char *ioBuffer = channel.getIoBuffer().get();
             uint32_t ioBufferSize = channel.getIoBufferSize();
             std::atomic<bool> stopShellInput{ false};
+            std::exception_ptr thrownException {nullptr};
 
             channel.requestTerminal();
             channel.requestTerminalSize(columns, rows);
             channel.requestShell();
 
-            std::thread shellInputThread{ readShellInput, std::ref(channel), std::ref(stopShellInput)};
+            std::thread shellInputThread{ readShellInput, std::ref(channel), std::ref(stopShellInput), std::ref(thrownException)};
 
             while (channel.isOpen() && !channel.isEndOfFile()) {
-                bytesRead = channel.read(ioBuffer, ioBufferSize, 0);
+                bytesRead = channel.readNonBlocking(ioBuffer, ioBufferSize, 0);
                 if (bytesRead > 0) {
                     std::cout.write(ioBuffer, bytesRead);
                     std::cout.flush();
+                }
+                if (thrownException) {
+                    break;    
                 }
             }
 
             stopShellInput = true;
 
             shellInputThread.join();
+            
+            if (thrownException) {
+                std::rethrow_exception(thrownException);
+            }
 
         }
 
         void executeCommand(CSSHChannel &channel, const std::string &command) {
 
-            int nbytes;
+            int bytesRead;
             char *ioBuffer = channel.getIoBuffer().get();
             uint32_t ioBufferSize = channel.getIoBufferSize();
 
             channel.execute(command.c_str());
 
-            while ((nbytes = channel.read(ioBuffer, ioBufferSize)) > 0) {
-                std::cout.write(ioBuffer, nbytes);
+            while ((bytesRead = channel.read(ioBuffer, ioBufferSize)) > 0) {
+                std::cout.write(ioBuffer, bytesRead);
             }
             std::cout << std::flush;
-            while ((nbytes = channel.read(ioBuffer, ioBufferSize, true)) > 0) {
-                std::cerr.write(ioBuffer, nbytes);
+
+            while ((bytesRead = channel.read(ioBuffer, ioBufferSize, true)) > 0) {
+                std::cerr.write(ioBuffer, bytesRead);
             }
 
         }

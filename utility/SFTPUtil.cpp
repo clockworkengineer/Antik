@@ -38,7 +38,7 @@
 #include <system_error>
 
 //
-// FTP utility definitions
+// SFTP utility definitions
 //
 
 #include "SFTPUtil.hpp"

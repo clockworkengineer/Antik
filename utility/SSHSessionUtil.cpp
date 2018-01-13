@@ -32,7 +32,7 @@
 #include <iostream>
 
 //
-// FTP utility definitions
+// SSH Session utility definitions
 //
 
 #include "SSHSessionUtil.hpp"
