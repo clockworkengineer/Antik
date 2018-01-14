@@ -67,6 +67,7 @@ namespace Antik {
             try {
 
                 struct termios terminalSettings, savedTerminalSettings;
+                std::vector<char> ioBuffer;
 
                 if (tcgetattr(0, &terminalSettings) == -1) {
                     throw system_error(errno, system_category(),  __func__);
@@ -83,13 +84,16 @@ namespace Antik {
                 }
 
                 while (!stopShellInput) {
-                    char singleChar = std::getchar();
-                    if (singleChar != EOF) {
-                        char ioBuffer[1]{singleChar};
-                        channel.write(ioBuffer, 1);
+                    
+                    for (char singleChar; (singleChar = std::getchar()) != EOF; ioBuffer.push_back(singleChar));
+
+                    if (!ioBuffer.empty()) {
+                        channel.write(&ioBuffer[0], ioBuffer.size());
+                        ioBuffer.clear();
                     } else {
                         std::this_thread::sleep_for(std::chrono::microseconds(5));
                     }
+                    
                 }
 
                 if (tcsetattr(0, TCSANOW, &savedTerminalSettings) == -1) {
@@ -121,14 +125,16 @@ namespace Antik {
             std::thread shellInputThread{ readShellInput, std::ref(channel), std::ref(stopShellInput), std::ref(thrownException)};
 
             while (channel.isOpen() && !channel.isEndOfFile()) {
-                bytesRead = channel.readNonBlocking(ioBuffer, ioBufferSize, 0);
-                if (bytesRead > 0) {
+                
+                if ((bytesRead = channel.read(ioBuffer, ioBufferSize, 0)) > 0) {
                     std::cout.write(ioBuffer, bytesRead);
                     std::cout.flush();
                 }
+                
                 if (thrownException) {
                     break;    
                 }
+                
             }
 
             stopShellInput = true;
