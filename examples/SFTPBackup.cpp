@@ -170,10 +170,11 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
 int main(int argc, char** argv) {
 
+    CSSHSession sshSession;
+
     try {
 
         ParamArgData argData;
-        CSSHSession sshSession;
         FileList locaFileList;
         FileList filesBackedUp;
  
@@ -254,10 +255,13 @@ int main(int argc, char** argv) {
     //    
 
     } catch (CSSHSession::Exception &e) {
+        sftpServer.close();
         exitWithError(e.getMessage());
     } catch (CSFTP::Exception &e) {
+        sftpServer.close();
         exitWithError(e.getMessage());
     } catch (std::runtime_error &e) {
+        sftpServer.close();
         exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
     }
 

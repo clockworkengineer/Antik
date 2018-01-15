@@ -268,7 +268,7 @@ namespace Antik {
             // Set IO buffer parameters.
             //
             
-            std::shared_ptr<char> getIoBuffer() const;
+            std::shared_ptr<char> getIoBuffer();
             void setIoBufferSize(std::uint32_t ioBufferSize);
             std::uint32_t getIoBufferSize() const;
 

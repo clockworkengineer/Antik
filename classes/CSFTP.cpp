@@ -93,8 +93,6 @@ namespace Antik {
 
         CSFTP::~CSFTP() {
 
-            close();
-
         }
 
         //
@@ -108,10 +106,6 @@ namespace Antik {
                 m_sftp = NULL;
                 throw Exception(*this, __func__);
             }
-
-            // Allocate IO Buffer
-
-            m_ioBuffer.reset(new char[m_ioBufferSize]);
 
         }
 
@@ -663,8 +657,11 @@ namespace Antik {
         //
         // Set/Get IO buffer parameters.
         //
-        
-        std::shared_ptr<char> CSFTP::getIoBuffer() const {
+
+        std::shared_ptr<char> CSFTP::getIoBuffer() {
+            if (!m_ioBuffer) {
+                setIoBufferSize(m_ioBufferSize);
+            }
             return m_ioBuffer;
         }
 

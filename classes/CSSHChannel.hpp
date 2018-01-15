@@ -98,6 +98,8 @@ namespace Antik {
             
             void close();
             
+            void free(); 
+            
             void sendEndOfFile();
             
             void execute(const std::string &commandToRun);
@@ -123,11 +125,13 @@ namespace Antik {
             
             int getExitStatus();
             
+            void openForward(const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort);
+            
             //
             // Set IO buffer parameters.
             //
             
-            std::shared_ptr<char> getIoBuffer() const;
+            std::shared_ptr<char> getIoBuffer();
             void setIoBufferSize(std::uint32_t ioBufferSize);
             std::uint32_t getIoBufferSize() const;
             
@@ -164,7 +168,7 @@ namespace Antik {
   
             CSSHSession &m_session;
                      
-            ssh_channel m_channel;
+            ssh_channel m_channel { NULL};
             
             std::shared_ptr<char> m_ioBuffer { nullptr };  // IO buffer
             std::uint32_t m_ioBufferSize     { 32*1024 };  // IO buffer size

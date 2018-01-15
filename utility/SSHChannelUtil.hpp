@@ -17,6 +17,14 @@
 // =============
 
 //
+// C++ STL
+//
+
+#include <iostream>
+#include <thread>
+#include <functional>
+
+//
 // Antik Classes
 //
 
@@ -25,9 +33,12 @@
 namespace Antik {
     namespace SSH {
 
-        int interactiveShell(CSSHChannel &channel, int columns, int rows);
-        void executeCommand(CSSHChannel &channel, const std::string &command);
+        typedef std::function<void (void *, uint32_t)>  ChannelWriteCallBack;
         
+        void interactiveShell(CSSHChannel &channel, int columns, int rows);
+        void executeCommand(CSSHChannel &channel, const std::string &command);
+        std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, ChannelWriteCallBack writeFn);
+       
     } // namespace SSH
 } // namespace Antik
 

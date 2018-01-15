@@ -70,7 +70,7 @@ namespace Antik {
                 std::vector<char> ioBuffer;
 
                 if (tcgetattr(0, &terminalSettings) == -1) {
-                    throw system_error(errno, system_category(),  __func__);
+                    throw system_error(errno, system_category(), __func__);
                 }
 
                 savedTerminalSettings = terminalSettings;
@@ -84,7 +84,7 @@ namespace Antik {
                 }
 
                 while (!stopShellInput) {
-                    
+
                     for (char singleChar; (singleChar = std::getchar()) != EOF; ioBuffer.push_back(singleChar));
 
                     if (!ioBuffer.empty()) {
@@ -93,7 +93,7 @@ namespace Antik {
                     } else {
                         std::this_thread::sleep_for(std::chrono::microseconds(5));
                     }
-                    
+
                 }
 
                 if (tcsetattr(0, TCSANOW, &savedTerminalSettings) == -1) {
@@ -103,20 +103,32 @@ namespace Antik {
             } catch (...) {
                 thrownException = std::current_exception();
             }
-            
+
         }
 
+        static void readChannelThread(CSSHChannel &forwardingChannel, ChannelWriteCallBack writeFn) {
+
+            uint32_t bytesRead;
+
+            while (forwardingChannel.isOpen() && !forwardingChannel.isEndOfFile()) {
+                while ((bytesRead = forwardingChannel.readNonBlocking(forwardingChannel.getIoBuffer().get(), forwardingChannel.getIoBufferSize(), false)) > 0) {
+                    writeFn(forwardingChannel.getIoBuffer().get(), bytesRead);
+                }
+                std::this_thread::sleep_for(std::chrono::microseconds(5));
+            }
+
+        }
         // ================
         // PUBLIC FUNCTIONS
         // ================
 
-        int interactiveShell(CSSHChannel &channel, int columns, int rows) {
+        void interactiveShell(CSSHChannel &channel, int columns, int rows) {
 
             int bytesRead;
             char *ioBuffer = channel.getIoBuffer().get();
             uint32_t ioBufferSize = channel.getIoBufferSize();
             std::atomic<bool> stopShellInput{ false};
-            std::exception_ptr thrownException {nullptr};
+            std::exception_ptr thrownException{nullptr};
 
             channel.requestTerminal();
             channel.requestTerminalSize(columns, rows);
@@ -125,22 +137,22 @@ namespace Antik {
             std::thread shellInputThread{ readShellInput, std::ref(channel), std::ref(stopShellInput), std::ref(thrownException)};
 
             while (channel.isOpen() && !channel.isEndOfFile()) {
-                
+
                 if ((bytesRead = channel.read(ioBuffer, ioBufferSize, 0)) > 0) {
                     std::cout.write(ioBuffer, bytesRead);
                     std::cout.flush();
                 }
-                
+
                 if (thrownException) {
-                    break;    
+                    break;
                 }
-                
+
             }
 
             stopShellInput = true;
 
             shellInputThread.join();
-            
+
             if (thrownException) {
                 std::rethrow_exception(thrownException);
             }
@@ -166,6 +178,15 @@ namespace Antik {
 
         }
 
+        std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, ChannelWriteCallBack writeFn) {
+
+            forwardingChannel.openForward(remoteHost, remotePort, localHost, localPort);
+
+            std::thread channelReadThread{ readChannelThread, std::ref(forwardingChannel), writeFn};
+
+            return (channelReadThread);
+
+        }
     } // namespace SSH
 
 } // namespace Antik
