@@ -165,19 +165,71 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
 }
 
+//
+// Perform restore of backed up  files.
+//
+
+void performRestore(CSSHSession &sshSession, ParamArgData argData) {
+
+    CSFTP sftpServer{ sshSession};
+
+    try {
+
+        FileMapper fileMapper{ argData.localDirectory, argData.remoteDirectory};
+        FileList remoteFileList;
+        FileList restoredFiles;
+
+        // Open SFTP session
+
+        sftpServer.open();
+
+        // Get remote directory file list
+
+        listRemoteRecursive(sftpServer, argData.remoteDirectory, remoteFileList);
+
+        // Restore files from  SFTP Server
+
+        if (!remoteFileList.empty()) {
+            restoredFiles = getFiles(sftpServer, fileMapper, remoteFileList);
+        }
+
+        // Signal success or failure
+
+        if (!restoredFiles.empty()) {
+            for (auto file : restoredFiles) {
+                std::cout << "Successfully restored [" << file << "]" << std::endl;
+            }
+        } else {
+            std::cout << "Restore failed." << std::endl;
+        }
+
+        // Close SFTP session 
+
+        sftpServer.close();
+
+    //
+    // Catch any errors
+    //    
+
+    } catch (...) {
+        sftpServer.close();
+        throw;
+    }
+    
+}
+
 // ============================
 // ===== MAIN ENTRY POint =====
 // ============================
 
 int main(int argc, char** argv) {
 
+    CSSHSession sshSession;
+       
     try {
 
         ParamArgData argData;
-        CSSHSession sshSession;
-        FileList  remoteFileList;
-        FileList restoredFiles;
-
+  
         // Read in command line parameters and process
 
         procCmdLine(argc, argv, argData);
@@ -218,36 +270,12 @@ int main(int argc, char** argv) {
             std::cout << "Client authorized..." << std::endl;
         }
 
-       // Create, open SFTP session and initialise file mapper
+        // Perform file restore
         
-        CSFTP sftpServer { sshSession };
-        FileMapper fileMapper{ argData.localDirectory, argData.remoteDirectory};
+        performRestore(sshSession, argData);
         
-        sftpServer.open();
-
-        // Get remote directory file list
-        
-        listRemoteRecursive(sftpServer, argData.remoteDirectory, remoteFileList);
-        
-        // Restore files from  SFTP Server
-
-        if (!remoteFileList.empty()) {
-            restoredFiles = getFiles(sftpServer, fileMapper, remoteFileList);
-        }
-
-        // Signal success or failure
-        
-        if (!restoredFiles.empty()) {
-            for (auto file : restoredFiles) {
-                std::cout << "Successfully restored [" << file << "]" << std::endl;
-            }
-        } else {
-            std::cout << "Restore failed."<< std::endl;
-        }
-
-        // Disconnect 
-        
-        sftpServer.close();
+        // Disconnect session
+ 
         sshSession.disconnect();
 
     //

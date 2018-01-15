@@ -164,6 +164,59 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
 }
 
+//
+// Perform backup of files.
+//
+
+void performBackup(CSSHSession &sshSession, ParamArgData argData) {
+
+    CSFTP sftpServer{ sshSession};
+  
+    try {
+
+        FileMapper fileMapper{ argData.localDirectory, argData.remoteDirectory};
+        FileList locaFileList;
+        FileList filesBackedUp;
+    
+        // Open SFTP session
+        
+        sftpServer.open();
+        
+        // Get local directory file list
+        
+        Antik::FTP::listLocalRecursive(argData.localDirectory, locaFileList);
+        
+        // Copy file list to SFTP Server
+
+        if (!locaFileList.empty()) {
+            filesBackedUp = putFiles(sftpServer, fileMapper, locaFileList);
+        }
+
+        // Signal success or failure
+        
+        if (!filesBackedUp.empty()) {
+            for (auto file : filesBackedUp) {
+                std::cout << "Sucessfully backed up [" << file << "]" << std::endl;
+            }
+        } else {
+            std::cout << "Backup failed."<< std::endl;
+        }
+
+        // Disconnect session
+        
+        sftpServer.close();
+
+    //
+    // Catch any errors
+    //    
+
+    } catch (...) {
+        sftpServer.close();
+        throw;    
+    }
+    
+}
+
 // ============================
 // ===== MAIN ENTRY POint =====
 // ============================
@@ -171,12 +224,10 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 int main(int argc, char** argv) {
 
     CSSHSession sshSession;
-
+    
     try {
 
         ParamArgData argData;
-        FileList locaFileList;
-        FileList filesBackedUp;
  
         // Read in command line parameters and process
 
@@ -217,37 +268,13 @@ int main(int argc, char** argv) {
         } else {
             std::cout << "Client authorized..." << std::endl;
         }
+        
+        // Perform backup
 
-        // Create, open SFTP session and initialise file mapper
+        performBackup(sshSession, argData);
         
-        CSFTP sftpServer { sshSession };
-        FileMapper fileMapper{ argData.localDirectory, argData.remoteDirectory};
+        //Disconnect session
         
-        sftpServer.open();
-        
-        // Get local directory file list
-        
-        Antik::FTP::listLocalRecursive(argData.localDirectory, locaFileList);
-        
-        // Copy file list to SFTP Server
-
-        if (!locaFileList.empty()) {
-            filesBackedUp = putFiles(sftpServer, fileMapper, locaFileList);
-        }
-
-        // Signal success or failure
-        
-        if (!filesBackedUp.empty()) {
-            for (auto file : filesBackedUp) {
-                std::cout << "Sucessfully backed up [" << file << "]" << std::endl;
-            }
-        } else {
-            std::cout << "Backup failed."<< std::endl;
-        }
-
-        // Disconnect 
-        
-        sftpServer.close();
         sshSession.disconnect();
 
     //
@@ -255,13 +282,10 @@ int main(int argc, char** argv) {
     //    
 
     } catch (CSSHSession::Exception &e) {
-        sftpServer.close();
         exitWithError(e.getMessage());
     } catch (CSFTP::Exception &e) {
-        sftpServer.close();
         exitWithError(e.getMessage());
     } catch (std::runtime_error &e) {
-        sftpServer.close();
         exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
     }
 
