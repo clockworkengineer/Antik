@@ -19,8 +19,11 @@
 // It also tries to hide as much of its implementation using libssh as possible and use/return 
 // C11++ data structures and exceptions.
 //
-// Dependencies:   C11++        - Language standard features used.
-//                 libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.6.3).
+// Dependencies:   
+//
+// C11++        - Language standard features used.
+// libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.6.3)
+//
 //
 
 // =================
@@ -80,10 +83,10 @@ namespace Antik {
         CSFTP::CSFTP(CSSHSession &session) : m_session{session}
         {
 
+            assert(session.isConnected() && session.isAuthorized() );
+  
             m_sftp = sftp_new(m_session.getSession());
-            if (m_sftp == NULL) {
-                throw Exception(*this, __func__);
-            }
+            assert(m_sftp != NULL);
 
         }
 

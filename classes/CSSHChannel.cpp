@@ -15,8 +15,10 @@
 // 
 // Description:
 //
-// Dependencies:   C11++        - Language standard features used.
-//                 libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.6.3)
+// Dependencies:   
+//
+// C11++        - Language standard features used.
+// libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.6.3)
 //
 
 // =================
@@ -75,9 +77,14 @@ namespace Antik {
         CSSHChannel::CSSHChannel(CSSHSession &session) : m_session{session}
         {
             m_channel = ssh_channel_new(m_session.getSession());
-            if (m_channel == NULL) {
-                throw Exception(*this, __func__);
-            }
+            assert(m_channel != NULL);
+
+        }
+        
+        CSSHChannel::CSSHChannel(CSSHSession &session, ssh_channel channel) : m_session{session}, m_channel {channel}
+        {
+           
+            assert(m_channel != NULL);
 
         }
 
@@ -99,20 +106,11 @@ namespace Antik {
 
         void CSSHChannel::close() {
             if (m_channel) {
-                if (isOpen()) {
-                    ssh_channel_close(m_channel);
-                }
-            }
-        }
-
-        void CSSHChannel::free() {
-
-            if (m_channel) {
-                close();
+                ssh_channel_close(m_channel);
                 ssh_channel_free(m_channel);
                 m_channel = NULL;
             }
-
+            m_ioBuffer.reset();
         }
 
         void CSSHChannel::sendEndOfFile() {
@@ -126,24 +124,24 @@ namespace Antik {
         }
 
         int CSSHChannel::read(void *buffer, uint32_t bytesToRead, bool isStdErr) {
-            int bytesRead = ssh_channel_read(m_channel, buffer, bytesToRead, isStdErr);
-            if (bytesRead == SSH_ERROR) {
+            uint32_t bytesRead = ssh_channel_read(m_channel, buffer, bytesToRead, isStdErr);
+            if (static_cast<int>(bytesRead) == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
             return (bytesRead);
         }
 
         int CSSHChannel::readNonBlocking(void *buffer, uint32_t bytesToRead, bool isStdErr) {
-            int bytesRead = ssh_channel_read_nonblocking(m_channel, buffer, bytesToRead, isStdErr);
-            if (bytesRead == SSH_ERROR) {
+            uint32_t bytesRead = ssh_channel_read_nonblocking(m_channel, buffer, bytesToRead, isStdErr);
+            if (static_cast<int>(bytesRead) == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
             return (bytesRead);
         }
 
         int CSSHChannel::write(void *buffer, uint32_t bytesToWrite) {
-            int bytesWritten = ssh_channel_write(m_channel, buffer, bytesToWrite);
-            if (bytesWritten == SSH_ERROR) {
+            uint32_t bytesWritten = ssh_channel_write(m_channel, buffer, bytesToWrite);
+            if (static_cast<int>(bytesWritten) == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
             return (bytesWritten);
@@ -202,6 +200,39 @@ namespace Antik {
 
         }
 
+        void CSSHChannel::listenForward(CSSHSession &session, const std::string &address, int port, int *boundPort) {
+            int returnCode = ssh_forward_listen(session.getSession(), address.c_str(), port, boundPort);
+            if (returnCode == SSH_ERROR) {
+                throw CSSHSession::Exception(session, __func__);
+            }
+         
+        }
+
+        void CSSHChannel::cancelForward(CSSHSession &session, const std::string &address, int port) {
+            int returnCode = ssh_forward_cancel(session.getSession(), address.c_str(), port);
+            if (returnCode == SSH_ERROR) {
+                  throw CSSHSession::Exception(session, __func__);
+            }
+
+        }
+
+        std::unique_ptr<CSSHChannel> CSSHChannel::acceptForward(CSSHSession &session, int timeout, int *port) {
+
+            ssh_channel forwardChannel = ssh_channel_accept_forward(session.getSession(), timeout, port);
+            if (forwardChannel == NULL) {
+                throw CSSHSession::Exception(session, __func__);
+            }
+
+            std::unique_ptr<CSSHChannel> returnChannel;
+
+            if (forwardChannel) {
+                returnChannel.reset(new CSSHChannel(session, forwardChannel));
+            }
+
+            return (returnChannel);
+
+        }
+             
         //
         // Set/Get IO buffer parameters.
         //

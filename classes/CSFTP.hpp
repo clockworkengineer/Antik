@@ -21,6 +21,7 @@
 #include <string>
 #include <cstring>
 #include <memory>
+#include <assert.h>
 
 //
 // Antik Classes

@@ -17,6 +17,7 @@
 //
 
 #include <stdexcept>
+#include <assert.h>
 
 //
 // Antik Classes
@@ -83,6 +84,7 @@ namespace Antik {
             //
 
             explicit CSSHChannel(CSSHSession &session);
+            explicit CSSHChannel(CSSHSession &session, ssh_channel channel);
             
             // ==========
             // DESTRUCTOR
@@ -97,8 +99,6 @@ namespace Antik {
             void open();
             
             void close();
-            
-            void free(); 
             
             void sendEndOfFile();
             
@@ -126,6 +126,10 @@ namespace Antik {
             int getExitStatus();
             
             void openForward(const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort);
+            
+            static void listenForward(CSSHSession &session, const std::string &address, int port, int *boundPort);
+            static void cancelForward(CSSHSession &session, const std::string &address, int port);
+            static std::unique_ptr<CSSHChannel> acceptForward(CSSHSession &session, int timeout, int *port);
             
             //
             // Set IO buffer parameters.

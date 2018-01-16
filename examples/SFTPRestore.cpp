@@ -169,7 +169,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Perform restore of backed up  files.
 //
 
-void performRestore(CSSHSession &sshSession, ParamArgData argData) {
+static void performRestore(CSSHSession &sshSession, ParamArgData argData) {
 
     CSFTP sftpServer{ sshSession};
 

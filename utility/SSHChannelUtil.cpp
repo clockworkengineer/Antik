@@ -18,7 +18,7 @@
 // Dependencies: 
 // 
 // C11++              : Use of C11++ features.
-// Antik classes      : SSHChannel
+// Antik classes      : CSSHChannel
 //
 
 // =============

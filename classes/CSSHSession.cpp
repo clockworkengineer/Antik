@@ -22,8 +22,10 @@
 // It also tries to hide as much of its implementation using libssh as possible and use/return 
 // C11++ data structures and exceptions.
 //
-// Dependencies:   C11++        - Language standard features used.
-//                 libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.6.3)
+// Dependencies:   
+// 
+// C11++        - Language standard features used.
+// libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.6.3)
 //
 
 // =================
@@ -73,29 +75,32 @@ namespace Antik {
         // PRIVATE METHODS
         // ===============
 
-        // ==============
-        // PUBLIC METHODS
-        // ==============
-
         void CSSHSession::initialise() {
-            
-            static bool intialised { false };
+
+            static bool intialised{ false};
 
             if (!intialised) {
                 ssh_threads_set_callbacks(ssh_threads_get_pthread());
                 ssh_init();
                 intialised = true;
             }
-            
+
         }
         
+        // ==============
+        // PUBLIC METHODS
+        // ==============
+
         //
         // Main CSSHSession object constructor. 
         //
 
         CSSHSession::CSSHSession() {
 
+            initialise();
+            
             m_session = ssh_new();
+            assert(m_session != NULL);
 
         }
 
@@ -187,7 +192,9 @@ namespace Antik {
             } else {
                 ssh_disconnect(m_session);
             }
-
+            
+            m_authorized=false;
+            
         }
 
         //
@@ -212,6 +219,8 @@ namespace Antik {
                 throw Exception(*this, __func__);
             }
 
+            m_authorized=true;
+                       
             return (returnCode);
 
         }
@@ -228,6 +237,8 @@ namespace Antik {
                 throw Exception(*this, __func__);
             }
 
+            m_authorized=true;
+            
             return (returnCode);
 
         }
@@ -244,6 +255,8 @@ namespace Antik {
                 throw Exception(*this, __func__);
             }
 
+            m_authorized=true;
+                       
             return (returnCode);
 
         }
@@ -260,6 +273,8 @@ namespace Antik {
                 throw Exception(*this, __func__);
             }
 
+            m_authorized=true;
+                       
             return (returnCode);
 
         }
@@ -488,6 +503,13 @@ namespace Antik {
         }
         
         //
+        // Has session been authorised
+        //
+            
+        bool CSSHSession::isAuthorized() const {
+            return m_authorized;
+        }       
+        //
         // Return last SSH error message.
         //
 
@@ -525,6 +547,8 @@ namespace Antik {
             m_logging = logging;
             ssh_options_set(m_session, SSH_OPTIONS_LOG_VERBOSITY, &m_logging);
         }
+
+  
 
     } // namespace CSSH
 } // namespace Antik

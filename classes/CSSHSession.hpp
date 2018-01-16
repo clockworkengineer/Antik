@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <vector>
 #include <memory>
+#include <assert.h>
 
 //
 // Libssh
@@ -111,12 +112,6 @@ namespace Antik {
             // ==============
             // PUBLIC METHODS
             // ==============
-
-            //
-            // Initialisation
-            //
-            
-            static void initialise();
             
             //
             // Set session details
@@ -199,7 +194,8 @@ namespace Antik {
 
             int getStatus() const;
             bool isConnected() const;
-
+            bool isAuthorized() const;
+            
             //
             // Get SSH error code and message
             //
@@ -224,7 +220,12 @@ namespace Antik {
             // ===========================
             // PRIVATE TYPES AND CONSTANTS
             // ===========================
-
+            
+            //
+            // Initialisation
+            //
+            
+            static void initialise();
 
             // ===========================================
             // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
@@ -243,13 +244,16 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
 
-            ssh_session m_session; // Session
+            ssh_session m_session;            // linssh session
+            int m_logging {SSH_LOG_NOLOG };   // libssh logging
 
             std::string m_server;             // SSH server name
             unsigned int m_port{ 22};         // SSH server port
             std::string m_user;               // SSH server login account name
             std::string m_password;           // SSH server login account password
-            int m_logging {SSH_LOG_NOLOG };   // libssh logging
+            bool m_connected {false};         // SSH session connected
+            bool m_authorized {false};        // SSH session authorised
+ 
 
         };
 

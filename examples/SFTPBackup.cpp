@@ -168,7 +168,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Perform backup of files.
 //
 
-void performBackup(CSSHSession &sshSession, ParamArgData argData) {
+static void performBackup(CSSHSession &sshSession, ParamArgData argData) {
 
     CSFTP sftpServer{ sshSession};
   
