@@ -17,7 +17,7 @@
 // the client and managing the sessions created. If a client wishes to override one of the
 // three main client authorization methods then it can be used as a base class.
 //
-// It is very much a wrapper class for libssh sessiom functionality
+// It is very much a wrapper class for libssh session functionality
 // but it wraps the main data structures in unique pointers with there own custom deleters.
 // It also tries to hide as much of its implementation using libssh as possible and use/return 
 // C11++ data structures and exceptions.

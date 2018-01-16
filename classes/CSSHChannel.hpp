@@ -84,7 +84,6 @@ namespace Antik {
             //
 
             explicit CSSHChannel(CSSHSession &session);
-            explicit CSSHChannel(CSSHSession &session, ssh_channel channel);
             
             // ==========
             // DESTRUCTOR
@@ -164,8 +163,13 @@ namespace Antik {
             // ===============
             // PRIVATE METHODS
             // ===============
+            
+           //
+            // Private constructor
+            //
+
+            explicit CSSHChannel(CSSHSession &session, ssh_channel channel);
                    
-           
             // =================
             // PRIVATE VARIABLES
             // =================
