@@ -79,7 +79,10 @@ namespace Antik {
         CSSHChannel::CSSHChannel(CSSHSession &session) : m_session{session}
         {
             
+            assert(session.isConnected() && session.isAuthorized() );
+                    
             m_channel = ssh_channel_new(m_session.getSession());
+            
             assert(m_channel != NULL);
 
         }

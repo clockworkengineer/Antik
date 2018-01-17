@@ -62,6 +62,10 @@ namespace Antik {
         // LOCAL FUNCTIONS
         // ===============
 
+        //
+        // Function run on a separate thread and used to read characters that are sent down a SSH chanel with an associated shell.
+        //
+        
         static void readShellInput(CSSHChannel &channel, std::atomic<bool> &stopShellInput, std::exception_ptr &thrownException) {
 
             try {
@@ -105,6 +109,11 @@ namespace Antik {
             }
 
         }
+        
+        //
+        // Function run on a separate thread that reads data from a direct forwarded SSH channel and passed to 
+        // write callback function. When the channel is closed the thread terminates.
+        //
 
         static void readChannelThread(CSSHChannel &forwardingChannel, ChannelWriteCallBack writeFn) {
 
@@ -122,6 +131,10 @@ namespace Antik {
         // PUBLIC FUNCTIONS
         // ================
 
+        //
+        // Create an interactive shell on a channel, send commands and receive output back.
+        //
+        
         void interactiveShell(CSSHChannel &channel, int columns, int rows) {
 
             int bytesRead;
@@ -159,6 +172,11 @@ namespace Antik {
 
         }
 
+        //
+        // Send a shell command down a channel to be executed and read any output
+        // produced.
+        //
+        
         void executeCommand(CSSHChannel &channel, const std::string &command) {
 
             int bytesRead;
@@ -178,6 +196,10 @@ namespace Antik {
 
         }
 
+        //
+        // Set up a channel to be direct forwarded and specify a write callback for any output received on the channel.
+        //
+        
         std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, ChannelWriteCallBack writeFn) {
 
             forwardingChannel.openForward(remoteHost, remotePort, localHost, localPort);
