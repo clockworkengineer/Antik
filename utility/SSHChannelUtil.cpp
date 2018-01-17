@@ -61,7 +61,7 @@ namespace Antik {
         // ===============
         // LOCAL FUNCTIONS
         // ===============
-
+        
         //
         // Function run on a separate thread and used to read characters that are sent down a SSH chanel with an associated shell.
         //
@@ -115,7 +115,7 @@ namespace Antik {
         // write callback function. When the channel is closed the thread terminates.
         //
 
-        static void readChannelThread(CSSHChannel &forwardingChannel, ChannelWriteCallBack writeFn) {
+        static void readChannelThread(CSSHChannel &forwardingChannel, WriteCallBackFn writeFn) {
 
             uint32_t bytesRead;
 
@@ -135,7 +135,7 @@ namespace Antik {
         // Create an interactive shell on a channel, send commands and receive output back.
         //
         
-        void interactiveShell(CSSHChannel &channel, int columns, int rows) {
+        void interactiveShell(CSSHChannel &channel, int columns, int rows, WriteCallBackFn writeFn) {
 
             int bytesRead;
             char *ioBuffer = channel.getIoBuffer().get();
@@ -152,8 +152,7 @@ namespace Antik {
             while (channel.isOpen() && !channel.isEndOfFile()) {
 
                 if ((bytesRead = channel.read(ioBuffer, ioBufferSize, 0)) > 0) {
-                    std::cout.write(ioBuffer, bytesRead);
-                    std::cout.flush();
+                    writeFn(ioBuffer, bytesRead);
                 }
 
                 if (thrownException) {
@@ -200,7 +199,7 @@ namespace Antik {
         // Set up a channel to be direct forwarded and specify a write callback for any output received on the channel.
         //
         
-        std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, ChannelWriteCallBack writeFn) {
+        std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, WriteCallBackFn writeFn) {
 
             forwardingChannel.openForward(remoteHost, remotePort, localHost, localPort);
 
