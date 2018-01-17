@@ -20,7 +20,7 @@
 // can be any standard internet protocol from IMAP/HTTP etc or a custom designed one.
 //
 // C11++        - Language standard features used.
-// libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.6.3)
+// libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.7.5)
 //
 
 // =================
