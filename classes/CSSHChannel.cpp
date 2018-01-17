@@ -273,7 +273,7 @@ namespace Antik {
         //
         
         void CSSHChannel::listenForward(CSSHSession &session, const std::string &address, int port, int *boundPort) {
-            int returnCode = ssh_forward_listen(session.getSession(), address.c_str(), port, boundPort);
+            int returnCode = ssh_channel_listen_forward(session.getSession(), address.c_str(), port, boundPort);
             if (returnCode == SSH_ERROR) {
                 throw CSSHSession::Exception(session, __func__);
             }
@@ -285,7 +285,7 @@ namespace Antik {
         //
   
         void CSSHChannel::cancelForward(CSSHSession &session, const std::string &address, int port) {
-            int returnCode = ssh_forward_cancel(session.getSession(), address.c_str(), port);
+            int returnCode = ssh_channel_cancel_forward(session.getSession(), address.c_str(), port);
             if (returnCode == SSH_ERROR) {
                   throw CSSHSession::Exception(session, __func__);
             }

@@ -75,6 +75,10 @@ namespace Antik {
         // PRIVATE METHODS
         // ===============
 
+        //
+        // Intialise libssh for threading (pthread only).
+        //
+        
         void CSSHSession::initialise() {
 
             static bool intialised{ false};
@@ -306,7 +310,7 @@ namespace Antik {
         Antik::SSH::CSSHSession::Key CSSHSession::getPublicKey() {
             Key serverPublicKey;
             ssh_key key;
-            if (ssh_get_publickey(m_session, &key) < 0) {
+            if (ssh_get_server_publickey(m_session, &key) < 0) {
                 return (serverPublicKey);
             }
             serverPublicKey.reset(key);

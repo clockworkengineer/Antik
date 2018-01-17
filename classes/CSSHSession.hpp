@@ -203,6 +203,10 @@ namespace Antik {
             std::string getError() const;
             int getErrorCode() const;
 
+            //
+            // Get libssh session structure
+            //
+            
             ssh_session getSession() const;
             
             //

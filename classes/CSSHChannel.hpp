@@ -70,7 +70,7 @@ namespace Antik {
 
             private:
                 std::string m_functionName; // Current function name
-                int m_errorCode; // SSH error code
+                int m_errorCode;            // SSH error code
                 std::string m_errorMessage; // SSH error message
 
             };
@@ -95,37 +95,43 @@ namespace Antik {
             // PUBLIC METHODS
             // ==============
             
-            void open();
-            
+            //
+            // Channel I/O
+            //
+     
+            void open();          
             void close();
-            
-            void sendEndOfFile();
-            
-            void execute(const std::string &commandToRun);
-            
-            int read(void *buffer, uint32_t bytesToRead, bool isStdErr=false);
-            
-            int readNonBlocking(void *buffer, uint32_t bytesToRead, bool isStdErr=false);
-            
+            void sendEndOfFile();         
+            int read(void *buffer, uint32_t bytesToRead, bool isStdErr=false);       
+            int readNonBlocking(void *buffer, uint32_t bytesToRead, bool isStdErr=false);         
             int write(void *buffer, uint32_t bytesToWrite);
             
-            void requestTerminal();
+            //
+            // Terminal and shell.
+            //
             
-            void requestTerminalSize(int columns, int rows);
-            
+            void requestTerminal();         
+            void requestTerminalSize(int columns, int rows);        
             void requestShell();
+            void execute(const std::string &commandToRun);
+            void setEnvironmentVariable(const std::string &variable, const std::string &value);
+            
+            //
+            // Channel status.
+            //
             
             bool isOpen();
             bool isClosed();
-            
-            bool isEndOfFile();
-            
-            void setEnvironmentVariable(const std::string &variable, const std::string &value);
-            
+            bool isEndOfFile();   
             int getExitStatus();
             
-            void openForward(const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort);
+            //
+            // Channel direct and reverse forwarding. Three of these functions are static as they need a session parameter
+            // and not a channel (the libssh functions seemed to be grouped under channel rather than session so have here to
+            // keep consistent).
+            //
             
+            void openForward(const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort);          
             static void listenForward(CSSHSession &session, const std::string &address, int port, int *boundPort);
             static void cancelForward(CSSHSession &session, const std::string &address, int port);
             static std::unique_ptr<CSSHChannel> acceptForward(CSSHSession &session, int timeout, int *port);
@@ -137,7 +143,11 @@ namespace Antik {
             std::shared_ptr<char> getIoBuffer();
             void setIoBufferSize(std::uint32_t ioBufferSize);
             std::uint32_t getIoBufferSize() const;
-            
+  
+            //
+            // Get CSSHSession for channel and libssh channel structure
+            //
+   
             CSSHSession& getSession() const;
             ssh_channel getChannel() const;
         
@@ -165,7 +175,7 @@ namespace Antik {
             // ===============
             
            //
-            // Private constructor
+            // Private constructor (used to return channel from acceptForward)
             //
 
             explicit CSSHChannel(CSSHSession &session, ssh_channel channel);
@@ -174,9 +184,9 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
   
-            CSSHSession &m_session;
+            CSSHSession &m_session;            // Channel session
                      
-            ssh_channel m_channel { NULL};
+            ssh_channel m_channel { NULL};      // libssh channel structure.
             
             std::shared_ptr<char> m_ioBuffer { nullptr };  // IO buffer
             std::uint32_t m_ioBufferSize     { 32*1024 };  // IO buffer size
