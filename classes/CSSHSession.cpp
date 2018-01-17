@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   CSSHSession.cpp(Work In Progress)
+ * File:   CSSHSession.cpp
  * 
  * Author: Robert Tizzard
  * 
@@ -15,12 +15,11 @@
 // 
 // Description: A class for connecting to a SSH server, verifying the server and authorizing 
 // the client and managing the sessions created. If a client wishes to override one of the
-// three main client authorization methods then it can be used as a base class.
-//
-// It is very much a wrapper class for libssh session functionality
-// but it wraps the main data structures in unique pointers with there own custom deleters.
-// It also tries to hide as much of its implementation using libssh as possible and use/return 
-// C11++ data structures and exceptions.
+// three main client authorization methods then it can be used as a base class. It is very much 
+// a wrapper class for libssh session functionality but it also wraps the main data structures 
+// in unique pointers with there own custom deleters. It also tries to hide as much of its 
+// implementation using libssh as possible and use/return C11++ data structures and exceptions.
+// It is not complete by any means but may be updated to future to use more libssh features.
 //
 // Dependencies:   
 // 
@@ -76,7 +75,7 @@ namespace Antik {
         // ===============
 
         //
-        // Intialise libssh for threading (pthread only).
+        // Intialise libssh for threading (currently pthread only).
         //
         
         void CSSHSession::initialise() {

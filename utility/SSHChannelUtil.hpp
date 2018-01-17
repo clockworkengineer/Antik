@@ -34,15 +34,9 @@ namespace Antik {
     namespace SSH {
 
         typedef std::function<void (void *, uint32_t)>  WriteCallBackFn;
-
-        static WriteCallBackFn defaultCOUT = [] (void *ioBuffer, uint32_t ioBufferSize) {
-            std::cout.write(static_cast<char *> (ioBuffer), ioBufferSize);
-            std::cout.flush();
-        };
-
-        static WriteCallBackFn defaultCERR = [] (void *ioBuffer, uint32_t ioBufferSize) {
-            std::cerr.write(static_cast<char *> (ioBuffer), ioBufferSize);
-        };
+        
+        void defaultCOUT(void*ioBuffer, uint32_t ioBufferSize);
+        void defaultCERR(void*ioBuffer, uint32_t ioBufferSize);
         
         void interactiveShell(CSSHChannel &channel, int columns, int rows, WriteCallBackFn writeFn=defaultCOUT);
         void executeCommand(CSSHChannel &channel, const std::string &command);

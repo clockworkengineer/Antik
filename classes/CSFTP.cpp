@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   CSFTP.cpp(Work In Progress)
+ * File:   CSFTP.cpp
  * 
  * Author: Robert Tizzard
  * 
@@ -15,9 +15,10 @@
 // 
 // Description A class to open an SFTP session with a server over SSH and issue SFTP
 // commands on remote files. It is very much a wrapper class for libssh sftp functionality
-// but it wraps the main data structures in unique pointers with there own custom deleters.
+// but it also wraps the main data structures in unique pointers with there own custom deleters.
 // It also tries to hide as much of its implementation using libssh as possible and use/return 
-// C11++ data structures and exceptions.
+// C11++ data structures and exceptions. It is not complete by any means but may be updated to 
+// future to use more libssh features.
 //
 // Dependencies:   
 //
@@ -36,10 +37,6 @@
 // ====================
 // CLASS IMPLEMENTATION
 // ====================
-
-//
-// C++ STL
-//
 
 // =======
 // IMPORTS
@@ -77,7 +74,8 @@ namespace Antik {
         // ==============
 
         //
-        // Main CSFTP object constructor. 
+        // Main CSFTP object constructor. The passed in session has to be
+        // connected and authorized for a SFTP session to be created.
         //
 
         CSFTP::CSFTP(CSSHSession &session) : m_session{session}

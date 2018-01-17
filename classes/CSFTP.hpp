@@ -1,5 +1,5 @@
 /*
- * File:   CSFTP.hpp(Work In Progress)
+ * File:   CSFTP.hpp
  * 
  * Author: Robert Tizzard
  * 
@@ -119,7 +119,6 @@ namespace Antik {
 
                 void operator()(sftp_dir directory) const {
                     sftp_closedir(directory);
-
                 }
             };
 
@@ -295,6 +294,7 @@ namespace Antik {
             // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
             // ===========================================
 
+            CSFTP() = delete;
             CSFTP(const CSFTP & orig) = delete;
             CSFTP(const CSFTP && orig) = delete;
             CSFTP& operator=(CSFTP other) = delete;
@@ -307,9 +307,9 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
 
-            CSSHSession &m_session;
+            CSSHSession &m_session;         // Channel session
 
-            sftp_session m_sftp;
+            sftp_session m_sftp;            // libssh sftp structure.
             
             std::shared_ptr<char> m_ioBuffer { nullptr };  // IO buffer
             std::uint32_t m_ioBufferSize     { 32*1024 };  // IO buffer size

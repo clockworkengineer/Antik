@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   CSSHChannel.cpp(Work In Progress)
+ * File:   CSSHChannel.cpp
  * 
  * Author: Robert Tizzard
  * 
@@ -12,12 +12,15 @@
 
 //
 // Class: CSSHChannel
-// 
-// Description:
 //
-// Dependencies:   A class for the creation of channels over an SSH session for the
+// Description:   A class for the creation of channels over an SSH session for the
 // transport of data/commands to and from a remote host. The protocol used on the channel
 // can be any standard internet protocol from IMAP/HTTP etc or a custom designed one.
+// It also tries to hide as much of its implementation using libssh as possible and use/return 
+// C11++ data structures and exceptions. It is not complete by any means but may be updated to 
+// future to use more libssh features.
+//
+// Dependencies: 
 //
 // C11++        - Language standard features used.
 // libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.7.5)
@@ -32,10 +35,6 @@
 // ====================
 // CLASS IMPLEMENTATION
 // ====================
-
-//
-// C++ STL
-//
 
 // =======
 // IMPORTS
@@ -73,7 +72,8 @@ namespace Antik {
         // ==============
 
         //
-        // Main CSSHChannel object constructors. 
+        // Main CSSHChannel object constructors. The passed in session has to be
+        // connected and authorized for a channel  to be created.
         //
 
         CSSHChannel::CSSHChannel(CSSHSession &session) : m_session{session}

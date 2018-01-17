@@ -127,7 +127,7 @@ namespace Antik {
             
             //
             // Channel direct and reverse forwarding. Three of these functions are static as they need a session parameter
-            // and not a channel (the libssh functions seemed to be grouped under channel rather than session so have here to
+            // and not a channel (the libssh functions seemed to be grouped under channel rather than session so try to
             // keep consistent).
             //
             
@@ -166,6 +166,7 @@ namespace Antik {
             // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
             // ===========================================
 
+            CSSHChannel() = delete;
             CSSHChannel(const CSSHChannel & orig) = delete;
             CSSHChannel(const CSSHChannel && orig) = delete;
             CSSHChannel& operator=(CSSHChannel other) = delete;
@@ -184,7 +185,7 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
   
-            CSSHSession &m_session;            // Channel session
+            CSSHSession &m_session;             // Channel session
                      
             ssh_channel m_channel { NULL};      // libssh channel structure.
             

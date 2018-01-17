@@ -1,5 +1,5 @@
 /*
- * File:   CSSHSession.hpp(Work In Progress)
+ * File:   CSSHSession.hpp
  * 
  * Author: Robert Tizzard
  * 
@@ -248,7 +248,7 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
 
-            ssh_session m_session;            // linssh session
+            ssh_session m_session;            // libssh session
             int m_logging {SSH_LOG_NOLOG };   // libssh logging
 
             std::string m_server;             // SSH server name

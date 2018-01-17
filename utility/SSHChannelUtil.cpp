@@ -132,6 +132,19 @@ namespace Antik {
         // ================
 
         //
+        // Default write callback functions.
+        //
+        
+        void defaultCOUT(void*ioBuffer, uint32_t ioBufferSize) {
+            std::cout.write(static_cast<char *> (ioBuffer), ioBufferSize);
+            std::cout.flush();
+        };
+
+        void defaultCERR (void *ioBuffer, uint32_t ioBufferSize) {
+            std::cerr.write(static_cast<char *> (ioBuffer), ioBufferSize);
+        }
+        
+        //
         // Create an interactive shell on a channel, send commands and receive output back.
         //
         
