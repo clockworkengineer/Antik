@@ -21,6 +21,10 @@
 // implementation using libssh as possible and use/return C11++ data structures and exceptions.
 // It is not complete by any means but may be updated to future to use more libssh features.
 //
+// Note: The libssh documentation says that sessions may be reused after they are disconnected;
+// I have not found this to be the case and so after a disconnect sessions need to be destroyed
+// and recreated (the same seems to apply to channels).
+//
 // Dependencies:   
 // 
 // C11++        - Language standard features used.
@@ -306,13 +310,18 @@ namespace Antik {
         //
 
         Antik::SSH::CSSHSession::Key CSSHSession::getPublicKey() {
+            
             Key serverPublicKey;
             ssh_key key;
+            
             if (ssh_get_publickey(m_session, &key) < 0) {
                 return (serverPublicKey);
             }
+            
             serverPublicKey.reset(key);
+            
             return (serverPublicKey);
+            
         }
 
         //
@@ -333,6 +342,7 @@ namespace Antik {
 
             unsigned char *hash = NULL;
             size_t hlen;
+            
             if (ssh_get_publickey_hash(serverPublicKey.get(), SSH_PUBLICKEY_HASH_SHA1, &hash, &hlen) >= 0) {
                 keyHash.assign(&hash[0], &hash[hlen]);
                 ssh_clean_pubkey_hash(&hash);
@@ -350,11 +360,13 @@ namespace Antik {
 
             char *hexa = NULL;
             std::string convertedHash;
+            
             hexa = ssh_get_hexa(&keyHash[0], keyHash.size());
             if (hexa >= 0) {
                 convertedHash.assign(&hexa[0], &hexa[std::strlen(hexa)]);
                 free(hexa);
             }
+            
             return (convertedHash);
 
         }
@@ -378,11 +390,13 @@ namespace Antik {
         std::string CSSHSession::getBanner() const {
 
             std::string sessionBanner;
+            
             char *banner = ssh_get_issue_banner(m_session);
             if (banner) {
                 sessionBanner.assign(&banner[0], &banner[std::strlen(banner)]);
                 free(banner);
             }
+            
             return (sessionBanner);
 
         }
@@ -395,9 +409,11 @@ namespace Antik {
 
             std::string clientBanner;
             const char *banner = ssh_get_clientbanner(m_session);
+            
             if (banner) {
                 clientBanner.assign(&banner[0], &banner[std::strlen(banner)]);
             }
+            
             return (clientBanner);
 
         }
@@ -409,10 +425,12 @@ namespace Antik {
         std::string CSSHSession::getServerBanner() const {
 
             std::string serverBanner;
-            const char *banner = ssh_get_serverbanner(m_session);
+            const char *banner = ssh_get_serverbanner(m_session)
+            ;
             if (banner) {
                 serverBanner.assign(&banner[0], &banner[std::strlen(banner)]);
             }
+            
             return (serverBanner);
 
         }
@@ -425,11 +443,13 @@ namespace Antik {
 
             std::string disconnectMessage;
             const char *message = ssh_get_disconnect_message(m_session);
+            
             if (message) {
                 disconnectMessage.assign(&message[0], &message[std::strlen(message)]);
             } else {
                 disconnectMessage = getError();
             }
+            
             return (disconnectMessage);
 
         }
@@ -441,12 +461,15 @@ namespace Antik {
         std::string CSSHSession::getCipherIn() {
             std::string cipherIn;
             const char *cipher = ssh_get_cipher_in(m_session);
+            
             if (cipher) {
                 cipherIn.assign(&cipher[0], &cipher[std::strlen(cipher)]);
             } else {
                 throw Exception(*this, __func__);
             }
+            
             return (cipherIn);
+            
         }
 
         //
@@ -454,14 +477,18 @@ namespace Antik {
         //
         
         std::string CSSHSession::getCipherOut() {
+            
             std::string cipherOut;
             const char *cipher = ssh_get_cipher_in(m_session);
+            
             if (cipher) {
                 cipherOut.assign(&cipher[0], &cipher[std::strlen(cipher)]);
             } else {
                 throw Exception(*this, __func__);
             }
+                
             return (cipherOut);
+            
         }
 
         //
@@ -509,7 +536,9 @@ namespace Antik {
         //
             
         bool CSSHSession::isAuthorized() const {
+            
             return m_authorized;
+            
         }       
         //
         // Return last SSH error message.
@@ -546,11 +575,11 @@ namespace Antik {
         //
         
         void CSSHSession::setLogging(int logging) {
+            
             m_logging = logging;
             ssh_options_set(m_session, SSH_OPTIONS_LOG_VERBOSITY, &m_logging);
+            
         }
-
-  
 
     } // namespace CSSH
 } // namespace Antik
