@@ -100,6 +100,14 @@ namespace Antik {
 
         CSSHChannel::~CSSHChannel() {
 
+            if (m_channel) {
+                if(isOpen()) {
+                    close();
+                }
+                ssh_channel_free(m_channel);
+                m_channel = NULL;
+            }
+
         }
 
         //
@@ -119,12 +127,11 @@ namespace Antik {
         //
 
         void CSSHChannel::close() {
-            if (m_channel) {
-                ssh_channel_close(m_channel);
-                ssh_channel_free(m_channel);
-                m_channel = NULL;
-            }
+
+            ssh_channel_close(m_channel);
+
             m_ioBuffer.reset();
+            
         }
 
         //
@@ -132,17 +139,22 @@ namespace Antik {
         //
         
         void CSSHChannel::sendEndOfFile() {
+            
             ssh_channel_send_eof(m_channel);
+            
+            
         }
         
         //
         // Execute a shell command on the remote host associated with a channel.
         //
-
+        
         void CSSHChannel::execute(const std::string &commandToRun) {
+            
             if (ssh_channel_request_exec(m_channel, commandToRun.c_str()) != SSH_OK) {
                 throw Exception(*this, __func__);
             }
+            
         }
         
         //
@@ -150,11 +162,15 @@ namespace Antik {
         //
 
         int CSSHChannel::read(void *buffer, uint32_t bytesToRead, bool isStdErr) {
+            
             uint32_t bytesRead = ssh_channel_read(m_channel, buffer, bytesToRead, isStdErr);
+                    
             if (static_cast<int>(bytesRead) == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
+            
             return (bytesRead);
+            
         }
 
   
@@ -163,11 +179,15 @@ namespace Antik {
         //
 
         int CSSHChannel::readNonBlocking(void *buffer, uint32_t bytesToRead, bool isStdErr) {
+            
             uint32_t bytesRead = ssh_channel_read_nonblocking(m_channel, buffer, bytesToRead, isStdErr);
+            
             if (static_cast<int>(bytesRead) == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
+            
             return (bytesRead);
+            
         }
 
         //
@@ -175,10 +195,13 @@ namespace Antik {
         //
         
         int CSSHChannel::write(void *buffer, uint32_t bytesToWrite) {
+            
             uint32_t bytesWritten = ssh_channel_write(m_channel, buffer, bytesToWrite);
+            
             if (static_cast<int>(bytesWritten) == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
+            
             return (bytesWritten);
         }
         
@@ -187,10 +210,13 @@ namespace Antik {
         //
 
         void CSSHChannel::requestTerminal() {
+            
             int returnCode = ssh_channel_request_pty(m_channel);
+            
             if (returnCode == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
+            
         }
 
         //
@@ -198,10 +224,12 @@ namespace Antik {
         //
 
         void CSSHChannel::requestTerminalSize(int columns, int rows) {
+            
             int returnCode = ssh_channel_change_pty_size(m_channel, columns, rows);
             if (returnCode == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
+            
         }
 
         //
@@ -209,10 +237,13 @@ namespace Antik {
         //
         
         void CSSHChannel::requestShell() {
+            
             int returnCode = ssh_channel_request_shell(m_channel);
+            
             if (returnCode == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
+            
         }
 
         //
@@ -220,7 +251,9 @@ namespace Antik {
         //
         
         bool CSSHChannel::isOpen() {
+            
             return (ssh_channel_is_open(m_channel));
+            
         }
         
         //
@@ -228,7 +261,9 @@ namespace Antik {
         //
 
         bool CSSHChannel::isClosed() {
+            
             return (ssh_channel_is_closed(m_channel));
+            
         }
 
         //
@@ -236,7 +271,9 @@ namespace Antik {
         //
         
         bool CSSHChannel::isEndOfFile() {
+            
             return (ssh_channel_is_eof(m_channel));
+            
         }
 
         //
@@ -244,7 +281,9 @@ namespace Antik {
         //
         
         int CSSHChannel::getExitStatus() {
+            
             return (ssh_channel_get_exit_status(m_channel));
+            
         }
         
         //
@@ -252,10 +291,13 @@ namespace Antik {
         //
 
         void CSSHChannel::setEnvironmentVariable(const std::string &variable, const std::string &value) {
+            
             int returnCode = ssh_channel_request_env(m_channel, variable.c_str(), value.c_str());
+            
             if (returnCode == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
+            
         }
 
         //
@@ -265,6 +307,7 @@ namespace Antik {
         void CSSHChannel::openForward(const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort) {
 
             int returnCode = ssh_channel_open_forward(m_channel, remoteHost.c_str(), remotePort, localHost.c_str(), localPort);
+            
             if (returnCode == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
@@ -276,7 +319,9 @@ namespace Antik {
         //
         
         void CSSHChannel::listenForward(CSSHSession &session, const std::string &address, int port, int *boundPort) {
+            
             int returnCode = ssh_channel_listen_forward(session.getSession(), address.c_str(), port, boundPort);
+            
             if (returnCode == SSH_ERROR) {
                 throw CSSHSession::Exception(session, __func__);
             }
@@ -288,7 +333,9 @@ namespace Antik {
         //
   
         void CSSHChannel::cancelForward(CSSHSession &session, const std::string &address, int port) {
+            
             int returnCode = ssh_channel_cancel_forward(session.getSession(), address.c_str(), port);
+            
             if (returnCode == SSH_ERROR) {
                   throw CSSHSession::Exception(session, __func__);
             }
@@ -318,19 +365,26 @@ namespace Antik {
         //
 
         std::shared_ptr<char> CSSHChannel::getIoBuffer() {
+            
             if (!m_ioBuffer) {
                 setIoBufferSize(m_ioBufferSize);
             }
+            
             return m_ioBuffer;
+            
         }
 
         void CSSHChannel::setIoBufferSize(std::uint32_t ioBufferSize) {
+            
             m_ioBufferSize = ioBufferSize;
             m_ioBuffer.reset(new char[m_ioBufferSize]);
+            
         }
 
         std::uint32_t CSSHChannel::getIoBufferSize() const {
+            
             return m_ioBufferSize;
+            
         }
 
         //
@@ -338,7 +392,9 @@ namespace Antik {
         //
  
         CSSHSession& CSSHChannel::getSession() const {
+            
             return m_session;
+            
         }
 
         //
@@ -346,7 +402,9 @@ namespace Antik {
         //
  
         ssh_channel CSSHChannel::getChannel() const {
+            
             return m_channel;
+            
         }
 
 

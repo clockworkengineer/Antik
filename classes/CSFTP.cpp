@@ -84,6 +84,7 @@ namespace Antik {
             assert(session.isConnected() && session.isAuthorized() );
   
             m_sftp = sftp_new(m_session.getSession());
+            
             assert(m_sftp != NULL);
 
         }
@@ -93,7 +94,13 @@ namespace Antik {
         //
 
         CSFTP::~CSFTP() {
-
+            
+          if (m_sftp) {
+                close();
+                sftp_free(m_sftp);
+                m_sftp = NULL;
+            }
+          
         }
 
         //
@@ -115,11 +122,6 @@ namespace Antik {
         //
 
         void CSFTP::close() {
-
-            if (m_sftp) {
-                sftp_free(m_sftp);
-                m_sftp = NULL;
-            }
 
             // Free IO Buffer
 
@@ -267,7 +269,9 @@ namespace Antik {
         //
 
         bool CSFTP::isARegularFile(const FileAttributes &fileAttributes) {
+            
             return (fileAttributes->type == SSH_FILEXFER_TYPE_REGULAR);
+            
         }
 
         //
@@ -660,15 +664,20 @@ namespace Antik {
         //
 
         std::shared_ptr<char> CSFTP::getIoBuffer() {
+            
             if (!m_ioBuffer) {
                 setIoBufferSize(m_ioBufferSize);
             }
+            
             return m_ioBuffer;
+            
         }
 
         void CSFTP::setIoBufferSize(std::uint32_t ioBufferSize) {
+            
             m_ioBufferSize = ioBufferSize;
             m_ioBuffer.reset(new char[m_ioBufferSize]);
+            
         }
 
         std::uint32_t CSFTP::getIoBufferSize() const {
@@ -680,11 +689,15 @@ namespace Antik {
         //
         
         sftp_session CSFTP::getSFTP() const {
+            
             return m_sftp;
+            
         }
 
         CSSHSession& CSFTP::getSession() const {
+            
             return m_session;
+            
         }
 
     } // namespace SSH
