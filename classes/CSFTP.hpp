@@ -138,11 +138,11 @@ namespace Antik {
             // Encapsulate libssh sftp data in unique pointers.
             //
             
-            typedef std::unique_ptr<sftp_attributes_struct, FileAttributesDeleter> FileAttributes;
-            typedef std::unique_ptr<sftp_file_struct, FileDeleter> File;
-            typedef std::unique_ptr<sftp_dir_struct, DirectoryDeleter> Directory;
-            typedef std::unique_ptr<sftp_statvfs_struct, FileSystemInfoDeleter> FileSystemInfo;
-            
+            typedef std::unique_ptr<std::pointer_traits<sftp_attributes>::element_type, FileAttributesDeleter> FileAttributes;
+            typedef std::unique_ptr<std::pointer_traits<sftp_file>::element_type, FileDeleter> File;
+            typedef std::unique_ptr<std::pointer_traits<sftp_dir>::element_type, DirectoryDeleter> Directory;
+            typedef std::unique_ptr<std::pointer_traits<sftp_statvfs_t>::element_type, FileSystemInfoDeleter> FileSystemInfo;
+
             //
             // Re-map some linux types used (possibly make these more abstract at a later date).
             //

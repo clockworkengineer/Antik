@@ -97,9 +97,10 @@ namespace Antik {
             // Encapsulate libssh session data in unique pointers.
             //
 
-            typedef std::unique_ptr<ssh_key_struct, KeyDeleter> Key;
-
+            typedef std::unique_ptr<std::pointer_traits<ssh_key>::element_type, KeyDeleter> Key;
+            
             // ============
+            
             // CONSTRUCTORS
             // ============
 
@@ -164,12 +165,14 @@ namespace Antik {
             void writeKnownHost();
 
             //
-            // Get names of session cipher in/out methods
+            // Get names of session cipher/HMAC in/out methods, key exchange algorithm
             //
 
             std::string getCipherIn();
             std::string getCipherOut();
-
+            std::string getHMACIn();
+            std::string getHMACOut();
+            std::string getKeyExchangeAlgorithm(); 
             //
             // Public key methods
             //
@@ -177,7 +180,6 @@ namespace Antik {
             Key getPublicKey();
             void getPublicKeyHash(Key &serverPublicKey, std::vector<unsigned char> &keyHash);
             std::string convertKeyHashToHex(std::vector<unsigned char> &keyHash);
-            void freeKey(Key &keyToFree);
 
             //
             // Get various banners and disconnect message
@@ -191,8 +193,9 @@ namespace Antik {
             //
             // Get SSH/OpenSSH versions
             //
+            
             int getSSHVersion() const;
-            int getOpenSSHVersion() const;
+            int getOpenSSHVersion() const;       
 
             //
             // Session status methods

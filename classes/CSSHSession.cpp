@@ -325,16 +325,6 @@ namespace Antik {
         }
 
         //
-        // Free a key.
-        //
-
-        void CSSHSession::freeKey(Key &keyToFree) {
-
-            ssh_key_free(keyToFree.release());
-
-        }
-
-        //
         // Generate hash for passed in server public key/
         //
 
@@ -455,7 +445,7 @@ namespace Antik {
         }
 
         //
-        // Return string representing name of current input cipher.
+        // Return string representing name of current session input cipher.
         //
         
         std::string CSSHSession::getCipherIn() {
@@ -473,7 +463,7 @@ namespace Antik {
         }
 
         //
-        // Return string representing name of current output cipher.
+        // Return string representing name of current session output cipher.
         //
         
         std::string CSSHSession::getCipherOut() {
@@ -490,7 +480,65 @@ namespace Antik {
             return (cipherOut);
             
         }
-
+        
+        //
+        // Return string representing name of current session input HMAC algorithm.
+        //
+        
+        std::string CSSHSession::getHMACIn() {
+            
+            std::string hmacIn;
+            const char *hmac = ssh_get_hmac_in(m_session);
+            
+            if (hmac) {
+                hmacIn.assign(&hmac[0], &hmac[std::strlen(hmac)]);
+            } else {
+                throw Exception(*this, __func__);
+            }
+            
+            return (hmacIn);
+            
+        }
+        
+        //
+        // Return string representing name of current session output HMAC algorithm.
+        //
+        
+        std::string CSSHSession::getHMACOut() {
+            
+            std::string hmacOut;
+            const char *hmac = ssh_get_hmac_out(m_session);
+            
+            if (hmac) {
+                hmacOut.assign(&hmac[0], &hmac[std::strlen(hmac)]);
+            } else {
+                throw Exception(*this, __func__);
+            }
+            
+            return (hmacOut);
+            
+        }
+        
+        //
+        // Return string representing name of current session key exchange algorithm.
+        //
+        
+        std::string CSSHSession::getKeyExchangeAlgorithm() {
+            
+            std::string keyExchangeAlg;
+            const char *keyexchange = ssh_get_kex_algo(m_session);
+            
+            if (keyexchange) {
+                keyExchangeAlg.assign(&keyexchange[0], &keyexchange[std::strlen(keyexchange)]);
+            } else {
+                throw Exception(*this, __func__);
+            }
+            
+            return (keyExchangeAlg);
+            
+        }
+	
+	
         //
         // Get SSH version.
         //
