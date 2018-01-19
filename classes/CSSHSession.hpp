@@ -92,12 +92,16 @@ namespace Antik {
                 }
 
             };
+            
+            typedef ssh_options_e Option;
 
             //
             // Encapsulate libssh session data in unique pointers.
             //
 
             typedef std::unique_ptr<std::pointer_traits<ssh_key>::element_type, KeyDeleter> Key;
+            
+
             
             // ============
             
@@ -173,6 +177,7 @@ namespace Antik {
             std::string getHMACIn();
             std::string getHMACOut();
             std::string getKeyExchangeAlgorithm(); 
+            
             //
             // Public key methods
             //
@@ -204,6 +209,14 @@ namespace Antik {
             int getStatus() const;
             bool isConnected() const;
             bool isAuthorized() const;
+  
+            //
+            // Get/Set option values for a session and also copy options,
+            //
+            
+            void setOption(Option sessionOption,  const void *optionValue);
+            void getOption(Option sessionOption, std::string &optionValue);
+            void copyOptions(CSSHSession &source);
             
             //
             // Get SSH error code and message

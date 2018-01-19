@@ -133,9 +133,7 @@ namespace Antik {
         void CSSHSession::setServer(const std::string &server) {
 
             m_server = server;
-            if (ssh_options_set(m_session, SSH_OPTIONS_HOST, m_server.c_str()) != SSH_OK) {
-                throw Exception(*this, __func__);
-            }
+            setOption(SSH_OPTIONS_HOST, m_server.c_str());
 
         }
 
@@ -146,10 +144,8 @@ namespace Antik {
         void CSSHSession::setPort(unsigned int port) {
 
             m_port = port;
-            if (ssh_options_set(m_session, SSH_OPTIONS_PORT, &m_port) != SSH_OK) {
-                throw Exception(*this, __func__);
-            }
-
+            setOption(SSH_OPTIONS_PORT, &m_port); 
+   
         }
 
         //
@@ -159,9 +155,7 @@ namespace Antik {
         void CSSHSession::setUser(const std::string &user) {
 
             m_user = user;
-            if (ssh_options_set(m_session, SSH_OPTIONS_USER, m_user.c_str()) != SSH_OK) {
-                throw Exception(*this, __func__);
-            }
+            setOption(SSH_OPTIONS_USER, m_user.c_str());
 
         }
 
@@ -314,7 +308,7 @@ namespace Antik {
             Key serverPublicKey;
             ssh_key key;
             
-            if (ssh_get_publickey(m_session, &key) < 0) {
+            if (ssh_get_publickey(m_session, &key)!=SSH_OK) {
                 return (serverPublicKey);
             }
             
@@ -332,13 +326,14 @@ namespace Antik {
 
             unsigned char *hash = NULL;
             size_t hlen;
-            
-            if (ssh_get_publickey_hash(serverPublicKey.get(), SSH_PUBLICKEY_HASH_SHA1, &hash, &hlen) >= 0) {
-                keyHash.assign(&hash[0], &hash[hlen]);
-                ssh_clean_pubkey_hash(&hash);
-            } else {
+
+            if (ssh_get_publickey_hash(serverPublicKey.get(), SSH_PUBLICKEY_HASH_SHA1, &hash, &hlen)!=SSH_OK) {
                 throw Exception(*this, __func__);
             }
+
+            keyHash.assign(&hash[0], &hash[hlen]);
+            ssh_clean_pubkey_hash(&hash);
+            
 
         }
 
@@ -354,7 +349,7 @@ namespace Antik {
             hexa = ssh_get_hexa(&keyHash[0], keyHash.size());
             if (hexa >= 0) {
                 convertedHash.assign(&hexa[0], &hexa[std::strlen(hexa)]);
-                free(hexa);
+                ssh_string_free_char(hexa);
             }
             
             return (convertedHash);
@@ -379,12 +374,12 @@ namespace Antik {
 
         std::string CSSHSession::getBanner() const {
 
-            std::string sessionBanner;
-            
+            std::string sessionBanner;           
             char *banner = ssh_get_issue_banner(m_session);
+            
             if (banner) {
                 sessionBanner.assign(&banner[0], &banner[std::strlen(banner)]);
-                free(banner);
+                ssh_string_free_char(banner);
             }
             
             return (sessionBanner);
@@ -415,8 +410,8 @@ namespace Antik {
         std::string CSSHSession::getServerBanner() const {
 
             std::string serverBanner;
-            const char *banner = ssh_get_serverbanner(m_session)
-            ;
+            const char *banner = ssh_get_serverbanner(m_session);
+
             if (banner) {
                 serverBanner.assign(&banner[0], &banner[std::strlen(banner)]);
             }
@@ -449,6 +444,7 @@ namespace Antik {
         //
         
         std::string CSSHSession::getCipherIn() {
+            
             std::string cipherIn;
             const char *cipher = ssh_get_cipher_in(m_session);
             
@@ -537,8 +533,48 @@ namespace Antik {
             return (keyExchangeAlg);
             
         }
-	
-	
+
+        //
+        // Set session option value
+        //
+
+        void CSSHSession::setOption(CSSHSession::Option sessionOption, const void *optionValue) {
+            
+            if (ssh_options_set(m_session, sessionOption, optionValue)!=SSH_OK) {
+                 throw Exception(*this, __func__);         
+            }
+
+        }
+        
+        //
+        // Copy a sessions options to a destination session
+        //
+
+        void CSSHSession::copyOptions(CSSHSession &source) {
+
+            if (ssh_options_copy(source.getSession(), &m_session)!=SSH_OK) {
+                 throw Exception(*this, __func__);         
+            }
+
+        }
+
+        //
+        // Get session option value
+        //
+
+        void CSSHSession::getOption(CSSHSession::Option sessionOption, std::string &optionValue) {
+
+            char *value;
+            
+            if (ssh_options_get(m_session, sessionOption, &value)!=SSH_OK) {
+                throw Exception(*this, __func__);                
+            }
+     
+            optionValue.assign(&value[0], &value[std::strlen(value)]);
+            ssh_string_free_char(value);
+
+        }
+            
         //
         // Get SSH version.
         //
