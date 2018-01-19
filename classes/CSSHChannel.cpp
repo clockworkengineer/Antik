@@ -17,7 +17,7 @@
 // transport of data/commands to and from a remote host. The protocol used on the channel
 // can be any standard internet protocol from IMAP/HTTP etc or a custom designed one.
 // It also tries to hide as much of its implementation using libssh as possible and use/return 
-// C11++ data structures and exceptions. It is not complete by any means but may be updated to 
+// C11++ data structures/ exceptions. It is not complete by any means but may be updated to 
 // future to use more libssh features.
 //
 // Dependencies: 
@@ -81,17 +81,21 @@ namespace Antik {
             
             assert(session.isConnected() && session.isAuthorized() );
                     
-            m_channel = ssh_channel_new(m_session.getSession());
-            
-            assert(m_channel != NULL);
+            if ((m_channel = ssh_channel_new(m_session.getSession()))==NULL) {
+                 throw Exception("Could not allocate new channel.", __func__);
+            }
 
         }
         
         CSSHChannel::CSSHChannel(CSSHSession &session, ssh_channel channel) : m_session{session}, m_channel {channel}
         {    
             
-            assert(m_channel != NULL);
-
+            assert(session.isConnected() && session.isAuthorized() );
+                      
+            if ((m_channel = ssh_channel_new(m_session.getSession()))==NULL) {
+                 throw Exception("Could not allocate new channel.", __func__);
+            }
+            
         }
 
         //
@@ -226,6 +230,7 @@ namespace Antik {
         void CSSHChannel::requestTerminalSize(int columns, int rows) {
             
             int returnCode = ssh_channel_change_pty_size(m_channel, columns, rows);
+            
             if (returnCode == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }

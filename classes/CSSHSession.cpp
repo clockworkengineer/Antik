@@ -16,9 +16,9 @@
 // Description: A class for connecting to a SSH server, verifying the server and authorizing 
 // the client and managing the sessions created. If a client wishes to override one of the
 // three main client authorization methods then it can be used as a base class. It is very much 
-// a wrapper class for libssh session functionality and it also wraps the main data structures 
+// a wrapper class for libssh session functionality but it also wraps the main data structures 
 // in unique pointers with there own custom deleters. It tries to hide as much of its 
-// implementation using libssh as possible and use/return C11++ data structures and exceptions.
+// implementation using libssh as possible and use/return C11++ data structure/exceptions.
 // It is not complete by any means but may be updated to future to use more libssh features.
 //
 // Note: The libssh documentation says that sessions may be reused after they are disconnected;
@@ -106,9 +106,9 @@ namespace Antik {
 
             initialise();
             
-            m_session = ssh_new();
-            
-            assert(m_session != NULL);
+            if ((m_session = ssh_new()) == NULL) {
+                throw Exception("Could not allocate new session.", __func__);
+            }
 
         }
 

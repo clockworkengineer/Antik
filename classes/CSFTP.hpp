@@ -77,6 +77,11 @@ namespace Antik {
                 {
                 }
 
+                Exception(const std::string &errorMessage, const std::string &functionName) : m_errorMessage{ errorMessage }, 
+                m_functionName{functionName}
+                {
+                }
+                
                 int getCode() const {
                     return m_errorCode;
                 }

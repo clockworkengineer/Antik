@@ -17,7 +17,7 @@
 // commands on remote files. It is very much a wrapper class for libssh sftp functionality
 // but it also wraps the main data structures in unique pointers with there own custom deleters.
 // It also tries to hide as much of its implementation using libssh as possible and use/return 
-// C11++ data structures and exceptions. It is not complete by any means but may be updated to 
+// C11++ data structures/exceptions. It is not complete by any means but may be updated to 
 // future to use more libssh features.
 //
 // Dependencies:   
@@ -81,11 +81,11 @@ namespace Antik {
         CSFTP::CSFTP(CSSHSession &session) : m_session{session}
         {
 
-            assert(session.isConnected() && session.isAuthorized() );
-  
-            m_sftp = sftp_new(m_session.getSession());
-            
-            assert(m_sftp != NULL);
+            assert(session.isConnected() && session.isAuthorized());
+
+            if ((m_sftp = sftp_new(m_session.getSession()))==NULL) {
+                throw Exception("Could not allocate new SFTP session.", __func__);
+            }
 
         }
 

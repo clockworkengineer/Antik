@@ -55,8 +55,14 @@ namespace Antik {
             //
 
             struct Exception {
-                Exception(CSSHSession &session, const std::string functionName) : m_errorCode{session.getErrorCode()},
+                
+                Exception(CSSHSession &session, const std::string &functionName) : m_errorCode{session.getErrorCode()},
                 m_errorMessage{ session.getError()}, m_functionName{functionName}
+                {
+                }
+                
+                Exception(const std::string &errorMessage, const std::string &functionName) : m_errorMessage{ errorMessage }, 
+                m_functionName{functionName}
                 {
                 }
 
@@ -70,7 +76,7 @@ namespace Antik {
 
             private:
                 std::string m_functionName; // Current function name
-                int m_errorCode;            // SSH error code
+                int m_errorCode {SSH_OK};   // SSH error code
                 std::string m_errorMessage; // SSH error message
 
             };
