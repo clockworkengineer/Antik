@@ -101,8 +101,6 @@ namespace Antik {
 
             typedef std::unique_ptr<std::pointer_traits<ssh_key>::element_type, KeyDeleter> Key;
             
-
-            
             // ============
             
             // CONSTRUCTORS
@@ -246,12 +244,6 @@ namespace Antik {
             // ===========================
             // PRIVATE TYPES AND CONSTANTS
             // ===========================
-            
-            //
-            // Initialisation
-            //
-            
-            static void initialise();
 
             // ===========================================
             // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
@@ -265,7 +257,12 @@ namespace Antik {
             // PRIVATE METHODS
             // ===============
 
-
+            //
+            // Initialisation
+            //
+            
+            static void initialise();
+            
             // =================
             // PRIVATE VARIABLES
             // =================
@@ -277,7 +274,6 @@ namespace Antik {
             unsigned int m_port{ 22};         // SSH server port
             std::string m_user;               // SSH server login account name
             std::string m_password;           // SSH server login account password
-            bool m_connected {false};         // SSH session connected
             bool m_authorized {false};        // SSH session authorised
  
 

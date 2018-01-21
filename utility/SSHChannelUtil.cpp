@@ -127,6 +127,7 @@ namespace Antik {
             }
 
         }
+        
         // ================
         // PUBLIC FUNCTIONS
         // ================
@@ -221,6 +222,7 @@ namespace Antik {
             return (channelReadThread);
 
         }
+        
     } // namespace SSH
 
 } // namespace Antik

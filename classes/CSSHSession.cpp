@@ -84,7 +84,7 @@ namespace Antik {
         
         void CSSHSession::initialise() {
 
-            static bool intialised{ false};
+            static bool intialised { false };
 
             if (!intialised) {
                 ssh_threads_set_callbacks(ssh_threads_get_pthread());
