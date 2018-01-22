@@ -17,8 +17,15 @@
 // =============
 
 //
+// Antik utility
+//
+
+#include "CommonUtil.hpp"
+
+//
 // Antik Classes
 //
+
 
 #include "CSSHSession.hpp"
 

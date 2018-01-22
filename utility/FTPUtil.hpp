@@ -24,6 +24,12 @@
 #include <vector>
 
 //
+// Antik utility
+//
+
+#include "CommonUtil.hpp"
+
+//
 // Antik Classes
 //
 

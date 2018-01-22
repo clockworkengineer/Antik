@@ -25,6 +25,12 @@
 #include <functional>
 
 //
+// Antik utility
+//
+
+#include "CommonUtil.hpp"
+
+//
 // Antik Classes
 //
 

@@ -151,7 +151,7 @@ namespace Antik {
         // CSFTP class.
         //
         
-        void getFile(CSFTP &sftp, const string &sourceFile, const string &destinationFile) {
+        void getFile(CSFTP &sftpServer, const string &sourceFile, const string &destinationFile) {
 
             CSFTP::File remoteFile;
             ofstream localFile;
@@ -161,8 +161,8 @@ namespace Antik {
                 CSFTP::FileAttributes fileAttributes;
                 int bytesRead{0}, bytesWritten{0};
 
-                remoteFile = sftp.openFile(sourceFile, O_RDONLY, 0);
-                sftp.getFileAttributes(remoteFile, fileAttributes);
+                remoteFile = sftpServer.openFile(sourceFile, O_RDONLY, 0);
+                sftpServer.getFileAttributes(remoteFile, fileAttributes);
 
                 localFile.open(destinationFile, ios_base::out | ios_base::binary | ios_base::trunc);
                 if (!localFile) {
@@ -170,18 +170,18 @@ namespace Antik {
                 }
 
                 for (;;) {
-                    bytesRead = sftp.readFile(remoteFile, sftp.getIoBuffer().get(), sftp.getIoBufferSize());
+                    bytesRead = sftpServer.readFile(remoteFile, sftpServer.getIoBuffer().get(), sftpServer.getIoBufferSize());
                     if (bytesRead == 0) {
                         break; // EOF
                     }
-                    localFile.write(sftp.getIoBuffer().get(), bytesRead);
+                    localFile.write(sftpServer.getIoBuffer().get(), bytesRead);
                     bytesWritten += bytesRead;
                     if (bytesWritten != localFile.tellp()) {
-                        throw CSFTP::Exception(sftp, __func__);
+                        throw CSFTP::Exception(sftpServer, __func__);
                     }
                 }
 
-                sftp.closeFile(remoteFile);
+                sftpServer.closeFile(remoteFile);
 
                 localFile.close();
 
@@ -202,7 +202,7 @@ namespace Antik {
         // CSFTP class.
         //
 
-        void putFile(CSFTP &sftp, const string &sourceFile, const string &destinationFile) {
+        void putFile(CSFTP &sftpServer, const string &sourceFile, const string &destinationFile) {
 
             CSFTP::File remoteFile;
             ifstream localFile;
@@ -219,16 +219,16 @@ namespace Antik {
 
                 fileStatus = fs::status(sourceFile);
 
-                remoteFile = sftp.openFile(destinationFile, O_CREAT | O_WRONLY | O_TRUNC, fileStatus.permissions());
+                remoteFile = sftpServer.openFile(destinationFile, O_CREAT | O_WRONLY | O_TRUNC, fileStatus.permissions());
 
                 for (;;) {
 
-                    localFile.read(sftp.getIoBuffer().get(), sftp.getIoBufferSize());
+                    localFile.read(sftpServer.getIoBuffer().get(), sftpServer.getIoBufferSize());
 
                     if (localFile.gcount()) {
-                        bytesWritten = sftp.writeFile(remoteFile, sftp.getIoBuffer().get(), localFile.gcount());
+                        bytesWritten = sftpServer.writeFile(remoteFile, sftpServer.getIoBuffer().get(), localFile.gcount());
                         if ((bytesWritten < 0) || (bytesWritten != localFile.gcount())) {
-                            throw CSFTP::Exception(sftp, __func__);
+                            throw CSFTP::Exception(sftpServer, __func__);
                         }
                     }
 
@@ -236,7 +236,7 @@ namespace Antik {
 
                 }
 
-                sftp.closeFile(remoteFile);
+                sftpServer.closeFile(remoteFile);
 
                 localFile.close();
 
@@ -253,7 +253,7 @@ namespace Antik {
         // Recursively parse a remote server path passed in and pass back a list of directories/files found.
         //
         
-        void listRemoteRecursive(CSFTP &sftp, const string &directoryPath, vector<string> &remoteFileList) {
+        void listRemoteRecursive(CSFTP &sftpServer, const string &directoryPath, vector<string> &remoteFileList) {
 
             try {
 
@@ -261,26 +261,26 @@ namespace Antik {
                 CSFTP::FileAttributes fileAttributes;
                 string filePath;
 
-                directoryHandle = sftp.openDirectory(directoryPath);
+                directoryHandle = sftpServer.openDirectory(directoryPath);
 
-                while (sftp.readDirectory(directoryHandle, fileAttributes)) {
+                while (sftpServer.readDirectory(directoryHandle, fileAttributes)) {
                     if ((static_cast<string> (fileAttributes->name) != ".") && (static_cast<string> (fileAttributes->name) != "..")) {
                         string filePath{ directoryPath};
                         if (filePath.back() == kServerPathSep) filePath.pop_back();
                         filePath += string(1, kServerPathSep) + fileAttributes->name;
-                        if (sftp.isADirectory(fileAttributes)) {
-                            listRemoteRecursive(sftp, filePath, remoteFileList);
+                        if (sftpServer.isADirectory(fileAttributes)) {
+                            listRemoteRecursive(sftpServer, filePath, remoteFileList);
                         }
                         remoteFileList.push_back(filePath);
                     }
                 }
 
-                if (!sftp.endOfDirectory(directoryHandle)) {
-                    sftp.closeDirectory(directoryHandle);
-                    throw CSFTP::Exception(sftp, __func__);
+                if (!sftpServer.endOfDirectory(directoryHandle)) {
+                    sftpServer.closeDirectory(directoryHandle);
+                    throw CSFTP::Exception(sftpServer, __func__);
                 }
 
-                sftp.closeDirectory(directoryHandle);
+                sftpServer.closeDirectory(directoryHandle);
 
             } catch (const CSFTP::Exception &e) {
                 throw;
