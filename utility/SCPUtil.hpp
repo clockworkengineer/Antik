@@ -54,6 +54,9 @@ namespace Antik {
         
         void getFile(CSSHSession &sshSession, const std::string &sourceFile, const std::string &destinationFile);
         void putFile(CSSHSession &sshSession, const std::string &sourceFile, const std::string &destinationFile);
+        
+        FileList getFiles(CSSHSession &sshSession, FileMapper &fileMapper, FileCompletionFn completionFn = nullptr);
+        FileList putFiles(CSSHSession &sshSession, FileMapper &fileMapper, FileCompletionFn completionFn  = nullptr);
 
     } // namespace SSH
 } // namespace Antik

@@ -106,18 +106,6 @@ namespace Antik {
         // ================
 
         //
-        // Recursively parse a local directory and produce a list of files.
-        //
-
-        void listLocalRecursive(const string &localDirectory, FileList &fileList) {
-
-            for (auto directoryEntry : fs::recursive_directory_iterator{localDirectory}) {
-                fileList.push_back(directoryEntry.path().string());
-            }
-
-        }
-
-        //
         // Recursively parse a remote server path passed in and pass back a list of directories/files found.
         // For servers that do not return a fully qualified path name create one.
         //

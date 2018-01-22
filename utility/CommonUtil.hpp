@@ -32,7 +32,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
-
 namespace Antik {
 
         //
@@ -89,6 +88,18 @@ namespace Antik {
             std::string m_remoteDirectory;
             
         };
+        
+        //
+        // Recursively parse a local directory and produce a list of files.
+        //
+
+        static inline void listLocalRecursive(const std::string &localDirectory, FileList &fileList) {
+
+            for (auto directoryEntry : boost::filesystem::recursive_directory_iterator{localDirectory}) {
+                fileList.push_back(directoryEntry.path().string());
+            }
+
+        }
 
 } // namespace Antik
 
