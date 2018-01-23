@@ -21,9 +21,10 @@
 #include <stdexcept>
 
 //
-// Antik sockets
+// Antik classes
 //
 
+#include "CommonAntik.hpp"
 #include "CSocket.hpp"
 
 // =========

@@ -26,7 +26,6 @@
 // Antik Classes
 //
 
-
 #include "CSSHSession.hpp"
 
 namespace Antik {

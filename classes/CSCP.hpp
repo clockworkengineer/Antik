@@ -19,9 +19,10 @@
 #include <stdexcept>
 
 //
-// Antik Classes
+// Antik classes
 //
 
+#include "CommonAntik.hpp"
 #include "CSSHSession.hpp"
 
 //

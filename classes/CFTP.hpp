@@ -25,9 +25,10 @@
 #include <iomanip>
 
 //
-// Antik sockets
+// Antik classes
 //
 
+#include "CommonAntik.hpp"
 #include "CSocket.hpp"
 
 // =========
@@ -41,14 +42,6 @@ namespace Antik {
         // PUBLIC TYPES AND CONSTANTS
         // ==========================
         
-        // Container for list of file paths
-        
-        typedef std::vector<std::string> FileList;
-        
-        // Server path separator
-        
-        const char kServerPathSep { '/' };
-
         // ================
         // CLASS DEFINITION
         // ================

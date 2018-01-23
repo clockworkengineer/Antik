@@ -20,6 +20,12 @@
 #include <mutex>
 #include <sstream>
 
+//
+// Antik classes
+//
+
+#include "CommonAntik.hpp"
+
 // =========
 // NAMESPACE
 // =========

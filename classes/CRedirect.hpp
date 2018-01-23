@@ -20,6 +20,12 @@
 #include <memory>
 #include <fstream>
 
+//
+// Antik classes
+//
+
+#include "CommonAntik.hpp"
+
 // =========
 // NAMESPACE
 // =========

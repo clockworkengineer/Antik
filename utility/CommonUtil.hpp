@@ -20,10 +20,11 @@
 // C++ STL
 //
 
-#include <string>
-#include <vector>
-#include <fstream>
-#include <vector>
+//
+// Antik classes
+//
+
+#include "CommonAntik.hpp"
 
 //
 // Boost file system, string
@@ -34,18 +35,6 @@
 
 namespace Antik {
 
-        //
-        // Container for list of file paths
-        //
-        
-        typedef std::vector<std::string> FileList;
-        
-        //
-        // Server path separator
-        //
-        
-        const char kServerPathSep { '/' };
-        
         //
         // File transfer complete function
         //
@@ -90,7 +79,7 @@ namespace Antik {
         };
         
         //
-        // Recursively parse a local directory and produce a list of files.
+        // Recursively parse a local directory and produce a list of files. (static for moment)
         //
 
         static inline void listLocalRecursive(const std::string &localDirectory, FileList &fileList) {

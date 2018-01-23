@@ -22,6 +22,12 @@
 #include <deque>
 
 //
+// Antik classes
+//
+
+#include "CommonAntik.hpp"
+
+//
 // libcurl
 //
 

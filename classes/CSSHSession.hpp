@@ -22,6 +22,12 @@
 #include <assert.h>
 
 //
+// Antik classes
+//
+
+#include "CommonAntik.hpp"
+
+//
 // Libssh
 //
 

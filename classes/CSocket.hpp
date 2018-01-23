@@ -23,6 +23,12 @@
 #include <mutex>
 
 //
+// Antik classes
+//
+
+#include "CommonAntik.hpp"
+
+//
 // Boost ASIO
 //
 

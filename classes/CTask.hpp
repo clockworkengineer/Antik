@@ -21,9 +21,10 @@
 #include <stdexcept>
 
 //
-// CLogger trace output, CFileApprise file event watcher
+// Antik classes
 //
 
+#include "CommonAntik.hpp"
 #include "CLogger.hpp"
 #include "CApprise.hpp"
 

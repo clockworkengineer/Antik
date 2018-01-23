@@ -24,9 +24,10 @@
 #include <stdexcept>
 
 //
-// CLogger trace output
+// Antik classes
 //
 
+#include "CommonAntik.hpp"
 #include "CLogger.hpp"
 
 //

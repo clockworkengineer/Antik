@@ -21,6 +21,12 @@
 #include <unordered_map>
 #include <stdexcept>
 
+//
+// Antik classes
+//
+
+#include "CommonAntik.hpp"
+
 // =========
 // NAMESPACE
 // =========

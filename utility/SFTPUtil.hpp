@@ -47,23 +47,13 @@
 
 namespace Antik {
     namespace SSH {
-        
-        //
-        // Get/put files to SFTP server
-        //
-        
-        FileList getFiles(CSFTP &sftpServer,FileMapper &fileMapper, const FileList &fileList, FileCompletionFn completionFn=nullptr, bool safe = false, char postFix = '~');
-        FileList putFiles(CSFTP &sftpServer, FileMapper &fileMapper, const FileList &fileList, FileCompletionFn completionFn=nullptr, bool safe = false, char postFix = '~');
-  
-        //
-        // Get/put a single file to SFTP server
-        //
-        
+
+        void listRemoteRecursive(CSFTP &sftpServer, const std::string &directoryPath, FileList &fileList);
         void getFile(CSFTP &sftpServer, const std::string &sourceFile, const std::string &destinationFile);
         void putFile(CSFTP &sftpServer, const std::string &sourceFile, const std::string &destinationFile);
-        
-        void listRemoteRecursive(CSFTP &sftpServer, const std::string &directoryPath, FileList &fileList);
-
+        FileList getFiles(CSFTP &sftpServer, FileMapper &fileMapper, const FileList &fileList, FileCompletionFn completionFn = nullptr, bool safe = false, char postFix = '~');
+        FileList putFiles(CSFTP &sftpServer, FileMapper &fileMapper, const FileList &fileList, FileCompletionFn completionFn=nullptr, bool safe = false, char postFix = '~');       
+   
     } // namespace SSH
 } // namespace Antik
 

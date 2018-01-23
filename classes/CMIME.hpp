@@ -23,9 +23,10 @@
 #include <vector>
 
 //
-// SMTP class
+// Antik classes
 //
 
+#include "CommonAntik.hpp"
 #include <CSMTP.hpp>
 
 //

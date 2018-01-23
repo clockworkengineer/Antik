@@ -23,9 +23,10 @@
 #include <ctime>
 
 //
-// ZIP archive record IO.
+// Antik classes
 //
 
+#include "CommonAntik.hpp"
 #include "CZIPIO.hpp"
 
 // =========
