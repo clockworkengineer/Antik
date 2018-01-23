@@ -48,7 +48,11 @@ namespace Antik {
         class FileMapper {
         public:
             explicit FileMapper(const std::string &localDirectory, const std::string &remoteDirectory) :
-            m_localDirectory{localDirectory}, m_remoteDirectory{ remoteDirectory}{ }
+            m_localDirectory{localDirectory}, m_remoteDirectory{ remoteDirectory}
+            { 
+                if (m_localDirectory.back() == kServerPathSep) m_localDirectory.pop_back();
+                if (m_remoteDirectory.back() == kServerPathSep) m_remoteDirectory.pop_back();
+            }
             
             std::string toLocal(const std::string &filePath)    
             {
@@ -56,6 +60,7 @@ namespace Antik {
                 localPath.normalize();
                 return(localPath.string());     
             }
+            
             std::string toRemote(const std::string &filePath) 
             {
                 boost::filesystem::path remotePath { m_remoteDirectory + kServerPathSep + filePath.substr(m_localDirectory.size()) };

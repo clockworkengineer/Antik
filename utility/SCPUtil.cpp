@@ -86,6 +86,44 @@ namespace Antik {
 
 
         }
+        
+        static void downloadFile(CSCP &scpServer, const std::string &destinationFile) {
+
+            ofstream localFile;
+            CSCP::FilePermissions filePermissions;
+            int bytesRead{0}, pullStatus{0};
+            size_t fileSize{0};
+
+            filePermissions = scpServer.requestFilePermissions();
+            fileSize = scpServer.requestFileSize();
+
+            scpServer.acceptRequest();
+
+            if (!fs::exists(fs::path(destinationFile).parent_path())) {
+                fs::create_directories(fs::path(destinationFile).parent_path());
+            }
+
+            localFile.open(destinationFile, ios_base::out | ios_base::binary | ios_base::trunc);
+            if (!localFile) {
+                throw system_error(errno, system_category());
+            }
+
+            for (;;) {
+                bytesRead = scpServer.read(scpServer.getIoBuffer().get(), scpServer.getIoBufferSize());
+                localFile.write(scpServer.getIoBuffer().get(), bytesRead);
+                fileSize -= bytesRead;
+                if (fileSize == 0) {
+                    break;
+                }
+            }
+
+            localFile.close();
+
+            fs::permissions(destinationFile, static_cast<fs::perms> (filePermissions));
+            
+            
+        }
+        
         // ================
         // PUBLIC FUNCTIONS
         // ================
@@ -98,16 +136,11 @@ namespace Antik {
 
         void getFile(CSSHSession &sshSession, const string &sourceFile, const string &destinationFile) {
 
-            ofstream localFile;
-
+  
             try {
-
-                CSCP::FilePermissions filePermissions;
-
-                int bytesRead{0}, pullStatus{0};
-                size_t fileSize{0};
-
+      
                 CSCP scpServer{ sshSession, SSH_SCP_READ, sourceFile};
+                int  pullStatus{0};
 
                 scpServer.open();
 
@@ -118,32 +151,7 @@ namespace Antik {
 
                 }
 
-                filePermissions = scpServer.requestFilePermissions();
-                fileSize = scpServer.requestFileSize();
-
-                scpServer.acceptRequest();
-
-                if (!fs::exists(fs::path(destinationFile).parent_path())) {
-                    fs::create_directories(fs::path(destinationFile).parent_path());
-                }
-
-                localFile.open(destinationFile, ios_base::out | ios_base::binary | ios_base::trunc);
-                if (!localFile) {
-                    throw system_error(errno, system_category());
-                }
-
-                for (;;) {
-                    bytesRead = scpServer.read(scpServer.getIoBuffer().get(), scpServer.getIoBufferSize());
-                    localFile.write(scpServer.getIoBuffer().get(), bytesRead);
-                    fileSize -= bytesRead;
-                    if (fileSize == 0) {
-                        break;
-                    }
-                }
-                
-                localFile.close();
-                
-                fs::permissions(destinationFile, static_cast<fs::perms> (filePermissions));
+                downloadFile(scpServer, destinationFile);
 
                 scpServer.close();
   
@@ -177,7 +185,7 @@ namespace Antik {
 
                 fileStatus = fs::status(fs::path(sourceFile).parent_path().string());
 
-                CSCP scpServer{ sshSession, SSH_SCP_WRITE | SSH_SCP_RECURSIVE, "/"};
+                CSCP scpServer{ sshSession, SSH_SCP_WRITE | SSH_SCP_RECURSIVE, std::string(1,kServerPathSep)};
 
                 scpServer.open();
 
@@ -205,7 +213,6 @@ namespace Antik {
 
                     }
 
-
                     localFile.close();
 
                 }
@@ -230,60 +237,33 @@ namespace Antik {
         FileList getFiles(CSSHSession &sshSession, FileMapper &fileMapper, FileCompletionFn completionFn) {
 
             FileList successList;
-            ofstream localFile;
-            fs::path destinationFilePath;
-
+   
             try {
 
                 CSCP scpServer{ sshSession, SSH_SCP_READ | SSH_SCP_RECURSIVE, fileMapper.getRemoteDirectory()};
 
-                int fileSize, pullStatus, bytesRead;
-                CSCP::FilePermissions filePermissions;
-                std::string fileName;
-                fs::path currentPath{ fileMapper.getLocalDirectory()};
+                int pullStatus;
+                fs::path currentPath{ fileMapper.getRemoteDirectory()};
+                fs::path localFilePath;
 
                 scpServer.open();
 
+                scpServer.pullRequest();
+                scpServer.acceptRequest();
+                                           
                 while ((pullStatus = scpServer.pullRequest()) != SSH_SCP_REQUEST_EOF) {
 
                     switch (pullStatus) {
                         
                         case SSH_SCP_REQUEST_NEWFILE:
                             
-                            fileSize = scpServer.requestFileSize();
-                            fileName = scpServer.requestFileName();
-                            filePermissions = scpServer.requestFilePermissions();
-
-                            scpServer.acceptRequest();
-
-                            destinationFilePath = fileMapper.toLocal(currentPath.string());
-                            destinationFilePath /= fileName;
-  
-                            if (!fs::exists(fs::path(destinationFilePath).parent_path())) {
-                                fs::create_directories(fs::path(destinationFilePath).parent_path());
-                            }
+                            localFilePath = currentPath.string();
+                            localFilePath /= scpServer.requestFileName();
+                            localFilePath = fileMapper.toLocal(localFilePath.string());
                             
-                            std::cout << "File [" + destinationFilePath.string() << "]" << std::endl;
+                            downloadFile(scpServer, localFilePath.string());
 
-                           localFile.open(destinationFilePath.string(), ios_base::out | ios_base::binary | ios_base::trunc);
-                            if (!localFile) {
-                                throw system_error(errno, system_category());
-                            }
-
-                            for (;;) {
-                                bytesRead = scpServer.read(scpServer.getIoBuffer().get(), scpServer.getIoBufferSize());
-                                localFile.write(scpServer.getIoBuffer().get(), bytesRead);
-                                fileSize -= bytesRead;
-                                if (fileSize == 0) {
-                                    break;
-                                }
-                            }
-
-                            localFile.close();
-                            
-                            fs::permissions(destinationFilePath, static_cast<fs::perms> (filePermissions));
-                            
-                            successList.push_back(fileMapper.toRemote(destinationFilePath.string()));
+                            successList.push_back(localFilePath.string());
 
                             if (completionFn) {
                                 completionFn(successList.back());
@@ -293,20 +273,17 @@ namespace Antik {
                             
                         case SSH_SCP_REQUEST_NEWDIR:
                             currentPath /= scpServer.requestFileName();
-                            std::cout << "Directory [" << scpServer.requestFileName() << "]" << std::endl;
                             scpServer.acceptRequest();
                             break;
+                            
                         case SSH_SCP_REQUEST_ENDDIR:
                             currentPath = currentPath.parent_path();
                             break;
+                            
                         case SSH_SCP_REQUEST_WARNING:
-                            std::cout << "WARNING: " << scpServer.getRequestWarning() << std::endl;
+                            throw CSCP::Exception(scpServer, __func__);
                             break;
-                        case SSH_SCP_REQUEST_EOF:
-                            break;
-                        default:
-                            std::cout << "Not caught " << pullStatus << std::endl;
-                            break;
+                            
                     }
 
                 }
