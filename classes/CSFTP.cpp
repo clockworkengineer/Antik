@@ -32,7 +32,6 @@
 // =================
 
 #include "CSFTP.hpp"
-#include "CSSHSession.hpp"
 
 // ====================
 // CLASS IMPLEMENTATION

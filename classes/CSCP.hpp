@@ -1,7 +1,7 @@
 /*
  * File:   CSCP.hpp
  * 
- * Author: Robert Tizzard (Work in Progress)
+ * Author: Robert Tizzard
  * 
  * Created on September 23, 2017, 2:33 PM
  *
@@ -17,6 +17,7 @@
 //
 
 #include <stdexcept>
+#include <cstring>
 
 //
 // Antik classes
@@ -86,7 +87,6 @@ namespace Antik {
 
             };
 
-            
             //
             // Re-map some linux types used (possibly make these more abstract at a later date).
             //
@@ -113,18 +113,26 @@ namespace Antik {
             // PUBLIC METHODS
             // ==============
         
+            //
+            // Open/close SCP connection.
+            //
+            
             void open();
             void close();
             
-            void pushDirectory(const std::string &directoryName, FilePermissions permissions);
+            //
+            // File/Directory remote creation.
+            //
             
+            void pushDirectory(const std::string &directoryName, FilePermissions permissions);   
             void pushFile(const std::string &fileName, size_t fileSize, FilePermissions permissions);
             void pushFile64(const std::string &fileName, uint64_t fileSize, FilePermissions permissions);
-            
-            void write(const void *buffer, size_t bufferSize);
-            int read(void * buffer, size_t bufferSize);
-            
+            void write(const void *buffer, size_t bufferSize);         
             void leaveDirectory();
+            
+            //
+            // File/Directory retrieval.
+            //
             
             int pullRequest(); 
             void acceptRequest();
@@ -134,10 +142,8 @@ namespace Antik {
             uint64_t requestFileSize64();
             std::string requestFileName();
             FilePermissions requestFilePermissions();
-
-            CSSHSession& getSession() const;
-            ssh_scp getSCP() const;
-  
+            int read(void * buffer, size_t bufferSize);
+   
             //
             // Set IO buffer parameters.
             //
@@ -145,6 +151,14 @@ namespace Antik {
             std::shared_ptr<char> getIoBuffer();
             void setIoBufferSize(std::uint32_t ioBufferSize);
             std::uint32_t getIoBufferSize() const;
+ 
+            //
+            // Get internal libssh ssh/scp session data structure pointers.
+            //
+
+            CSSHSession& getSession() const;
+            ssh_scp getSCP() const;
+ 
             
             // ================
             // PUBLIC VARIABLES
@@ -161,6 +175,7 @@ namespace Antik {
             // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
             // ===========================================
 
+            CSCP() = delete;
             CSCP(const CSCP & orig) = delete;
             CSCP(const CSCP && orig) = delete;
             CSCP& operator=(CSCP other) = delete;
@@ -174,12 +189,12 @@ namespace Antik {
             // =================
             
             
-            CSSHSession &m_session;         // SCP session
+            CSSHSession &m_session;         // SSH session
 
-            ssh_scp m_scp;
+            ssh_scp m_scp;                  // SCP sonenction
             
-            int m_mode;
-            std::string m_location;
+            int m_mode;                     // SCP mode
+            std::string m_location;         // SCP location
             
             std::shared_ptr<char> m_ioBuffer { nullptr };  // IO buffer
             std::uint32_t m_ioBufferSize     { 32*1024 };  // IO buffer size

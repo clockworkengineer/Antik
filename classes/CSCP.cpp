@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   CSCP.cpp (Work in Progress)
+ * File:   CSCP.cpp
  * 
  * Author: Robert Tizzard
  * 
@@ -13,7 +13,12 @@
 //
 // Class: CSCP
 // 
-// Description:
+// Description: A class to open an SCP session with a server over SSH and issue SCP
+// commands on remote files. It is very much a wrapper class for libssh scp functionality
+// but it also wraps the main data structures in unique pointers with there own custom deleters.
+// It also tries to hide as much of its implementation using libssh as possible and use/return 
+// C11++ data structures/exceptions. It is not complete by any means but may be updated to 
+// future to use more libssh features.
 //
 // Dependencies:   
 // 
@@ -27,17 +32,10 @@
 // =================
 
 #include "CSCP.hpp"
-#include "CSSHSession.hpp"
 
 // ====================
 // CLASS IMPLEMENTATION
 // ====================
-
-//
-// C++ STL
-//
-
-#include <cstring>
 
 // =======
 // IMPORTS
@@ -89,18 +87,23 @@ namespace Antik {
         }
 
         //
-        // CSCP Destructor
+        // CSCP Destructor.
         //
 
         CSCP::~CSCP() {
 
             if (m_scp) {
+                close();
                 ssh_scp_free(m_scp);
                 m_scp==NULL;
             }
             
         }
 
+        //
+        // Open SCP server connection.
+        //
+        
         void CSCP::open() {
             
             if (ssh_scp_init(m_scp)!=SSH_OK) {
@@ -108,7 +111,11 @@ namespace Antik {
             }
              
         }
-              
+        
+        //
+        // Close SCp server connection.
+        //
+        
         void CSCP::close() {
             
              ssh_scp_close(m_scp);
@@ -117,6 +124,10 @@ namespace Antik {
              
         }
         
+        //
+        // Create a directory on remote server.
+        //
+        
         void CSCP::pushDirectory(const std::string &directoryName, FilePermissions permissions) {
             
             if (ssh_scp_push_directory(m_scp, directoryName.c_str(), permissions)!=SSH_OK) {
@@ -124,6 +135,10 @@ namespace Antik {
             }
             
         }
+        
+        //
+        // Create a file on remote server.
+        //
 
         void CSCP::pushFile(const std::string &fileName, size_t fileSize, FilePermissions permissions) {
 
@@ -133,6 +148,10 @@ namespace Antik {
 
         }
         
+        //
+        // Create a file on remote server ( > 4GB).
+        //
+        
         void CSCP::pushFile64(const std::string &fileName, uint64_t fileSize, FilePermissions permissions) {
 
             if (ssh_scp_push_file64(m_scp, fileName.c_str(), fileSize, permissions) != SSH_OK) {
@@ -141,6 +160,10 @@ namespace Antik {
 
         }
 
+        //
+        // Write data to newly created remote file.
+        //
+        
         void  CSCP::write(const void *buffer, size_t bufferSize) {
             
           if (ssh_scp_write(m_scp, buffer, bufferSize) != SSH_OK) {
@@ -148,6 +171,10 @@ namespace Antik {
           }
           
         }
+        
+        //
+        // Read data from recently requested remote file.
+        //
 
         int CSCP::read(void * buffer, size_t bufferSize) {
 
@@ -161,7 +188,10 @@ namespace Antik {
 
         }
         
-		
+	//
+        // Request next remote file/directory (can be recursive).
+        //
+        
         int CSCP::pullRequest() {
             
             int returnCode = ssh_scp_pull_request(m_scp);
@@ -173,18 +203,30 @@ namespace Antik {
             return(returnCode);
 
         }
+        
+        //
+        // Retrieve currently requested file size.
+        //
 
         size_t CSCP::requestFileSize() {
             
             return(ssh_scp_request_get_size(m_scp));
 
         }
+        
+        //
+        // Retrieve currently requested file size (>4GB).
+        //
 
         uint64_t CSCP::requestFileSize64() {
 
             return (ssh_scp_request_get_size64(m_scp));
 
         }
+        
+        //
+        // Retrieve currently requested file name.
+        //
 
         std::string CSCP::requestFileName() {
 
@@ -201,12 +243,20 @@ namespace Antik {
             
         }
 
+        //
+        // Retrieve currently requested file permissions.
+        //
+        
         CSCP::FilePermissions CSCP::requestFilePermissions() {
             
              return(ssh_scp_request_get_permissions(m_scp));
 
         }
 
+        //
+        // Accept last requested file/directory.
+        //
+        
         void CSCP::acceptRequest() {
 
             if (ssh_scp_accept_request(m_scp) != SSH_OK) {
@@ -215,6 +265,10 @@ namespace Antik {
 
         }
 
+        //
+        // Deny last requested file/directory..
+        //
+        
         void CSCP::denyRequest(const std::string &reason) {
 
             if (ssh_scp_deny_request(m_scp, reason.c_str()) != SSH_OK) {
@@ -223,6 +277,10 @@ namespace Antik {
                        
         }
 
+        //
+        // If last pull request resulted in a warning then retrieve the message.
+        //
+        
         std::string CSCP::getRequestWarning() {
             
             std::string requestWarning;
@@ -238,6 +296,10 @@ namespace Antik {
             
         }
 
+        //
+        // Move up a in remote directory structure.
+        //
+        
         void CSCP::leaveDirectory() {
 
             if (ssh_scp_leave_directory(m_scp) != SSH_OK) {
