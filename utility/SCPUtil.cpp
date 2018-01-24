@@ -13,9 +13,9 @@
 //
 // Module: SCPUtil
 //
-// Description: SCP utility functions for the Antik class CSCP. Perform selective 
-// and  more powerful operations not available directly through single raw SCP 
-// commands.
+// Description: SCP utility functions for the Antik class CSCP. Perform single/recursive
+// file transfers to/from a remote server. Any file paths are converted in situ on either
+// the remote server or local host.
 // 
 // Dependencies: 
 // 
@@ -84,14 +84,19 @@ namespace Antik {
                 }
             }
 
-
         }
-        
+
+        //
+        // Download the currently requested file from SCP server and write to local directory.
+        //
+
         static void downloadFile(CSCP &scpServer, const std::string &destinationFile) {
 
             ofstream localFile;
             CSCP::FilePermissions filePermissions;
-            int bytesRead{0}, pullStatus{0};
+            char *ioBuffer = scpServer.getIoBuffer().get();
+            size_t ioBufferSize = scpServer.getIoBufferSize();
+            int bytesRead{0};
             size_t fileSize{0};
 
             filePermissions = scpServer.requestFilePermissions();
@@ -109,8 +114,8 @@ namespace Antik {
             }
 
             for (;;) {
-                bytesRead = scpServer.read(scpServer.getIoBuffer().get(), scpServer.getIoBufferSize());
-                localFile.write(scpServer.getIoBuffer().get(), bytesRead);
+                bytesRead = scpServer.read(ioBuffer, ioBufferSize);
+                localFile.write(ioBuffer, ioBufferSize);
                 fileSize -= bytesRead;
                 if (fileSize == 0) {
                     break;
@@ -120,10 +125,9 @@ namespace Antik {
             localFile.close();
 
             fs::permissions(destinationFile, static_cast<fs::perms> (filePermissions));
-            
-            
+
         }
-        
+
         // ================
         // PUBLIC FUNCTIONS
         // ================
@@ -136,30 +140,22 @@ namespace Antik {
 
         void getFile(CSSHSession &sshSession, const string &sourceFile, const string &destinationFile) {
 
-  
-            try {
-      
-                CSCP scpServer{ sshSession, SSH_SCP_READ, sourceFile};
-                int  pullStatus{0};
 
-                scpServer.open();
+            CSCP scpServer{ sshSession, SSH_SCP_READ, sourceFile};
+            int pullStatus{0};
 
-                if ((pullStatus = scpServer.pullRequest()) != SSH_SCP_REQUEST_NEWFILE) {
-                    if (pullStatus == SSH_SCP_REQUEST_WARNING) {
-                        throw CSCP::Exception(scpServer, __func__);
-                    }
+            scpServer.open();
 
+            if ((pullStatus = scpServer.pullRequest()) != SSH_SCP_REQUEST_NEWFILE) {
+                if (pullStatus == SSH_SCP_REQUEST_WARNING) {
+                    throw CSCP::Exception(scpServer, __func__);
                 }
 
-                downloadFile(scpServer, destinationFile);
-
-                scpServer.close();
-  
-            } catch (const CSCP::Exception &e) {
-                throw;
-            } catch (const system_error &e) {
-                throw;
             }
+
+            downloadFile(scpServer, destinationFile);
+
+            scpServer.close();
 
         }
 
@@ -172,64 +168,56 @@ namespace Antik {
 
         void putFile(CSSHSession &sshSession, const string &sourceFile, const string &destinationFile) {
 
+
             ifstream localFile;
+            fs::file_status fileStatus;
 
-            try {
+            localFile.open(sourceFile, ios_base::in | ios_base::binary);
+            if (!localFile) {
+                throw system_error(errno, system_category());
+            }
 
-                fs::file_status fileStatus;
+            fileStatus = fs::status(fs::path(sourceFile).parent_path().string());
 
-                localFile.open(sourceFile, ios_base::in | ios_base::binary);
-                if (!localFile) {
-                    throw system_error(errno, system_category());
-                }
+            CSCP scpServer{ sshSession, SSH_SCP_WRITE | SSH_SCP_RECURSIVE, std::string(1, kServerPathSep)};
 
-                fileStatus = fs::status(fs::path(sourceFile).parent_path().string());
+            scpServer.open();
 
-                CSCP scpServer{ sshSession, SSH_SCP_WRITE | SSH_SCP_RECURSIVE, std::string(1,kServerPathSep)};
+            if (fs::is_directory(sourceFile)) {
 
-                scpServer.open();
+                makeRemotePath(scpServer, fs::path(destinationFile).string(), fileStatus.permissions());
 
-                if (fs::is_directory(sourceFile)) {
+            } else if (fs::is_regular_file(sourceFile)) {
 
-                    makeRemotePath(scpServer, fs::path(destinationFile).string(), fileStatus.permissions());
+                makeRemotePath(scpServer, fs::path(destinationFile).parent_path().string(), fileStatus.permissions());
 
-                } else if (fs::is_regular_file(sourceFile)) {
+                fileStatus = fs::status(fs::path(sourceFile));
 
-                    makeRemotePath(scpServer, fs::path(destinationFile).parent_path().string(), fileStatus.permissions());
+                scpServer.pushFile(fs::path(destinationFile).filename().string(), fs::file_size(sourceFile), fileStatus.permissions());
 
-                    fileStatus = fs::status(fs::path(sourceFile));
+                for (;;) {
 
-                    scpServer.pushFile(fs::path(destinationFile).filename().string(), fs::file_size(sourceFile), fileStatus.permissions());
+                    localFile.read(scpServer.getIoBuffer().get(), scpServer.getIoBufferSize());
 
-                    for (;;) {
-
-                        localFile.read(scpServer.getIoBuffer().get(), scpServer.getIoBufferSize());
-
-                        if (localFile.gcount()) {
-                            scpServer.write(scpServer.getIoBuffer().get(), localFile.gcount());
-                        }
-
-                        if (!localFile) break;
-
+                    if (localFile.gcount()) {
+                        scpServer.write(scpServer.getIoBuffer().get(), localFile.gcount());
                     }
 
-                    localFile.close();
+                    if (!localFile) break;
 
                 }
-                
-                scpServer.close();
 
-            } catch (const CSCP::Exception &e) {
-                throw;
-            } catch (const system_error &e) {
-                throw;
+                localFile.close();
+
             }
+
+            scpServer.close();
 
 
         }
 
         //
-        // Download all files passed in file list from server to the local directory passed in; recreating 
+        // Download all files in a remote directory structure (recursive); recreating 
         // any server directory structure in situ. Returns a list of successfully downloaded files and 
         // directories created in the local directory.
         //
@@ -237,7 +225,7 @@ namespace Antik {
         FileList getFiles(CSSHSession &sshSession, FileMapper &fileMapper, FileCompletionFn completionFn) {
 
             FileList successList;
-   
+
             try {
 
                 CSCP scpServer{ sshSession, SSH_SCP_READ | SSH_SCP_RECURSIVE, fileMapper.getRemoteDirectory()};
@@ -250,17 +238,17 @@ namespace Antik {
 
                 scpServer.pullRequest();
                 scpServer.acceptRequest();
-                                           
+
                 while ((pullStatus = scpServer.pullRequest()) != SSH_SCP_REQUEST_EOF) {
 
                     switch (pullStatus) {
-                        
+
                         case SSH_SCP_REQUEST_NEWFILE:
-                            
+
                             localFilePath = currentPath.string();
                             localFilePath /= scpServer.requestFileName();
                             localFilePath = fileMapper.toLocal(localFilePath.string());
-                            
+
                             downloadFile(scpServer, localFilePath.string());
 
                             successList.push_back(localFilePath.string());
@@ -268,22 +256,31 @@ namespace Antik {
                             if (completionFn) {
                                 completionFn(successList.back());
                             }
-                                        
+
                             break;
-                            
+
                         case SSH_SCP_REQUEST_NEWDIR:
                             currentPath /= scpServer.requestFileName();
+                            if (!fs::exists(fileMapper.toLocal(currentPath.string()))) {
+                                fs::create_directories(fileMapper.toLocal(currentPath.string()));
+                                fs::permissions(fileMapper.toLocal(currentPath.string()),
+                                        static_cast<fs::perms> (scpServer.requestFilePermissions()));
+                                successList.push_back(fileMapper.toLocal(currentPath.string()));
+                                if (completionFn) {
+                                    completionFn(successList.back());
+                                }
+                            }
                             scpServer.acceptRequest();
                             break;
-                            
+
                         case SSH_SCP_REQUEST_ENDDIR:
                             currentPath = currentPath.parent_path();
                             break;
-                            
+
                         case SSH_SCP_REQUEST_WARNING:
                             throw CSCP::Exception(scpServer, __func__);
                             break;
-                            
+
                     }
 
                 }
@@ -315,11 +312,11 @@ namespace Antik {
             FileList successList;
 
             try {
-                
+
                 FileList localFileList;
-                
+
                 listLocalRecursive(fileMapper.getLocalDirectory(), localFileList);
-                
+
                 for (auto localFile : localFileList) {
                     putFile(sshSession, localFile, fileMapper.toRemote(localFile));
                     successList.push_back(fileMapper.toRemote(localFile));
