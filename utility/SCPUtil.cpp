@@ -97,7 +97,7 @@ namespace Antik {
             char *ioBuffer = scpServer.getIoBuffer().get();
             size_t ioBufferSize = scpServer.getIoBufferSize();
             int bytesRead{0};
-            size_t fileSize{0};
+            int fileSize{0};
 
             filePermissions = scpServer.requestFilePermissions();
             fileSize = scpServer.requestFileSize();
@@ -115,9 +115,14 @@ namespace Antik {
 
             for (;;) {
                 bytesRead = scpServer.read(ioBuffer, ioBufferSize);
-                localFile.write(ioBuffer, ioBufferSize);
-                fileSize -= bytesRead;
-                if (fileSize == 0) {
+                if (bytesRead) {
+                    localFile.write(ioBuffer, bytesRead);
+                    if (!localFile) {
+                        throw system_error(errno, system_category());
+                    }
+                    fileSize -= bytesRead;
+                }
+                if ((fileSize <= 0) || (bytesRead==0)) {
                     break;
                 }
             }
