@@ -46,8 +46,8 @@
 
 #include "SSHSessionUtil.hpp"
 #include "SFTPUtil.hpp"
-#include "FTPUtil.hpp"
 
+using namespace Antik;
 using namespace Antik::SSH;
 
 //

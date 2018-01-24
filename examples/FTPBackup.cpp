@@ -42,9 +42,9 @@
 // Antik Classes
 //
 
-#include "CFTP.hpp"
 #include "FTPUtil.hpp"
 
+using namespace Antik;
 using namespace Antik::FTP;
 
 //

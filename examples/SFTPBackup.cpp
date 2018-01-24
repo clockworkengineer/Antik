@@ -45,8 +45,8 @@
 
 #include "SSHSessionUtil.hpp"
 #include "SFTPUtil.hpp"
-#include "FTPUtil.hpp"
 
+using namespace Antik;
 using namespace Antik::SSH;
 
 //
@@ -184,7 +184,7 @@ static void performBackup(CSSHSession &sshSession, ParamArgData argData) {
         
         // Get local directory file list
         
-        Antik::FTP::listLocalRecursive(argData.localDirectory, locaFileList);
+        listLocalRecursive(argData.localDirectory, locaFileList);
         
         // Copy file list to SFTP Server
 
@@ -285,7 +285,7 @@ int main(int argc, char** argv) {
         exitWithError(e.getMessage());
     } catch (CSFTP::Exception &e) {
         exitWithError(e.getMessage());
-    } catch (std::runtime_error &e) {
+    } catch (std::exception &e) {
         exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
     }
 
