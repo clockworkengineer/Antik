@@ -14,7 +14,7 @@
 // Module: SCPUtil
 //
 // Description: SCP utility functions for the Antik class CSCP. Perform single/recursive
-// file transfers to/from a remote server. Any file paths are converted in situ on either
+// file transfers to/from a remote server. Any file paths are created in situ on either
 // the remote server or local host.
 // 
 // Dependencies: 
@@ -138,7 +138,7 @@ namespace Antik {
         // ================
 
         //
-        // Upload a file from remote SCP server assigning it the same permissions as the remote file.
+        // Download a file from remote SCP server assigning it the same permissions as the remote file.
         // SCP does not directly support file upload/download so this function is not part of the
         // CSCP class.
         //
@@ -165,7 +165,7 @@ namespace Antik {
         }
 
         //
-        // Download a file to remote SCP server assigning it the same permissions as the local file. 
+        // Upload a file to remote SCP server assigning it the same permissions as the local file. 
         // It will be created with the owner and group of the currently logged in SSH account.
         // SCP does not directly support file upload/download so this function is not part of the
         // CSCP class.
