@@ -442,20 +442,20 @@ namespace Antik {
         //
         // Return string representing name of current session input cipher.
         //
-        
+
         std::string CSSHSession::getCipherIn() {
-            
+
             std::string cipherIn;
             const char *cipher = ssh_get_cipher_in(m_session);
-            
-            if (cipher) {
-                cipherIn.assign(&cipher[0], &cipher[std::strlen(cipher)]);
-            } else {
+
+            if (cipher == NULL) {
                 throw Exception(*this, __func__);
             }
-            
+
+            cipherIn.assign(&cipher[0], &cipher[std::strlen(cipher)]);
+
             return (cipherIn);
-            
+
         }
 
         //
@@ -463,18 +463,18 @@ namespace Antik {
         //
         
         std::string CSSHSession::getCipherOut() {
-            
+
             std::string cipherOut;
             const char *cipher = ssh_get_cipher_in(m_session);
-            
-            if (cipher) {
-                cipherOut.assign(&cipher[0], &cipher[std::strlen(cipher)]);
-            } else {
+
+            if (cipher == NULL) {
                 throw Exception(*this, __func__);
             }
-                
+
+            cipherOut.assign(&cipher[0], &cipher[std::strlen(cipher)]);
+
             return (cipherOut);
-            
+
         }
         
         //
@@ -486,11 +486,11 @@ namespace Antik {
             std::string hmacIn;
             const char *hmac = ssh_get_hmac_in(m_session);
             
-            if (hmac) {
-                hmacIn.assign(&hmac[0], &hmac[std::strlen(hmac)]);
-            } else {
+            if (hmac == NULL) {
                 throw Exception(*this, __func__);
             }
+            
+            hmacIn.assign(&hmac[0], &hmac[std::strlen(hmac)]);
             
             return (hmacIn);
             
@@ -501,18 +501,18 @@ namespace Antik {
         //
         
         std::string CSSHSession::getHMACOut() {
-            
+
             std::string hmacOut;
             const char *hmac = ssh_get_hmac_out(m_session);
-            
-            if (hmac) {
-                hmacOut.assign(&hmac[0], &hmac[std::strlen(hmac)]);
-            } else {
+
+            if (hmac == NULL) {
                 throw Exception(*this, __func__);
             }
-            
+
+            hmacOut.assign(&hmac[0], &hmac[std::strlen(hmac)]);
+
             return (hmacOut);
-            
+
         }
         
         //
@@ -523,12 +523,12 @@ namespace Antik {
             
             std::string keyExchangeAlg;
             const char *keyexchange = ssh_get_kex_algo(m_session);
-            
-            if (keyexchange) {
-                keyExchangeAlg.assign(&keyexchange[0], &keyexchange[std::strlen(keyexchange)]);
-            } else {
+
+            if (keyexchange == NULL) {
                 throw Exception(*this, __func__);
             }
+
+            keyExchangeAlg.assign(&keyexchange[0], &keyexchange[std::strlen(keyexchange)]);
             
             return (keyExchangeAlg);
             

@@ -115,13 +115,15 @@ namespace Antik {
         // write callback function. When the channel is closed the thread terminates.
         //
 
-        static void readChannelThread(CSSHChannel &forwardingChannel, WriteCallBackFn writeFn) {
+        static void readChannelThread(CSSHChannel &forwardingChannel, WriteOutputContext &writeContext) {
 
             uint32_t bytesRead;
 
             while (forwardingChannel.isOpen() && !forwardingChannel.isEndOfFile()) {
                 while ((bytesRead = forwardingChannel.readNonBlocking(forwardingChannel.getIoBuffer().get(), forwardingChannel.getIoBufferSize(), false)) > 0) {
-                    writeFn(forwardingChannel.getIoBuffer().get(), bytesRead);
+                    if (writeContext.writeOutFn){
+                        writeContext.writeOutFn(forwardingChannel.getIoBuffer().get(), bytesRead, writeContext.contextData);
+                    }
                 }
                 std::this_thread::sleep_for(std::chrono::microseconds(5));
             }
@@ -131,25 +133,12 @@ namespace Antik {
         // ================
         // PUBLIC FUNCTIONS
         // ================
-
-        //
-        // Default write callback functions.
-        //
-        
-        void defaultCOUT(void*ioBuffer, uint32_t ioBufferSize) {
-            std::cout.write(static_cast<char *> (ioBuffer), ioBufferSize);
-            std::cout.flush();
-        };
-
-        void defaultCERR (void *ioBuffer, uint32_t ioBufferSize) {
-            std::cerr.write(static_cast<char *> (ioBuffer), ioBufferSize);
-        }
         
         //
         // Create an interactive shell on a channel, send commands and receive output back.
         //
         
-        void interactiveShell(CSSHChannel &channel, int columns, int rows, WriteCallBackFn writeFn) {
+        void interactiveShell(CSSHChannel &channel, int columns, int rows, WriteOutputContext &writeContext) {
 
             int bytesRead;
             char *ioBuffer = channel.getIoBuffer().get();
@@ -166,7 +155,9 @@ namespace Antik {
             while (channel.isOpen() && !channel.isEndOfFile()) {
 
                 if ((bytesRead = channel.read(ioBuffer, ioBufferSize, 0)) > 0) {
-                    writeFn(ioBuffer, bytesRead);
+                    if (writeContext.writeOutFn) {
+                        writeContext.writeOutFn(ioBuffer, bytesRead, writeContext.contextData);
+                    }
                 }
 
                 if (thrownException) {
@@ -190,7 +181,7 @@ namespace Antik {
         // produced.
         //
         
-        void executeCommand(CSSHChannel &channel, const std::string &command) {
+        void executeCommand(CSSHChannel &channel, const std::string &command, WriteOutputContext &writeContext) {
 
             int bytesRead;
             char *ioBuffer = channel.getIoBuffer().get();
@@ -199,12 +190,16 @@ namespace Antik {
             channel.execute(command.c_str());
 
             while ((bytesRead = channel.read(ioBuffer, ioBufferSize)) > 0) {
-                std::cout.write(ioBuffer, bytesRead);
+                if (writeContext.writeOutFn) {
+                    writeContext.writeOutFn(ioBuffer, bytesRead, writeContext.contextData);
+                }
             }
             std::cout << std::flush;
 
             while ((bytesRead = channel.read(ioBuffer, ioBufferSize, true)) > 0) {
-                std::cerr.write(ioBuffer, bytesRead);
+                if (writeContext.writeErrFn) {
+                    writeContext.writeErrFn(ioBuffer, bytesRead, writeContext.contextData);
+                }
             }
 
         }
@@ -213,11 +208,11 @@ namespace Antik {
         // Set up a channel to be direct forwarded and specify a write callback for any output received on the channel.
         //
         
-        std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, WriteCallBackFn writeFn) {
+        std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, WriteOutputContext &writeContext) {
 
             forwardingChannel.openForward(remoteHost, remotePort, localHost, localPort);
 
-            std::thread channelReadThread{ readChannelThread, std::ref(forwardingChannel), writeFn};
+            std::thread channelReadThread{ readChannelThread, std::ref(forwardingChannel), std::ref(writeContext)};
 
             return (channelReadThread);
 
