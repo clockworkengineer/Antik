@@ -38,15 +38,26 @@
 
 namespace Antik {
     namespace SSH {
-
-        typedef std::function<void (void *, uint32_t)>  WriteCallBackFn;
         
-        void defaultCOUT(void*ioBuffer, uint32_t ioBufferSize);
-        void defaultCERR(void*ioBuffer, uint32_t ioBufferSize);
+        //
+        // Write call back function for channel feedback
+        //
         
-        void interactiveShell(CSSHChannel &channel, int columns, int rows, WriteCallBackFn writeFn=defaultCOUT);
-        void executeCommand(CSSHChannel &channel, const std::string &command);
-        std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, WriteCallBackFn writeFnwriteFn=defaultCOUT);
+        typedef std::function<void (void *, uint32_t, void *)>  WriteCallBackFn;
+        
+        //
+        // Write context for channel feedback
+        //
+        
+        struct WriteOutputContext {
+            WriteCallBackFn writeOutFn {nullptr};   // stdout
+            WriteCallBackFn writeErrFn {nullptr};   // stderr
+            void *contextData {nullptr};            // context data
+        };
+           
+        void interactiveShell(CSSHChannel &channel, int columns, int rows, WriteOutputContext &writeContext);
+        void executeCommand(CSSHChannel &channel, const std::string &command, WriteOutputContext &writeContext);
+        std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, WriteOutputContext &writeContext);
        
     } // namespace SSH
 } // namespace Antik
