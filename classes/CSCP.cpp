@@ -91,12 +91,6 @@ namespace Antik {
         //
 
         CSCP::~CSCP() {
-
-            if (m_scp) {
-                close();
-                ssh_scp_free(m_scp);
-                m_scp==NULL;
-            }
             
         }
 
@@ -113,12 +107,16 @@ namespace Antik {
         }
         
         //
-        // Close SCp server connection.
+        // Close SCP server connection and free its resources.
         //
         
         void CSCP::close() {
-            
-             ssh_scp_close(m_scp);
+
+            if (m_scp) {
+                ssh_scp_close(m_scp);
+                ssh_scp_free(m_scp);
+                m_scp == NULL;
+            }  
              
              m_ioBuffer.reset();
              

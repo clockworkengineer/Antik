@@ -40,24 +40,31 @@ namespace Antik {
     namespace SSH {
         
         //
-        // Write call back function for channel feedback
+        // IO context for channel feedback
         //
         
-        typedef std::function<void (void *, uint32_t, void *)>  WriteCallBackFn;
-        
-        //
-        // Write context for channel feedback
-        //
-        
-        struct WriteOutputContext {
-            WriteCallBackFn writeOutFn {nullptr};   // stdout
-            WriteCallBackFn writeErrFn {nullptr};   // stderr
-            void *contextData {nullptr};            // context data
+        class IOContext {
+        public:
+            explicit IOContext(void *context) : m_contextData{context}
+            {
+            }
+            virtual void writeOutFn(void *data, uint32_t size) {
+                std::cout.write((char *) data, size);
+            }
+            virtual void writeErrFn(void *data, uint32_t size) {
+                std::cerr.write((char *) data, size);
+            }
+            bool useInternalInput() const {
+                return m_internalInput;
+            }
+        protected:
+            void *m_contextData  {nullptr};
+            bool m_internalInput {true};
         };
            
-        void interactiveShell(CSSHChannel &channel, int columns, int rows, WriteOutputContext &writeContext);
-        void executeCommand(CSSHChannel &channel, const std::string &command, WriteOutputContext &writeContext);
-        std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, WriteOutputContext &writeContext);
+        void interactiveShell(CSSHChannel &channel, int columns, int rows, IOContext &ioContext);
+        void executeCommand(CSSHChannel &channel, const std::string &command, IOContext &ioContext);
+        std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, IOContext &ioContext);
        
     } // namespace SSH
 } // namespace Antik

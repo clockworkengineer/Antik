@@ -104,14 +104,6 @@ namespace Antik {
 
         CSSHChannel::~CSSHChannel() {
 
-            if (m_channel) {
-                if(isOpen()) {
-                    close();
-                }
-                ssh_channel_free(m_channel);
-                m_channel = NULL;
-            }
-
         }
 
         //
@@ -127,13 +119,17 @@ namespace Antik {
         }
         
         //
-        // Close an open channel.
+        // Close an open channel and free its resources.
         //
 
         void CSSHChannel::close() {
 
-            ssh_channel_close(m_channel);
-
+            if (m_channel) {
+                ssh_channel_close(m_channel);
+                ssh_channel_free(m_channel);
+                m_channel = NULL;
+            }
+            
             m_ioBuffer.reset();
             
         }

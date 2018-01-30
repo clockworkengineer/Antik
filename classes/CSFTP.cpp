@@ -93,12 +93,6 @@ namespace Antik {
         //
 
         CSFTP::~CSFTP() {
-            
-          if (m_sftp) {
-                close();
-                sftp_free(m_sftp);
-                m_sftp = NULL;
-            }
           
         }
 
@@ -117,11 +111,16 @@ namespace Antik {
         }
 
         //
-        // Close connection with SFTP server.
+        // Close connection with SFTP server and free its resources.
         //
 
         void CSFTP::close() {
 
+            if (m_sftp) {
+                sftp_free(m_sftp);
+                m_sftp = NULL;
+            }
+                    
             // Free IO Buffer
 
             m_ioBuffer.reset();

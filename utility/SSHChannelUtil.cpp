@@ -30,6 +30,7 @@
 //
 
 #include <iostream>
+#include <memory>
 #include <thread>
 #include <chrono>
 #include <atomic>
@@ -61,11 +62,11 @@ namespace Antik {
         // ===============
         // LOCAL FUNCTIONS
         // ===============
-        
+
         //
         // Function run on a separate thread and used to read characters that are sent down a SSH chanel with an associated shell.
         //
-        
+
         static void readShellInput(CSSHChannel &channel, std::atomic<bool> &stopShellInput, std::exception_ptr &thrownException) {
 
             try {
@@ -109,40 +110,39 @@ namespace Antik {
             }
 
         }
-        
+
         //
         // Function run on a separate thread that reads data from a direct forwarded SSH channel and passed to 
         // write callback function. When the channel is closed the thread terminates.
         //
 
-        static void readChannelThread(CSSHChannel &forwardingChannel, WriteOutputContext &writeContext) {
+        static void readChannelThread(CSSHChannel &forwardingChannel, IOContext &ioContext) {
 
             uint32_t bytesRead;
 
             while (forwardingChannel.isOpen() && !forwardingChannel.isEndOfFile()) {
                 while ((bytesRead = forwardingChannel.readNonBlocking(forwardingChannel.getIoBuffer().get(), forwardingChannel.getIoBufferSize(), false)) > 0) {
-                    if (writeContext.writeOutFn){
-                        writeContext.writeOutFn(forwardingChannel.getIoBuffer().get(), bytesRead, writeContext.contextData);
-                    }
+                    ioContext.writeOutFn(forwardingChannel.getIoBuffer().get(), bytesRead);
                 }
                 std::this_thread::sleep_for(std::chrono::microseconds(5));
             }
 
         }
-        
+
         // ================
         // PUBLIC FUNCTIONS
         // ================
-        
+
         //
         // Create an interactive shell on a channel, send commands and receive output back.
         //
-        
-        void interactiveShell(CSSHChannel &channel, int columns, int rows, WriteOutputContext &writeContext) {
+
+        void interactiveShell(CSSHChannel &channel, int columns, int rows, IOContext &ioContext) {
 
             int bytesRead;
             char *ioBuffer = channel.getIoBuffer().get();
             uint32_t ioBufferSize = channel.getIoBufferSize();
+            std::unique_ptr<std::thread> shellInputThread;
             std::atomic<bool> stopShellInput{ false};
             std::exception_ptr thrownException{nullptr};
 
@@ -150,14 +150,14 @@ namespace Antik {
             channel.requestTerminalSize(columns, rows);
             channel.requestShell();
 
-            std::thread shellInputThread{ readShellInput, std::ref(channel), std::ref(stopShellInput), std::ref(thrownException)};
-
+            if (ioContext.useInternalInput()) {
+                shellInputThread.reset( new std::thread(readShellInput, std::ref(channel), std::ref(stopShellInput), std::ref(thrownException)));;
+            }
+            
             while (channel.isOpen() && !channel.isEndOfFile()) {
 
                 if ((bytesRead = channel.read(ioBuffer, ioBufferSize, 0)) > 0) {
-                    if (writeContext.writeOutFn) {
-                        writeContext.writeOutFn(ioBuffer, bytesRead, writeContext.contextData);
-                    }
+                    ioContext.writeOutFn(ioBuffer, bytesRead);
                 }
 
                 if (thrownException) {
@@ -166,9 +166,10 @@ namespace Antik {
 
             }
 
-            stopShellInput = true;
-
-            shellInputThread.join();
+            if (shellInputThread) {
+                stopShellInput = true;
+                shellInputThread->join();
+            }
 
             if (thrownException) {
                 std::rethrow_exception(thrownException);
@@ -180,8 +181,8 @@ namespace Antik {
         // Send a shell command down a channel to be executed and read any output
         // produced.
         //
-        
-        void executeCommand(CSSHChannel &channel, const std::string &command, WriteOutputContext &writeContext) {
+
+        void executeCommand(CSSHChannel &channel, const std::string &command, IOContext &ioContext) {
 
             int bytesRead;
             char *ioBuffer = channel.getIoBuffer().get();
@@ -190,16 +191,11 @@ namespace Antik {
             channel.execute(command.c_str());
 
             while ((bytesRead = channel.read(ioBuffer, ioBufferSize)) > 0) {
-                if (writeContext.writeOutFn) {
-                    writeContext.writeOutFn(ioBuffer, bytesRead, writeContext.contextData);
-                }
+                ioContext.writeOutFn(ioBuffer, bytesRead);
             }
-            std::cout << std::flush;
 
             while ((bytesRead = channel.read(ioBuffer, ioBufferSize, true)) > 0) {
-                if (writeContext.writeErrFn) {
-                    writeContext.writeErrFn(ioBuffer, bytesRead, writeContext.contextData);
-                }
+                ioContext.writeErrFn(ioBuffer, bytesRead);
             }
 
         }
@@ -207,17 +203,17 @@ namespace Antik {
         //
         // Set up a channel to be direct forwarded and specify a write callback for any output received on the channel.
         //
-        
-        std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, WriteOutputContext &writeContext) {
+
+        std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, IOContext &ioContext) {
 
             forwardingChannel.openForward(remoteHost, remotePort, localHost, localPort);
 
-            std::thread channelReadThread{ readChannelThread, std::ref(forwardingChannel), std::ref(writeContext)};
+            std::thread channelReadThread{ readChannelThread, std::ref(forwardingChannel), std::ref(ioContext)};
 
             return (channelReadThread);
 
         }
-        
+
     } // namespace SSH
 
 } // namespace Antik
