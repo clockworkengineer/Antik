@@ -49,10 +49,10 @@ namespace Antik {
             {
             }
             virtual void writeOutFn(void *data, uint32_t size) {
-                std::cout.write((char *) data, size);
+                std::cout.write(static_cast<char *>(data), size);
             }
             virtual void writeErrFn(void *data, uint32_t size) {
-                std::cerr.write((char *) data, size);
+                std::cerr.write(static_cast<char *>(data), size);
             }
             bool useInternalInput() const {
                 return m_internalInput;
@@ -62,7 +62,7 @@ namespace Antik {
             bool m_internalInput {true};
         };
            
-        void interactiveShell(CSSHChannel &channel, int columns, int rows, IOContext &ioContext);
+        void interactiveShell(CSSHChannel &channel, const std::string &terminalType, int columns, int rows, IOContext &ioContext);
         void executeCommand(CSSHChannel &channel, const std::string &command, IOContext &ioContext);
         std::thread directForwarding(CSSHChannel &forwardingChannel, const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort, IOContext &ioContext);
        

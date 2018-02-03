@@ -107,42 +107,34 @@ namespace Antik {
             // Custom deleter for re-mapped libssh sftp data structures.
             //
             
-            struct FileAttributesDeleter {
+            struct Deleter {
 
                 void operator()(sftp_attributes fileAttributes) const {
                     sftp_attributes_free(fileAttributes);
                 }
-            };
-
-            struct FileDeleter {
-
+                
                 void operator()(sftp_file file) const {
                     sftp_close(file);
                 }
-            };
-
-            struct DirectoryDeleter {
-
+                
                 void operator()(sftp_dir directory) const {
                     sftp_closedir(directory);
                 }
-            };
-
-            struct FileSystemInfoDeleter {
 
                 void operator()(sftp_statvfs_t statvfs) const {
-                     sftp_statvfs_free(statvfs);
+                    sftp_statvfs_free(statvfs);
                 }
+                          
             };
 
             //
             // Encapsulate libssh sftp data in unique pointers.
             //
             
-            typedef std::unique_ptr<std::pointer_traits<sftp_attributes>::element_type, FileAttributesDeleter> FileAttributes;
-            typedef std::unique_ptr<std::pointer_traits<sftp_file>::element_type, FileDeleter> File;
-            typedef std::unique_ptr<std::pointer_traits<sftp_dir>::element_type, DirectoryDeleter> Directory;
-            typedef std::unique_ptr<std::pointer_traits<sftp_statvfs_t>::element_type, FileSystemInfoDeleter> FileSystemInfo;
+            typedef std::unique_ptr<std::pointer_traits<sftp_attributes>::element_type, Deleter> FileAttributes;
+            typedef std::unique_ptr<std::pointer_traits<sftp_file>::element_type, Deleter> File;
+            typedef std::unique_ptr<std::pointer_traits<sftp_dir>::element_type, Deleter> Directory;
+            typedef std::unique_ptr<std::pointer_traits<sftp_statvfs_t>::element_type, Deleter> FileSystemInfo;
 
             //
             // Re-map some linux types used (possibly make these more abstract at a later date).

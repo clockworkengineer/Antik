@@ -117,8 +117,9 @@ namespace Antik {
             // Terminal and shell.
             //
             
+            void requestTerminalOfTypeSize(const std::string &termialType, int columns, int rows); 
             void requestTerminal();         
-            void requestTerminalSize(int columns, int rows);        
+            void changeTerminalSize(int columns, int rows);        
             void requestShell();
             void execute(const std::string &commandToRun);
             void setEnvironmentVariable(const std::string &variable, const std::string &value);

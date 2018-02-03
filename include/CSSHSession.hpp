@@ -91,7 +91,7 @@ namespace Antik {
             // Custom deleter for re-mapped libssh session data structures.
             //
 
-            struct KeyDeleter {
+            struct Deleter {
 
                 void operator()(ssh_key key) const {
                     ssh_key_free(key);
@@ -105,7 +105,7 @@ namespace Antik {
             // Encapsulate libssh session data in unique pointers.
             //
 
-            typedef std::unique_ptr<std::pointer_traits<ssh_key>::element_type, KeyDeleter> Key;
+            typedef std::unique_ptr<std::pointer_traits<ssh_key>::element_type, Deleter> Key;
             
             // ============
             
