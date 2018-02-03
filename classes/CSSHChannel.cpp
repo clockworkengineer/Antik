@@ -204,6 +204,20 @@ namespace Antik {
             
             return (bytesWritten);
         }
+     
+        //
+        // Request a PTY (pseudoterminal) of given type and size is attached to channel.
+        //
+        
+        void CSSHChannel::requestTerminalOfTypeSize(const std::string &termialType, int columns, int rows) {
+            
+            int returnCode = ssh_channel_request_pty_size(m_channel, termialType.c_str(), columns, rows);
+            
+            if (returnCode == SSH_ERROR) {
+                throw Exception(*this, __func__);
+            }
+            
+        }
         
         //
         // Request a PTY (pseudoterminal) is attached to channel.
@@ -223,7 +237,7 @@ namespace Antik {
         // Set PTY (pseudoterminal) terminal size.
         //
 
-        void CSSHChannel::requestTerminalSize(int columns, int rows) {
+        void CSSHChannel::changeTerminalSize(int columns, int rows) {
             
             int returnCode = ssh_channel_change_pty_size(m_channel, columns, rows);
             

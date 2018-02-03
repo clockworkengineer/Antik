@@ -137,7 +137,7 @@ namespace Antik {
         // Create an interactive shell on a channel, send commands and receive output back.
         //
 
-        void interactiveShell(CSSHChannel &channel, int columns, int rows, IOContext &ioContext) {
+        void interactiveShell(CSSHChannel &channel, const std::string &terminalType, int columns, int rows, IOContext &ioContext) {
 
             int bytesRead;
             char *ioBuffer = channel.getIoBuffer().get();
@@ -146,8 +146,13 @@ namespace Antik {
             std::atomic<bool> stopShellInput{ false};
             std::exception_ptr thrownException{nullptr};
 
-            channel.requestTerminal();
-            channel.requestTerminalSize(columns, rows);
+            if (!terminalType.empty()) {
+                channel.requestTerminalOfTypeSize(terminalType, columns, rows);
+            } else {
+                channel.requestTerminal();
+                channel.changeTerminalSize(columns, rows);
+            }
+            
             channel.requestShell();
 
             if (ioContext.useInternalInput()) {
