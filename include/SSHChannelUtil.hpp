@@ -45,7 +45,7 @@ namespace Antik {
         
         class IOContext {
         public:
-            explicit IOContext(void *context) : m_contextData{context}
+            explicit IOContext(void *context=nullptr) : m_contextData{context}
             {
             }
             virtual void writeOutFn(void *data, uint32_t size) {

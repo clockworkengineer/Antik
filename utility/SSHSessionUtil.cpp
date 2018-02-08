@@ -108,11 +108,10 @@ namespace Antik {
         // and write away if they do.
         //
         
-        bool verifyKnownServer(CSSHSession &sshSession) {
+        bool verifyKnownServer(CSSHSession &sshSession,  ServerVerificationContext &verificationContext) {
 
             vector<unsigned char> keyHash;
             CSSHSession::Key serverPublicKey;
-            string reply;
             int returnCode;
 
             returnCode = sshSession.isServerKnown();
@@ -124,37 +123,24 @@ namespace Antik {
             switch (returnCode) {
 
                 case SSH_SERVER_KNOWN_OK:
-                    break; /* ok */
+                    verificationContext.serverKnown(sshSession);
+                    break;
 
                 case SSH_SERVER_KNOWN_CHANGED:
-                    cerr << "Host key for server changed: it is now:\n" << sshSession.convertKeyHashToHex(keyHash) << endl;
-                    cerr << "For security reasons, connection will be stopped" << endl;
-                    return (false);
+                    return (verificationContext.serverKnownChanged(sshSession, keyHash));
 
                 case SSH_SERVER_FOUND_OTHER:
-                    cerr << "The host key for this server was not found but an other type of key exists.\n";
-                    cerr << "An attacker might change the default server key to confuse your client into ";
-                    cerr << "thinking the key does not exist" << endl;
-                    return (false);
+                    return (verificationContext.serverFoundOther(sshSession));
 
                 case SSH_SERVER_FILE_NOT_FOUND:
-                    cerr << "Could not find known host file.\n";
-                    cerr << "If you accept the host key here, the file will be automatically created." << endl;
-                    /* fallback to SSH_SERVER_NOT_KNOWN behavior */
+                    return(verificationContext.serverFileNotFound(sshSession, keyHash));
 
                 case SSH_SERVER_NOT_KNOWN:
-                    cerr << "The server is unknown. Do you trust the host key?\n";
-                    cerr << "Public key hash: " << sshSession.convertKeyHashToHex(keyHash) << endl;
-                    cin >> reply;
-                    if (reply != "yes") {
-                        return (false);
-                    }
-                    sshSession.writeKnownHost();
+                    return(verificationContext.serverNotKnown(sshSession, keyHash));
                     break;
 
                 case SSH_SERVER_ERROR:
-                    cerr << "Error: " << sshSession.getError() << endl;
-                    return (false);
+                    return(verificationContext.serverError(sshSession));
 
             }
 
