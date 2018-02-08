@@ -224,7 +224,8 @@ static void performBackup(CSSHSession &sshSession, ParamArgData argData) {
 int main(int argc, char** argv) {
 
     CSSHSession sshSession;
-    
+    ServerVerificationContext verificationContext; 
+       
     try {
 
         ParamArgData argData;
@@ -255,7 +256,7 @@ int main(int argc, char** argv) {
 
         // Verify the server's identity
 
-        if (!verifyKnownServer(sshSession)) {
+        if (!verifyKnownServer(sshSession, verificationContext)) {
             throw std::runtime_error("Unable to verify server.");
         } else {
             std::cout << "Server verified..." << std::endl;
