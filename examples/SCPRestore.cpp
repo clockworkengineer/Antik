@@ -209,7 +209,7 @@ static void performRestore(CSSHSession &sshSession, ParamArgData argData) {
 int main(int argc, char** argv) {
 
     CSSHSession sshSession;
-    ServerVerificationContext verificationContext;    
+    ServerVerificationContext verificationContext { &sshSession };    
     
     try {
 
