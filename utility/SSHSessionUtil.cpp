@@ -191,7 +191,6 @@ namespace Antik {
 
                 case SSH_SERVER_NOT_KNOWN:
                     return (verificationContext.serverNotKnown(keyHash));
-                    break;
 
                 case SSH_SERVER_ERROR:
                     return (verificationContext.serverError());

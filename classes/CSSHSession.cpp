@@ -222,6 +222,7 @@ namespace Antik {
             }
 
             m_authorized=true;
+            this->m_authorizarionType = UserAuthorizationType::None;
                        
             return (returnCode);
 
@@ -240,6 +241,7 @@ namespace Antik {
             }
 
             m_authorized=true;
+            this->m_authorizarionType = UserAuthorizationType::Password;
             
             return (returnCode);
 
@@ -258,7 +260,8 @@ namespace Antik {
             }
 
             m_authorized=true;
-                       
+            this->m_authorizarionType = UserAuthorizationType::PublicKey;
+             
             return (returnCode);
 
         }
@@ -276,7 +279,8 @@ namespace Antik {
             }
 
             m_authorized=true;
-                       
+            this->m_authorizarionType = UserAuthorizationType::PublicKey;
+         
             return (returnCode);
 
         }
@@ -665,6 +669,10 @@ namespace Antik {
             m_logging = logging;
             ssh_options_set(m_session, SSH_OPTIONS_LOG_VERBOSITY, &m_logging);
             
+        }
+
+        std::uint32_t CSSHSession::getAuthorizarionType() const {
+            return m_authorizarionType;
         }
 
     } // namespace CSSH

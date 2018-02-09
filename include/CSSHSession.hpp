@@ -45,6 +45,13 @@ namespace Antik {
         // PUBLIC TYPES AND CONSTANTS
         // ==========================
 
+        enum UserAuthorizationType {
+            None=0x1,
+            Password=0x2,
+            PublicKey=0x4,
+            Interactice=0x8
+        };
+        
         // ================
         // CLASS DEFINITION
         // ================
@@ -107,8 +114,7 @@ namespace Antik {
 
             typedef std::unique_ptr<std::pointer_traits<ssh_key>::element_type, Deleter> Key;
             
-            // ============
-            
+            // ============        
             // CONSTRUCTORS
             // ============
 
@@ -149,13 +155,13 @@ namespace Antik {
             //
 
             int userAuthorizationList();
-            int userAuthorizationNone();
-            int userAuthorizationWithPublicKeyAuto();
 
             //
             // Overridable user authorization functions
             //
 
+            virtual int userAuthorizationNone();
+            virtual int userAuthorizationWithPublicKeyAuto();
             virtual int userAuthorizationWithPassword();
             virtual int userAuthorizationWithPublicKey();
             virtual int userAuthorizationWithKeyboardInteractive();
@@ -236,10 +242,17 @@ namespace Antik {
             ssh_session getSession() const;
             
             //
+            // Get session user authorization type
+            //
+            
+            std::uint32_t getAuthorizarionType() const;
+            
+            //
             // Set logging verbosity
             //
             
             void setLogging(int logging);
+  
 
             // ================
             // PUBLIC VARIABLES
@@ -276,12 +289,13 @@ namespace Antik {
             ssh_session m_session;            // libssh session
             int m_logging {SSH_LOG_NOLOG };   // libssh logging
 
-            std::string m_server;             // SSH server name
-            unsigned int m_port{ 22};         // SSH server port
-            std::string m_user;               // SSH server login account name
-            std::string m_password;           // SSH server login account password
-            bool m_authorized {false};        // SSH session authorised
- 
+            std::string m_server;              // SSH server name
+            unsigned int m_port{ 22};          // SSH server port
+            std::string m_user;                // SSH server login account name
+            std::string m_password;            // SSH server login account password
+            bool m_authorized {false};         // SSH session authorised
+            std::uint32_t m_authorizarionType; // SSH session user authorization type
+
 
         };
 
