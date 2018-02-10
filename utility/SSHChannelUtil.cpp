@@ -122,7 +122,7 @@ namespace Antik {
 
             while (forwardingChannel.isOpen() && !forwardingChannel.isEndOfFile()) {
                 while ((bytesRead = forwardingChannel.readNonBlocking(forwardingChannel.getIoBuffer().get(), forwardingChannel.getIoBufferSize(), false)) > 0) {
-                    ioContext.writeOutFn(forwardingChannel.getIoBuffer().get(), bytesRead);
+                    ioContext.writeOutput(forwardingChannel.getIoBuffer().get(), bytesRead);
                 }
                 std::this_thread::sleep_for(std::chrono::microseconds(5));
             }
@@ -162,7 +162,7 @@ namespace Antik {
             while (channel.isOpen() && !channel.isEndOfFile()) {
 
                 if ((bytesRead = channel.read(ioBuffer, ioBufferSize, 0)) > 0) {
-                    ioContext.writeOutFn(ioBuffer, bytesRead);
+                    ioContext.writeOutput(ioBuffer, bytesRead);
                 }
 
                 if (thrownException) {
@@ -196,11 +196,11 @@ namespace Antik {
             channel.execute(command.c_str());
 
             while ((bytesRead = channel.read(ioBuffer, ioBufferSize)) > 0) {
-                ioContext.writeOutFn(ioBuffer, bytesRead);
+                ioContext.writeOutput(ioBuffer, bytesRead);
             }
 
             while ((bytesRead = channel.read(ioBuffer, ioBufferSize, true)) > 0) {
-                ioContext.writeErrFn(ioBuffer, bytesRead);
+                ioContext.writeError(ioBuffer, bytesRead);
             }
 
         }

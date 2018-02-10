@@ -48,10 +48,10 @@ namespace Antik {
             explicit IOContext(void *context=nullptr) : m_contextData{context}
             {
             }
-            virtual void writeOutFn(void *data, uint32_t size) {
+            virtual void writeOutput(void *data, uint32_t size) {
                 std::cout.write(static_cast<char *>(data), size);
             }
-            virtual void writeErrFn(void *data, uint32_t size) {
+            virtual void writeError(void *data, uint32_t size) {
                 std::cerr.write(static_cast<char *>(data), size);
             }
             bool useInternalInput() const {
