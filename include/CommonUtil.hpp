@@ -39,7 +39,7 @@ namespace Antik {
         // File transfer complete function
         //
         
-        typedef std::function<void(std::string)> FileCompletionFn;
+        typedef std::function<void(const std::string&)> FileCompletionFn;
         
         //
         // Map files from to/from local/remote directories

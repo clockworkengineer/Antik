@@ -151,7 +151,7 @@ namespace Antik {
         // CSFTP class.
         //
         
-        void getFile(CSFTP &sftpServer, const string &sourceFile, const string &destinationFile) {
+        void getFile(CSFTP &sftpServer, const string &sourceFile, const string &destinationFile, FileCompletionFn completionFn) {
 
             CSFTP::File remoteFile;
             ofstream localFile;
@@ -187,6 +187,10 @@ namespace Antik {
 
                 fs::permissions(destinationFile, static_cast<fs::perms> (fileAttributes->permissions));
 
+                if (completionFn) {
+                    completionFn(destinationFile);
+                }
+
             } catch (const CSFTP::Exception &e) {
                 throw;
             } catch (const system_error &e) {
@@ -202,7 +206,7 @@ namespace Antik {
         // CSFTP class.
         //
 
-        void putFile(CSFTP &sftpServer, const string &sourceFile, const string &destinationFile) {
+        void putFile(CSFTP &sftpServer, const string &sourceFile, const string &destinationFile, FileCompletionFn completionFn) {
 
             CSFTP::File remoteFile;
             ifstream localFile;
@@ -239,6 +243,10 @@ namespace Antik {
                 sftpServer.closeFile(remoteFile);
 
                 localFile.close();
+
+                if (completionFn) {
+                    completionFn(destinationFile);
+                }
 
             } catch (const CSFTP::Exception &e) {
                 throw;

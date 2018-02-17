@@ -35,6 +35,7 @@
 #include <chrono>
 #include <atomic>
 #include <system_error>
+#include <mutex>
 
 // POSIX terminal control definitions
 
@@ -64,15 +65,15 @@ namespace Antik {
         // ===============
 
         //
-        // Function run on a separate thread and used to read characters that are sent down a SSH chanel with an associated shell.
+        // Function run on a separate thread and used to read characters that are to be sent down a SSH chanel with an associated shell.
         //
 
-        static void readShellInput(CSSHChannel &channel, std::atomic<bool> &stopShellInput, std::exception_ptr &thrownException) {
-
+        static void readShellInput(std::vector<char> &keyBuffer, std::mutex &keyBuffferLock, std::atomic<bool> &stopShellInput, std::exception_ptr &thrownException) {
+ 
             try {
 
                 struct termios terminalSettings, savedTerminalSettings;
-                std::vector<char> ioBuffer;
+                std::vector<char> terminalBuffer;
 
                 if (tcgetattr(0, &terminalSettings) == -1) {
                     throw system_error(errno, system_category(), __func__);
@@ -90,14 +91,15 @@ namespace Antik {
 
                 while (!stopShellInput) {
 
-                    for (char singleChar; (singleChar = std::getchar()) != EOF; ioBuffer.push_back(singleChar));
+                    for (char singleChar; (singleChar = std::getchar()) != EOF; terminalBuffer.push_back(singleChar));
 
-                    if (!ioBuffer.empty()) {
-                        channel.write(&ioBuffer[0], ioBuffer.size());
-                        ioBuffer.clear();
-                    } else {
-                        std::this_thread::sleep_for(std::chrono::microseconds(5));
+                    if (!terminalBuffer.empty()) {
+                        std::lock_guard<std::mutex> keyBufferGuard(keyBuffferLock);
+                        std:;copy(terminalBuffer.begin(), terminalBuffer.end(), std::back_inserter(keyBuffer));
+                        terminalBuffer.clear();
                     }
+
+                    std::this_thread::sleep_for(std::chrono::microseconds(5));
 
                 }
 
@@ -140,11 +142,14 @@ namespace Antik {
         void interactiveShell(CSSHChannel &channel, const std::string &terminalType, int columns, int rows, IOContext &ioContext) {
 
             int bytesRead;
+            bool standardError = false;
             char *ioBuffer = channel.getIoBuffer().get();
             uint32_t ioBufferSize = channel.getIoBufferSize();
             std::unique_ptr<std::thread> shellInputThread;
             std::atomic<bool> stopShellInput{ false};
             std::exception_ptr thrownException{nullptr};
+            std::mutex keyBuffferLock;
+            std::vector<char> keyBuffer;
 
             if (!terminalType.empty()) {
                 channel.requestTerminalOfTypeSize(terminalType, columns, rows);
@@ -152,18 +157,29 @@ namespace Antik {
                 channel.requestTerminal();
                 channel.changeTerminalSize(columns, rows);
             }
-            
+
             channel.requestShell();
 
             if (ioContext.useInternalInput()) {
-                shellInputThread.reset( new std::thread(readShellInput, std::ref(channel), std::ref(stopShellInput), std::ref(thrownException)));;
+                shellInputThread.reset(new std::thread(readShellInput, std::ref(keyBuffer), std::ref(keyBuffferLock), std::ref(stopShellInput), std::ref(thrownException)));
             }
-            
+
             while (channel.isOpen() && !channel.isEndOfFile()) {
 
-                if ((bytesRead = channel.read(ioBuffer, ioBufferSize, 0)) > 0) {
+                if ((bytesRead = channel.readNonBlocking(ioBuffer, ioBufferSize, standardError)) > 0) {
                     ioContext.writeOutput(ioBuffer, bytesRead);
                 }
+                standardError = !standardError;
+
+                if (!stopShellInput) {
+                    std::lock_guard<std::mutex> keyBufferGuard(keyBuffferLock);
+                    if (!keyBuffer.empty()) {
+                        channel.write(&keyBuffer[0], keyBuffer.size());
+                        keyBuffer.clear();
+                    }
+                }
+
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
 
                 if (thrownException) {
                     break;
