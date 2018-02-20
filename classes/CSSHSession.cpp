@@ -113,11 +113,15 @@ namespace Antik {
         }
 
         //
-        // CSSHSession Destructor
+        // CSSHSession Destructor (free session resources).
         //
 
         CSSHSession::~CSSHSession() {
 
+            if (m_session) {
+                ssh_free(m_session);
+                m_session = NULL;
+            }
 
         }
 
@@ -179,7 +183,7 @@ namespace Antik {
         }
 
         //
-        // Disconnect SSH session and free its resources.
+        // Disconnect SSH session.
         //
 
         void CSSHSession::disconnect(bool silent) {
@@ -194,9 +198,6 @@ namespace Antik {
                     ssh_disconnect(m_session);
                 }
 
-                ssh_free(m_session);
-                m_session = NULL;
-                
             }
             
             m_authorized=false;
