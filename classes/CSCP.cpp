@@ -79,8 +79,6 @@ namespace Antik {
         CSCP::CSCP(CSSHSession &session, int mode, const std::string &location) : m_session {session},
                 m_mode {mode }, m_location {location }
         {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
    
             if ((m_scp = ssh_scp_new(m_session.getSession(), mode, location.c_str()))== NULL) {
                 throw Exception("Could not allocate new SCP session.", __func__);
@@ -101,8 +99,6 @@ namespace Antik {
         //
         
         void CSCP::open() {
-   
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
             
             if (ssh_scp_init(m_scp)!=SSH_OK) {
                 throw Exception(*this, __func__);
@@ -115,8 +111,6 @@ namespace Antik {
         //
         
         void CSCP::close() {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
    
             if (m_scp) {
                 ssh_scp_close(m_scp);
@@ -133,8 +127,6 @@ namespace Antik {
         //
         
         void CSCP::pushDirectory(const std::string &directoryName, FilePermissions permissions) {
-   
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
             
             if (ssh_scp_push_directory(m_scp, directoryName.c_str(), permissions)!=SSH_OK) {
                  throw Exception(*this, __func__);              
@@ -147,8 +139,6 @@ namespace Antik {
         //
 
         void CSCP::pushFile(const std::string &fileName, size_t fileSize, FilePermissions permissions) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
    
             if (ssh_scp_push_file(m_scp, fileName.c_str(), fileSize, permissions) != SSH_OK) {
                 throw Exception(*this, __func__);
@@ -161,8 +151,6 @@ namespace Antik {
         //
         
         void CSCP::pushFile64(const std::string &fileName, uint64_t fileSize, FilePermissions permissions) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
    
             if (ssh_scp_push_file64(m_scp, fileName.c_str(), fileSize, permissions) != SSH_OK) {
                 throw Exception(*this, __func__);
@@ -175,8 +163,6 @@ namespace Antik {
         //
         
         void  CSCP::write(const void *buffer, size_t bufferSize) {
-   
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
             
           if (ssh_scp_write(m_scp, buffer, bufferSize) != SSH_OK) {
                 throw Exception(*this, __func__);
@@ -189,8 +175,6 @@ namespace Antik {
         //
 
         int CSCP::read(void * buffer, size_t bufferSize) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
    
             int returnCode = ssh_scp_read(m_scp, buffer, bufferSize);
 
@@ -207,8 +191,6 @@ namespace Antik {
         //
         
         int CSCP::pullRequest() {
-   
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
             
             int returnCode = ssh_scp_pull_request(m_scp);
             
@@ -225,8 +207,6 @@ namespace Antik {
         //
 
         size_t CSCP::requestFileSize() {
-   
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
             
             return(ssh_scp_request_get_size(m_scp));
 
@@ -237,8 +217,6 @@ namespace Antik {
         //
 
         uint64_t CSCP::requestFileSize64() {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
    
             return (ssh_scp_request_get_size64(m_scp));
 
@@ -249,8 +227,6 @@ namespace Antik {
         //
 
         std::string CSCP::requestFileName() {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
    
             std::string fileName;
             const char *filename = ssh_scp_request_get_filename(m_scp);
@@ -270,8 +246,6 @@ namespace Antik {
         //
         
         CSCP::FilePermissions CSCP::requestFilePermissions() {
-   
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
             
              return(ssh_scp_request_get_permissions(m_scp));
 
@@ -282,8 +256,6 @@ namespace Antik {
         //
         
         void CSCP::acceptRequest() {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
    
             if (ssh_scp_accept_request(m_scp) != SSH_OK) {
                 throw Exception(*this, __func__);
@@ -296,8 +268,6 @@ namespace Antik {
         //
         
         void CSCP::denyRequest(const std::string &reason) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
    
             if (ssh_scp_deny_request(m_scp, reason.c_str()) != SSH_OK) {
                 throw Exception(*this, __func__);
@@ -310,8 +280,6 @@ namespace Antik {
         //
         
         std::string CSCP::getRequestWarning() {
-   
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
             
             std::string requestWarning;
             const char *warning = ssh_scp_request_get_warning(m_scp);
@@ -331,8 +299,6 @@ namespace Antik {
         //
         
         void CSCP::leaveDirectory() {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
    
             if (ssh_scp_leave_directory(m_scp) != SSH_OK) {
                 throw Exception(*this, __func__);
@@ -345,8 +311,6 @@ namespace Antik {
         //
 
         std::shared_ptr<char> CSCP::getIoBuffer() {
-   
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
             
             if (!m_ioBuffer) {
                 setIoBufferSize(m_ioBufferSize);
@@ -357,8 +321,6 @@ namespace Antik {
         }
 
         void CSCP::setIoBufferSize(std::uint32_t ioBufferSize) {
-   
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
             
             m_ioBufferSize = ioBufferSize;
             m_ioBuffer.reset(new char[m_ioBufferSize]);

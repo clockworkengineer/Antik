@@ -81,8 +81,6 @@ namespace Antik {
 
             assert(session.isConnected() && session.isAuthorized());
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             if ((m_channel = ssh_channel_new(m_session.getSession())) == NULL) {
                 throw Exception("Could not allocate new channel.", __func__);
             }
@@ -93,8 +91,6 @@ namespace Antik {
         {
 
             assert(session.isConnected() && session.isAuthorized());
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             if ((m_channel = ssh_channel_new(m_session.getSession())) == NULL) {
                 throw Exception("Could not allocate new channel.", __func__);
@@ -116,8 +112,6 @@ namespace Antik {
 
         void CSSHChannel::open() {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             if (ssh_channel_open_session(m_channel) != SSH_OK) {
                 throw Exception(*this, __func__);
             }
@@ -129,8 +123,6 @@ namespace Antik {
         //
 
         void CSSHChannel::close() {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             if (m_channel) {
                 ssh_channel_close(m_channel);
@@ -148,8 +140,6 @@ namespace Antik {
 
         void CSSHChannel::sendEndOfFile() {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             ssh_channel_send_eof(m_channel);
 
         }
@@ -159,8 +149,6 @@ namespace Antik {
         //
 
         void CSSHChannel::execute(const std::string &commandToRun) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             if (ssh_channel_request_exec(m_channel, commandToRun.c_str()) != SSH_OK) {
                 throw Exception(*this, __func__);
@@ -173,8 +161,6 @@ namespace Antik {
         //
 
         int CSSHChannel::read(void *buffer, uint32_t bytesToRead, bool isStdErr) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             uint32_t bytesRead = ssh_channel_read(m_channel, buffer, bytesToRead, isStdErr);
 
@@ -192,8 +178,6 @@ namespace Antik {
         //
 
         int CSSHChannel::readNonBlocking(void *buffer, uint32_t bytesToRead, bool isStdErr) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
  
             uint32_t bytesRead = ssh_channel_read_nonblocking(m_channel, buffer, bytesToRead, isStdErr);
 
@@ -210,8 +194,6 @@ namespace Antik {
         //
 
         int CSSHChannel::write(void *buffer, uint32_t bytesToWrite) {
-           
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
  
             uint32_t bytesWritten = ssh_channel_write(m_channel, buffer, bytesToWrite);
 
@@ -228,8 +210,6 @@ namespace Antik {
 
         void CSSHChannel::requestTerminalOfTypeSize(const std::string &termialType, int columns, int rows) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             int returnCode = ssh_channel_request_pty_size(m_channel, termialType.c_str(), columns, rows);
 
             if (returnCode == SSH_ERROR) {
@@ -243,8 +223,6 @@ namespace Antik {
         //
 
         void CSSHChannel::requestTerminal() {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             int returnCode = ssh_channel_request_pty(m_channel);
 
@@ -260,8 +238,6 @@ namespace Antik {
 
         void CSSHChannel::changeTerminalSize(int columns, int rows) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             int returnCode = ssh_channel_change_pty_size(m_channel, columns, rows);
 
             if (returnCode == SSH_ERROR) {
@@ -275,8 +251,6 @@ namespace Antik {
         //
 
         void CSSHChannel::requestShell() {
-            
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             int returnCode = ssh_channel_request_shell(m_channel);
 
@@ -292,8 +266,6 @@ namespace Antik {
 
         bool CSSHChannel::isOpen() {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             return (ssh_channel_is_open(m_channel));
 
         }
@@ -303,8 +275,6 @@ namespace Antik {
         //
 
         bool CSSHChannel::isClosed() {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             return (ssh_channel_is_closed(m_channel));
 
@@ -316,8 +286,6 @@ namespace Antik {
 
         bool CSSHChannel::isEndOfFile() {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             return (ssh_channel_is_eof(m_channel));
 
         }
@@ -328,8 +296,6 @@ namespace Antik {
 
         int CSSHChannel::getExitStatus() {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             return (ssh_channel_get_exit_status(m_channel));
 
         }
@@ -339,8 +305,6 @@ namespace Antik {
         //
 
         void CSSHChannel::setEnvironmentVariable(const std::string &variable, const std::string &value) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             int returnCode = ssh_channel_request_env(m_channel, variable.c_str(), value.c_str());
 
@@ -356,8 +320,6 @@ namespace Antik {
 
         void CSSHChannel::openForward(const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             int returnCode = ssh_channel_open_forward(m_channel, remoteHost.c_str(), remotePort, localHost.c_str(), localPort);
 
             if (returnCode == SSH_ERROR) {
@@ -371,8 +333,6 @@ namespace Antik {
         //
 
         void CSSHChannel::listenForward(CSSHSession &session, const std::string &address, int port, int *boundPort) {
-            
-            std::lock_guard<std::mutex>{ session.getSessionMutex()};
 
             int returnCode = ssh_channel_listen_forward(session.getSession(), address.c_str(), port, boundPort);
 
@@ -387,8 +347,6 @@ namespace Antik {
         //
 
         void CSSHChannel::cancelForward(CSSHSession &session, const std::string &address, int port) {
-
-            std::lock_guard<std::mutex>{ session.getSessionMutex()};
                    
             int returnCode = ssh_channel_cancel_forward(session.getSession(), address.c_str(), port);
 
@@ -403,8 +361,6 @@ namespace Antik {
         //
 
         std::unique_ptr<CSSHChannel> CSSHChannel::acceptForward(CSSHSession &session, int timeout, int *port) {
-
-            std::lock_guard<std::mutex>{ session.getSessionMutex()};
                    
             ssh_channel forwardChannel = ssh_channel_accept_forward(session.getSession(), timeout, port);
 
@@ -423,8 +379,6 @@ namespace Antik {
         //
 
         std::shared_ptr<char> CSSHChannel::getIoBuffer() {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
                    
             if (!m_ioBuffer) {
                 setIoBufferSize(m_ioBufferSize);
@@ -435,8 +389,6 @@ namespace Antik {
         }
 
         void CSSHChannel::setIoBufferSize(std::uint32_t ioBufferSize) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
                    
             m_ioBufferSize = ioBufferSize;
             m_ioBuffer.reset(new char[m_ioBufferSize]);

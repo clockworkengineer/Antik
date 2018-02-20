@@ -173,8 +173,6 @@ namespace Antik {
         //
 
         void CSSHSession::connect() {
- 
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             if (ssh_connect(m_session) != SSH_OK) {
                 throw Exception(*this, __func__);
@@ -187,8 +185,6 @@ namespace Antik {
         //
 
         void CSSHSession::disconnect(bool silent) {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             if (m_session) {
                 
@@ -209,8 +205,6 @@ namespace Antik {
         //
 
         int CSSHSession::userAuthorizationList() {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             return (ssh_userauth_list(m_session, NULL));
 
@@ -221,8 +215,6 @@ namespace Antik {
         //
 
         int CSSHSession::userAuthorizationNone() {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             int returnCode = ssh_userauth_none(m_session, NULL);
 
@@ -242,8 +234,6 @@ namespace Antik {
         //
 
         int CSSHSession::userAuthorizationWithPassword() {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             int returnCode = ssh_userauth_password(m_session, NULL, m_password.c_str()); 
 
@@ -263,8 +253,6 @@ namespace Antik {
         //  
 
         int CSSHSession::userAuthorizationWithPublicKeyAuto() {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             int returnCode = ssh_userauth_publickey_auto(m_session, NULL, NULL);
 
@@ -284,8 +272,6 @@ namespace Antik {
         //  
 
         int CSSHSession::userAuthorizationWithPublicKey() {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             int returnCode = userAuthorizationWithPublicKeyAuto();
 
@@ -315,8 +301,6 @@ namespace Antik {
         //
 
         int CSSHSession::isServerKnown() {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             return (ssh_is_server_known(m_session));
 
@@ -327,8 +311,6 @@ namespace Antik {
         //
 
         Antik::SSH::CSSHSession::Key CSSHSession::getPublicKey() {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             Key serverPublicKey;
             ssh_key key;
@@ -348,8 +330,6 @@ namespace Antik {
         //
 
         void CSSHSession::getPublicKeyHash(Antik::SSH::CSSHSession::Key &serverPublicKey, std::vector<unsigned char> &keyHash) {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             unsigned char *hash = NULL;
             size_t hlen;
@@ -369,8 +349,6 @@ namespace Antik {
         //
 
         std::string CSSHSession::convertKeyHashToHex(std::vector<unsigned char> &keyHash) {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             char *hexa = NULL;
             std::string convertedHash;
@@ -390,8 +368,6 @@ namespace Antik {
         //
 
         void CSSHSession::writeKnownHost() {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             if (ssh_write_knownhost(m_session) != SSH_OK) {
                 throw Exception(*this, __func__);
@@ -404,8 +380,6 @@ namespace Antik {
         //
 
         std::string CSSHSession::getBanner() const {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             std::string sessionBanner;           
             char *banner = ssh_get_issue_banner(m_session);
@@ -424,8 +398,6 @@ namespace Antik {
         //
 
         std::string CSSHSession::getClientBanner() const {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             std::string clientBanner;
             const char *banner = ssh_get_clientbanner(m_session);
@@ -443,8 +415,6 @@ namespace Antik {
         // 
 
         std::string CSSHSession::getServerBanner() const {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             std::string serverBanner;
             const char *banner = ssh_get_serverbanner(m_session);
@@ -462,8 +432,6 @@ namespace Antik {
         //
         
         std::string CSSHSession::getDisconnectMessage() const {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             std::string disconnectMessage;
             const char *message = ssh_get_disconnect_message(m_session);
@@ -483,8 +451,6 @@ namespace Antik {
         //
 
         std::string CSSHSession::getCipherIn() {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             std::string cipherIn;
             const char *cipher = ssh_get_cipher_in(m_session);
@@ -504,8 +470,6 @@ namespace Antik {
         //
         
         std::string CSSHSession::getCipherOut() {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             std::string cipherOut;
             const char *cipher = ssh_get_cipher_in(m_session);
@@ -526,8 +490,6 @@ namespace Antik {
         
         std::string CSSHSession::getHMACIn() {
             
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
-            
             std::string hmacIn;
             const char *hmac = ssh_get_hmac_in(m_session);
             
@@ -546,8 +508,6 @@ namespace Antik {
         //
         
         std::string CSSHSession::getHMACOut() {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             std::string hmacOut;
             const char *hmac = ssh_get_hmac_out(m_session);
@@ -568,8 +528,6 @@ namespace Antik {
         
         std::string CSSHSession::getKeyExchangeAlgorithm() {
             
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
-            
             std::string keyExchangeAlg;
             const char *keyexchange = ssh_get_kex_algo(m_session);
 
@@ -589,8 +547,6 @@ namespace Antik {
 
         void CSSHSession::setOption(CSSHSession::Option sessionOption, const void *optionValue) {
             
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
-            
             if (ssh_options_set(m_session, sessionOption, optionValue)!=SSH_OK) {
                  throw Exception(*this, __func__);         
             }
@@ -602,8 +558,6 @@ namespace Antik {
         //
 
         void CSSHSession::copyOptions(CSSHSession &source) {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             if (ssh_options_copy(source.getSession(), &m_session)!=SSH_OK) {
                  throw Exception(*this, __func__);         
@@ -616,8 +570,6 @@ namespace Antik {
         //
 
         void CSSHSession::getOption(CSSHSession::Option sessionOption, std::string &optionValue) {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             char *value;
             
@@ -635,8 +587,6 @@ namespace Antik {
         //
         
         int CSSHSession::getSSHVersion() const {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             return (ssh_get_version(m_session));
 
@@ -647,8 +597,6 @@ namespace Antik {
         //
         
         int CSSHSession::getOpenSSHVersion() const {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             return (ssh_get_openssh_version(m_session));
 
@@ -659,8 +607,6 @@ namespace Antik {
         //
         
         int CSSHSession::getStatus() const {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             return (ssh_get_status(m_session));
 
@@ -671,8 +617,6 @@ namespace Antik {
         //
         
         bool CSSHSession::isConnected() const {
-
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             return (ssh_is_connected(m_session));
 
@@ -683,8 +627,6 @@ namespace Antik {
         //
             
         bool CSSHSession::isAuthorized() const {
-            
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             return m_authorized;
             
@@ -724,16 +666,10 @@ namespace Antik {
         //
         
         void CSSHSession::setLogging(int logging) {
-       
-            std::lock_guard<std::mutex> sessionLock { m_sessionMutex };
             
             m_logging = logging;
             ssh_options_set(m_session, SSH_OPTIONS_LOG_VERBOSITY, &m_logging);
             
-        }
-
-        std::mutex &CSSHSession::getSessionMutex() {
-            return m_sessionMutex;
         }
 
         std::uint32_t CSSHSession::getAuthorizarionType() const {

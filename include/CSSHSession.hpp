@@ -254,12 +254,6 @@ namespace Antik {
             
             void setLogging(int logging);
             
-            //
-            // Get session mutex
-            //
-            
-            std::mutex &getSessionMutex();
-
             // ================
             // PUBLIC VARIABLES
             // ================
@@ -292,7 +286,6 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
 
-            mutable std::mutex m_sessionMutex;// Session mutex
             ssh_session m_session;            // libssh session
             int m_logging {SSH_LOG_NOLOG };   // libssh logging
 

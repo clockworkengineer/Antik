@@ -81,8 +81,6 @@ namespace Antik {
         {
 
             assert(session.isConnected() && session.isAuthorized());
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
                    
             if ((m_sftp = sftp_new(m_session.getSession()))==NULL) {
                 throw Exception("Could not allocate new SFTP session.", __func__);
@@ -104,8 +102,6 @@ namespace Antik {
 
         void CSFTP::open() {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             if (sftp_init(m_sftp) != SSH_OK) {
                 sftp_free(m_sftp);
                 m_sftp = NULL;
@@ -119,8 +115,6 @@ namespace Antik {
         //
 
         void CSFTP::close() {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             if (m_sftp) {
                 sftp_free(m_sftp);
@@ -139,8 +133,6 @@ namespace Antik {
 
         CSFTP::File CSFTP::openFile(const std::string &fileName, int accessType, int mode) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             File fileHandle{ sftp_open(m_sftp, fileName.c_str(), accessType, mode)};
 
             if (fileHandle.get() == NULL) {
@@ -156,8 +148,6 @@ namespace Antik {
         //
 
         size_t CSFTP::readFile(const File &fileHandle, void *readBuffer, size_t bytesToRead) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             size_t bytesRead = sftp_read(fileHandle.get(), readBuffer, bytesToRead);
 
@@ -175,8 +165,6 @@ namespace Antik {
 
         size_t CSFTP::writeFile(const File &fileHandle, void *writeBuffer, size_t bytesToWrite) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             size_t bytesWritten = sftp_write(fileHandle.get(), writeBuffer, bytesToWrite);
 
             if (static_cast<int>(bytesWritten) < 0) {
@@ -193,8 +181,6 @@ namespace Antik {
 
         void CSFTP::closeFile(File &fileHandle) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             if (sftp_close(fileHandle.release()) == SSH_ERROR) {
                 throw Exception(*this, __func__);
             }
@@ -206,8 +192,6 @@ namespace Antik {
         //
 
         CSFTP::Directory CSFTP::openDirectory(const std::string &directoryPath) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             Directory directory{ sftp_opendir(m_sftp, directoryPath.c_str())};
 
@@ -224,8 +208,6 @@ namespace Antik {
         //
 
         bool CSFTP::readDirectory(const Directory &directoryHandle, FileAttributes &fileAttributes) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             sftp_attributes file{ sftp_readdir(m_sftp, directoryHandle.get())};
 
@@ -244,8 +226,6 @@ namespace Antik {
 
         bool CSFTP::endOfDirectory(const Directory &directoryHandle) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             return (sftp_dir_eof(directoryHandle.get()));
 
         }
@@ -255,8 +235,6 @@ namespace Antik {
         //
 
         void CSFTP::closeDirectory(Directory &directoryHandle) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             if (sftp_closedir(directoryHandle.release()) == SSH_ERROR) {
                 throw Exception(*this, __func__);
@@ -300,8 +278,6 @@ namespace Antik {
 
         void CSFTP::changePermissions(const std::string &filePath, const FilePermissions &filePermissions) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             if (sftp_chmod(m_sftp, filePath.c_str(), filePermissions) < 0) {
                 throw Exception(*this, __func__);
             }
@@ -314,8 +290,6 @@ namespace Antik {
 
         void CSFTP::changeOwnerGroup(const std::string &filePath, const FileOwner &owner, const FileGroup &group) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             if (sftp_chown(m_sftp, filePath.c_str(), owner, group) < 0) {
                 throw Exception(*this, __func__);
             }
@@ -327,8 +301,6 @@ namespace Antik {
         //
 
         void CSFTP::getFileAttributes(const File &fileHandle, FileAttributes &fileAttributes) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             sftp_attributes file{ sftp_fstat(fileHandle.get())};
 
@@ -346,8 +318,6 @@ namespace Antik {
 
         void CSFTP::getFileAttributes(const std::string &filePath, FileAttributes &fileAttributes) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             sftp_attributes file{ sftp_stat(m_sftp, filePath.c_str())};
 
             if (file == NULL) {
@@ -364,8 +334,6 @@ namespace Antik {
 
         void CSFTP::setFileAttributes(const std::string &filePath, const FileAttributes &fileAttributes) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             if (sftp_setstat(m_sftp, filePath.c_str(), fileAttributes.get()) < 0) {
                 throw Exception(*this, __func__);
             }
@@ -377,8 +345,6 @@ namespace Antik {
         //
 
         void CSFTP::getLinkAttributes(const std::string &linkPath, FileAttributes &fileAttributes) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             sftp_attributes file = sftp_lstat(m_sftp, linkPath.c_str());
 
@@ -396,8 +362,6 @@ namespace Antik {
 
         void CSFTP::createDirectory(const std::string &directoryPath, const FilePermissions &filePermissions) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             if (sftp_mkdir(m_sftp, directoryPath.c_str(), filePermissions)) {
                 throw Exception(*this, __func__);
             }
@@ -410,8 +374,6 @@ namespace Antik {
 
         void CSFTP::removeDirectory(const std::string &directoryPath) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             if (sftp_rmdir(m_sftp, directoryPath.c_str()) < 0) {
                 throw Exception(*this, __func__);
             }
@@ -423,8 +385,6 @@ namespace Antik {
         //
 
         std::string CSFTP::readLink(const std::string &linkPath) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             std::string finalPath;
             char *file;
@@ -448,8 +408,6 @@ namespace Antik {
 
         void CSFTP::createLink(const std::string &targetPath, const std::string &linkPath) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             if (sftp_symlink(m_sftp, targetPath.c_str(), linkPath.c_str()) < 0) {
                 throw Exception(*this, __func__);
             }
@@ -461,8 +419,6 @@ namespace Antik {
         //
 
         void CSFTP::removeLink(const std::string &filePath) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             if (sftp_unlink(m_sftp, filePath.c_str()) < 0) {
                 throw Exception(*this, __func__);
@@ -476,8 +432,6 @@ namespace Antik {
 
         void CSFTP::renameFile(const std::string &sourceFile, const std::string &destinationFile) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             if (sftp_rename(m_sftp, sourceFile.c_str(), destinationFile.c_str()) < 0) {
                 throw Exception(*this, __func__);
             }
@@ -490,8 +444,6 @@ namespace Antik {
 
         void CSFTP::rewindFile(const File &fileHandle) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             sftp_rewind(fileHandle.get());
 
         }
@@ -501,8 +453,6 @@ namespace Antik {
         //
 
         void CSFTP::seekFile(const File &fileHandle, uint32_t offset) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             if (sftp_seek(fileHandle.get(), offset) < 0) {
                 throw Exception(*this, __func__);
@@ -516,8 +466,6 @@ namespace Antik {
 
         void CSFTP::seekFile64(const File &fileHandle, uint64_t offset) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             if (sftp_seek64(fileHandle.get(), offset) < 0) {
                 throw Exception(*this, __func__);
             }
@@ -529,8 +477,6 @@ namespace Antik {
         //
 
         uint32_t CSFTP::currentFilePostion(const File &fileHandle) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             int32_t position = sftp_tell(fileHandle.get());
 
@@ -548,8 +494,6 @@ namespace Antik {
 
         uint64_t CSFTP::currentFilePostion64(const File &fileHandle) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             int64_t position = sftp_tell64(fileHandle.get());
 
             if (position < 0) {
@@ -566,8 +510,6 @@ namespace Antik {
         //
         
         std::string CSFTP::canonicalizePath(const std::string &pathName) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             std::string finalPath;
             char *path;
@@ -592,8 +534,6 @@ namespace Antik {
 
         void CSFTP::getFileSystemInfo(const File &fileHandle, FileSystemInfo &fileSystem) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             sftp_statvfs_t file{ sftp_fstatvfs(fileHandle.get())};
 
             if (file == NULL) {
@@ -609,8 +549,6 @@ namespace Antik {
         // 
         
         void CSFTP::getFileSystemInfo(const std::string &fileSystemName, FileSystemInfo &fileSystem) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             sftp_statvfs_t file{ sftp_statvfs(m_sftp, fileSystemName.c_str())};
 
@@ -628,8 +566,6 @@ namespace Antik {
 
         void CSFTP::changeFileModificationAccessTimes(const std::string &filePath, const Time *newTimeValues) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             if (sftp_utimes(m_sftp, filePath.c_str(), newTimeValues) < 0) {
                 throw Exception(*this, __func__);
             }
@@ -642,8 +578,6 @@ namespace Antik {
         
         int CSFTP::getExtensionCount() {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             return (sftp_extensions_get_count(m_sftp));
 
         }
@@ -653,8 +587,6 @@ namespace Antik {
         //
         
         std::string CSFTP::getExtensionName(int index) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             std::string extentionName;
             const char *name;
@@ -676,8 +608,6 @@ namespace Antik {
         //
         
         std::string CSFTP::getExtensionData(int index) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             std::string extensionData;
             const char *data;
@@ -701,8 +631,6 @@ namespace Antik {
         
         bool CSFTP::extensionSupported(const std::string &name, const std::string &data) {
 
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
-
             return (sftp_extension_supported(m_sftp, name.c_str(), data.c_str()));
 
         }
@@ -712,8 +640,6 @@ namespace Antik {
         //
         
         int CSFTP::getServerVersion() const {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
 
             return (sftp_server_version(m_sftp));
 
@@ -736,8 +662,6 @@ namespace Antik {
         //
 
         std::shared_ptr<char> CSFTP::getIoBuffer() {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
             
             if (!m_ioBuffer) {
                 setIoBufferSize(m_ioBufferSize);
@@ -748,8 +672,6 @@ namespace Antik {
         }
 
         void CSFTP::setIoBufferSize(std::uint32_t ioBufferSize) {
-
-            std::lock_guard<std::mutex>{ m_session.getSessionMutex()};
             
             m_ioBufferSize = ioBufferSize;
             m_ioBuffer.reset(new char[m_ioBufferSize]);
