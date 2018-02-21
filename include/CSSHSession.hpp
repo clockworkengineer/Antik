@@ -120,11 +120,13 @@ namespace Antik {
             // ============
 
             //
-            // Main constructor
+            // Main constructors
             //
 
-            CSSHSession();
+            explicit CSSHSession();
 
+            explicit CSSHSession(CSSHSession &session);
+            
             // ==========
             // DESTRUCTOR
             // ==========

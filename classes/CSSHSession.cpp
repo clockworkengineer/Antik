@@ -113,6 +113,16 @@ namespace Antik {
         }
 
         //
+        // Main CSSHSession object constructor. 
+        //
+
+        CSSHSession::CSSHSession(CSSHSession &session) : CSSHSession() {
+
+            copyOptions(session);
+
+        }
+        
+        //
         // CSSHSession Destructor (free session resources).
         //
 
