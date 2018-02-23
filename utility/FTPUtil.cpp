@@ -110,7 +110,7 @@ namespace Antik {
         // For servers that do not return a fully qualified path name create one.
         //
 
-        void listRemoteRecursive(CFTP &ftpServer, const string &remoteDirectory, FileList &fileList) {
+        void listRemoteRecursive(CFTP &ftpServer, const string &remoteDirectory, FileList &remoteFileList, RemoteFileListFn remoteFileFeedbackFn) {
 
             FileList serverFileList;
             string currentWorkingDirectory;
@@ -123,9 +123,12 @@ namespace Antik {
             if (ftpServer.listFiles("", serverFileList) == 226) {
                 for (auto file : serverFileList) {
                     string fullFilePath{ constructRemotePathName(remoteDirectory, file)};
-                    fileList.push_back(fullFilePath);
+                    remoteFileList.push_back(fullFilePath);
+                    if (remoteFileFeedbackFn) {
+                        remoteFileFeedbackFn(remoteFileList.back());
+                    }
                     if (ftpServer.isDirectory(fullFilePath)) {
-                        listRemoteRecursive(ftpServer, fullFilePath, fileList);
+                        listRemoteRecursive(ftpServer, fullFilePath, remoteFileList, remoteFileFeedbackFn);
                     }
 
                 }

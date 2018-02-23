@@ -42,6 +42,12 @@ namespace Antik {
         typedef std::function<void(const std::string&)> FileCompletionFn;
         
         //
+        // Remote file recursive list feedback function
+        //
+        
+        typedef std::function<void(const std::string&)> RemoteFileListFn;
+        
+        //
         // Map files from to/from local/remote directories
         //
         

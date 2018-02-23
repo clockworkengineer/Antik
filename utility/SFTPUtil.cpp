@@ -261,7 +261,7 @@ namespace Antik {
         // Recursively parse a remote server path passed in and pass back a list of directories/files found.
         //
         
-        void listRemoteRecursive(CSFTP &sftpServer, const string &directoryPath, vector<string> &remoteFileList) {
+        void listRemoteRecursive(CSFTP &sftpServer, const string &directoryPath, FileList &remoteFileList, RemoteFileListFn remoteFileFeedbackFn) {
 
             try {
 
@@ -277,9 +277,12 @@ namespace Antik {
                         if (filePath.back() == kServerPathSep) filePath.pop_back();
                         filePath += string(1, kServerPathSep) + fileAttributes->name;
                         if (sftpServer.isADirectory(fileAttributes)) {
-                            listRemoteRecursive(sftpServer, filePath, remoteFileList);
+                            listRemoteRecursive(sftpServer, filePath, remoteFileList, remoteFileFeedbackFn);
                         }
                         remoteFileList.push_back(filePath);
+                        if (remoteFileFeedbackFn) {
+                            remoteFileFeedbackFn(remoteFileList.back());
+                        }
                     }
                 }
 
