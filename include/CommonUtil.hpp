@@ -59,15 +59,15 @@ namespace Antik {
                 if (m_localDirectory.back() == kServerPathSep) m_localDirectory.pop_back();
                 if (m_remoteDirectory.back() == kServerPathSep) m_remoteDirectory.pop_back();
             }
-            
-            std::string toLocal(const std::string &filePath)    
+
+            std::string toLocal(const std::string &filePath)
             {
                 boost::filesystem::path localPath { m_localDirectory + kServerPathSep + filePath.substr(m_remoteDirectory.size()) };
                 localPath.normalize();
                 return(localPath.string());     
             }
             
-            std::string toRemote(const std::string &filePath) 
+            std::string toRemote(const std::string &filePath)
             {
                 boost::filesystem::path remotePath { m_remoteDirectory + kServerPathSep + filePath.substr(m_localDirectory.size()) };
                 remotePath.normalize();
@@ -93,10 +93,13 @@ namespace Antik {
         // Recursively parse a local directory and produce a list of files. (static for moment)
         //
 
-        static inline void listLocalRecursive(const std::string &localDirectory, FileList &fileList) {
+        static inline void listLocalRecursive(const std::string &localDirectory, FileList &fileList, RemoteFileListFn localFileFeedbackFn=nullptr) {
 
             for (auto directoryEntry : boost::filesystem::recursive_directory_iterator{localDirectory}) {
                 fileList.push_back(directoryEntry.path().string());
+                if (localFileFeedbackFn) {
+                    localFileFeedbackFn(directoryEntry.path().string());
+                }
             }
 
         }
