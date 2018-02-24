@@ -311,7 +311,7 @@ namespace Antik {
                             if (!ftpServer.isDirectory(remoteDirectory)) {
                                 makeRemotePath(ftpServer, remoteDirectory, false);
                                 successList.push_back(constructRemotePathName(currentWorkingDirectory, remoteDirectory, ""));
-                                if (completionFn) {
+                                if (!transferFile && completionFn) {
                                     completionFn(successList.back());
                                 }
                             } else {

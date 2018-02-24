@@ -71,7 +71,7 @@ namespace Antik {
         //
         // Return true if a given remote files exists.
         //
-        
+
         static bool fileExists(CSFTP &sftpServer, const string &remotePath) {
 
             try {
@@ -96,11 +96,11 @@ namespace Antik {
         // Break path into its component directories and create path structure on
         // remote FTP server.
         //
-        
+
         static void makeRemotePath(CSFTP &sftpServer, const string &remotePath, const CSFTP::FilePermissions &permissions) {
 
             vector<string> pathComponents;
-            fs::path currentPath{ string(1, kServerPathSep) };
+            fs::path currentPath{ string(1, kServerPathSep)};
 
             boost::split(pathComponents, remotePath, boost::is_any_of(string(1, kServerPathSep)));
 
@@ -120,7 +120,7 @@ namespace Antik {
         //
         // Return true if a given remote path is a directory.
         //
-        
+
         static bool isDirectory(CSFTP &sftpServer, const string &remotePath) {
 
             CSFTP::FileAttributes fileAttributes;
@@ -132,7 +132,7 @@ namespace Antik {
         //
         // Return true if a given remote path is a regular file.
         //
-        
+
         static bool isRegularFile(CSFTP &sftpServer, const string &remotePath) {
 
             CSFTP::FileAttributes fileAttributes;
@@ -150,7 +150,7 @@ namespace Antik {
         // SFTP does not directly support file upload/download so this function is not part of the
         // CSFTP class.
         //
-        
+
         void getFile(CSFTP &sftpServer, const string &sourceFile, const string &destinationFile, FileCompletionFn completionFn) {
 
             CSFTP::File remoteFile;
@@ -164,32 +164,49 @@ namespace Antik {
                 remoteFile = sftpServer.openFile(sourceFile, O_RDONLY, 0);
                 sftpServer.getFileAttributes(remoteFile, fileAttributes);
 
-                localFile.open(destinationFile, ios_base::out | ios_base::binary | ios_base::trunc);
-                if (!localFile) {
-                    throw system_error(errno, system_category());
+                if (sftpServer.isARegularFile(fileAttributes)) {
+
+                    if (!fs::exists(fs::path(destinationFile).parent_path())) {
+                        fs::create_directories(fs::path(destinationFile).parent_path());
+                    }
+
+                    localFile.open(destinationFile, ios_base::out | ios_base::binary | ios_base::trunc);
+                    if (!localFile) {
+                        throw system_error(errno, system_category());
+                    }
+
+                    for (;;) {
+                        bytesRead = sftpServer.readFile(remoteFile, sftpServer.getIoBuffer().get(), sftpServer.getIoBufferSize());
+                        if (bytesRead == 0) {
+                            break; // EOF
+                        }
+                        localFile.write(sftpServer.getIoBuffer().get(), bytesRead);
+                        bytesWritten += bytesRead;
+                        if (bytesWritten != localFile.tellp()) {
+                            throw CSFTP::Exception(sftpServer, __func__);
+                        }
+                    }
+
+
+                    localFile.close();
+
+                    fs::permissions(destinationFile, static_cast<fs::perms> (fileAttributes->permissions));
+
+                    if (completionFn) {
+                        completionFn(destinationFile);
+                    }
+
+                } else if (sftpServer.isADirectory(fileAttributes)) {
+                    if (!fs::exists(fs::path(destinationFile))) {
+                        fs::create_directories(fs::path(destinationFile));
+                    }
+                    if (completionFn) {
+                        completionFn(destinationFile);
+                    }
                 }
 
-                for (;;) {
-                    bytesRead = sftpServer.readFile(remoteFile, sftpServer.getIoBuffer().get(), sftpServer.getIoBufferSize());
-                    if (bytesRead == 0) {
-                        break; // EOF
-                    }
-                    localFile.write(sftpServer.getIoBuffer().get(), bytesRead);
-                    bytesWritten += bytesRead;
-                    if (bytesWritten != localFile.tellp()) {
-                        throw CSFTP::Exception(sftpServer, __func__);
-                    }
-                }
 
                 sftpServer.closeFile(remoteFile);
-
-                localFile.close();
-
-                fs::permissions(destinationFile, static_cast<fs::perms> (fileAttributes->permissions));
-
-                if (completionFn) {
-                    completionFn(destinationFile);
-                }
 
             } catch (const CSFTP::Exception &e) {
                 throw;
@@ -198,7 +215,7 @@ namespace Antik {
             }
 
         }
-        
+
         //
         // Download a file to remote SFTP server assigning it the same permissions as the local file. 
         // It will be created with the owner and group of the currently logged in SSH account.
@@ -213,39 +230,63 @@ namespace Antik {
 
             try {
 
+                string remoteFilePath;
                 fs::file_status fileStatus;
                 int bytesWritten{0};
+                bool transferFile{ false};
 
-                localFile.open(sourceFile, ios_base::in | ios_base::binary);
-                if (!localFile) {
-                    throw system_error(errno, system_category());
+                if (fs::is_directory(sourceFile)) {
+                    remoteFilePath = destinationFile;
+                    fileStatus = fs::status(sourceFile);
+                 } else if (fs::is_regular_file(sourceFile)) {
+                    remoteFilePath = fs::path(destinationFile).parent_path().string();
+                    fileStatus = fs::status(fs::path(sourceFile).parent_path());
+                    transferFile = true;
+                 } else {
+                    return; // Not valid for transfer NEXT FILE!
                 }
 
-                fileStatus = fs::status(sourceFile);
+                if (!fileExists(sftpServer, remoteFilePath)) {
+                    makeRemotePath(sftpServer, remoteFilePath, static_cast<CSFTP::FilePermissions>(fileStatus.permissions()));
+                    if (!transferFile && completionFn) {
+                        completionFn(remoteFilePath);
+                    }
+                }
 
-                remoteFile = sftpServer.openFile(destinationFile, O_CREAT | O_WRONLY | O_TRUNC, fileStatus.permissions());
+                if (transferFile) {
 
-                for (;;) {
-
-                    localFile.read(sftpServer.getIoBuffer().get(), sftpServer.getIoBufferSize());
-
-                    if (localFile.gcount()) {
-                        bytesWritten = sftpServer.writeFile(remoteFile, sftpServer.getIoBuffer().get(), localFile.gcount());
-                        if ((bytesWritten < 0) || (bytesWritten != localFile.gcount())) {
-                            throw CSFTP::Exception(sftpServer, __func__);
-                        }
+                    localFile.open(sourceFile, ios_base::in | ios_base::binary);
+                    if (!localFile) {
+                        throw system_error(errno, system_category());
                     }
 
-                    if (!localFile) break;
+                    fileStatus = fs::status(sourceFile);
 
-                }
+                    remoteFile = sftpServer.openFile(destinationFile, O_CREAT | O_WRONLY | O_TRUNC, fileStatus.permissions());
 
-                sftpServer.closeFile(remoteFile);
+                    for (;;) {
 
-                localFile.close();
+                        localFile.read(sftpServer.getIoBuffer().get(), sftpServer.getIoBufferSize());
 
-                if (completionFn) {
-                    completionFn(destinationFile);
+                        if (localFile.gcount()) {
+                            bytesWritten = sftpServer.writeFile(remoteFile, sftpServer.getIoBuffer().get(), localFile.gcount());
+                            if ((bytesWritten < 0) || (bytesWritten != localFile.gcount())) {
+                                throw CSFTP::Exception(sftpServer, __func__);
+                            }
+                        }
+
+                        if (!localFile) break;
+
+                    }
+
+                    sftpServer.closeFile(remoteFile);
+
+                    localFile.close();
+
+                    if (completionFn) {
+                        completionFn(destinationFile);
+                    }
+
                 }
 
             } catch (const CSFTP::Exception &e) {
@@ -256,11 +297,11 @@ namespace Antik {
 
 
         }
-        
+
         //
         // Recursively parse a remote server path passed in and pass back a list of directories/files found.
         //
-        
+
         void listRemoteRecursive(CSFTP &sftpServer, const string &directoryPath, FileList &remoteFileList, RemoteFileListFn remoteFileFeedbackFn) {
 
             try {
@@ -306,7 +347,7 @@ namespace Antik {
         // to its correct value on success. Returns a list of successfully downloaded files and directories created in the local
         // directory.
         //
-        
+
         FileList getFiles(CSFTP &sftpServer, FileMapper &fileMapper, const FileList &remoteFileList, FileCompletionFn completionFn, bool safe, char postFix) {
 
             FileList successList;
@@ -328,7 +369,9 @@ namespace Antik {
                         if (!safe) {
                             destinationFileName.pop_back();
                         }
+
                         getFile(sftpServer, remoteFile, destinationFileName);
+
                         if (safe) {
                             fs::rename(destinationFileName, localFilePath);
                         }
@@ -364,7 +407,7 @@ namespace Antik {
             return (successList);
 
         }
-        
+
         //
         // Take local directory, file list and upload all files to server;  recreating 
         // any local directory structure in situ on the server. Returns a list of successfully 
@@ -407,7 +450,7 @@ namespace Antik {
                         if (!fileExists(sftpServer, remoteFilePath)) {
                             makeRemotePath(sftpServer, remoteFilePath, remoteDirectoryAttributes->permissions);
                             successList.push_back(remoteFilePath);
-                            if (completionFn) {
+                            if (!transferFile && completionFn) {
                                 completionFn(successList.back());
                             }
                         }
@@ -439,7 +482,7 @@ namespace Antik {
 
                 }
 
-           // On exception report and return with files that where successfully uploaded.
+                // On exception report and return with files that where successfully uploaded.
 
             } catch (const CSFTP::Exception &e) {
                 cerr << e.getMessage() << endl;
