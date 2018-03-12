@@ -45,7 +45,7 @@ namespace Antik {
         // Remote file recursive list feedback function
         //
         
-        typedef std::function<void(const std::string&)> RemoteFileListFn;
+        typedef std::function<void(const std::string&)> FileFeedBackFn;
         
         //
         // Map files from to/from local/remote directories
@@ -93,7 +93,7 @@ namespace Antik {
         // Recursively parse a local directory and produce a list of files. (static for moment)
         //
 
-        static inline void listLocalRecursive(const std::string &localDirectory, FileList &fileList, RemoteFileListFn localFileFeedbackFn=nullptr) {
+        static inline void listLocalRecursive(const std::string &localDirectory, FileList &fileList, FileFeedBackFn localFileFeedbackFn=nullptr) {
 
             for (auto directoryEntry : boost::filesystem::recursive_directory_iterator{localDirectory}) {
                 fileList.push_back(directoryEntry.path().string());

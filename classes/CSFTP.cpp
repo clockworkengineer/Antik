@@ -363,7 +363,9 @@ namespace Antik {
         void CSFTP::createDirectory(const std::string &directoryPath, const FilePermissions &filePermissions) {
 
             if (sftp_mkdir(m_sftp, directoryPath.c_str(), filePermissions)) {
-                throw Exception(*this, __func__);
+                if (getErrorCode() != SSH_FX_FILE_ALREADY_EXISTS) {
+                    throw Exception(*this, __func__);
+                }
             }
 
         }

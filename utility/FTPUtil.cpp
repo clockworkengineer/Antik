@@ -107,10 +107,11 @@ namespace Antik {
 
         //
         // Recursively parse a remote server path passed in and pass back a list of directories/files found.
-        // For servers that do not return a fully qualified path name create one.
+        // For servers that do not return a fully qualified path name create one. If a feedback function has
+        // been passed in then it is called for each file found.
         //
 
-        void listRemoteRecursive(CFTP &ftpServer, const string &remoteDirectory, FileList &remoteFileList, RemoteFileListFn remoteFileFeedbackFn) {
+        void listRemoteRecursive(CFTP &ftpServer, const string &remoteDirectory, FileList &remoteFileList, FileFeedBackFn remoteFileFeedbackFn) {
 
             FileList serverFileList;
             string currentWorkingDirectory;
