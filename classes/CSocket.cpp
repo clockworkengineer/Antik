@@ -317,7 +317,7 @@ namespace Antik {
         }
         
         //
-        // Set SSL context for the TLS version set
+        // Set SSL context for the TLS version se
         //
 
         void CSocket::setTLSVersion(TLSVerion version) {
@@ -326,13 +326,13 @@ namespace Antik {
 
             switch (m_tlsVersion) {
                 case TLSVerion::v1_0:
-                    m_sslContext.reset(new boost::asio::ssl::context(m_ioService, boost::asio::ssl::context::tlsv1));
+                    m_sslContext.reset(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
                     break;
                 case TLSVerion::v1_1:
-                    m_sslContext.reset(new boost::asio::ssl::context(m_ioService, boost::asio::ssl::context::tlsv11));
+                    m_sslContext.reset(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv11));
                     break;
                 case TLSVerion::v1_2:
-                    m_sslContext.reset(new boost::asio::ssl::context(m_ioService, boost::asio::ssl::context::tlsv12));
+                    m_sslContext.reset(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv12));
                     break;
             }
             

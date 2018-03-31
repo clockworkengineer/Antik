@@ -85,7 +85,7 @@ namespace Antik {
 
             CSocket() {
                 // Default SSL context use TLS v1.2
-                m_sslContext.reset(new boost::asio::ssl::context(m_ioService, boost::asio::ssl::context::tlsv12));
+                m_sslContext.reset(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv12));
             }
 
             // ==========
