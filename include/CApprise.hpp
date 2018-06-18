@@ -29,7 +29,6 @@
 //
 
 #include "CommonAntik.hpp"
-#include "CLogger.hpp"
 
 //
 // inotify
@@ -241,6 +240,7 @@ namespace Antik {
             //
             // Watcher thread
             //
+            
             std::unique_ptr<std::thread> m_watcherThread;
 
         };

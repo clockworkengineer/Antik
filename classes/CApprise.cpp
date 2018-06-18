@@ -21,7 +21,6 @@
 // POSIX only or any platform that has inotify or a third party equivalent.
 //
 // Dependencies: C11++               - Language standard features used.    
-//               Class CLogger       - Logging functionality. 
 //               inotify/Linux       - Linux file system events
 //
 
@@ -38,7 +37,6 @@
 //
 // C++ STL
 //
-
 
 #include <mutex>
 #include <system_error>
@@ -248,6 +246,7 @@ namespace Antik {
                 destroyWatchTable();
 
             }
+            
         }
 
         //
@@ -519,13 +518,20 @@ namespace Antik {
             }
 
         }
-
-         
+        
+        //
+        // Start watching for file events
+        //
+        
         void CApprise::startWatching(void) {
            
             m_watcherThread.reset(new std::thread(&CApprise::watch, this));
             
         }
+        
+        //
+        // Stop watching for file events
+        //
         
         void CApprise::stopWatching(void) {
    

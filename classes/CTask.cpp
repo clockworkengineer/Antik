@@ -188,11 +188,9 @@ namespace Antik {
                 m_thrownException = std::current_exception();
             }
 
-            // CFileApprise still flagged as running so close down 
+            // Stop file watcher
 
-            if (m_watcher->stillWatching()) {
-               m_watcher->stopWatching();
-            }
+            m_watcher->stopWatching();
 
             m_coutstr({m_prefix, "CTask monitor on stopped."});
 
