@@ -39,7 +39,7 @@
 // C++ STL
 //
 
-#include <thread>
+
 #include <mutex>
 #include <system_error>
 #include <cassert>
@@ -92,49 +92,6 @@ namespace Antik {
         // ===============
 
         //
-        // Display Inotify event using coutstr
-        //
-
-        void CApprise::displayInotifyEvent(struct inotify_event *event) {
-
-#ifdef DISPLAY_INOTIFY_EVENTS
-
-            std::string outstr{("    wd = " + std::to_string(event->wd) + ";")};
-
-            if (event->cookie > 0) {
-                outstr += ("cookie = " + std::to_string(event->wd) + ";");
-            }
-
-            outstr += ("mask = ");
-
-            if (event->mask & IN_ACCESS) outstr += ("IN_ACCESS ");
-            if (event->mask & IN_ATTRIB) outstr += ("IN_ATTRIB ");
-            if (event->mask & IN_CLOSE_NOWRITE) outstr += ("IN_CLOSE_NOWRITE ");
-            if (event->mask & IN_CLOSE_WRITE) outstr += ("IN_CLOSE_WRITE ");
-            if (event->mask & IN_CREATE) outstr += ("IN_CREATE ");
-            if (event->mask & IN_DELETE) outstr += ("IN_DELETE ");
-            if (event->mask & IN_DELETE_SELF) outstr += ("IN_DELETE_SELF ");
-            if (event->mask & IN_IGNORED) outstr += ("IN_IGNORED ");
-            if (event->mask & IN_ISDIR) outstr += ("IN_ISDIR ");
-            if (event->mask & IN_MODIFY) outstr += ("IN_MODIFY ");
-            if (event->mask & IN_MOVE_SELF) outstr += ("IN_MOVE_SELF ");
-            if (event->mask & IN_MOVED_FROM) outstr += ("IN_MOVED_FROM ");
-            if (event->mask & IN_MOVED_TO) outstr += ("IN_MOVED_TO ");
-            if (event->mask & IN_OPEN) outstr += ("IN_OPEN ");
-            if (event->mask & IN_Q_OVERFLOW) outstr += ("IN_Q_OVERFLOW ");
-            if (event->mask & IN_UNMOUNT) outstr += ("IN_UNMOUNT ");
-
-            if (event->len > 0) {
-                outstr += ("\n        name = " + std::string(event->name));
-            }
-
-            m_coutstr({outstr});
-
-#endif // DISPLAY_INOTIFY_EVENTS
-
-        }
-
-        //
         // Clean up inotify. Note: closing the inotify file descriptor cleans up all
         // used resources including watch descriptors but removing them all before
         // hand will cause any pending read for events to return and the watcher loop
@@ -147,10 +104,8 @@ namespace Antik {
 
                 if (inotify_rm_watch(m_inotifyFd, it->first) == -1) {
                     throw std::system_error(std::error_code(errno, std::system_category()), "inotify_rm_watch() error");
-                } else {
-                    m_coutstr({kLogPrefix, "Watch[", std::to_string(it->first), "] removed.", "\n"});
-                }
-
+                } 
+       
             }
 
             if (close(m_inotifyFd) == -1) {
@@ -210,8 +165,6 @@ namespace Antik {
 
             m_watchMap.insert({watch, fileName});
 
-            m_coutstr({kLogPrefix, "Watch added [", fileName, "] watch = [", std::to_string(watch), "]"});
-
         }
 
         //
@@ -242,16 +195,12 @@ namespace Antik {
 
                 if (watch) {
 
-                    m_coutstr({kLogPrefix, "Watch removed [", fileName, "] watch = [", std::to_string(watch), "]"});
-
                     m_watchMap.erase(watch);
 
                     if (inotify_rm_watch(m_inotifyFd, watch) == -1) {
                         throw std::system_error(std::error_code(errno, std::system_category()), "inotify_rm_watch() error");
                     }
 
-                } else {
-                    m_cerrstr({kLogPrefix, "Watch not found in local map. Remove failed [", fileName, "]"});
                 }
 
 
@@ -265,7 +214,6 @@ namespace Antik {
             // No more watches so closedown
 
             if (m_watchMap.size() == 0) {
-                m_coutstr({kLogPrefix, "*** Last watch deleted so terminating watch loop. ***"});
                 stop();
             }
 
@@ -283,186 +231,23 @@ namespace Antik {
 
         }
 
-        // ==============
-        // PUBLIC METHODS
-        // ==============
-
-        //
-        // Main CApprise object constructor. 
-        //
-
-        CApprise::CApprise(const std::string& watchFolder, int watchDepth, std::shared_ptr<CApprise::Options> options) : m_watchFolder{watchFolder}, m_watchDepth{watchDepth}, m_doWork{true}
-        {
-
-            // ASSERT if passed parameters invalid
-
-            assert(watchFolder.length() != 0); // Length == 0
-            assert(watchDepth >= -1); // < -1
-
-            // If options passed then setup trace functions and event mask
-
-            if (options) {
-                m_bDisplayInotifyEvent = options->bDisplayInotifyEvent;
-                if (options->inotifyWatchMask) {
-                    m_inotifyWatchMask = options->inotifyWatchMask;
-                }
-                if (options->coutstr) {
-                    m_coutstr = options->coutstr;
-                }
-                if (options->cerrstr) {
-                    m_cerrstr = options->cerrstr;
-                }
-            }
-
-            // Remove path trailing '/'
-
-            if ((m_watchFolder).back() == '/') {
-                (m_watchFolder).pop_back();
-            }
-
-            m_coutstr({kLogPrefix, "Watch folder [", m_watchFolder, "]"});
-            m_coutstr({kLogPrefix, "Watch Depth [", std::to_string(watchDepth), "]"});
-
-            // Save away max watch depth and modify with watch folder depth value if not all (-1).
-
-            m_watchDepth = watchDepth;
-            if (watchDepth != -1) {
-                m_watchDepth += std::count(watchFolder.begin(), watchFolder.end(), '/');
-            }
-
-            // Allocate inotify read buffer
-
-            m_inotifyBuffer.reset(new std::uint8_t [kInotifyEventBuffLen]);
-
-            // Create watch table
-
-            initWatchTable();
-
-        }
-
-        //
-        // CApprise object constructor (watches need to be added/removed). 
-        //
-
-        CApprise::CApprise(std::shared_ptr<CApprise::Options> options) : m_doWork{true}
-        {
-
-
-            // If options passed then setup trace functions and event mask
-
-            if (options) {
-                m_bDisplayInotifyEvent = options->bDisplayInotifyEvent;
-                if (options->inotifyWatchMask) {
-                    m_inotifyWatchMask = options->inotifyWatchMask;
-                }
-                if (options->coutstr) {
-                    m_coutstr = options->coutstr;
-                }
-                if (options->cerrstr) {
-                    m_cerrstr = options->cerrstr;
-                }
-            }
-
-            // Allocate inotify read buffer
-
-            m_inotifyBuffer.reset(new u_int8_t [kInotifyEventBuffLen]);
-
-            // Create watch table
-
-            initWatchTable();
-
-        }
-
-        //
-        // CApprise Destructor
-        //
-
-        CApprise::~CApprise() {
-
-            m_coutstr({kLogPrefix, "DESTRUCTOR CALLED."});
-
-        }
-
-        //
-        // CApprise still watching folder(s)
-        //
-
-        bool CApprise::stillWatching(void) {
-
-            return (m_doWork.load());
-
-        }
-
-        //
-        // Check whether termination of CApprise was the result of any thrown exception
-        //
-
-        std::exception_ptr CApprise::getThrownException(void) {
-
-            return (m_thrownException);
-
-        }
-
-        //
-        // Add watch (file or directory)
-        //
-
-        void CApprise::addWatchFile(const std::string& filePath) {
-
-            addWatch(filePath);
-
-        }
-
-        //
-        // Remove watch
-        //
-
-        void CApprise::removeWatchFile(const std::string& filePath) {
-
-            removeWatch(filePath);
-
-        }
-
-        //
-        // Get next CApprise event in queue.
-        //
-
-        void CApprise::getEvent(CApprise::Event& evt) {
-
-            std::unique_lock<std::mutex> locker(m_queuedEventsMutex);
-
-            // Wait for something to happen. Either an event or stop running
-
-            m_queuedEventsWaiting.wait(locker, [&]() {
-                return (!m_queuedEvents.empty() || !m_doWork.load());
-            });
-
-            // return next event from queue
-
-            if (!m_queuedEvents.empty()) {
-                evt = m_queuedEvents.front();
-                m_queuedEvents.pop();
-            } else {
-                evt.id = Event_none;
-                evt.message = "";
-            }
-
-        }
-
         //
         // Flag watch loop to stop.
         //
 
         void CApprise::stop(void) {
 
-            m_coutstr({kLogPrefix, "Stop CApprise thread."});
+            // If still active then need to close down
 
-            std::unique_lock<std::mutex> locker(m_queuedEventsMutex);
-            m_doWork = false;
-            m_queuedEventsWaiting.notify_one();
+            if (m_doWork.load()) {
 
-            destroyWatchTable();
+                std::unique_lock<std::mutex> locker(m_queuedEventsMutex);
+                m_doWork = false;
+                m_queuedEventsWaiting.notify_one();
 
+                destroyWatchTable();
+
+            }
         }
 
         //
@@ -475,9 +260,6 @@ namespace Antik {
             std::uint8_t *buffer { m_inotifyBuffer.get() };
             struct inotify_event *event { nullptr };
             std::string filePath;
-
-            m_coutstr({kLogPrefix, "CApprise watch loop started on thread [",
-                Antik::Util::CLogger::toing(std::this_thread::get_id()), "]"});
 
             try {
 
@@ -502,12 +284,6 @@ namespace Antik {
 
                         event = (struct inotify_event *) &buffer[ currentPos ];
                         currentPos += kInotifyEventSize + event->len;
-
-                        // Display inotify event
-
-                        if (m_bDisplayInotifyEvent) {
-                            displayInotifyEvent(event);
-                        }
 
                         // IGNORE so move onto next event
 
@@ -624,15 +400,143 @@ namespace Antik {
                 m_thrownException = std::current_exception();
             }
 
-            // If still active then need to close down
-
-            if (m_doWork.load()) {
-                stop();
-            }
-
-            m_coutstr({kLogPrefix, "CApprise watch loop stopped."});
+            stop();
 
         }
+
+        // ==============
+        // PUBLIC METHODS
+        // ==============
+
+        //
+        // Main CApprise object constructor. 
+        //
+
+        CApprise::CApprise(const std::string& watchFolder, int watchDepth) : m_watchFolder{watchFolder}, m_watchDepth{watchDepth}, m_doWork{true}
+        {
+
+            // ASSERT if passed parameters invalid
+
+             assert(watchDepth >= -1); // < -1
+
+            if (!watchFolder.empty()) {
+
+                // Remove path trailing '/'
+
+                if ((m_watchFolder).back() == '/') {
+                    (m_watchFolder).pop_back();
+                }
+
+                // Save away max watch depth and modify with watch folder depth value if not all (-1).
+
+                m_watchDepth = watchDepth;
+                if (watchDepth != -1) {
+                    m_watchDepth += std::count(watchFolder.begin(), watchFolder.end(), '/');
+                }
+
+            }
+
+            // Allocate inotify read buffer
+
+            m_inotifyBuffer.reset(new std::uint8_t [kInotifyEventBuffLen]);
+
+            // Create watch table
+
+            initWatchTable();
+
+        }
+
+        //
+        // CApprise Destructor
+        //
+
+        CApprise::~CApprise() {
+
+        }
+
+        //
+        // CApprise still watching folder(s)
+        //
+
+        bool CApprise::stillWatching(void) {
+
+            return (m_doWork.load());
+
+        }
+
+        //
+        // Check whether termination of CApprise was the result of any thrown exception
+        //
+
+        std::exception_ptr CApprise::getThrownException(void) {
+
+            return (m_thrownException);
+
+        }
+
+        //
+        // Add watch (file or directory)
+        //
+
+        void CApprise::addWatchFile(const std::string& filePath) {
+
+            addWatch(filePath);
+
+        }
+
+        //
+        // Remove watch
+        //
+
+        void CApprise::removeWatchFile(const std::string& filePath) {
+
+            removeWatch(filePath);
+
+        }
+
+        //
+        // Get next CApprise event in queue.
+        //
+
+        void CApprise::getEvent(CApprise::Event& evt) {
+
+            std::unique_lock<std::mutex> locker(m_queuedEventsMutex);
+
+            // Wait for something to happen. Either an event or stop running
+
+            m_queuedEventsWaiting.wait(locker, [&]() {
+                return (!m_queuedEvents.empty() || !m_doWork.load());
+            });
+
+            // return next event from queue
+
+            if (!m_queuedEvents.empty()) {
+                evt = m_queuedEvents.front();
+                m_queuedEvents.pop();
+            } else {
+                evt.id = Event_none;
+                evt.message = "";
+            }
+
+        }
+
+         
+        void CApprise::startWatching(void) {
+           
+            m_watcherThread.reset(new std::thread(&CApprise::watch, this));
+            
+        }
+        
+        void CApprise::stopWatching(void) {
+   
+            stop();
+
+            if (m_watcherThread) {
+                m_watcherThread->join();
+            }
+            
+        }
+       
 
     } // namespace File
 } // namespace Antik

@@ -107,12 +107,7 @@ namespace Antik {
 
             // Create CFileApprise watcher object. Use same cout/cerr functions as Task.
 
-            m_watcherOptions.reset(new CApprise::Options{0, false, m_coutstr, m_cerrstr});
-            m_watcher.reset(new CApprise{watchFolder, watchDepth, m_watcherOptions});
-
-            // Create CFileApprise object thread and start to watch
-
-            m_watcherThread.reset(new std::thread(&CApprise::watch, m_watcher));
+            m_watcher.reset(new CApprise{watchFolder, watchDepth});
 
         }
 
@@ -143,7 +138,7 @@ namespace Antik {
         void CTask::stop(void) {
 
             m_coutstr({m_prefix, "Stop task."});
-            m_watcher->stop();
+            m_watcher->stopWatching();
 
         }
 
@@ -157,6 +152,8 @@ namespace Antik {
 
                 m_coutstr({m_prefix, "CTask monitor started."});
 
+                m_watcher->startWatching();
+                
                 // Loop until watcher stopped
 
                 while (m_watcher->stillWatching()) {
@@ -194,12 +191,8 @@ namespace Antik {
             // CFileApprise still flagged as running so close down 
 
             if (m_watcher->stillWatching()) {
-                m_watcher->stop();
+               m_watcher->stopWatching();
             }
-
-            // Wait for CFileApprise thread
-
-            m_watcherThread->join();
 
             m_coutstr({m_prefix, "CTask monitor on stopped."});
 

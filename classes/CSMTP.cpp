@@ -515,7 +515,7 @@ namespace Antik {
             std::string& encodeding, std::uint32_t numberOfBytes) {
 
         int trailing, byteIndex = 0;
-        register std::uint8_t byte1, byte2, byte3;
+        std::uint8_t byte1, byte2, byte3;
 
         if (numberOfBytes == 0) {
             return;
@@ -569,7 +569,7 @@ namespace Antik {
             std::string& decoded, std::uint32_t numberOfBytes) {
 
         int byteIndex { 0 };
-        register std::uint8_t byte1, byte2, byte3, byte4;
+        std::uint8_t byte1, byte2, byte3, byte4;
 
         if ((numberOfBytes == 0) || (numberOfBytes % 4)) {
             return;

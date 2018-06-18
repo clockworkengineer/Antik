@@ -108,7 +108,7 @@ namespace Antik {
             //
 
             void monitor(void); // Monitor watch folder for directory file events and process added files
-            void stop(void); // Stop task
+            void stop(void);    // Stop task
 
             //
             // Private data accessors
@@ -154,8 +154,6 @@ namespace Antik {
             //
 
             std::shared_ptr<CApprise> m_watcher; // Folder watcher
-            std::shared_ptr<CApprise::Options> m_watcherOptions; // folder watcher options
-            std::unique_ptr<std::thread> m_watcherThread; // Folder watcher thread
 
             //
             // Publicly accessed via accessors

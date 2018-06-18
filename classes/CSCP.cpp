@@ -115,7 +115,7 @@ namespace Antik {
             if (m_scp) {
                 ssh_scp_close(m_scp);
                 ssh_scp_free(m_scp);
-                m_scp == NULL;
+                m_scp = NULL;
             }  
              
              m_ioBuffer.reset();

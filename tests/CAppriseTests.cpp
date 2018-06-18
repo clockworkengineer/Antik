@@ -199,20 +199,12 @@ void CAppriseTests::createChanges(int updateCount) {
     // Create the file
     
     createFile(filePath+fileName);
-       
-    // Setup CFileApprise options
 
-    std::shared_ptr<CApprise::Options> watchOptions;
-    watchOptions.reset(new CApprise::Options{0, false, Antik::Util::CLogger::noOp, Antik::Util::CLogger::noOp});
+    // Create CFileApprise object and start watching
 
-    // Create CFileApprise object
+    CApprise watcher{watchFolder, watchDepth};
 
-    CApprise watcher{watchFolder, watchDepth, watchOptions};
-
-    // Create CFileApprise object thread and start to watch
-
-    std::unique_ptr<std::thread> watcherThread;
-    watcherThread.reset(new std::thread(&CApprise::watch, &watcher));
+    watcher.startWatching();
 
     filePath = CAppriseTests::kWatchFolder;
 
@@ -243,10 +235,9 @@ void CAppriseTests::createChanges(int updateCount) {
     
     fs::remove(filePath+fileName);
         
-    // Stop watcher
+    // Stop watching
     
-    watcher.stop();
-    watcherThread->join();
+    watcher.stopWatching();
 
 }
 
@@ -263,19 +254,11 @@ void CAppriseTests::createRemoveFiles(int fileCount) {
     watchFolder = kWatchFolder;
     watchDepth = -1;
 
-    // Setup CFileApprise options
+    // Create CFileApprise object and start watching
 
-    std::shared_ptr<CApprise::Options> watchOptions;
-    watchOptions.reset(new CApprise::Options{0, false, Antik::Util::CLogger::noOp, Antik::Util::CLogger::noOp});
+    CApprise watcher{watchFolder, watchDepth};
 
-    // Create CFileApprise object
-
-    CApprise watcher{watchFolder, watchDepth, watchOptions};
-
-    // Create CFileApprise object thread and start to watch
-
-    std::unique_ptr<std::thread> watcherThread;
-    watcherThread.reset(new std::thread(&CApprise::watch, &watcher));
+    watcher.startWatching();
 
     filePath = CAppriseTests::kWatchFolder;
 
@@ -313,8 +296,7 @@ void CAppriseTests::createRemoveFiles(int fileCount) {
        
     // Stop watcher
     
-    watcher.stop();
-    watcherThread->join();
+    watcher.stopWatching();
 
     // Check events generated
     
@@ -344,7 +326,7 @@ void CAppriseTests::generateException(std::exception_ptr e) {
 // =============================
 
 //
-// Watch Folder Name lengh == 0 ASSERT
+// Watch Folder Name length == 0 ASSERT
 //
 
 TEST_F(CAppriseTests, AssertParam1) {
@@ -361,7 +343,6 @@ TEST_F(CAppriseTests, AssertParam1) {
 
 TEST_F(CAppriseTests,AssertParam2) {
 
-    //   taskName = "Test";
     watchFolder = kWatchFolder;
     watchDepth = -99;
 

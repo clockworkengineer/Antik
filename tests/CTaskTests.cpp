@@ -227,7 +227,7 @@ void CTaskTests::generateException(std::exception_ptr e) {
 // =====================
 
 //
-// Task Name lengh == 0 ASSERT
+// Task Name length == 0 ASSERT
 //
 
 TEST_F(CTaskTests, AssertParam1) {

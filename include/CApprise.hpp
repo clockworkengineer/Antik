@@ -22,6 +22,7 @@
 #include <atomic>
 #include <set>
 #include <stdexcept>
+#include <thread>
 
 //
 // Antik classes
@@ -67,17 +68,6 @@ namespace Antik {
             };
 
             //
-            // CApprise options structure (optionally passed to CApprise constructor)
-            //
-
-            struct Options {
-                std::uint32_t inotifyWatchMask;                  // inotify watch event mask
-                bool bDisplayInotifyEvent;                  // ==true then display inotify event to coutstr
-                Antik::Util::CLogger::LogStringsFn coutstr; // coutstr output
-                Antik::Util::CLogger::LogStringsFn cerrstr; // cerrstr output
-            };
-
-            //
             // CApprise event identifiers
             //
 
@@ -96,7 +86,7 @@ namespace Antik {
             //
 
             struct Event {
-                EventId id;                 // Event id
+                EventId id;              // Event id
                 std::string message;     // Event file name / error message string
             };
 
@@ -110,20 +100,9 @@ namespace Antik {
 
             explicit CApprise
             (
-                const std::string& watchFolder, // Watch folder path
-                int watchDepth, // Watch depth -1=all,0=just watch folder,1=next level down etc.
-                std::shared_ptr<CApprise::Options> options = nullptr // CApprise Options (OPTIONAL)
+                const std::string& watchFolder="",  // Watch folder path;;
+                int watchDepth=-1                   // Watch depth -1=all,0=just watch folder,1=next level down etc.
             );
-
-            //
-            // Need to add/remove watches manually
-            //
-
-            explicit CApprise
-            (
-                std::shared_ptr<CApprise::Options> options = nullptr // CApprise Options (OPTIONAL)
-            );
-
 
             // ==========
             // DESTRUCTOR
@@ -138,10 +117,10 @@ namespace Antik {
             //
             // Control
             //
-
-            void watch(void); // Watch folder(s) for file events to convert for CApprise.
-            void stop(void); // Stop watch loop/thread
-
+            
+            void startWatching(void);
+            void stopWatching(void);
+            
             //
             // Queue access
             //
@@ -190,7 +169,6 @@ namespace Antik {
             // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
             // ===========================================
 
-            CApprise() = delete;
             CApprise(const CApprise & orig) = delete;
             CApprise(const CApprise && orig) = delete;
             CApprise& operator=(CApprise other) = delete;
@@ -200,11 +178,12 @@ namespace Antik {
             // ===============
 
             //
-            // Display inotify
+            // Control
             //
-
-            void displayInotifyEvent(struct inotify_event *event);
-
+               
+            void watch(void); // Watch folder(s) for file events to convert for CApprise.
+            void stop(void);  // Stop watch loop/thread
+            
             //
             // Watch processing
             //
@@ -213,7 +192,7 @@ namespace Antik {
             void removeWatch(const std::string& filePath); // Remove path being watched
             void initWatchTable(void); // Initialise table for watched folders
             void destroyWatchTable(void); // Tare down watch table
-
+          
             //
             // Queue CApprise event
             //
@@ -243,8 +222,7 @@ namespace Antik {
             std::unique_ptr<std::uint8_t> m_inotifyBuffer; // read buffer
             std::unordered_map<int32_t, std::string> m_watchMap; // Watch table indexed by watch variable
             std::set<std::string> m_inProcessOfCreation; // Set to hold files being created.
-            bool m_bDisplayInotifyEvent { false }; // ==true then display inotify event to coutstr
-
+            
             //
             // Publicly accessed via accessors
             //
@@ -259,11 +237,11 @@ namespace Antik {
             std::condition_variable m_queuedEventsWaiting; // Queued events conditional
             std::mutex m_queuedEventsMutex; // Queued events mutex
             std::queue <CApprise::Event> m_queuedEvents; // Queue of CApprise events
-
-            // Trace functions default (do nothing).
-
-            Antik::Util::CLogger::LogStringsFn m_coutstr { Antik::Util::CLogger::noOp };
-            Antik::Util::CLogger::LogStringsFn m_cerrstr { Antik::Util::CLogger::noOp };
+            
+            //
+            // Watcher thread
+            //
+            std::unique_ptr<std::thread> m_watcherThread;
 
         };
 

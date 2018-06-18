@@ -701,7 +701,7 @@ namespace Antik {
             // Create command parse/response  data
             
             CommandData commandData{ stringTag(commandLine),commandLine, responseStream};
-            commandData.resp.reset({new CommandResponse { findCommandCode->second } });
+            commandData.resp.reset(new CommandResponse { findCommandCode->second } );
 
             // Find parse function or use default if none present
 
