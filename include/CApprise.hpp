@@ -180,8 +180,8 @@ namespace Antik {
             // Control
             //
                
-            void watch(void); // Watch folder(s) for file events to convert for CApprise.
-            void stop(void);  // Stop watch loop/thread
+            void generateEvents(void);       // Watch folder(s) for file events to convert for CApprise.
+            void stopEventGeneration(void);  // Stop watch loop/thread
             
             //
             // Watch processing
@@ -197,7 +197,7 @@ namespace Antik {
             //
 
             void sendEvent(
-                CApprise::EventId id,           // Event id
+                EventId id,                  // Event id
                 const std::string& message   // Filename/message
             );
 

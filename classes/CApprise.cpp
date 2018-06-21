@@ -56,22 +56,21 @@ namespace Antik {
 
         // inotify events to recieve
 
-        const std::uint32_t CApprise::kInofityEvents { 
-                IN_ISDIR | IN_CREATE | IN_MOVED_TO | IN_MOVED_FROM |
-                IN_DELETE_SELF | IN_CLOSE_WRITE | IN_DELETE | IN_MODIFY 
-        };
+        const std::uint32_t CApprise::kInofityEvents{
+            IN_ISDIR | IN_CREATE | IN_MOVED_TO | IN_MOVED_FROM |
+            IN_DELETE_SELF | IN_CLOSE_WRITE | IN_DELETE | IN_MODIFY};
 
         // inotify event structure size
 
-        const std::uint32_t CApprise::kInotifyEventSize { (sizeof (struct inotify_event)) };
+        const std::uint32_t CApprise::kInotifyEventSize{ (sizeof (struct inotify_event))};
 
         // inotify event read buffer size
 
-        const std::uint32_t CApprise::kInotifyEventBuffLen { (1024 * (CApprise::kInotifyEventSize + 16)) };
+        const std::uint32_t CApprise::kInotifyEventBuffLen{ (1024 * (CApprise::kInotifyEventSize + 16))};
 
         // CApprise logging prefix
 
-        const std::string CApprise::kLogPrefix { "[CApprise] " };
+        const std::string CApprise::kLogPrefix{ "[CApprise] "};
 
         // ==========================
         // PUBLIC TYPES AND CONSTANTS
@@ -102,8 +101,8 @@ namespace Antik {
 
                 if (inotify_rm_watch(m_inotifyFd, it->first) == -1) {
                     throw std::system_error(std::error_code(errno, std::system_category()), "inotify_rm_watch() error");
-                } 
-       
+                }
+
             }
 
             if (close(m_inotifyFd) == -1) {
@@ -138,8 +137,8 @@ namespace Antik {
 
         void CApprise::addWatch(const std::string& filePath) {
 
-            std::string fileName { filePath };
-            int watch { 0 };
+            std::string fileName{ filePath};
+            int watch{ 0};
 
             // Remove path trailing '/'
 
@@ -173,8 +172,8 @@ namespace Antik {
 
             try {
 
-                std::string fileName { filePath };
-                int32_t watch { 0 };
+                std::string fileName{ filePath};
+                int32_t watch{ 0};
 
                 // Remove path trailing '/'
 
@@ -212,7 +211,7 @@ namespace Antik {
             // No more watches so closedown
 
             if (m_watchMap.size() == 0) {
-                stop();
+                stopEventGeneration();
             }
 
         }
@@ -233,7 +232,7 @@ namespace Antik {
         // Flag watch loop to stop.
         //
 
-        void CApprise::stop(void) {
+        void CApprise::stopEventGeneration(void) {
 
             // If still active then need to close down
 
@@ -246,7 +245,7 @@ namespace Antik {
                 destroyWatchTable();
 
             }
-            
+
         }
 
         //
@@ -254,10 +253,13 @@ namespace Antik {
         // and also generating CApprise events from inotify; until stopped.
         //
 
-        void CApprise::watch(void) {
+        void CApprise::generateEvents(void) {
 
-            std::uint8_t *buffer { m_inotifyBuffer.get() };
-            struct inotify_event *event { nullptr };
+            std::uint8_t * buffer{ m_inotifyBuffer.get()};
+
+            struct inotify_event * event {
+                nullptr
+            };
             std::string filePath;
 
             try {
@@ -266,8 +268,8 @@ namespace Antik {
 
                 while (m_doWork.load()) {
 
-                    int readLen { 0 };
-                    int currentPos { 0 };
+                    int readLen{ 0};
+                    int currentPos{ 0};
 
                     // Read in events
 
@@ -295,7 +297,7 @@ namespace Antik {
                         filePath = m_watchMap[event->wd];
 
                         if (event->len > 0) {
-                            filePath += ("/" + static_cast<std::string>(event->name));
+                            filePath += ("/" + static_cast<std::string> (event->name));
                         }
 
                         // Process event
@@ -399,7 +401,7 @@ namespace Antik {
                 m_thrownException = std::current_exception();
             }
 
-            stop();
+            stopEventGeneration(); // If not asked to stop then call anyway (cleanup)
 
         }
 
@@ -411,12 +413,13 @@ namespace Antik {
         // Main CApprise object constructor. 
         //
 
-        CApprise::CApprise(const std::string& watchFolder, int watchDepth) : m_watchFolder{watchFolder}, m_watchDepth{watchDepth}, m_doWork{true}
+        CApprise::CApprise(const std::string& watchFolder, int watchDepth)
+        : m_watchFolder{watchFolder}, m_watchDepth{watchDepth}, m_doWork{true}
         {
 
             // ASSERT if passed parameters invalid
 
-             assert(watchDepth >= -1); // < -1
+            assert(watchDepth >= -1); // < -1
 
             if (!watchFolder.empty()) {
 
@@ -518,31 +521,31 @@ namespace Antik {
             }
 
         }
-        
+
         //
         // Start watching for file events
         //
-        
+
         void CApprise::startWatching(void) {
-           
-            m_watcherThread.reset(new std::thread(&CApprise::watch, this));
-            
+
+            m_watcherThread.reset(new std::thread(&CApprise::generateEvents, this));
+
         }
-        
+
         //
         // Stop watching for file events
         //
-        
+
         void CApprise::stopWatching(void) {
-   
-            stop();
+
+            stopEventGeneration();
 
             if (m_watcherThread) {
                 m_watcherThread->join();
             }
-            
+
         }
-       
+
 
     } // namespace File
 } // namespace Antik
