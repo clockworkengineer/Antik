@@ -25,6 +25,7 @@
 //
 
 #include "CommonAntik.hpp"
+#include "CLogger.hpp"
 #include "CApprise.hpp"
 
 // =========
@@ -70,6 +71,8 @@ namespace Antik {
 
             struct TaskOptions {
                 int killCount; // file kill count
+                Antik::Util::CLogger::LogStringsFn coutstr; // coutstr output
+                Antik::Util::CLogger::LogStringsFn cerrstr; // cerrstr output
             };
 
             // ===========
@@ -157,6 +160,15 @@ namespace Antik {
             //
 
             std::exception_ptr m_thrownException { nullptr }; // Pointer to any exception thrown
+
+            //
+            // Trace functions default do nothing
+            //
+
+            Antik::Util::CLogger::LogStringsFn m_coutstr { Antik::Util::CLogger::noOp };
+            Antik::Util::CLogger::LogStringsFn m_cerrstr { Antik::Util::CLogger::noOp };
+
+            std::string m_prefix; // Task trace prefix
 
         };
 

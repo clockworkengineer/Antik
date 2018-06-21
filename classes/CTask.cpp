@@ -89,11 +89,21 @@ namespace Antik {
             assert(taskActFcn != nullptr); // nullptr
             assert(fnData != nullptr); // nullptr
 
-            // If options passed then setup kill count
+            // If options passed then setup trace functions and  kill count
 
             if (options) {
+                if (options->coutstr) {
+                    m_coutstr = options->coutstr;
+                }
+                if (options->cerrstr) {
+                    m_cerrstr = options->cerrstr;
+                }
                 m_killCount = options->killCount;
             }
+
+            // Task prefix
+
+            m_prefix = "[TASK " + m_taskName + "] ";
 
             // Create CFileApprise watcher object. Use same cout/cerr functions as Task.
 
@@ -106,6 +116,8 @@ namespace Antik {
         //
 
         CTask::~CTask() {
+
+            m_coutstr({m_prefix, "CTask DESTRUCTOR CALLED."});
 
         }
 
@@ -120,11 +132,12 @@ namespace Antik {
         }
 
         //
-        // Stop file watcher.
+        // Flag watcher and task loops to stop.
         //
 
         void CTask::stop(void) {
 
+            m_coutstr({m_prefix, "Stop task."});
             m_watcher->stopWatching();
 
         }
@@ -136,8 +149,8 @@ namespace Antik {
         void CTask::monitor(void) {
 
             try {
-                
-                // Start file watcher
+
+                m_coutstr({m_prefix, "CTask monitor started."});
 
                 m_watcher->startWatching();
                 
@@ -153,12 +166,13 @@ namespace Antik {
 
                         m_taskActFcn(evt.message, m_fnData);
 
-                        if ((m_killCount != 0) && (--(m_killCount) == 0)) { // Kill count reached so stop
+                        if ((m_killCount != 0) && (--(m_killCount) == 0)) {
+                            m_coutstr({m_prefix, "CTask kill count reached."});
                             break;
                         }
 
                     } else if ((evt.id == CApprise::Event_error) && !evt.message.empty()) {
-//                        m_coutstr({evt.message});
+                        m_coutstr({evt.message});
                     }
 
                 }
@@ -177,6 +191,8 @@ namespace Antik {
             // Stop file watcher
 
             m_watcher->stopWatching();
+
+            m_coutstr({m_prefix, "CTask monitor on stopped."});
 
         }
 

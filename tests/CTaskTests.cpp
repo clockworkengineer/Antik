@@ -70,7 +70,7 @@ protected:
         fnData.reset(new TestActFnData{0});
         funcData = static_cast<TestActFnData *> (fnData.get());
 
-        taskOptions.reset(new CTask::TaskOptions{0});
+        taskOptions.reset(new CTask::TaskOptions{0, nullptr, nullptr});
 
         // Create watch folder.
 
