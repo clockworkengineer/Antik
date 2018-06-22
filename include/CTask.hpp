@@ -59,17 +59,6 @@ namespace Antik {
 
             };
 
-            //
-            // Task options structure (optionally pass to CTask constructor)
-            // Note: After killCount files processed stop task (0 = disabled)
-            //
-
-            struct TaskOptions {
-                int killCount; // file kill count
-                Antik::Util::CLogger::LogStringsFn coutstr; // coutstr output
-                Antik::Util::CLogger::LogStringsFn cerrstr; // cerrstr output
-            };
-            
             class Action {
             public:
                 Action(const std::string &taskName) : name {taskName} {}
@@ -97,7 +86,7 @@ namespace Antik {
                 const std::string& watchFolder,      // Watch folder path
                 std::shared_ptr<Action> taskActFcn,  // Task action function
                 int watchDepth,                      // Watch depth -1= all, 0=just watch folder
-                std::shared_ptr<TaskOptions> options = nullptr // Task options. 
+                int killCount                        // Kill count
             );
 
             // ==========
@@ -165,15 +154,6 @@ namespace Antik {
             //
 
             std::exception_ptr m_thrownException { nullptr }; // Pointer to any exception thrown
-
-            //
-            // Trace functions default do nothing
-            //
-
-            Antik::Util::CLogger::LogStringsFn m_coutstr { Antik::Util::CLogger::noOp };
-            Antik::Util::CLogger::LogStringsFn m_cerrstr { Antik::Util::CLogger::noOp };
-
-            std::string m_prefix; // Task trace prefix
 
         };
 

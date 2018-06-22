@@ -73,9 +73,9 @@ namespace Antik {
                 const std::string& watchFolder,        // Watch folder path
                 std::shared_ptr<CTask::Action> action, //  Action object
                 int watchDepth,                        // Watch depth -1= all, 0=just watch folder
-                std::shared_ptr<TaskOptions> options   // Task options. 
+                int killCount                          // Kill count
         )
-        : m_taskAction{action}
+        : m_taskAction{action}, m_killCount { killCount}
 
         {
 
@@ -84,22 +84,6 @@ namespace Antik {
             assert(watchFolder.length() != 0); // Length == 0
             assert(watchDepth >= -1); // < -1
             assert(action != nullptr); // nullptr
-
-            // If options passed then setup trace functions and  kill count
-
-            if (options) {
-                if (options->coutstr) {
-                    m_coutstr = options->coutstr;
-                }
-                if (options->cerrstr) {
-                    m_cerrstr = options->cerrstr;
-                }
-                m_killCount = options->killCount;
-            }
-
-            // Task prefix
-
-            m_prefix = "[TASK " + m_taskAction->name + "] ";
 
             // Create CFileApprise watcher object. Use same cout/cerr functions as Task.
 
@@ -112,8 +96,6 @@ namespace Antik {
         //
 
         CTask::~CTask() {
-
-            m_coutstr({m_prefix, "CTask DESTRUCTOR CALLED."});
 
         }
 
@@ -133,7 +115,6 @@ namespace Antik {
 
         void CTask::stop(void) {
 
-            m_coutstr({m_prefix, "Stop task."});
             m_watcher->stopWatching();
 
         }
@@ -145,8 +126,6 @@ namespace Antik {
         void CTask::monitor(void) {
 
             try {
-
-                m_coutstr({m_prefix, "CTask monitor started."});
 
                 m_taskAction->init();
 
@@ -165,12 +144,11 @@ namespace Antik {
                         m_taskAction->process(evt.message);
 
                         if ((m_killCount != 0) && (--(m_killCount) == 0)) {
-                            m_coutstr({m_prefix, "CTask kill count reached."});
                             break;
                         }
 
                     } else if ((evt.id == CApprise::Event_error) && !evt.message.empty()) {
-                        m_coutstr({evt.message});
+                      ;
                     }
 
                 }
@@ -191,8 +169,6 @@ namespace Antik {
             m_watcher->stopWatching();
 
             m_taskAction->term();
-
-            m_coutstr({m_prefix, "CTask monitor on stopped."});
 
         }
 
