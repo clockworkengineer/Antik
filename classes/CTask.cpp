@@ -70,14 +70,14 @@ namespace Antik {
 
         CTask::CTask
         (
-                const std::string& taskName, // Task name
-                const std::string& watchFolder, // Watch folder path
-                TaskActionFcn taskActFcn, // Task action function
-                std::shared_ptr<void> fnData, // Task file process function data
-                int watchDepth, // Watch depth -1= all, 0=just watch folder
-                std::shared_ptr<TaskOptions> options // Task options. 
+                const std::string& taskName,            // Task name
+                const std::string& watchFolder,         // Watch folder path
+                std::shared_ptr<CTask::Action> actionObject,   //  Action object
+                std::shared_ptr<void> fnData,           // Task file process function data
+                int watchDepth,                         // Watch depth -1= all, 0=just watch folder
+                std::shared_ptr<TaskOptions> options    // Task options. 
                 )
-        : m_taskName{taskName}, m_taskActFcn{taskActFcn}, m_fnData{fnData}
+        : m_taskName{taskName}, m_taskActFcn{actionObject}, m_fnData{fnData}
 
         {
 
@@ -86,7 +86,7 @@ namespace Antik {
             assert(taskName.length() != 0); // Length == 0
             assert(watchFolder.length() != 0); // Length == 0
             assert(watchDepth >= -1); // < -1
-            assert(taskActFcn != nullptr); // nullptr
+            assert(actionObject != nullptr); // nullptr
             assert(fnData != nullptr); // nullptr
 
             // If options passed then setup trace functions and  kill count
@@ -151,6 +151,8 @@ namespace Antik {
             try {
 
                 m_coutstr({m_prefix, "CTask monitor started."});
+                
+                m_taskActFcn->init();
 
                 m_watcher->startWatching();
                 
@@ -164,7 +166,7 @@ namespace Antik {
 
                     if ((evt.id == CApprise::Event_add) && !evt.message.empty()) {
 
-                        m_taskActFcn(evt.message, m_fnData);
+                        m_taskActFcn->process(evt.message, m_fnData);
 
                         if ((m_killCount != 0) && (--(m_killCount) == 0)) {
                             m_coutstr({m_prefix, "CTask kill count reached."});
@@ -191,6 +193,8 @@ namespace Antik {
             // Stop file watcher
 
             m_watcher->stopWatching();
+            
+            m_taskActFcn->term();
 
             m_coutstr({m_prefix, "CTask monitor on stopped."});
 
