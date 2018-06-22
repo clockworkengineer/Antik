@@ -70,24 +70,20 @@ namespace Antik {
 
         CTask::CTask
         (
-                const std::string& taskName,            // Task name
-                const std::string& watchFolder,         // Watch folder path
-                std::shared_ptr<CTask::Action> actionObject,   //  Action object
-                std::shared_ptr<void> fnData,           // Task file process function data
-                int watchDepth,                         // Watch depth -1= all, 0=just watch folder
-                std::shared_ptr<TaskOptions> options    // Task options. 
-                )
-        : m_taskName{taskName}, m_taskActFcn{actionObject}, m_fnData{fnData}
+                const std::string& watchFolder,        // Watch folder path
+                std::shared_ptr<CTask::Action> action, //  Action object
+                int watchDepth,                        // Watch depth -1= all, 0=just watch folder
+                std::shared_ptr<TaskOptions> options   // Task options. 
+        )
+        : m_taskAction{action}
 
         {
 
             // ASSERT if passed parameters invalid
 
-            assert(taskName.length() != 0); // Length == 0
             assert(watchFolder.length() != 0); // Length == 0
             assert(watchDepth >= -1); // < -1
-            assert(actionObject != nullptr); // nullptr
-            assert(fnData != nullptr); // nullptr
+            assert(action != nullptr); // nullptr
 
             // If options passed then setup trace functions and  kill count
 
@@ -103,7 +99,7 @@ namespace Antik {
 
             // Task prefix
 
-            m_prefix = "[TASK " + m_taskName + "] ";
+            m_prefix = "[TASK " + m_taskAction->name + "] ";
 
             // Create CFileApprise watcher object. Use same cout/cerr functions as Task.
 
@@ -151,11 +147,11 @@ namespace Antik {
             try {
 
                 m_coutstr({m_prefix, "CTask monitor started."});
-                
-                m_taskActFcn->init();
+
+                m_taskAction->init();
 
                 m_watcher->startWatching();
-                
+
                 // Loop until watcher stopped
 
                 while (m_watcher->stillWatching()) {
@@ -166,7 +162,7 @@ namespace Antik {
 
                     if ((evt.id == CApprise::Event_add) && !evt.message.empty()) {
 
-                        m_taskActFcn->process(evt.message, m_fnData);
+                        m_taskAction->process(evt.message);
 
                         if ((m_killCount != 0) && (--(m_killCount) == 0)) {
                             m_coutstr({m_prefix, "CTask kill count reached."});
@@ -193,8 +189,8 @@ namespace Antik {
             // Stop file watcher
 
             m_watcher->stopWatching();
-            
-            m_taskActFcn->term();
+
+            m_taskAction->term();
 
             m_coutstr({m_prefix, "CTask monitor on stopped."});
 

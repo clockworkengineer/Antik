@@ -60,12 +60,6 @@ namespace Antik {
             };
 
             //
-            // Task action function
-            //
-
-     //       typedef std::function<bool (const std::string&, const std::shared_ptr<void>) > TaskActionFcn;
-
-            //
             // Task options structure (optionally pass to CTask constructor)
             // Note: After killCount files processed stop task (0 = disabled)
             //
@@ -80,9 +74,13 @@ namespace Antik {
             public:
                 Action(const std::string &taskName) : name {taskName} {}
                 std::string name;
+                std::unordered_map<std::string, std::string> m_actionData;
                 virtual void init(void)=0;
-                virtual bool process(const std::string &file, const std::shared_ptr<void> fnData)=0;
+                virtual bool process(const std::string &file)=0;
                 virtual void term(void)=0;
+                void setActionData(std::unordered_map<std::string, std::string> &actionData) {
+                    m_actionData = actionData ;
+                }
                 virtual ~Action() {};
             };
 
@@ -96,11 +94,9 @@ namespace Antik {
 
             explicit CTask
             (
-                const std::string& taskName,    // Task name
-                const std::string& watchFolder, // Watch folder path
+                const std::string& watchFolder,      // Watch folder path
                 std::shared_ptr<Action> taskActFcn,  // Task action function
-                std::shared_ptr<void> fnData,   // Task file process function data
-                int watchDepth,                 // Watch depth -1= all, 0=just watch folder
+                int watchDepth,                      // Watch depth -1= all, 0=just watch folder
                 std::shared_ptr<TaskOptions> options = nullptr // Task options. 
             );
 
@@ -154,10 +150,8 @@ namespace Antik {
             // Constructor passed in and intialized
             //
 
-            std::string m_taskName;         // Task name
             std::string m_watchFolder;      // Watch Folder
-            std::shared_ptr<Action> m_taskActFcn;      // Task action function 
-            std::shared_ptr<void> m_fnData; // Task action function data   
+            std::shared_ptr<Action> m_taskAction;      // Task action function 
             int m_killCount { 0 };          // Task Kill Count
 
             //
