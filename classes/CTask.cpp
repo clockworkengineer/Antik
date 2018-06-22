@@ -71,7 +71,7 @@ namespace Antik {
         CTask::CTask
         (
                 const std::string& watchFolder,        // Watch folder path
-                std::shared_ptr<CTask::Action> action, //  Action object
+                std::shared_ptr<CTask::Action> action, // Action object
                 int watchDepth,                        // Watch depth -1= all, 0=just watch folder
                 int killCount                          // Kill count
         )
@@ -84,6 +84,7 @@ namespace Antik {
             assert(watchFolder.length() != 0); // Length == 0
             assert(watchDepth >= -1); // < -1
             assert(action != nullptr); // nullptr
+            assert(killCount >= 0); // < 0
 
             // Create CFileApprise watcher object. Use same cout/cerr functions as Task.
 

@@ -41,12 +41,36 @@ namespace fs = boost::filesystem;
 // UNIT TEST FIXTURE CLASS
 // =======================
 
-// Test Action function data
+class TestAction1 : public CTask::Action {
+public:
 
-struct TestActFnData {
-    int fnCalledCount; // How many times action function called
+    TestAction1() : Action("Test") {
+    }
+    virtual void init(void) {};
+    virtual void term(void) {} ;
+    virtual bool process(const std::string &file) {
+        int fileCount = std::stoi(this->m_actionData["fnCalledCount"]);
+        this->m_actionData["fnCalledCount"] = std::to_string(++fileCount);
+        return true;      
+    }
+    virtual ~TestAction1() {
+    };
 };
 
+class TestAction2: public CTask::Action {
+public:
+
+    TestAction2() : Action("Test") {
+    }
+    virtual void init(void) {};
+    virtual void term(void) {} ;
+    virtual bool process(const std::string &file) {
+         throw std::logic_error("Just an example.");
+         return true;
+    }
+    virtual ~TestAction2() {
+    };
+};
 
 class CTaskTests : public ::testing::Test {
 protected:
@@ -65,13 +89,12 @@ protected:
 
     virtual void SetUp() {
 
-        // Create function data (wrap in void shared pointer for passing to task).
-
-        fnData.reset(new TestActFnData{0});
-        funcData = static_cast<TestActFnData *> (fnData.get());
-
-        taskOptions.reset(new CTask::TaskOptions{0, nullptr, nullptr});
-
+        // Create default test action and data
+        
+        testTaskAction.reset(new TestAction1());
+        actionData["fnCalledCount"] = "0";
+        testTaskAction->setActionData(actionData);
+            
         // Create watch folder.
 
         if (!fs::exists(CTaskTests::kWatchFolder)) {
@@ -106,17 +129,14 @@ protected:
     void createFiles(int fileCount);                 // Create fileCount files and check action function call count
     void generateException(std::exception_ptr e);
 
-    std::shared_ptr<void> fnData;   // Action function data shared pointer wrapper
-    TestActFnData *funcData;        // Action function data 
-
     std::string filePath = "";      // Test file path
     std::string fileName = "";      // Test file name
     int watchDepth = -1;            // Folder Watch depth
     std::string taskName = "";      // Task Name
     std::string watchFolder = "";   // Watch Folder
 
-    CTask::TaskActionFcn taskActFcn; // Task Action Function Data
-    std::shared_ptr<CTask::TaskOptions> taskOptions; // Task options
+    std::shared_ptr<CTask::Action> testTaskAction; // Task Action Function Data
+    std::unordered_map<std::string, std::string> actionData;
 
     static const std::string kWatchFolder; // Test Watch Folder
     static const std::string kDestinationFolder; // Test Destination folder
@@ -168,22 +188,10 @@ void CTaskTests::createFiles(int fileCount) {
     watchFolder = kWatchFolder;
     watchDepth = -1;
 
-    // Simple test action function that just increases call count
-
-    taskActFcn = [] ( const std::string &filenamePath, const std::shared_ptr<void> fnData) -> bool {
-        TestActFnData *funcData = static_cast<TestActFnData *> (fnData.get());
-        funcData->fnCalledCount++;
-        return true;
-    };
-
-    // Set any task options required by test
-
-    (taskOptions)->killCount = fileCount;
-
     // Create task object
     
-    CTask task{taskName, watchFolder, taskActFcn, fnData, watchDepth, taskOptions};
-
+    CTask task{watchFolder, testTaskAction,  watchDepth, fileCount};
+           
     // Create task object thread and start to watch
 
     std::unique_ptr<std::thread> taskThread;
@@ -201,7 +209,7 @@ void CTaskTests::createFiles(int fileCount) {
 
     taskThread->join();
 
-    EXPECT_EQ(fileCount, funcData->fnCalledCount);
+    EXPECT_EQ(fileCount, std::stoi(testTaskAction->m_actionData["fnCalledCount"]));
 
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::string file = (boost::format("temp%1%.txt") % cnt01).str();
@@ -232,7 +240,7 @@ void CTaskTests::generateException(std::exception_ptr e) {
 
 TEST_F(CTaskTests, AssertParam1) {
 
-    EXPECT_DEATH(CTask task(taskName, watchFolder, taskActFcn, fnData, watchDepth), CTaskTests::kParamAssertion1);
+    EXPECT_DEATH(CTask task(watchFolder, testTaskAction, 0, watchDepth), CTaskTests::kParamAssertion1);
 
 }
 
@@ -244,7 +252,7 @@ TEST_F(CTaskTests, AssertParam2) {
 
     taskName = "Test";
 
-    EXPECT_DEATH(CTask task(taskName, watchFolder, taskActFcn, fnData, watchDepth), CTaskTests::kParamAssertion2);
+    EXPECT_DEATH(CTask task(watchFolder, testTaskAction,  watchDepth, 0), CTaskTests::kParamAssertion2);
 
 }
 
@@ -258,7 +266,7 @@ TEST_F(CTaskTests, AssertParam3) {
     watchFolder = kWatchFolder;
     watchDepth = -1;
 
-    EXPECT_DEATH(CTask task(taskName, watchFolder, nullptr, fnData, watchDepth), CTaskTests::kParamAssertion3);
+    EXPECT_DEATH(CTask task(watchFolder, nullptr, watchDepth, 0), CTaskTests::kParamAssertion3);
 
 }
 
@@ -272,7 +280,7 @@ TEST_F(CTaskTests, AssertParam4) {
     watchFolder = kWatchFolder;
     watchDepth = -1;
 
-    EXPECT_DEATH(CTask task(taskName, watchFolder, taskActFcn, nullptr, watchDepth), CTaskTests::kParamAssertion4);
+    EXPECT_DEATH(CTask task(watchFolder, nullptr, watchDepth, 0), CTaskTests::kParamAssertion4);
 
 }
 
@@ -286,7 +294,7 @@ TEST_F(CTaskTests, AssertParam5) {
     watchFolder = kWatchFolder;
     watchDepth = -99;
 
-    EXPECT_DEATH(CTask task(taskName, watchFolder, taskActFcn, fnData, watchDepth), CTaskTests::kParamAssertion5);
+    EXPECT_DEATH(CTask task(watchFolder, testTaskAction, watchDepth, 0), CTaskTests::kParamAssertion5);
 
 }
 
@@ -362,14 +370,10 @@ TEST_F(CTaskTests, NoWatchFolder) {
 
     // Simple test action function that does nothing
 
-    taskActFcn = [] (const std::string& filenamePath, const std::shared_ptr<void> fnData) -> bool {
-        TestActFnData *funcData = static_cast<TestActFnData *> (fnData.get());
-        return true;
-    };
 
     // Create task object
 
-    EXPECT_THROW(CTask task(taskName, watchFolder, taskActFcn, fnData, watchDepth, taskOptions), std::system_error);
+    EXPECT_THROW(CTask task(watchFolder, testTaskAction, watchDepth, 0), std::system_error);
 
 }
 
@@ -384,21 +388,13 @@ TEST_F(CTaskTests, ActionFunctionException) {
     fileName = "tmp.txt";
     watchDepth = -1;
 
-    // Simple test action function that just throws an exception
-
-    taskActFcn = [] (const std::string& filenamePath, const std::shared_ptr<void> fnData) -> bool {
-        TestActFnData *funcData = static_cast<TestActFnData *> (fnData.get());
-        throw std::logic_error("Just an example.");
-        return true;
-    };
-
-    // Set any task options required by test
-
-    (taskOptions)->killCount = 1;
+    // SWitch in non-default test action object
+    
+    testTaskAction.reset(new TestAction2());
     
     // Create task object
 
-    CTask task{taskName, watchFolder, taskActFcn, fnData, watchDepth, taskOptions};
+    CTask task{watchFolder, testTaskAction, watchDepth, 0};
 
     // Create task object thread and start to watch
 
