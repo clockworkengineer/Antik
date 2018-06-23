@@ -41,27 +41,41 @@ namespace fs = boost::filesystem;
 // UNIT TEST FIXTURE CLASS
 // =======================
 
-class TestAction1 : public CTask::Action {
+class TestAction1 : public CTask::IAction {
 public:
 
-    TestAction1() : Action("Test") {
+    TestAction1(const std::string &taskName) : name{taskName}
+    {
     }
-    virtual void init(void) {};
-    virtual void term(void) {} ;
-    virtual bool process(const std::string &file) {
-        int fileCount = std::stoi(this->m_actionData["fnCalledCount"]);
-        this->m_actionData["fnCalledCount"] = std::to_string(++fileCount);
-        return true;      
-    }
-    virtual ~TestAction1() {
+
+    virtual void init(void) {
     };
+
+    virtual void term(void) {
+    };
+
+    virtual bool process(const std::string &file) {
+        fileCount++;
+        return true;
+    }
+
+    virtual ~TestAction1() {
+
+    };
+
+    int fileCount{ 0};
+    
+protected:
+    std::string name; // Action name
 };
 
-class TestAction2: public CTask::Action {
+class TestAction2: public CTask::IAction {
 public:
 
-    TestAction2() : Action("Test") {
+    TestAction2(const std::string &taskName) : name{taskName}
+    {
     }
+
     virtual void init(void) {};
     virtual void term(void) {} ;
     virtual bool process(const std::string &file) {
@@ -70,6 +84,8 @@ public:
     }
     virtual ~TestAction2() {
     };
+protected:
+    std::string name; // Action name
 };
 
 class CTaskTests : public ::testing::Test {
@@ -89,12 +105,11 @@ protected:
 
     virtual void SetUp() {
 
-        // Create default test action and data
+        // Create test actions
         
-        testTaskAction.reset(new TestAction1());
-        actionData["fnCalledCount"] = "0";
-        testTaskAction->setActionData(actionData);
-            
+        testTaskAction1.reset(new TestAction1("Test1"));
+        testTaskAction2.reset(new TestAction2("Test2"));
+        
         // Create watch folder.
 
         if (!fs::exists(CTaskTests::kWatchFolder)) {
@@ -135,10 +150,10 @@ protected:
     std::string taskName = "";      // Task Name
     std::string watchFolder = "";   // Watch Folder
 
-    std::shared_ptr<CTask::Action> testTaskAction; // Task Action Function Data
-    std::unordered_map<std::string, std::string> actionData;
+    std::shared_ptr<TestAction1> testTaskAction1; // Test Action 1
+    std::shared_ptr<TestAction2> testTaskAction2; // Test Action 2
 
-    static const std::string kWatchFolder; // Test Watch Folder
+    static const std::string kWatchFolder;       // Test Watch Folder
     static const std::string kDestinationFolder; // Test Destination folder
 
     static const std::string kParamAssertion1; // Missing parameter 1 Assert REGEX
@@ -190,7 +205,7 @@ void CTaskTests::createFiles(int fileCount) {
 
     // Create task object
     
-    CTask task{watchFolder, testTaskAction,  watchDepth, fileCount};
+    CTask task{watchFolder, testTaskAction1,  watchDepth, fileCount};
            
     // Create task object thread and start to watch
 
@@ -209,7 +224,7 @@ void CTaskTests::createFiles(int fileCount) {
 
     taskThread->join();
 
-    EXPECT_EQ(fileCount, std::stoi(testTaskAction->m_actionData["fnCalledCount"]));
+    EXPECT_EQ(fileCount, testTaskAction1->fileCount);
 
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::string file = (boost::format("temp%1%.txt") % cnt01).str();
@@ -240,7 +255,7 @@ void CTaskTests::generateException(std::exception_ptr e) {
 
 TEST_F(CTaskTests, AssertParam1) {
 
-    EXPECT_DEATH(CTask task(watchFolder, testTaskAction, 0, watchDepth), CTaskTests::kParamAssertion1);
+    EXPECT_DEATH(CTask task(watchFolder, testTaskAction1, 0, watchDepth), CTaskTests::kParamAssertion1);
 
 }
 
@@ -252,7 +267,7 @@ TEST_F(CTaskTests, AssertParam2) {
 
     taskName = "Test";
 
-    EXPECT_DEATH(CTask task(watchFolder, testTaskAction,  watchDepth, 0), CTaskTests::kParamAssertion2);
+    EXPECT_DEATH(CTask task(watchFolder, testTaskAction1,  watchDepth, 0), CTaskTests::kParamAssertion2);
 
 }
 
@@ -294,7 +309,7 @@ TEST_F(CTaskTests, AssertParam5) {
     watchFolder = kWatchFolder;
     watchDepth = -99;
 
-    EXPECT_DEATH(CTask task(watchFolder, testTaskAction, watchDepth, 0), CTaskTests::kParamAssertion5);
+    EXPECT_DEATH(CTask task(watchFolder, testTaskAction1, watchDepth, 0), CTaskTests::kParamAssertion5);
 
 }
 
@@ -368,12 +383,9 @@ TEST_F(CTaskTests, NoWatchFolder) {
     watchFolder = "/tmp/tnothere";
     watchDepth = -1;
 
-    // Simple test action function that does nothing
-
-
     // Create task object
 
-    EXPECT_THROW(CTask task(watchFolder, testTaskAction, watchDepth, 0), std::system_error);
+    EXPECT_THROW(CTask task(watchFolder, testTaskAction1, watchDepth, 0), std::system_error);
 
 }
 
@@ -387,14 +399,10 @@ TEST_F(CTaskTests, ActionFunctionException) {
     watchFolder = kWatchFolder;
     fileName = "tmp.txt";
     watchDepth = -1;
-
-    // SWitch in non-default test action object
-    
-    testTaskAction.reset(new TestAction2());
     
     // Create task object
 
-    CTask task{watchFolder, testTaskAction, watchDepth, 0};
+    CTask task{watchFolder, testTaskAction2, watchDepth, 0};
 
     // Create task object thread and start to watch
 

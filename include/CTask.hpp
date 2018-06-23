@@ -26,7 +26,6 @@
 //
 
 #include "CommonAntik.hpp"
-#include "CLogger.hpp"
 #include "CApprise.hpp"
 
 // =========
@@ -59,18 +58,15 @@ namespace Antik {
 
             };
 
-            class Action {
-            public:
-                Action(const std::string &taskName) : name {taskName} {}
-                std::string name;
-                std::unordered_map<std::string, std::string> m_actionData;
-                virtual void init(void)=0;
-                virtual bool process(const std::string &file)=0;
-                virtual void term(void)=0;
-                void setActionData(std::unordered_map<std::string, std::string> &actionData) {
-                    m_actionData = actionData ;
-                }
-                virtual ~Action() {};
+            //
+            // Base action interface class
+            //
+
+            class IAction {
+            public:            
+                virtual void init(void) = 0;
+                virtual bool process(const std::string &file) = 0;
+                virtual void term(void) = 0;
             };
 
             // ===========
@@ -83,10 +79,10 @@ namespace Antik {
 
             explicit CTask
             (
-                const std::string& watchFolder,      // Watch folder path
-                std::shared_ptr<Action> taskActFcn,  // Task action function
-                int watchDepth,                      // Watch depth -1= all, 0=just watch folder
-                int killCount                        // Kill count
+                    const std::string& watchFolder, // Watch folder path
+                    std::shared_ptr<IAction> taskActFcn, // Task action function
+                    int watchDepth, // Watch depth -1= all, 0=just watch folder
+                    int killCount // Kill count
             );
 
             // ==========
@@ -139,9 +135,9 @@ namespace Antik {
             // Constructor passed in and intialized
             //
 
-            std::string m_watchFolder;      // Watch Folder
-            std::shared_ptr<Action> m_taskAction;      // Task action function 
-            int m_killCount { 0 };          // Task Kill Count
+            std::string m_watchFolder;             // Watch Folder
+            std::shared_ptr<IAction> m_taskAction; // Task action function 
+            int m_killCount { 0 };                   // Task Kill Count
 
             //
             // CFileApprise file watcher
@@ -153,7 +149,7 @@ namespace Antik {
             // Publicly accessed via accessors
             //
 
-            std::exception_ptr m_thrownException { nullptr }; // Pointer to any exception thrown
+            std::exception_ptr m_thrownException{ nullptr}; // Pointer to any exception thrown
 
         };
 
