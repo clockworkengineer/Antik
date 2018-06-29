@@ -68,20 +68,37 @@ namespace Antik {
             // ==============
 
             static bool exists(const CPath &filePath) {
-                return(boost::filesystem::exists(filePath.toString()));
+                try {
+                    return(boost::filesystem::exists(filePath.toString()));
+                } catch (const boost::filesystem::filesystem_error & e) {
+                    throw Exception(e.what());
+                } 
             }
             
             static bool createDirectory(const CPath &directoryPath) {
-                return(boost::filesystem::create_directories(directoryPath.toString()));
+                try {
+                    return (boost::filesystem::create_directories(directoryPath.toString()));
+                } catch (const boost::filesystem::filesystem_error & e) {
+                    throw Exception(e.what());
+                }
             }
-            
+
             static void remove(const CPath &filePath) {
-                boost::filesystem::remove(filePath.toString());
+                try {
+                    boost::filesystem::remove(filePath.toString());
+                } catch (const boost::filesystem::filesystem_error & e) {
+                    throw Exception(e.what());
+                }
             }
             
             static void copy(const CPath &soutcePath, const CPath &destinationPath) {
-                boost::filesystem::copy_file(soutcePath.toString(), destinationPath.toString(),
-                        boost::filesystem::copy_option::none);
+                try {
+                    boost::filesystem::copy_file(soutcePath.toString(), destinationPath.toString(),
+                            boost::filesystem::copy_option::none);
+                } catch (const boost::filesystem::filesystem_error & e) {
+                    throw Exception(e.what());
+                }
+                  
             }
             
             // ================
