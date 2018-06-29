@@ -99,6 +99,12 @@ namespace Antik {
             void replaceExtension(const std::string &extension) {
                 m_path.replace_extension(extension);
             }
+            
+            std::string absolutePath() {
+                std::string path =  boost::filesystem::absolute(m_path).lexically_normal().string();
+                if (path.back() == '.') path.pop_back();
+                return(path);
+            }
                         
             // ================
             // PUBLIC VARIABLES
