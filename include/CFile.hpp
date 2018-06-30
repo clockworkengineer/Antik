@@ -75,6 +75,22 @@ namespace Antik {
                 } 
             }
             
+            static bool isFile(const CPath &filePath) {
+                try {
+                    return(boost::filesystem::is_regular(filePath.toString()));
+                } catch (const boost::filesystem::filesystem_error & e) {
+                    throw Exception(e.what());
+                } 
+            }
+            
+           static bool isDirectory(const CPath &filePath) {
+                try {
+                    return(boost::filesystem::is_directory(filePath.toString()));
+                } catch (const boost::filesystem::filesystem_error & e) {
+                    throw Exception(e.what());
+                } 
+            }
+            
             static bool createDirectory(const CPath &directoryPath) {
                 try {
                     return (boost::filesystem::create_directories(directoryPath.toString()));
@@ -99,6 +115,25 @@ namespace Antik {
                     throw Exception(e.what());
                 }
                   
+            }
+            
+            static FileList directoryContentsList(const CPath &localDirectory) {
+
+                FileList fileList;
+
+                try {
+
+                    for (auto &directoryEntry : boost::filesystem::
+                            recursive_directory_iterator{localDirectory.toString()}) {
+                        fileList.emplace_back(directoryEntry.path().string());
+                    }
+
+                } catch (const boost::filesystem::filesystem_error & e) {
+                    throw Exception(e.what());
+                }
+                
+                return(fileList);
+            
             }
             
             // ================

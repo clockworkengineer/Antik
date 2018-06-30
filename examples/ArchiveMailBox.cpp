@@ -34,8 +34,8 @@
 // Note: MIME encoded words in the email subject line are decoded to the best ASCII fit
 // available.
 // 
-// Dependencies: C11++, Classes (CFileMIME, CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
-//               Linux, Boost C++ Libraries.
+// Dependencies: C11++, Classes (CFileMIME, CFile, CPath, CMailIMAP, CMailIMAPParse,
+//               CMailIMAPBodyStruct), Linux, Boost C++ Libraries.
 //
 
 // =============
@@ -57,19 +57,19 @@
 #include "CIMAP.hpp"
 #include "CIMAPParse.hpp"
 #include "CMIME.hpp"
+#include "CPath.hpp"
+#include "CFile.hpp"
 
 using namespace Antik::IMAP;
+using namespace Antik::File;
 
 //
-// Boost program options  & file system library
+// Boost program options library
 //
 
 #include <boost/program_options.hpp> 
-#include <boost/filesystem.hpp>
-#include <boost/range/iterator_range.hpp>
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 // ======================
 // LOCAL TYES/DEFINITIONS
@@ -80,14 +80,14 @@ namespace fs = boost::filesystem;
 //
 
 struct ParamArgData {
-    std::string userName;        // Email account user name
-    std::string userPassword;    // Email account user name password
-    std::string serverURL;       // SMTP server URL
-    std::string mailBoxName;     // Mailbox name
-    fs::path destinationFolder;  // Destination folder for e-mail archive
-    std::string configFileName;  // Configuration file name
-    bool bOnlyUpdates {false };  // = true search date since last .eml archived
-    bool bAllMailBoxes {false }; // = true archive all mailboxes
+    std::string userName;          // Email account user name
+    std::string userPassword;      // Email account user name password
+    std::string serverURL;         // SMTP server URL
+    std::string mailBoxName;       // Mailbox name
+    std::string destinationFolder; // Destination folder for e-mail archive
+    std::string configFileName;    // Configuration file name
+    bool bOnlyUpdates {false };    // = true search date since last .eml archived
+    bool bAllMailBoxes {false };   // = true archive all mailboxes
 
 };
 
@@ -132,7 +132,7 @@ static void addCommonOptions(po::options_description& commonOptions, ParamArgDat
             ("user,u", po::value<std::string>(&argData.userName)->required(), "Account username")
             ("password,p", po::value<std::string>(&argData.userPassword)->required(), "User password")
             ("mailbox,m", po::value<std::string>(&argData.mailBoxName)->required(), "Mailbox name")
-            ("destination,d", po::value<fs::path>(&argData.destinationFolder)->required(), "Destination for e-mail archive")
+            ("destination,d", po::value<std::string>(&argData.destinationFolder)->required(), "Destination for e-mail archive")
             ("updates,u", "Search since last file archived.")
             ("all,a", "Download files for all mailboxes.");
 
@@ -173,10 +173,10 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         }
 
         if (vm.count("config")) {
-            if (fs::exists(vm["config"].as<std::string>().c_str())) {
-                std::ifstream ifs{vm["config"].as<std::string>().c_str()};
-                if (ifs) {
-                    po::store(po::parse_config_file(ifs, configFile), vm);
+            if (CFile::exists(vm["config"].as<std::string>())) {
+                std::ifstream configFileStream{vm["config"].as<std::string>().c_str()};
+                if (configFileStream) {
+                    po::store(po::parse_config_file(configFileStream, configFile), vm);
                 }
             } else {
                 throw po::error("Specified config file does not exist.");
@@ -256,7 +256,7 @@ static std::string sendCommand(CIMAP& imap, const std::string& mailBoxName,
 //
 
 static void fetchEmailAndArchive(CIMAP& imap, const std::string& mailBoxName, 
-                     const fs::path& destinationFolder, std::uint64_t index) {
+                     const CPath &destinationFolder, std::uint64_t index) {
 
     std::string command, commandResponse, subject, emailBody;
     CIMAPParse::COMMANDRESPONSE parsedResponse;
@@ -290,19 +290,19 @@ static void fetchEmailAndArchive(CIMAP& imap, const std::string& mailBoxName,
         // Have email body so create .eml file for it.
 
         if (!emailBody.empty()) {
-            fs::path fullFilePath = destinationFolder;
-            fullFilePath /= "(" + std::to_string(index) + ") " + subject + kEMLFileExt;
-            if (!fs::exists(fullFilePath)) {
+            CPath fullFilePath = destinationFolder;
+            fullFilePath.join("(" + std::to_string(index) + ") " + subject + kEMLFileExt);
+            if (!CFile::exists(fullFilePath)) {
                 std::istringstream emailBodyStream(emailBody);
-                std::ofstream emlFileStream(fullFilePath.string(), std::ios::binary);
+                std::ofstream emlFileStream(fullFilePath.toString(), std::ios::binary);
                 if (emlFileStream.is_open()) {
-                    std::cout << "Creating [" << fullFilePath.native() << "]" << std::endl;
+                    std::cout << "Creating [" << fullFilePath.toString() << "]" << std::endl;
                     for (std::string line; std::getline(emailBodyStream, line, '\n');) {
                         line.push_back('\n');
                         emlFileStream.write(&line[0], line.length());
                     }
                 } else {
-                    std::cerr << "Failed to create file [" << fullFilePath << "]" << std::endl;
+                    std::cerr << "Failed to create file [" << fullFilePath.toString() << "]" << std::endl;
                 }
             }
         }
@@ -316,15 +316,17 @@ static void fetchEmailAndArchive(CIMAP& imap, const std::string& mailBoxName,
 // prefix; get the UID from this.
 //
 
-static std::uint64_t getLowerSearchLimit(const fs::path& destinationFolder) {
+static std::uint64_t getLowerSearchLimit(const CPath &destinationFolder) {
 
-    if (fs::exists(destinationFolder) && fs::is_directory(destinationFolder)) {
+    if (CFile::exists(destinationFolder) && CFile::isDirectory(destinationFolder)) {
 
         std::uint64_t highestUID=1, currentUID=0;
+        
+        Antik::FileList mailMessages { CFile::directoryContentsList(destinationFolder) };
 
-        for (auto& entry : boost::make_iterator_range(fs::directory_iterator(destinationFolder),{})) {
-            if (fs::is_regular_file(entry.status()) && (entry.path().extension().compare(kEMLFileExt) == 0)) {
-                currentUID=std::strtoull(CIMAPParse::stringBetween(entry.path().filename().string(),'(', ')').c_str(), nullptr, 10);
+        for (auto& mailFile : mailMessages) {
+            if (CFile::isFile(mailFile) && (CPath(mailFile).extension().compare(kEMLFileExt) == 0)) {
+                currentUID=std::strtoull(CIMAPParse::stringBetween(mailFile,'(', ')').c_str(), nullptr, 10);
                 if (currentUID > highestUID) {
                     highestUID = currentUID;
                 } 
@@ -412,7 +414,7 @@ int main(int argc, char** argv) {
         for (std::string mailBox : mailBoxList) {
 
             CIMAPParse::COMMANDRESPONSE parsedResponse;
-            fs::path mailBoxPath;
+            CPath mailBoxPath { argData.destinationFolder };
             std::string command, commandResponse;
             std::uint64_t searchUID=0;
             
@@ -431,10 +433,10 @@ int main(int argc, char** argv) {
 
             // Create destination folder
 
-            mailBoxPath = argData.destinationFolder / mailBox;
-            if (!argData.destinationFolder.string().empty() && !fs::exists(mailBoxPath)) {
-                std::cout << "Creating destination folder = [" << mailBoxPath.native() << "]" << std::endl;
-                fs::create_directories(mailBoxPath);
+            mailBoxPath.join(mailBox);
+            if (!argData.destinationFolder.empty() && !CFile::exists(mailBoxPath)) {
+                std::cout << "Creating destination folder = [" << mailBoxPath.toString() << "]" << std::endl;
+                CFile::createDirectory(mailBoxPath);
             }
 
             // Get UID of newest archived message and search from that for updates
@@ -479,10 +481,10 @@ int main(int argc, char** argv) {
         exitWithError(e.what());
     } catch (CIMAPParse::Exception &e) {
         exitWithError(e.what());
-    } catch (const fs::filesystem_error & e) {
-        exitWithError(std::string("BOOST file system exception occured: [") + e.what() + "]");
-    } catch (std::exception & e) {
-        exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
+    } catch (const CFile::Exception &e) {
+        exitWithError(e.what());
+    } catch (std::exception &e) {
+        exitWithError(e.what());
     }
 
     // IMAP closedown

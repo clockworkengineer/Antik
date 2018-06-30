@@ -25,10 +25,11 @@
 #include "CommonAntik.hpp"
 
 //
-// BOOST filesystem
+// BOOST filesystem, iterators
 //
 
 #include <boost/filesystem.hpp>
+#include <boost/range/iterator_range.hpp>
 
 // =========
 // NAMESPACE
@@ -81,7 +82,7 @@ namespace Antik {
             };
             
             CPath  parentPath () {
-                return(CPath(m_path.parent_path().string()));
+                return(m_path.parent_path().string());
             }
             
             std::string fileName() const {
@@ -90,6 +91,10 @@ namespace Antik {
             
             std::string baseName() const {
                 return m_path.stem().string();
+            };
+            
+            std::string extension() const {
+                return m_path.extension().string();
             };
             
             void join(const std::string &partialPath) {

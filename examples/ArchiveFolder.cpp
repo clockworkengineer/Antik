@@ -46,19 +46,20 @@
 //
 
 #include "CZIP.hpp"
+#include "CPath.hpp"
+#include "CFile.hpp"
 
 using namespace Antik::ZIP;
+using namespace Antik::File;
+
 
 //
-// BOOST file system, program options processing and iterator
+// BOOST program options library.
 //
 
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/range/iterator_range.hpp>
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 // ======================
 // LOCAL TYES/DEFINITIONS
@@ -136,10 +137,10 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         }
 
         if (vm.count("config")) {
-            if (fs::exists(vm["config"].as<std::string>().c_str())) {
-                std::ifstream ifs{vm["config"].as<std::string>().c_str()};
-                if (ifs) {
-                    po::store(po::parse_config_file(ifs, configFile), vm);
+            if (CFile::exists(CPath(vm["config"].as<std::string>().c_str()))) {
+                std::ifstream configFileStream{vm["config"].as<std::string>().c_str()};
+                if (configFileStream) {
+                    po::store(po::parse_config_file(configFileStream, configFile), vm);
                 }
             } else {
                 throw po::error("Specified config file does not exist.");
@@ -180,9 +181,7 @@ int main(int argc, char** argv) {
             
             // Iterate recursively through folder hierarchy creating file list
             
-            fs::path zipFolder(argData.sourceFolderName);
-            fs::recursive_directory_iterator begin(zipFolder), end;
-            std::vector<fs::directory_entry> fileNameList(begin, end);
+            Antik::FileList fileNameList = CFile::directoryContentsList(argData.sourceFolderName);
             
             zipFile.open();
             
@@ -190,8 +189,8 @@ int main(int argc, char** argv) {
             
             std::cout << "There are " << fileNameList.size() << " files: " << std::endl;
             for (auto& fileName : fileNameList) {
-                std::cout << "Add " << fileName.path().string() << '\n';
-                if (fs::is_regular_file(fileName.path()))  zipFile.add(fileName.path().string(),fileName.path().string().substr(1));
+                std::cout << "Add " << fileName << '\n';
+                if (CFile::isFile(fileName))  zipFile.add(fileName,fileName.substr(1));
             }
             
             // Save archive
@@ -208,10 +207,10 @@ int main(int argc, char** argv) {
 
     } catch (const CZIP::Exception & e) {
         exitWithError(e.what());
-    } catch (const fs::filesystem_error & e) {
-        exitWithError(std::string("BOOST file system exception occured: [") + e.what() + "]");
+    } catch (const CFile::Exception & e) {
+        exitWithError(e.what());
     } catch (const std::exception & e) {
-        exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
+        exitWithError(e.what());
     }
 
     //
