@@ -57,10 +57,8 @@ using namespace Antik::File;
 //
 
 #include <boost/program_options.hpp>  
-#include <boost/filesystem.hpp>
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 // ======================
 // LOCAL TYES/DEFINITIONS

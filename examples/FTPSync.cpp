@@ -335,7 +335,7 @@ int main(int argc, char** argv) {
     } catch (const CFile::Exception &e) {
         exitWithError(e.what());
     } catch (std::exception &e) {
-        exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
+        exitWithError(e.what());
     }
 
     exit(EXIT_SUCCESS);

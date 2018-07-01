@@ -436,11 +436,11 @@ int main(int argc, char** argv) {
         // Catch any errors
         //    
 
-    } catch (CIMAP::Exception &e) {
+    } catch (const CIMAP::Exception &e) {
         exitWithError(e.what());
     } catch (const CFile::Exception & e) {
         exitWithError(e.what());
-    } catch (std::exception & e) {
+    } catch (const std::exception & e) {
         exitWithError(e.what());
     }
 

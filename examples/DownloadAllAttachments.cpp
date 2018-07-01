@@ -58,7 +58,6 @@ using namespace Antik::IMAP;
 using namespace Antik::SMTP;
 using namespace Antik::File;
 
-
 //
 // BOOST program options library.
 //

@@ -52,7 +52,6 @@ using namespace Antik;
 using namespace Antik::SSH;
 using namespace Antik::File;
 
-
 //
 // Boost program options library
 //
