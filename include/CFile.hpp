@@ -136,6 +136,19 @@ namespace Antik {
             
             }
             
+            static time_t lastWriteTime(const CPath &filePath) {
+
+                try {
+
+                    return(boost::filesystem::last_write_time(filePath.toString()));
+
+                } catch (const boost::filesystem::filesystem_error & e) {
+                    throw Exception(e.what());
+                }
+                
+            
+            }
+            
             // ================
             // PUBLIC VARIABLES
             // ================
