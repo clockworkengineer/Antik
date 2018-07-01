@@ -64,10 +64,10 @@ using namespace Antik::IMAP;
 using namespace Antik::File;
 
 //
-// Boost program options library
+// BOOST program options library.
 //
 
-#include <boost/program_options.hpp> 
+#include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 
@@ -174,7 +174,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
         if (vm.count("config")) {
             if (CFile::exists(vm["config"].as<std::string>())) {
-                std::ifstream configFileStream{vm["config"].as<std::string>().c_str()};
+                std::ifstream configFileStream{vm["config"].as<std::string>()};
                 if (configFileStream) {
                     po::store(po::parse_config_file(configFileStream, configFile), vm);
                 }
@@ -290,7 +290,7 @@ static void fetchEmailAndArchive(CIMAP& imap, const std::string& mailBoxName,
         // Have email body so create .eml file for it.
 
         if (!emailBody.empty()) {
-            CPath fullFilePath = destinationFolder;
+            CPath fullFilePath { destinationFolder };
             fullFilePath.join("(" + std::to_string(index) + ") " + subject + kEMLFileExt);
             if (!CFile::exists(fullFilePath)) {
                 std::istringstream emailBodyStream(emailBody);
@@ -477,13 +477,13 @@ int main(int argc, char** argv) {
     // Catch any errors
     //    
 
-    } catch (CIMAP::Exception &e) {
+    } catch (const CIMAP::Exception &e) {
         exitWithError(e.what());
-    } catch (CIMAPParse::Exception &e) {
+    } catch (const CIMAPParse::Exception &e) {
         exitWithError(e.what());
     } catch (const CFile::Exception &e) {
         exitWithError(e.what());
-    } catch (std::exception &e) {
+    } catch (const std::exception &e) {
         exitWithError(e.what());
     }
 

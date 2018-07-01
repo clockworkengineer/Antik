@@ -17,7 +17,7 @@
 // sycnhronized with a remote server directory. Note: Im sure the sync can be done
 // in one pass (come back and look at later).
 //
-// Dependencies: C11++, Classes (CFTP, CSocket), Boost C++ Libraries.
+// Dependencies: C11++, Classes (CFTP, CFile, CPath, CSocket), Boost C++ Libraries.
 //
 // FTPSync
 // Program Options:
@@ -47,19 +47,20 @@
 //
 
 #include "FTPUtil.hpp"
+#include "CPath.hpp"
+#include "CFile.hpp"
 
 using namespace Antik;
 using namespace Antik::FTP;
+using namespace Antik::File;
 
 //
-// Boost program options  & file system library
+// Boost program library
 //
 
 #include <boost/program_options.hpp>  
-#include <boost/filesystem.hpp>
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 // ======================
 // LOCAL TYES/DEFINITIONS
@@ -146,10 +147,10 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         }
 
         if (vm.count("config")) {
-            if (fs::exists(vm["config"].as<std::string>().c_str())) {
-                std::ifstream ifs{vm["config"].as<std::string>().c_str()};
-                if (ifs) {
-                    po::store(po::parse_config_file(ifs, configFile), vm);
+            if (CFile::exists(vm["config"].as<std::string>())) {
+                std::ifstream configFileStream{vm["config"].as<std::string>()};
+                if (configFileStream) {
+                    po::store(po::parse_config_file(configFileStream, configFile), vm);
                 }
             } else {
                 throw po::error("Specified config file does not exist.");
@@ -305,8 +306,8 @@ int main(int argc, char** argv) {
         // Copy updated files to server
         
         for (auto file : localFiles) {
-            if (fs::is_regular_file(file)) {
-                std::time_t localModifiedTime = fs::last_write_time(file);
+            if (CFile::isFile(file)) {
+                auto localModifiedTime = CFile::lastWriteTime(file);
                 if (remoteFileModifiedTimes[localFileToRemote(argData, file)] < 
                         static_cast<CFTP::DateTime>(std::localtime(&localModifiedTime))) {
                     std::cout << "Server file " << localFileToRemote(argData, file) << " out of date." << std::endl;
@@ -330,6 +331,8 @@ int main(int argc, char** argv) {
         //    
 
     } catch (CFTP::Exception &e) {
+        exitWithError(e.what());
+    } catch (const CFile::Exception &e) {
         exitWithError(e.what());
     } catch (std::exception &e) {
         exitWithError(std::string("Standard exception occured: [") + e.what() + "]");

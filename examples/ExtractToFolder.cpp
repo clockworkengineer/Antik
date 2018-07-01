@@ -25,7 +25,7 @@
 //   -d [ --destination ] arg    Destination folder for extract
 //   -z [ --zip ] arg            ZIP Archive Name
 // 
-// Dependencies: C11++, Classes (CFileZIP), Linux, Boost C++ Libraries.
+// Dependencies: C11++, Classes (CFileZIP,Path,CFile), Linux, Boost C++ Libraries.
 //
 
 // =============
@@ -46,19 +46,19 @@
 //
 
 #include "CZIP.hpp"
+#include "CPath.hpp"
+#include "CFile.hpp"
 
 using namespace Antik::ZIP;
+using namespace Antik::File;
 
 //
-// BOOST file system, program options processing and iterator
+// BOOST program options library.
 //
 
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/range/iterator_range.hpp>
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 // ======================
 // LOCAL TYES/DEFINITIONS
@@ -136,17 +136,17 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         }
 
         if (vm.count("config")) {
-            if (fs::exists(vm["config"].as<std::string>().c_str())) {
-                std::ifstream ifs{vm["config"].as<std::string>().c_str()};
-                if (ifs) {
-                    po::store(po::parse_config_file(ifs, configFile), vm);
+            if (CFile::exists(vm["config"].as<std::string>())) {
+                std::ifstream configFileStream{vm["config"].as<std::string>()};
+                if (configFileStream) {
+                    po::store(po::parse_config_file(configFileStream, configFile), vm);
                 }
             } else {
                 throw po::error("Specified config file does not exist.");
             }
         }
 
-        if (!fs::exists(vm["zip"].as<std::string>().c_str())) {
+        if (!CFile::exists(vm["zip"].as<std::string>())) {
             throw po::error("Specified ZIP archive file does not exist.");
         }
 
@@ -180,8 +180,8 @@ int main(int argc, char** argv) {
 
             // Create destination folder
             
-            if (!fs::exists(argData.destinationFolderName)) {
-                fs::create_directories(argData.destinationFolderName);
+            if (!CFile::exists(argData.destinationFolderName)) {
+                CFile::createDirectory(argData.destinationFolderName);
             }
 
             // Open archive and extract a content list
@@ -193,12 +193,13 @@ int main(int argc, char** argv) {
             // For each file create any directory hierarchy needed and extract file.
             
             for (auto & file : zipContents) {
-                fs::path destinationPath(argData.destinationFolderName + file.fileName);
-                if (!fs::exists(destinationPath.parent_path())) {
-                    fs::create_directories(destinationPath.parent_path());
+                CPath destinationPath { argData.destinationFolderName };
+                destinationPath.join(file.fileName);          
+                if (!CFile::exists(destinationPath)) {
+                    CFile::createDirectory(destinationPath);
                 }
-                if (zipFile.extract(file.fileName, destinationPath.string())) {
-                    std::cout << "Extracted [" << destinationPath.native() << "]" << std::endl;
+                if (zipFile.extract(file.fileName, destinationPath.toString())) {
+                    std::cout << "Extracted [" << destinationPath.toString() << "]" << std::endl;
                 }
             }
             
@@ -213,12 +214,12 @@ int main(int argc, char** argv) {
         // Catch any errors
         //
 
-    } catch (const CZIP::Exception & e) {
+    } catch (const CZIP::Exception &e) {
         exitWithError(e.what());
-    } catch (const fs::filesystem_error & e) {
-        exitWithError(std::string("BOOST file system exception occured: [") + e.what() + "]");
-    } catch (const std::exception & e) {
-        exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
+    } catch (const CFile::Exception &e) {
+        exitWithError(e.what());
+    } catch (const std::exception &e) {
+        exitWithError(e.what());
     }
 
     //

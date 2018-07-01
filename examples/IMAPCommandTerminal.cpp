@@ -17,7 +17,7 @@
 // and executes commands typed in. The raw command responses are echoed back as default but 
 // parsed responses are displayed if specified in program options.
 // 
-// Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
+// Dependencies: C11++, Classes (CFile, CPath, CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
 //               Linux, Boost C++ Libraries.
 //
 // IMAPCommandTerminal
@@ -47,8 +47,11 @@
 #include "CIMAP.hpp"
 #include "CIMAPParse.hpp"
 #include "CIMAPBodyStruct.hpp"
+#include "CPath.hpp"
+#include "CFile.hpp"
 
 using namespace Antik::IMAP;
+using namespace Antik::File;
 
 //
 // Boost program options  & file system library
@@ -143,10 +146,10 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         }
 
         if (vm.count("config")) {
-            if (fs::exists(vm["config"].as<std::string>().c_str())) {
-                std::ifstream ifs{vm["config"].as<std::string>().c_str()};
-                if (ifs) {
-                    po::store(po::parse_config_file(ifs, configFile), vm);
+            if (CFile::exists(vm["config"].as<std::string>())) {
+                std::ifstream configFileStream{vm["config"].as<std::string>()};
+                if (configFileStream) {
+                    po::store(po::parse_config_file(configFileStream, configFile), vm);
                 }
             } else {
                 throw po::error("Specified config file does not exist.");
@@ -435,8 +438,10 @@ int main(int argc, char** argv) {
 
     } catch (CIMAP::Exception &e) {
         exitWithError(e.what());
+    } catch (const CFile::Exception & e) {
+        exitWithError(e.what());
     } catch (std::exception & e) {
-        exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
+        exitWithError(e.what());
     }
 
     CIMAP::closedown();

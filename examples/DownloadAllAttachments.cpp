@@ -29,8 +29,8 @@
 //   -m [ --mailbox ] arg     Mailbox name
 //   -d [ --destination ] arg Destination for attachments
 // 
-// Dependencies: C11++, Classes (CMailIMAP, CMailIMAPParse, CMailIMAPBodyStruct),
-//               Linux, Boost C++ Libraries.
+// Dependencies: C11++, Classes (CFile, CPath, CMailIMAP, CMailIMAPParse, 
+//               CMailIMAPBodyStruct), Linux, Boost C++ Libraries.
 //
  
 // =============
@@ -51,19 +51,21 @@
 #include "CIMAPParse.hpp"
 #include "CIMAPBodyStruct.hpp"
 #include "CSMTP.hpp"
+#include "CPath.hpp"
+#include "CFile.hpp"
 
 using namespace Antik::IMAP;
 using namespace Antik::SMTP;
+using namespace Antik::File;
+
 
 //
-// Boost program options  & file system library
+// BOOST program options library.
 //
 
-#include <boost/program_options.hpp> 
-#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 // ======================
 // LOCAL TYES/DEFINITIONS
@@ -78,7 +80,7 @@ struct ParamArgData {
     std::string userPassword;        // Email account user name password
     std::string serverURL;           // SMTP server URL
     std::string mailBoxName;         // Mailbox name
-    fs::path destinationFolder;      // Destination folder for attachments
+    std::string destinationFolder;   // Destination folder for attachments
     std::string configFileName;      // Configuration file name
 };
 
@@ -111,7 +113,7 @@ static void addCommonOptions(po::options_description& commonOptions, ParamArgDat
             ("user,u", po::value<std::string>(&argData.userName)->required(), "Account username")
             ("password,p", po::value<std::string>(&argData.userPassword)->required(), "User password")
             ("mailbox,m", po::value<std::string>(&argData.mailBoxName)->required(), "Mailbox name")
-            ("destination,d", po::value<fs::path>(&argData.destinationFolder)->required(), "Destination for attachments");
+            ("destination,d", po::value<std::string>(&argData.destinationFolder)->required(), "Destination for attachments");
 
 }
 //
@@ -149,10 +151,10 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         }
 
         if (vm.count("config")) {
-            if (fs::exists(vm["config"].as<std::string>().c_str())) {
-                std::ifstream ifs{vm["config"].as<std::string>().c_str()};
-                if (ifs) {
-                    po::store(po::parse_config_file(ifs, configFile), vm);
+            if (CFile::exists(vm["config"].as<std::string>())) {
+                std::ifstream configFileStream{vm["config"].as<std::string>()};
+                if (configFileStream) {
+                    po::store(po::parse_config_file(configFileStream, configFile), vm);
                 }
             } else {
                 throw po::error("Specified config file does not exist.");
@@ -173,7 +175,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 // Download an attachment, decode it and write to local folder.
 //
 
-static void downloadAttachment(CIMAP& imap, fs::path& destinationFolder, CIMAPBodyStruct::Attachment &attachment) {
+static void downloadAttachment(CIMAP& imap, const CPath &destinationFolder, CIMAPBodyStruct::Attachment &attachment) {
 
     std::string commandLine("FETCH " + attachment.index + " BODY[" + attachment.partNo + "]");
     std::string parsedResponseStr(imap.sendCommand(commandLine));
@@ -188,15 +190,17 @@ static void downloadAttachment(CIMAP& imap, fs::path& destinationFolder, CIMAPBo
 
         for (auto resp : fetchEntry.responseMap) {
 
-            if (resp.first.find("BODY[" + attachment.partNo + "]") == 0) {
-                fs::path fullFilePath = destinationFolder / attachment.fileName;
+            if (resp.first.find("BODY[" + attachment.partNo + "]") == 0) {  
+                
+                CPath fullFilePath = { destinationFolder };
+                fullFilePath.join(attachment.fileName);
 
-                if (!fs::exists(fullFilePath)) {
+                if (!CFile::exists(fullFilePath)) {
                     std::string decodedString;
                     std::istringstream responseStream(resp.second);
-                    std::ofstream attachmentFileStream(fullFilePath.string(), std::ios::binary);
+                    std::ofstream attachmentFileStream(fullFilePath.toString(), std::ios::binary);
                     if (attachmentFileStream.is_open()) {
-                        std::cout << "Creating [" << fullFilePath.native() << "]" << std::endl;
+                        std::cout << "Creating [" << fullFilePath.toString() << "]" << std::endl;
                         // Encoded lines have terminating '\r\n' the getline removes '\n'
                         for (std::string line; std::getline(responseStream, line, '\n');) {
                             line.pop_back(); // Remove '\r'
@@ -204,7 +208,7 @@ static void downloadAttachment(CIMAP& imap, fs::path& destinationFolder, CIMAPBo
                             attachmentFileStream.write(&decodedString[0], decodedString.length());
                         }
                     } else {
-                        std::cout << "Failed to create file [" << fullFilePath.native() << "]" << std::endl;
+                        std::cout << "Failed to create file [" << fullFilePath.toString() << "]" << std::endl;
                     }
                 }
 
@@ -217,7 +221,7 @@ static void downloadAttachment(CIMAP& imap, fs::path& destinationFolder, CIMAPBo
 // For a passed in BODTSTRUCTURE parse and download any base64 encoded attachments.
 //
 
-static void getBodyStructAttachments(CIMAP& imap, std::uint64_t index, fs::path & destinationFolder, const std::string& bodyStructure) {
+static void getBodyStructAttachments(CIMAP& imap, std::uint64_t index, const CPath &destinationFolder, const std::string& bodyStructure) {
 
     std::unique_ptr<CIMAPBodyStruct::BodyNode> treeBase{ new CIMAPBodyStruct::BodyNode()};
     std::shared_ptr<void> attachmentData{ new CIMAPBodyStruct::AttachmentData()};
@@ -272,9 +276,9 @@ int main(int argc, char** argv) {
        // Create destination folder
 
         argData.destinationFolder += argData.mailBoxName;
-        if (!argData.destinationFolder.string().empty() && !fs::exists(argData.destinationFolder)) {
-            std::cout << "Creating destination folder = [" << argData.destinationFolder.native() << "]" << std::endl;
-            fs::create_directories(argData.destinationFolder);
+        if (!argData.destinationFolder.empty() && !CFile::exists(argData.destinationFolder)) {
+            std::cout << "Creating destination folder = [" << argData.destinationFolder << "]" << std::endl;
+            CFile::createDirectory(argData.destinationFolder);
         }
         
         // Connect
@@ -327,14 +331,14 @@ int main(int argc, char** argv) {
     // Catch any errors
     //    
 
-    } catch (CIMAP::Exception &e) {
+    } catch (const CIMAP::Exception &e) {
         exitWithError(e.what());
-    } catch (CIMAPParse::Exception &e) {
+    } catch (const CIMAPParse::Exception &e) {
         exitWithError(e.what());
-    } catch (const fs::filesystem_error & e) {
-        exitWithError(std::string("BOOST file system exception occured: [") + e.what() + "]");
-    } catch (std::exception & e) {
-        exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
+    } catch (const CFile::Exception &e) {
+        exitWithError(e.what());
+    } catch (const std::exception &e) {
+        exitWithError(e.what());
     }
 
     // IMAP closedown

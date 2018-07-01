@@ -52,7 +52,6 @@
 using namespace Antik::ZIP;
 using namespace Antik::File;
 
-
 //
 // BOOST program options library.
 //
@@ -137,8 +136,8 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         }
 
         if (vm.count("config")) {
-            if (CFile::exists(CPath(vm["config"].as<std::string>().c_str()))) {
-                std::ifstream configFileStream{vm["config"].as<std::string>().c_str()};
+            if (CFile::exists(CPath(vm["config"].as<std::string>()))) {
+                std::ifstream configFileStream{vm["config"].as<std::string>()};
                 if (configFileStream) {
                     po::store(po::parse_config_file(configFileStream, configFile), vm);
                 }

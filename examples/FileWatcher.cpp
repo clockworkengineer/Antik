@@ -16,7 +16,7 @@
 // Description: Program that uses CApprise class to log files events on passed in folders and
 // file. Any folders created in the watched directory are automatically added to the watch list.
 //
-// Dependencies: C11++, Classes (CApprise),
+// Dependencies: C11++, Classes (CApprise, CFile, CPath),
 //               Linux, Boost C++ Libraries.
 //
 
@@ -36,19 +36,19 @@
 //
 
 #include "CApprise.hpp"
+#include "CPath.hpp"
+#include "CFile.hpp"
 
 using namespace Antik::File;
 
 //
-// Boost program options  & file system library
+// Boost program options library
 //
 
 #include <boost/program_options.hpp> 
-#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 // ======================
 // LOCAL TYES/DEFINITIONS
@@ -126,10 +126,10 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         }
 
         if (vm.count("config")) {
-            if (fs::exists(vm["config"].as<std::string>().c_str())) {
-                std::ifstream ifs{vm["config"].as<std::string>().c_str()};
-                if (ifs) {
-                    po::store(po::parse_config_file(ifs, configFile), vm);
+            if (CFile::exists(vm["config"].as<std::string>())) {
+                std::ifstream configFileStream{vm["config"].as<std::string>()};
+                if (configFileStream) {
+                    po::store(po::parse_config_file(configFileStream, configFile), vm);
                 }
             } else {
                 throw po::error("Specified config file does not exist.");
@@ -223,12 +223,12 @@ int main(int argc, char** argv) {
         
         fileWatcher.stopWatching();
         
-    } catch (CApprise::Exception &e) {
+    } catch (const CApprise::Exception &e) {
        exitWithError(fileWatcher, e.what());
-    } catch (const fs::filesystem_error & e) {
-        exitWithError(fileWatcher, std::string("BOOST file system exception occured: [") + e.what() + "]");
-    } catch (std::exception & e) {
-        exitWithError(fileWatcher, std::string("Standard exception occured: [") + e.what() + "]");
+    } catch (const CFile::Exception & e) {
+        exitWithError(fileWatcher, e.what());
+    } catch (const std::exception & e) {
+        exitWithError(fileWatcher, e.what());
     }
 
     exit(EXIT_SUCCESS);
