@@ -31,7 +31,7 @@
 //   -c [ --contents ] arg    File containing email contents
 //   -a [ --attachments ] arg File Attachments List
 //
-// Dependencies: C11++, Classes (CMailSMTP, CFileMIME),
+// Dependencies: C11++, Classes (CMailSMTP, CFileMIME, CFile, CPath),
 //               Linux, Boost C++ Libraries.
 //
 
@@ -51,18 +51,19 @@
 
 #include "CSMTP.hpp"
 #include "CMIME.hpp"
+#include "CPath.hpp"
+#include "CFile.hpp"
 
 using namespace Antik::SMTP;
+using namespace Antik::File;
 
 //
-// Boost program options  & file system library
+// Boost program options library
 //
 
 #include "boost/program_options.hpp" 
-#include <boost/filesystem.hpp>
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 // ======================
 // LOCAL TYES/DEFINITIONS
@@ -155,10 +156,10 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         }
 
         if (vm.count("config")) {
-            if (fs::exists(vm["config"].as<std::string>().c_str())) {
-                std::ifstream ifs{vm["config"].as<std::string>().c_str()};
-                if (ifs) {
-                    po::store(po::parse_config_file(ifs, configFile), vm);
+            if (CFile::exists(vm["config"].as<std::string>())) {
+                std::ifstream configFileStream{vm["config"].as<std::string>()};
+                if (configFileStream) {
+                    po::store(po::parse_config_file(configFileStream, configFile), vm);
                 }
             } else {
                 throw po::error("Specified config file does not exist.");
@@ -212,7 +213,7 @@ int main(int argc, char** argv) {
         // Set mail contents
         
         if (!argData.configFileName.empty()) {
-            if (fs::exists(argData.mailContentsFile)) {
+            if (CFile::exists(argData.mailContentsFile)) {
                 std::ifstream mailContentsStream(argData.mailContentsFile);
                 if (mailContentsStream.is_open()) {
                     for (std::string line; std::getline(mailContentsStream, line, '\n');) {
@@ -230,7 +231,7 @@ int main(int argc, char** argv) {
             for (std::string attachment; std::getline(attachListStream, attachment, ',');) {
                 attachment = attachment.substr(attachment.find_first_not_of(' '));
                 attachment = attachment.substr(0, attachment.find_last_not_of(' ') + 1);
-                if (fs::exists(attachment)){
+                if (CFile::exists(attachment)){
                     std::cout << "Attaching file [" << attachment << "]" << std::endl;
                     mail.addFileAttachment(attachment, Antik::File::CMIME::getFileMIMEType(attachment), "base64");
                 } else {
@@ -248,12 +249,12 @@ int main(int argc, char** argv) {
         // Catch any errors
         //    
 
-    } catch (CSMTP::Exception &e) {
+    } catch (const CSMTP::Exception &e) {
         exitWithError(e.what());
-    } catch (const fs::filesystem_error & e) {
-        exitWithError(std::string("BOOST file system exception occured: [") + e.what() + "]");
-    } catch (std::exception & e) {
-        exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
+    } catch (const CFile::Exception & e) {
+        exitWithError(e.what());
+    } catch (const std::exception & e) {
+        exitWithError(e.what());
     }
 
     // Closedown SMTP transport

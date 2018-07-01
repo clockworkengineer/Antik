@@ -23,7 +23,7 @@
 //   -c [ --config ] arg         Config File Name
 //   -z [ --zip ] arg            ZIP Archive Name
 // 
-// Dependencies: C11++, Classes (CFileZIPIO), Linux, Boost C++ Libraries.
+// Dependencies: C11++, Classes (CFileZIPIO,CFile,CPath), Linux, Boost C++ Libraries.
 //
 
 // =============
@@ -42,18 +42,19 @@
 //
 
 #include "CZIPIO.hpp"
+#include "CPath.hpp"
+#include "CFile.hpp"
 
 using namespace Antik::ZIP;
+using namespace Antik::File;
 
 //
-// BOOST file system, program options processing
+// BOOST program options library
 //
 
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 // ======================
 // LOCAL TYES/DEFINITIONS
@@ -129,10 +130,10 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         }
 
         if (vm.count("config")) {
-            if (fs::exists(vm["config"].as<std::string>().c_str())) {
-                std::ifstream ifs{vm["config"].as<std::string>().c_str()};
-                if (ifs) {
-                    po::store(po::parse_config_file(ifs, configFile), vm);
+            if (CFile::exists(vm["config"].as<std::string>())) {
+                std::ifstream configFileStream{vm["config"].as<std::string>()};
+                if (configFileStream) {
+                    po::store(po::parse_config_file(configFileStream, configFile), vm);
                 }
             } else {
                 throw po::error("Specified config file does not exist.");
@@ -141,7 +142,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
 
         // Check ZIP archive exists
 
-        if (vm.count("zip") && !fs::exists(vm["zip"].as<std::string>().c_str())) {
+        if (vm.count("zip") && !CFile::exists(vm["zip"].as<std::string>())) {
             throw po::error("Specified ZIP archive file does not exist.");
         }
 
@@ -310,8 +311,10 @@ int main(int argc, char** argv) {
 
     } catch (const CZIPIO::Exception & e) {
         exitWithError(e.what());
+    } catch (const CFile::Exception & e) {
+        exitWithError(e.what());
     } catch (const std::exception & e) {
-        exitWithError(std::string("Standard exception occured: [") + e.what() + "]");
+        exitWithError(e.what());
     }
 
     //
