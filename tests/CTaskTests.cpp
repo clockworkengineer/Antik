@@ -23,19 +23,18 @@
 // C++ STL
 
 #include <stdexcept>
+#include <sstream>
 
 // CTask class
 
-#include "CTask.hpp" 
+#include "CTask.hpp"
+
+// Used Antik classes
+
+#include "CFile.hpp"
+#include "CPath.hpp"
 
 using namespace Antik::File;
-
-// Boost file system and format libraries
-
-#include <boost/filesystem.hpp> 
-#include <boost/format.hpp>
-
-namespace fs = boost::filesystem;
 
 // =======================
 // UNIT TEST FIXTURE CLASS
@@ -112,14 +111,14 @@ protected:
         
         // Create watch folder.
 
-        if (!fs::exists(CTaskTests::kWatchFolder)) {
-            fs::create_directory(CTaskTests::kWatchFolder);
+        if (!CFile::exists(CTaskTests::kWatchFolder)) {
+            CFile::createDirectory(CTaskTests::kWatchFolder);
         }
 
         // Create destination folder.
 
-        if (!fs::exists(CTaskTests::kDestinationFolder)) {
-            fs::create_directory(CTaskTests::kDestinationFolder);
+        if (!CFile::exists(CTaskTests::kDestinationFolder)) {
+            CFile::createDirectory(CTaskTests::kDestinationFolder);
         }
 
     }
@@ -128,14 +127,14 @@ protected:
 
         // Remove watch folder.
 
-        if (fs::exists(CTaskTests::kWatchFolder)) {
-            fs::remove(CTaskTests::kWatchFolder);
+        if (CFile::exists(CTaskTests::kWatchFolder)) {
+            CFile::remove(CTaskTests::kWatchFolder);
         }
 
         // Remove destination folder.
 
-        if (fs::exists(CTaskTests::kDestinationFolder)) {
-            fs::remove(CTaskTests::kDestinationFolder);
+        if (CFile::exists(CTaskTests::kDestinationFolder)) {
+            CFile::remove(CTaskTests::kDestinationFolder);
         }
 
     }
@@ -216,8 +215,9 @@ void CTaskTests::createFiles(int fileCount) {
     filePath = CTaskTests::kWatchFolder;
 
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
-        std::string file = (boost::format("temp%1%.txt") % cnt01).str();
-        createFile(filePath + file);
+        std::stringstream file;
+        file << "temp" << cnt01 << ".txt" ;
+        createFile(filePath + file.str());
     }
 
     // Thread should die after killCount files created
@@ -227,8 +227,9 @@ void CTaskTests::createFiles(int fileCount) {
     EXPECT_EQ(fileCount, testTaskAction1->fileCount);
 
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
-        std::string file = (boost::format("temp%1%.txt") % cnt01).str();
-        fs::remove(filePath + file);
+        std::stringstream file;
+        file << "temp" << cnt01 << ".txt" ;
+        CFile::remove(filePath + file.str());
     }
 
 }
@@ -420,8 +421,8 @@ TEST_F(CTaskTests, ActionFunctionException) {
 
     EXPECT_THROW(generateException(task.getThrownException()), std::logic_error);
 
-    if (fs::exists(watchFolder + fileName)) {
-        fs::remove(watchFolder + fileName);
+    if (CFile::exists(watchFolder + fileName)) {
+        CFile::remove(watchFolder + fileName);
     }
 
 }

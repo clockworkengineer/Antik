@@ -25,19 +25,18 @@
 #include <stdexcept>
 #include <fstream>
 #include <thread>
+#include <sstream>
 
 // CApprise class
 
 #include "CApprise.hpp"
 
+// Used Antik classes
+
+#include "CFile.hpp"
+#include "CPath.hpp"
+
 using namespace Antik::File;
-
-// Boost file system and format libraries
-
-#include <boost/filesystem.hpp> 
-#include <boost/format.hpp>
-
-namespace fs = boost::filesystem;
 
 // =======================
 // UNIT TEST FIXTURE CLASS
@@ -73,14 +72,14 @@ protected:
 
         // Create watch folder.
 
-        if (!fs::exists(CAppriseTests::kWatchFolder)) {
-            fs::create_directory(CAppriseTests::kWatchFolder);
+        if (!CFile::exists(CAppriseTests::kWatchFolder)) {
+            CFile::createDirectory(CAppriseTests::kWatchFolder);
         }
 
         // Create destination folder.
 
-        if (!fs::exists(CAppriseTests::kDestinationFolder)) {
-            fs::create_directory(CAppriseTests::kDestinationFolder);
+        if (!CFile::exists(CAppriseTests::kDestinationFolder)) {
+            CFile::createDirectory(CAppriseTests::kDestinationFolder);
         }
 
     }
@@ -89,14 +88,14 @@ protected:
 
         // Remove watch folder.
 
-        if (fs::exists(CAppriseTests::kWatchFolder)) {
-            fs::remove(CAppriseTests::kWatchFolder);
+        if (CFile::exists(CAppriseTests::kWatchFolder)) {
+            CFile::remove(CAppriseTests::kWatchFolder);
         }
 
         // Remove destination folder.
 
-        if (fs::exists(CAppriseTests::kDestinationFolder)) {
-            fs::remove(CAppriseTests::kDestinationFolder);
+        if (CFile::exists(CAppriseTests::kDestinationFolder)) {
+            CFile::remove(CAppriseTests::kDestinationFolder);
         }
 
     }
@@ -233,7 +232,7 @@ void CAppriseTests::createChanges(int updateCount) {
 
     // Remove file
     
-    fs::remove(filePath+fileName);
+    CFile::remove(filePath+fileName);
         
     // Stop watching
     
@@ -265,8 +264,9 @@ void CAppriseTests::createRemoveFiles(int fileCount) {
     // Create fileCount files
     
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
-        std::string file = (boost::format("temp%1%.txt") % cnt01).str();
-        createFile(filePath + file);
+        std::stringstream file;
+        file << "temp" << cnt01 << ".txt" ;
+        createFile(filePath + file.str());
     }
     
     // Loop getting add events
@@ -285,8 +285,9 @@ void CAppriseTests::createRemoveFiles(int fileCount) {
     // Remove files
     
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
-        std::string file = (boost::format("temp%1%.txt") % cnt01).str();
-        fs::remove(filePath + file);
+        std::stringstream file;
+        file << "temp" << cnt01 << ".txt" ;
+        CFile::remove(filePath + file.str());
     }
     
      // Loop getting unlink events
@@ -324,18 +325,6 @@ void CAppriseTests::generateException(std::exception_ptr e) {
 // =============================
 // CFILEAPPRISE CLASS UNIT TESTS
 // =============================
-
-//
-// Watch Folder Name length == 0 ASSERT
-//
-
-TEST_F(CAppriseTests, AssertParam1) {
-
-    //  taskName = "Test";
-
-    EXPECT_DEATH(CApprise watcher(watchFolder, watchDepth), CAppriseTests::kParamAssertion1);
-
-}
 
 //
 // Watch Depth < -1 ASSERT
