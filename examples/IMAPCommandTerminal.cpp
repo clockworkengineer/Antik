@@ -54,14 +54,12 @@ using namespace Antik::IMAP;
 using namespace Antik::File;
 
 //
-// Boost program options  & file system library
+// Boost program options library
 //
 
 #include <boost/program_options.hpp>  
-#include <boost/filesystem.hpp>
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 // ======================
 // LOCAL TYES/DEFINITIONS

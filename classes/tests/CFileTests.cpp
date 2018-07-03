@@ -6,7 +6,7 @@
  *
  * Created on October 24, 2016, 2:34 PM
  * 
- * Description: Google unit tests for class CFileTests.
+ * Description: Google unit tests for class CFile.
  *
  * Copyright 2016.
  *
@@ -29,13 +29,6 @@
 #include "CTask.hpp" 
 
 using namespace Antik::File;
-
-// Boost file system and format libraries
-
-#include <boost/filesystem.hpp> 
-#include <boost/format.hpp>
-
-namespace fs = boost::filesystem;
 
 // =======================
 // UNIT TEST FIXTURE CLASS
@@ -82,7 +75,7 @@ protected:
 // Task action throw exception capture.
 //
 
-TEST_F(CFileTests, ActionFunctionException) {
+TEST_F(CFileTests, Test1) {
 
 }
 
