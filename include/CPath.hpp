@@ -110,6 +110,10 @@ namespace Antik {
                 if (path.back() == '.') path.pop_back();
                 return(path);
             }
+            
+            static std::string currentPath() {
+                return(boost::filesystem::current_path().string());
+            }
                         
             // ================
             // PUBLIC VARIABLES

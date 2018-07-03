@@ -104,7 +104,7 @@ TEST_F(CPathTests, EmptyPathCreation) {
     CPath path{ ""};
 
     ASSERT_STREQ("", path.toString().c_str());
-//    ASSERT_STREQ("", path.absolutePath().c_str());
+    ASSERT_STREQ(CPath::currentPath().c_str(), path.absolutePath().c_str());
     ASSERT_STREQ("", path.baseName().c_str());
     ASSERT_STREQ("", path.extension().c_str());
     ASSERT_STREQ("", path.fileName().c_str());
@@ -186,6 +186,18 @@ TEST_F(CPathTests, Join) {
     path.join("fileend.tmp");
 
     ASSERT_STREQ((this->testPath2+"/fileend.tmp").c_str(), path.toString().c_str());
+
+}
+
+//
+// Extension
+//
+
+TEST_F(CPathTests, AbsolutePath) {
+
+    CPath path{ "./test"};
+
+    ASSERT_STREQ((CPath::currentPath()+"/test").c_str(), path.absolutePath().c_str());
 
 }
 
