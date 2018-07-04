@@ -106,7 +106,7 @@ namespace Antik {
                     throw Exception(e.what());
                 }
             }
-            
+                        
             static void copy(const CPath &soutcePath, const CPath &destinationPath) {
                 try {
                     boost::filesystem::copy_file(soutcePath.toString(), destinationPath.toString(),

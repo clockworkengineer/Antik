@@ -100,7 +100,7 @@ protected:
 
     }
 
-    void createFile(std::string fileName);          // Create a test file.
+    void createFile(const std::string &fileName);   // Create a test file.
     void createRemoveFiles(int fileCount);          // Create fileCount files and check action function call count
     void createChanges(int updateCount);            // Perform updateCount changes to a file and verify event count
     void generateException(std::exception_ptr e);   // Generate an exception stored in CFileApprise class
@@ -140,7 +140,7 @@ const std::string CAppriseTests::kParamAssertion2("Assertion*");
 // Create a file for test purposes.
 //
 
-void CAppriseTests::createFile(std::string fileName) {
+void CAppriseTests::createFile(const std::string &fileName) {
 
     std::ofstream outfile(fileName);
     outfile << "TEST TEXT" << std::endl;

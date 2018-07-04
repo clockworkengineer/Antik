@@ -26,7 +26,7 @@
 
 // CTask class
 
-#include "CTask.hpp" 
+#include "CFile.hpp" 
 
 using namespace Antik::File;
 
@@ -56,27 +56,219 @@ protected:
     virtual void TearDown() {
 
     }
+    
+    void createFile(const CPath &filePath);   // Create a test file.
 
+    static const std::string kTestPathName1;
+    static const std::string kTestPathName2;
+    static const std::string kTestPathName3;
+    
 };
 
 // =================
 // FIXTURE CONSTANTS
 // =================
 
+const std::string CFileTests::kTestPathName1 { "/tmp/test1.txt"};
+const std::string CFileTests::kTestPathName2 { "/tmp/test"};
+const std::string CFileTests::kTestPathName3 { "/tmp/test/test1.txt"};
+   
 // ===============
 // FIXTURE METHODS
 // ===============
+
+//
+// Create a file for test purposes.
+//
+
+void CFileTests::createFile(const CPath &filePath) {
+
+    std::ofstream outfile(filePath.toString());
+    outfile << "TEST TEXT" << std::endl;
+    outfile.close();
+
+}
 
 // =====================
 // TASK CLASS UNIT TESTS
 // =====================
 
 //
-// Task action throw exception capture.
+// Check to see file does not exist.
 //
 
-TEST_F(CFileTests, Test1) {
+TEST_F(CFileTests, FileDoesNotExist) {
 
+    CPath filePath { kTestPathName1 };
+    
+    EXPECT_FALSE(CFile::exists(filePath));
+    
+}
+
+//
+// Check to see file does exist.
+//
+
+TEST_F(CFileTests, FileExists) {
+
+    CPath filePath { kTestPathName1 };
+    
+    createFile(filePath);
+    
+    EXPECT_TRUE(CFile::exists(filePath));
+    
+    CFile::remove(filePath);
+    
+}
+
+//
+// Check to see path is a file.
+//
+
+TEST_F(CFileTests, CheckIfPathIsNormalFile) {
+
+    CPath filePath { kTestPathName1 };
+    
+    createFile(filePath);
+    
+    EXPECT_TRUE(CFile::isFile(filePath));
+    
+    CFile::remove(filePath);
+    
+}
+
+//
+// Check to see path is not a file.
+//
+
+TEST_F(CFileTests, CheckIfPathIsNotAFile) {
+
+    CPath filePath { kTestPathName2 };
+    
+    CFile::createDirectory(filePath);
+    
+    EXPECT_FALSE(CFile::isFile(filePath));
+    
+    CFile::remove(filePath);
+    
+}
+
+//
+// Check to see path is not a directory.
+//
+
+TEST_F(CFileTests, CheckIfPathIsNotADirectory) {
+
+    CPath filePath { kTestPathName1 };
+    
+    createFile(filePath);
+    
+    EXPECT_FALSE(CFile::isDirectory(filePath));
+    
+    CFile::remove(filePath);
+    
+}
+
+//
+// Check to see path is a directory
+//
+
+TEST_F(CFileTests, CheckIfPathIsADirectory) {
+
+    CPath filePath { kTestPathName2 };
+    
+    CFile::createDirectory(filePath);
+    
+    EXPECT_TRUE(CFile::isDirectory(filePath));
+    
+    CFile::remove(filePath);
+    
+}
+
+//
+// Create an directory with invalid name (empty)
+//
+
+TEST_F(CFileTests, CreatDirectoryWithEmptyName) {
+
+    CPath filePath {""};
+    
+    EXPECT_THROW(CFile::createDirectory(filePath), CFile::Exception);
+    
+    CFile::remove(filePath);
+    
+}
+
+//
+// Create an directory and check that successful.
+//
+
+TEST_F(CFileTests, CreatDirectoryAndCheckForSuccess) {
+
+    CPath filePath {kTestPathName2};
+    
+    CFile::createDirectory(filePath);
+    
+    EXPECT_TRUE(CFile::isDirectory(filePath));
+    
+    CFile::remove(filePath);
+    
+}
+
+//
+// Remove a normal file.
+//
+
+TEST_F(CFileTests, RemoveANormalFile) {
+
+    CPath filePath {kTestPathName1};
+    
+    createFile(filePath);
+    
+    EXPECT_TRUE(CFile::exists(filePath)&&CFile::isFile(filePath));
+    
+    CFile::remove(filePath);
+    
+    EXPECT_FALSE(CFile::exists(filePath));
+    
+}
+
+//
+// Remove a directory file.
+//
+
+TEST_F(CFileTests, RemoveADirectory) {
+
+    CPath filePath {kTestPathName2};
+    
+    CFile::createDirectory(filePath);
+    
+    EXPECT_TRUE(CFile::exists(filePath)&&CFile::isDirectory(filePath));
+    
+    CFile::remove(filePath);
+    
+    EXPECT_FALSE(CFile::exists(filePath));
+    
+}
+
+//
+// Remove a non-empty directory file.
+//
+
+TEST_F(CFileTests, RemoveANonEmptyDirectory) {
+
+    CPath filePath {kTestPathName3};
+    
+    CFile::createDirectory(filePath.parentPath());
+    createFile(filePath);
+    
+    EXPECT_TRUE(CFile::exists(filePath)&&CFile::isFile(filePath));
+    
+    EXPECT_THROW(CFile::remove(filePath.parentPath()), CFile::Exception);
+    
+    CFile::remove(filePath);
+    CFile::remove(filePath.parentPath());
+    
 }
 
 // =====================
