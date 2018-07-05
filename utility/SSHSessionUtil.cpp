@@ -48,8 +48,6 @@ namespace Antik {
         // IMPORTS
         // =======
 
-        using namespace std;
-
         // ===============
         // LOCAL FUNCTIONS
         // ===============
@@ -164,7 +162,7 @@ namespace Antik {
 
         bool verifyKnownServer(CSSHSession &sshSession, ServerVerificationContext &verificationContext) {
 
-            vector<unsigned char> keyHash;
+            std::vector<unsigned char> keyHash;
             CSSHSession::Key serverPublicKey;
             int returnCode;
 

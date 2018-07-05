@@ -58,8 +58,6 @@ namespace Antik {
         // IMPORTS
         // =======
 
-        using namespace std;
-
         namespace fs = boost::filesystem;
 
         // ===============
@@ -71,12 +69,12 @@ namespace Antik {
         // remote SCP server.
         //
 
-        static void makeRemotePath(CSCP &scpServer, const string &remotePath, const CSCP::FilePermissions permissions) {
+        static void makeRemotePath(CSCP &scpServer, const std::string &remotePath, const CSCP::FilePermissions permissions) {
 
-            vector<string> pathComponents;
-            fs::path currentPath{ string(1, kServerPathSep)};
+            std::vector<std::string> pathComponents;
+            fs::path currentPath{ std::string(1, kServerPathSep)};
 
-            boost::split(pathComponents, remotePath, boost::is_any_of(string(1, kServerPathSep)));
+            boost::split(pathComponents, remotePath, boost::is_any_of(std::string(1, kServerPathSep)));
 
             for (auto directory : pathComponents) {
                 if (!directory.empty()) {
@@ -92,7 +90,7 @@ namespace Antik {
 
         static void downloadFile(CSCP &scpServer, const std::string &destinationFile) {
 
-            ofstream localFile;
+            std::ofstream localFile;
             CSCP::FilePermissions filePermissions;
             char *ioBuffer = scpServer.getIoBuffer().get();
             size_t ioBufferSize = scpServer.getIoBufferSize();
@@ -108,9 +106,9 @@ namespace Antik {
                 fs::create_directories(fs::path(destinationFile).parent_path());
             }
 
-            localFile.open(destinationFile, ios_base::out | ios_base::binary | ios_base::trunc);
+            localFile.open(destinationFile, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
             if (!localFile) {
-                throw system_error(errno, system_category());
+                throw std::system_error(errno, std::system_category());
             }
 
             for (;;) {
@@ -118,7 +116,7 @@ namespace Antik {
                 if (bytesRead) {
                     localFile.write(ioBuffer, bytesRead);
                     if (!localFile) {
-                        throw system_error(errno, system_category());
+                        throw std::system_error(errno, std::system_category());
                     }
                     fileSize -= bytesRead;
                 }
@@ -143,7 +141,7 @@ namespace Antik {
         // CSCP class.
         //
 
-        void getFile(CSSHSession &sshSession, const string &sourceFile, const string &destinationFile) {
+        void getFile(CSSHSession &sshSession, const std::string &sourceFile, const std::string &destinationFile) {
 
 
             CSCP scpServer{ sshSession, SSH_SCP_READ, sourceFile};
@@ -171,15 +169,15 @@ namespace Antik {
         // CSCP class.
         //
 
-        void putFile(CSSHSession &sshSession, const string &sourceFile, const string &destinationFile) {
+        void putFile(CSSHSession &sshSession, const std::string &sourceFile, const std::string &destinationFile) {
 
 
-            ifstream localFile;
+            std::ifstream localFile;
             fs::file_status fileStatus;
 
-            localFile.open(sourceFile, ios_base::in | ios_base::binary);
+            localFile.open(sourceFile, std::ios_base::in | std::ios_base::binary);
             if (!localFile) {
-                throw system_error(errno, system_category());
+                throw std::system_error(errno, std::system_category());
             }
 
             fileStatus = fs::status(fs::path(sourceFile).parent_path().string());
@@ -295,11 +293,11 @@ namespace Antik {
                 // On exception report and return with files that where successfully downloaded.
 
             } catch (const CSCP::Exception &e) {
-                cerr << e.getMessage() << endl;
+                std::cerr << e.getMessage() << std::endl;
             } catch (const boost::filesystem::filesystem_error & e) {
-                cerr << string("BOOST file system exception occured: [") + e.what() + "]" << endl;
-            } catch (const exception &e) {
-                cerr << string("Standard exception occured: [") + e.what() + "]" << endl;
+                std::cerr << e.what() << std::endl;
+            } catch (const std::exception &e) {
+                std::cerr << e.what() << std::endl;
             }
 
             return (successList);
@@ -333,11 +331,11 @@ namespace Antik {
                 // On exception report and return with files that where successfully uploaded.
 
             } catch (const CSCP::Exception &e) {
-                cerr << e.getMessage() << endl;
+                std::cerr << e.getMessage() << std::endl;
             } catch (const boost::filesystem::filesystem_error & e) {
-                cerr << string("BOOST file system exception occured: [") + e.what() + "]" << endl;
-            } catch (const exception &e) {
-                cerr << string("Standard exception occured: [") + e.what() + "]" << endl;
+                std::cerr << e.what() << std::endl;
+            } catch (const std::exception &e) {
+                std::cerr << e.what() << std::endl;
             }
 
             return (successList);

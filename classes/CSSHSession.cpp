@@ -686,5 +686,5 @@ namespace Antik {
             return m_authorizarionType;
         }
 
-    } // namespace CSSH
+    } // namespace SSH
 } // namespace Antik

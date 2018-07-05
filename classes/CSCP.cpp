@@ -349,5 +349,5 @@ namespace Antik {
             
         }
         
-    } // namespace FTP
+    } // namespace SSH
 } // namespace Antik

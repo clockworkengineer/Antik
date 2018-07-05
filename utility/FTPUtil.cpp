@@ -59,8 +59,6 @@ namespace Antik {
         // IMPORTS
         // =======
 
-        using namespace std;
-
         namespace fs = boost::filesystem;
 
         // ===============
@@ -72,12 +70,12 @@ namespace Antik {
         // double path separators with just one if any have been generated.
         //
 
-        static inline string constructRemotePathName(const string &currentWorkingDirectory, const string &remotePath, const string &remoteFileName) {
+        static std::string constructRemotePathName(const std::string &currentWorkingDirectory, const std::string &remotePath, const std::string &remoteFileName) {
 
-            string remoteDirectoryPath{ currentWorkingDirectory + kServerPathSep + remotePath + kServerPathSep + remoteFileName};
-            string::size_type i{0};
+            std::string remoteDirectoryPath{ currentWorkingDirectory + kServerPathSep + remotePath + kServerPathSep + remoteFileName};
+            std::string::size_type i{0};
 
-            while ((i = remoteDirectoryPath.find(string(2, kServerPathSep))) != string::npos) {
+            while ((i = remoteDirectoryPath.find(std::string(2, kServerPathSep))) != std::string::npos) {
                 remoteDirectoryPath.erase(remoteDirectoryPath.begin() + i);
             }
             if (remoteDirectoryPath.back() == kServerPathSep) remoteDirectoryPath.pop_back();
@@ -91,7 +89,7 @@ namespace Antik {
         // the absolute path name on front. If it does return it otherwise construct one that does.
         //
 
-        static inline string constructRemotePathName(const string &remotePath, const string &remoteFileName) {
+        static std::string constructRemotePathName(const std::string &remotePath, const std::string &remoteFileName) {
 
             if (remoteFileName.find(remotePath) == 0) {
                 return (remoteFileName);
@@ -111,10 +109,10 @@ namespace Antik {
         // been passed in then it is called for each file found.
         //
 
-        void listRemoteRecursive(CFTP &ftpServer, const string &remoteDirectory, FileList &remoteFileList, FileFeedBackFn remoteFileFeedbackFn) {
+        void listRemoteRecursive(CFTP &ftpServer, const std::string &remoteDirectory, FileList &remoteFileList, FileFeedBackFn remoteFileFeedbackFn) {
 
             FileList serverFileList;
-            string currentWorkingDirectory;
+            std::string currentWorkingDirectory;
 
             // Save current working directory
 
@@ -123,7 +121,7 @@ namespace Antik {
             ftpServer.changeWorkingDirectory(remoteDirectory);
             if (ftpServer.listFiles("", serverFileList) == 226) {
                 for (auto file : serverFileList) {
-                    string fullFilePath{ constructRemotePathName(remoteDirectory, file)};
+                    std::string fullFilePath{ constructRemotePathName(remoteDirectory, file)};
                     remoteFileList.push_back(fullFilePath);
                     if (remoteFileFeedbackFn) {
                         remoteFileFeedbackFn(remoteFileList.back());
@@ -148,10 +146,10 @@ namespace Antik {
         // use CFTP::fileExists() after call to see if it has been created.
         //
 
-        void makeRemotePath(CFTP &ftpServer, const string &remotePath, bool saveCWD) {
+        void makeRemotePath(CFTP &ftpServer, const std::string &remotePath, bool saveCWD) {
 
-            vector<string> pathComponents;
-            string currentWorkingDirectory;
+            std::vector<std::string> pathComponents;
+            std::string currentWorkingDirectory;
 
             // Save current working directory
 
@@ -159,7 +157,7 @@ namespace Antik {
                 ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
             }
 
-            boost::split(pathComponents, remotePath, boost::is_any_of(string(1, kServerPathSep)));
+            boost::split(pathComponents, remotePath, boost::is_any_of(std::string(1, kServerPathSep)));
 
             ftpServer.getCurrentWoringDirectory(currentWorkingDirectory);
 
@@ -186,10 +184,10 @@ namespace Antik {
         // appending it to the passed in local directory to get the full local file path.
         //
 
-        FileList getFiles(CFTP &ftpServer, const string &localDirectory, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
+        FileList getFiles(CFTP &ftpServer, const std::string &localDirectory, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
 
             FileList successList;
-            string currentWorkingDirectory;
+            std::string currentWorkingDirectory;
 
             // Save current working directory
 
@@ -209,7 +207,7 @@ namespace Antik {
 
                     if (!ftpServer.isDirectory(file)) {
 
-                        string destinationFileName{ destination.string() + postFix};
+                        std::string destinationFileName{ destination.string() + postFix};
                         if (!safe) {
                             destinationFileName.pop_back();
                         }
@@ -246,9 +244,9 @@ namespace Antik {
             } catch (const CFTP::Exception &e) {
                 std::cerr << e.what() << std::endl;
             } catch (const boost::filesystem::filesystem_error & e) {
-                std::cerr << string("BOOST file system exception occured: [") + e.what() + "]" << std::endl;
-            } catch (const exception &e) {
-                std::cerr << string("Standard exception occured: [") + e.what() + "]" << std::endl;
+                std::cerr << e.what() << std::endl;
+            } catch (const std::exception &e) {
+                std::cerr << e.what() << std::endl;
             }
 
             return (successList);
@@ -263,11 +261,11 @@ namespace Antik {
         // All files/directories are placed/created relative to the server current working directory.
         // 
 
-        FileList putFiles(CFTP &ftpServer, const string &localDirectory, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
+        FileList putFiles(CFTP &ftpServer, const std::string &localDirectory, const FileList &fileList, FileCompletionFn completionFn, bool safe, char postFix) {
 
             FileList successList;
             size_t localPathLength{ 0};
-            string currentWorkingDirectory;
+            std::string currentWorkingDirectory;
 
             // Determine local path length for creating remote paths.
 
@@ -288,7 +286,7 @@ namespace Antik {
 
                     if (fs::exists(filePath)) {
 
-                        string remoteDirectory;
+                        std::string remoteDirectory;
                         bool transferFile{ false};
 
                         // Create remote path and set file to be transfered flag
@@ -323,7 +321,7 @@ namespace Antik {
                         // Transfer file
 
                         if (transferFile) {
-                            string destinationFileName{ filePath.filename().string() + postFix};
+                            std::string destinationFileName{ filePath.filename().string() + postFix};
                             if (!safe) {
                                 destinationFileName.pop_back();
                             }
@@ -352,9 +350,9 @@ namespace Antik {
             } catch (const CFTP::Exception &e) {
                 std::cerr << e.what() << std::endl;
             } catch (const boost::filesystem::filesystem_error & e) {
-                std::cerr << string("BOOST file system exception occured: [") + e.what() + "]" << std::endl;
-            } catch (const exception &e) {
-                std::cerr << string("Standard exception occured: [") + e.what() + "]" << std::endl;
+                std::cerr << e.what() << std::endl;
+            } catch (const std::exception &e) {
+                std::cerr << e.what() << std::endl;
             }
 
             return (successList);

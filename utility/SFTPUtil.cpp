@@ -60,8 +60,6 @@ namespace Antik {
         // IMPORTS
         // =======
 
-        using namespace std;
-
         namespace fs = boost::filesystem;
 
         // ===============
@@ -72,7 +70,7 @@ namespace Antik {
         // Return true if a given remote files exists.
         //
 
-        static bool fileExists(CSFTP &sftpServer, const string &remotePath) {
+        static bool fileExists(CSFTP &sftpServer, const std::string &remotePath) {
 
             try {
 
@@ -97,12 +95,12 @@ namespace Antik {
         // remote FTP server.
         //
 
-        static void makeRemotePath(CSFTP &sftpServer, const string &remotePath, const CSFTP::FilePermissions &permissions) {
+        static void makeRemotePath(CSFTP &sftpServer, const std::string &remotePath, const CSFTP::FilePermissions &permissions) {
 
-            vector<string> pathComponents;
-            fs::path currentPath{ string(1, kServerPathSep)};
+            std::vector<std::string> pathComponents;
+            fs::path currentPath{ std::string(1, kServerPathSep)};
 
-            boost::split(pathComponents, remotePath, boost::is_any_of(string(1, kServerPathSep)));
+            boost::split(pathComponents, remotePath, boost::is_any_of(std::string(1, kServerPathSep)));
 
             for (auto directory : pathComponents) {
                 currentPath /= directory;
@@ -121,7 +119,7 @@ namespace Antik {
         // Return true if a given remote path is a directory.
         //
 
-        static bool isDirectory(CSFTP &sftpServer, const string &remotePath) {
+        static bool isDirectory(CSFTP &sftpServer, const std::string &remotePath) {
 
             CSFTP::FileAttributes fileAttributes;
             sftpServer.getFileAttributes(remotePath, fileAttributes);
@@ -133,7 +131,7 @@ namespace Antik {
         // Return true if a given remote path is a regular file.
         //
 
-        static bool isRegularFile(CSFTP &sftpServer, const string &remotePath) {
+        static bool isRegularFile(CSFTP &sftpServer, const std::string &remotePath) {
 
             CSFTP::FileAttributes fileAttributes;
             sftpServer.getFileAttributes(remotePath, fileAttributes);
@@ -151,10 +149,10 @@ namespace Antik {
         // CSFTP class.
         //
 
-        void getFile(CSFTP &sftpServer, const string &sourceFile, const string &destinationFile, FileCompletionFn completionFn) {
+        void getFile(CSFTP &sftpServer, const std::string &sourceFile, const std::string &destinationFile, FileCompletionFn completionFn) {
 
             CSFTP::File remoteFile;
-            ofstream localFile;
+            std::ofstream localFile;
 
             try {
 
@@ -170,9 +168,9 @@ namespace Antik {
                         fs::create_directories(fs::path(destinationFile).parent_path());
                     }
 
-                    localFile.open(destinationFile, ios_base::out | ios_base::binary | ios_base::trunc);
+                    localFile.open(destinationFile, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
                     if (!localFile) {
-                        throw system_error(errno, system_category());
+                        throw std::system_error(errno, std::system_category());
                     }
 
                     for (;;) {
@@ -210,7 +208,7 @@ namespace Antik {
 
             } catch (const CSFTP::Exception &e) {
                 throw;
-            } catch (const system_error &e) {
+            } catch (const std::system_error &e) {
                 throw;
             }
 
@@ -223,14 +221,14 @@ namespace Antik {
         // CSFTP class.
         //
 
-        void putFile(CSFTP &sftpServer, const string &sourceFile, const string &destinationFile, FileCompletionFn completionFn) {
+        void putFile(CSFTP &sftpServer, const std::string &sourceFile, const std::string &destinationFile, FileCompletionFn completionFn) {
 
             CSFTP::File remoteFile;
-            ifstream localFile;
+            std::ifstream localFile;
 
             try {
 
-                string remoteFilePath;
+                std::string remoteFilePath;
                 fs::file_status fileStatus;
                 int bytesWritten{0};
                 bool transferFile{ false};
@@ -255,9 +253,9 @@ namespace Antik {
 
                 if (transferFile) {
 
-                    localFile.open(sourceFile, ios_base::in | ios_base::binary);
+                    localFile.open(sourceFile, std::ios_base::in | std::ios_base::binary);
                     if (!localFile) {
-                        throw system_error(errno, system_category());
+                        throw std::system_error(errno, std::system_category());
                     }
 
                     fileStatus = fs::status(sourceFile);
@@ -291,7 +289,7 @@ namespace Antik {
 
             } catch (const CSFTP::Exception &e) {
                 throw;
-            } catch (const system_error &e) {
+            } catch (const std::system_error &e) {
                 throw;
             }
 
@@ -303,21 +301,21 @@ namespace Antik {
         // If a feedback function has been passed in then it is called for each file found.
         //
 
-        void listRemoteRecursive(CSFTP &sftpServer, const string &directoryPath, FileList &remoteFileList, FileFeedBackFn remoteFileFeedbackFn) {
+        void listRemoteRecursive(CSFTP &sftpServer, const std::string &directoryPath, FileList &remoteFileList, FileFeedBackFn remoteFileFeedbackFn) {
 
             try {
 
                 CSFTP::Directory directoryHandle;
                 CSFTP::FileAttributes fileAttributes;
-                string filePath;
+                std::string filePath;
 
                 directoryHandle = sftpServer.openDirectory(directoryPath);
 
                 while (sftpServer.readDirectory(directoryHandle, fileAttributes)) {
-                    if ((static_cast<string> (fileAttributes->name) != ".") && (static_cast<string> (fileAttributes->name) != "..")) {
-                        string filePath{ directoryPath};
+                    if ((static_cast<std::string> (fileAttributes->name) != ".") && (static_cast<std::string> (fileAttributes->name) != "..")) {
+                        std::string filePath{ directoryPath};
                         if (filePath.back() == kServerPathSep) filePath.pop_back();
-                        filePath += string(1, kServerPathSep) + fileAttributes->name;
+                        filePath += std::string(1, kServerPathSep) + fileAttributes->name;
                         if (sftpServer.isADirectory(fileAttributes)) {
                             listRemoteRecursive(sftpServer, filePath, remoteFileList, remoteFileFeedbackFn);
                         }
@@ -357,11 +355,11 @@ namespace Antik {
 
                 for (auto remoteFile : remoteFileList) {
 
-                    string localFilePath{ fileMapper.toLocal(remoteFile)};
+                    std::string localFilePath{ fileMapper.toLocal(remoteFile)};
 
                     if (isRegularFile(sftpServer, remoteFile)) {
 
-                        string destinationFileName{ localFilePath + postFix};
+                        std::string destinationFileName{ localFilePath + postFix};
 
                         if (!fs::exists(fs::path(localFilePath).parent_path())) {
                             fs::create_directories(fs::path(localFilePath).parent_path());
@@ -398,11 +396,11 @@ namespace Antik {
                 // On exception report and return with files that where successfully downloaded.
 
             } catch (const CSFTP::Exception &e) {
-                cerr << e.getMessage() << endl;
+                std::cerr << e.getMessage() << std::endl;
             } catch (const boost::filesystem::filesystem_error & e) {
-                cerr << string("BOOST file system exception occured: [") + e.what() + "]" << endl;
-            } catch (const exception &e) {
-                cerr << string("Standard exception occured: [") + e.what() + "]" << endl;
+                std::cerr << e.what() << std::endl;
+            } catch (const std::exception &e) {
+                std::cerr << e.what() << std::endl;
             }
 
             return (successList);
@@ -434,7 +432,7 @@ namespace Antik {
 
                     if (fs::exists(localFile)) {
 
-                        string remoteFilePath;
+                        std::string remoteFilePath;
                         bool transferFile{ false};
 
                         // Create remote full remote path and set file to be transfered flag
@@ -461,7 +459,7 @@ namespace Antik {
                         // Transfer file
 
                         if (transferFile) {
-                            string destinationFilePath{ remoteFilePath + postFix};
+                            std::string destinationFilePath{ remoteFilePath + postFix};
                             if (!safe) {
                                 destinationFilePath.pop_back();
                             }
@@ -486,11 +484,11 @@ namespace Antik {
                 // On exception report and return with files that where successfully uploaded.
 
             } catch (const CSFTP::Exception &e) {
-                cerr << e.getMessage() << endl;
+                std::cerr << e.getMessage() << std::endl;
             } catch (const boost::filesystem::filesystem_error & e) {
-                cerr << string("BOOST file system exception occured: [") + e.what() + "]" << endl;
-            } catch (const exception &e) {
-                cerr << string("Standard exception occured: [") + e.what() + "]" << endl;
+                std::cerr << e.what() << std::endl;
+            } catch (const std::exception &e) {
+                std::cerr << e.what() << std::endl;
             }
 
             return (successList);

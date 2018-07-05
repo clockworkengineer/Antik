@@ -157,5 +157,5 @@ namespace Antik {
         return ss.str();
     }
 
-    } // snamespace Util
+    } // namespace Util
 } // namespace Antik

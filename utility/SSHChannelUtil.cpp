@@ -58,8 +58,6 @@ namespace Antik {
         // IMPORTS
         // =======
 
-        using namespace std;
-
         // ===============
         // LOCAL FUNCTIONS
         // ===============
@@ -76,7 +74,7 @@ namespace Antik {
                 std::vector<char> terminalBuffer;
 
                 if (tcgetattr(0, &terminalSettings) == -1) {
-                    throw system_error(errno, system_category(), __func__);
+                    throw std::system_error(errno, std::system_category(), __func__);
                 }
 
                 savedTerminalSettings = terminalSettings;
@@ -86,7 +84,7 @@ namespace Antik {
                 terminalSettings.c_cc[VTIME] = 0;
 
                 if (tcsetattr(0, TCSANOW, &terminalSettings) == -1) {
-                    throw system_error(errno, system_category(), __func__);
+                    throw std::system_error(errno, std::system_category(), __func__);
                 }
 
                 while (!stopShellInput) {
@@ -104,7 +102,7 @@ namespace Antik {
                 }
 
                 if (tcsetattr(0, TCSANOW, &savedTerminalSettings) == -1) {
-                    throw system_error(errno, system_category(), __func__);
+                    throw std::system_error(errno, std::system_category(), __func__);
                 }
 
             } catch (...) {
