@@ -63,12 +63,12 @@ protected:
 
     // Empty destructor
 
-    virtual ~CAppriseTests() {
+    ~CAppriseTests() override {
     }
 
     // Keep initialization and cleanup code to SetUp() and TearDown() methods
 
-    virtual void SetUp() {
+    void SetUp() override {
 
         // Create watch folder.
 
@@ -84,7 +84,7 @@ protected:
 
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
 
         // Remove watch folder.
 
@@ -103,7 +103,7 @@ protected:
     void createFile(const std::string &fileName);   // Create a test file.
     void createRemoveFiles(int fileCount);          // Create fileCount files and check action function call count
     void createChanges(int updateCount);            // Perform updateCount changes to a file and verify event count
-    void generateException(std::exception_ptr e);   // Generate an exception stored in CFileApprise class
+    void generateException(std::exception_ptr &e);   // Generate an exception stored in CFileApprise class
     
     // Collect loopCount CFileApprise events
     
@@ -314,7 +314,7 @@ void CAppriseTests::createRemoveFiles(int fileCount) {
 // Re-throw any exception passed.
 //
 
-void CAppriseTests::generateException(std::exception_ptr e) {
+void CAppriseTests::generateException(std::exception_ptr &e) {
 
     if (e) {
         std::rethrow_exception(e);

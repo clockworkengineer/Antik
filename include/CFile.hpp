@@ -107,10 +107,19 @@ namespace Antik {
                 }
             }
                         
-            static void copy(const CPath &soutcePath, const CPath &destinationPath) {
+            static void copy(const CPath &sourcePath, const CPath &destinationPath) {
                 try {
-                    boost::filesystem::copy_file(soutcePath.toString(), destinationPath.toString(),
+                    boost::filesystem::copy_file(sourcePath.toString(), destinationPath.toString(),
                             boost::filesystem::copy_option::none);
+                } catch (const boost::filesystem::filesystem_error & e) {
+                    throw Exception(e.what());
+                }
+                  
+            }
+            
+            static void rename(const CPath &sourcePath, const CPath &destinationPath) {
+                try {
+                    boost::filesystem::rename(sourcePath.toString(), destinationPath.toString());
                 } catch (const boost::filesystem::filesystem_error & e) {
                     throw Exception(e.what());
                 }

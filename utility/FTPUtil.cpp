@@ -41,10 +41,16 @@
 #include "FTPUtil.hpp"
 
 //
+// Antik Classes
+//
+
+#include "CFile.hpp"
+#include "CPath.hpp"
+
+//
 // Boost file system, string and iterators
 //
 
-#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/range/iterator_range.hpp>
 
@@ -59,8 +65,8 @@ namespace Antik {
         // IMPORTS
         // =======
 
-        namespace fs = boost::filesystem;
-
+        using namespace Antik::File;
+        
         // ===============
         // LOCAL FUNCTIONS
         // ===============
@@ -197,25 +203,26 @@ namespace Antik {
 
                 for (auto file : fileList) {
 
-                    fs::path destination{ localDirectory};
+                    CPath destination {localDirectory};
 
-                    destination /= file.substr(currentWorkingDirectory.size());
-                    destination = destination.normalize();
-                    if (!fs::exists(destination.parent_path())) {
-                        fs::create_directories(destination.parent_path());
+                    destination.join(file.substr(currentWorkingDirectory.size()));
+                    destination.normalize();
+                    
+                    if (!CFile::exists(destination.parentPath())) {
+                        CFile::createDirectory(destination.parentPath());
                     }
 
                     if (!ftpServer.isDirectory(file)) {
 
-                        std::string destinationFileName{ destination.string() + postFix};
+                        std::string destinationFileName{ destination.toString() + postFix};
                         if (!safe) {
                             destinationFileName.pop_back();
                         }
                         if (ftpServer.getFile(file, destinationFileName) == 226) {
                             if (safe) {
-                                fs::rename(destinationFileName, destination.string());
+                                CFile::rename(destinationFileName, destination);
                             }
-                            successList.push_back(destination.string());
+                            successList.push_back(destination.toString());
                             if (completionFn) {
                                 completionFn(successList.back());
                             }
@@ -223,10 +230,10 @@ namespace Antik {
 
                     } else {
 
-                        if (!fs::exists(destination)) {
-                            fs::create_directories(destination);
+                        if (!CFile::exists(destination)) {
+                            CFile::createDirectory(destination);
                         }
-                        successList.push_back(destination.string());
+                        successList.push_back(destination.toString());
                         if (completionFn) {
                             completionFn(successList.back());
                         }
@@ -282,19 +289,19 @@ namespace Antik {
 
                 for (auto file : fileList) {
 
-                    fs::path filePath{ file};
+                    CPath filePath { file };
 
-                    if (fs::exists(filePath)) {
+                    if (CFile::exists(filePath)) {
 
                         std::string remoteDirectory;
                         bool transferFile{ false};
 
                         // Create remote path and set file to be transfered flag
 
-                        if (fs::is_directory(filePath)) {
-                            remoteDirectory = filePath.string();
-                        } else if (fs::is_regular_file(filePath)) {
-                            remoteDirectory = filePath.parent_path().string() + kServerPathSep;
+                        if (CFile::isDirectory(filePath)) {
+                            remoteDirectory = filePath.toString();
+                        } else if (CFile::isFile(filePath)) {
+                            remoteDirectory = filePath.parentPath().toString() + kServerPathSep;
                             transferFile = true;
                         } else {
                             continue; // Not valid for transfer NEXT FILE!
@@ -321,15 +328,15 @@ namespace Antik {
                         // Transfer file
 
                         if (transferFile) {
-                            std::string destinationFileName{ filePath.filename().string() + postFix};
+                            std::string destinationFileName{ filePath.fileName() + postFix};
                             if (!safe) {
                                 destinationFileName.pop_back();
                             }
-                            if (ftpServer.putFile(destinationFileName, filePath.string()) == 226) {
+                            if (ftpServer.putFile(destinationFileName, filePath.toString()) == 226) {
                                 if (safe) {
-                                    ftpServer.renameFile(destinationFileName, filePath.filename().string());
+                                    ftpServer.renameFile(destinationFileName, filePath.fileName());
                                 }
-                                successList.push_back(constructRemotePathName(currentWorkingDirectory, remoteDirectory, filePath.filename().string()));
+                                successList.push_back(constructRemotePathName(currentWorkingDirectory, remoteDirectory, filePath.fileName()));
                                 if (completionFn) {
                                     completionFn(successList.back());
                                 }

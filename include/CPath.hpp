@@ -105,6 +105,10 @@ namespace Antik {
                 m_path.replace_extension(extension);
             }
             
+            void normalize(void) {
+                m_path = m_path.normalize();
+            }
+            
             std::string absolutePath() {
                 std::string path =  boost::filesystem::absolute(m_path).lexically_normal().string();
                 if (path.back() == '.') path.pop_back();
@@ -114,6 +118,7 @@ namespace Antik {
             static std::string currentPath() {
                 return(boost::filesystem::current_path().string());
             }
+            
                         
             // ================
             // PUBLIC VARIABLES

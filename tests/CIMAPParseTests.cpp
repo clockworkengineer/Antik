@@ -45,13 +45,13 @@ protected:
 
     // Empty destructor
 
-    virtual ~CIMAPParseTests() {
+    ~CIMAPParseTests() override {
     }
 
-    virtual void SetUp() {
+    void SetUp() override {
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
     }
     
     static void checkListRespData(CIMAPParse::ListRespData &respData, std::uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr);

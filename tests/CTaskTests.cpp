@@ -43,17 +43,17 @@ using namespace Antik::File;
 class TestAction1 : public CTask::IAction {
 public:
 
-    TestAction1(const std::string &taskName) : name{taskName}
+    explicit TestAction1(const std::string &taskName) : name{taskName}
     {
     }
 
-    virtual void init(void) {
+    void init(void) override {
     };
 
-    virtual void term(void) {
+    void term(void) override {
     };
 
-    virtual bool process(const std::string &file) {
+    bool process(const std::string &file) override {
         fileCount++;
         return true;
     }
@@ -71,13 +71,13 @@ protected:
 class TestAction2: public CTask::IAction {
 public:
 
-    TestAction2(const std::string &taskName) : name{taskName}
+    explicit TestAction2(const std::string &taskName) : name{taskName}
     {
     }
 
-    virtual void init(void) {};
-    virtual void term(void) {} ;
-    virtual bool process(const std::string &file) {
+    void init(void) override {};
+    void term(void) override {} ;
+    bool process(const std::string &file) override {
          throw std::logic_error("Just an example.");
          return true;
     }
@@ -97,12 +97,12 @@ protected:
 
     // Empty destructor
     
-    virtual ~CTaskTests() {
+    ~CTaskTests() override {
     }
     
     // Keep initialization and cleanup code to SetUp() and TearDown() methods
 
-    virtual void SetUp() {
+    void SetUp() override{
 
         // Create test actions
         
@@ -123,7 +123,7 @@ protected:
 
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
 
         // Remove watch folder.
 
@@ -141,7 +141,7 @@ protected:
 
     void createFile(std::string fileName);           // Create a test file.
     void createFiles(int fileCount);                 // Create fileCount files and check action function call count
-    void generateException(std::exception_ptr e);
+    void generateException(const std::exception_ptr &e);
 
     std::string filePath = "";      // Test file path
     std::string fileName = "";      // Test file name
@@ -238,7 +238,7 @@ void CTaskTests::createFiles(int fileCount) {
 // Re-throw any exception passed.
 //
 
-void CTaskTests::generateException(std::exception_ptr e) {
+void CTaskTests::generateException(const std::exception_ptr &e) {
 
     if (e) {
         std::rethrow_exception(e);

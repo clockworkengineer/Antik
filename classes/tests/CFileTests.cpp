@@ -44,16 +44,16 @@ protected:
 
     // Empty destructor
     
-    virtual ~CFileTests() {
+    ~CFileTests() override{
     }
     
     // Keep initialization and cleanup code to SetUp() and TearDown() methods
 
-    virtual void SetUp() {
+    void SetUp() override {
 
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
 
     }
     
