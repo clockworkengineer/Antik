@@ -100,7 +100,7 @@ namespace Antik {
     // Set whether log output is to have a date and time stamp.
     //
 
-    void CLogger::setDateTimeStamped(const bool bDateTimeStamped) {
+    void CLogger::setDateTimeStamped(bool bDateTimeStamped) {
         CLogger::m_dateTimeStamped = bDateTimeStamped;
     }
 
@@ -117,7 +117,7 @@ namespace Antik {
             if (CLogger::m_dateTimeStamped) {
                 std::cout << ("[" + currentDateAndTime() + "]");
             }
-            for (auto str : outstr) {
+            for (auto &str : outstr) {
                 std::cout << str;
             }
             std::cout << std::endl;
@@ -138,7 +138,7 @@ namespace Antik {
             if (CLogger::m_dateTimeStamped) {
                 std::cerr << ("[" + currentDateAndTime() + "]");
             }
-            for (auto str : errstr) {
+            for (auto &str : errstr) {
                 std::cerr << str;
             }
             std::cerr << std::endl;

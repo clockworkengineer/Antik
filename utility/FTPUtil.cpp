@@ -20,8 +20,8 @@
 // Dependencies: 
 // 
 // C11++              : Use of C11++ features.
-// Antik Classes      : CFTP
-// Boost              : File system, string, iterators.
+// Antik Classes      : CFTP, CFile, CPath
+// Boost              : String, iterators.
 //
 
 // =============
@@ -48,7 +48,7 @@
 #include "CPath.hpp"
 
 //
-// Boost file system, string and iterators
+// Boost string and iterators
 //
 
 #include <boost/algorithm/string.hpp>

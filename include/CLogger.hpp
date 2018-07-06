@@ -48,7 +48,7 @@ namespace Antik {
         // Logging output function
         //
 
-        typedef std::function<void (const std::initializer_list<std::string>&) > LogStringsFn;
+        using LogStringsFn = std::function<void (const std::initializer_list<std::string>&)>;
 
         //
         // NoOp output function
@@ -75,7 +75,7 @@ namespace Antik {
         // Set output as date time stamped
         // 
 
-        static void setDateTimeStamped(const bool bDateTimeStamped);
+        static void setDateTimeStamped(bool bDateTimeStamped);
 
         //
         // Template for string conversion method
@@ -129,7 +129,7 @@ namespace Antik {
         return ss.str();
     }
 
-    } // nmespace Util
+    } // namespace Util
 } // namespace Antik
 
 #endif /* CLOGGER_HPP */

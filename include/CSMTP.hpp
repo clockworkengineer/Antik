@@ -57,7 +57,7 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& message)
+                explicit Exception(std::string const& message)
                 : std::runtime_error("CSMTP Failure: " + message) {
                 }
 

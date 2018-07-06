@@ -646,7 +646,7 @@ namespace Antik {
 
     std::string CMIME::getFileMIMEType(const std::string& fileName) {
 
-        std::string baseFileName { fileName.substr(fileName.find_last_of("/\\") + 1) };
+        std::string baseFileName { fileName.substr(fileName.find_last_of(R"(/\)") + 1) };
         std::size_t fullStop { baseFileName.find_last_of('.') };
 
         if (fullStop != std::string::npos) {
@@ -666,11 +666,11 @@ namespace Antik {
     // Parse MIME string into normal ASCII and MIME word encoded pieces.
     //
 
-    std::vector<CMIME::ParsedMIMEing> CMIME::parseMIMEing(const std::string& mime) {
+    std::vector<CMIME::ParsedMIMEString> CMIME::parseMIMEString(const std::string& mime) {
 
         std::istringstream subjectStream(mime);
-        ParsedMIMEing parsedEntry;
-        std::vector<ParsedMIMEing> parseding;
+        ParsedMIMEString parsedEntry;
+        std::vector<ParsedMIMEString> parseding;
 
         for (std::string line; std::getline(subjectStream, line, '\n');) {
 
@@ -722,7 +722,7 @@ namespace Antik {
 
     std::string CMIME::convertMIMEStringToASCII(const std::string& mime) {
 
-        std::vector<ParsedMIMEing> parseding { parseMIMEing(mime) };
+        std::vector<ParsedMIMEString> parseding { parseMIMEString(mime) };
         std::string convertedMIME;
 
         for (auto& parsedEntry : parseding) {

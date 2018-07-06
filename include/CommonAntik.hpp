@@ -25,7 +25,7 @@ namespace Antik {
         // Container for list of file paths
         //
         
-        typedef std::vector<std::string> FileList;
+        using FileList = std::vector<std::string>;
         
         //
         // Server path separator

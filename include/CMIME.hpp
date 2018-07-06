@@ -57,7 +57,7 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& message)
+                explicit Exception(std::string const& message)
                 : std::runtime_error("CMIME Failure: " + message) {
                 }
 
@@ -67,7 +67,7 @@ namespace Antik {
             // Parsed MIME string entry
             //
 
-            struct ParsedMIMEing {
+            struct ParsedMIMEString {
                 unsigned char type  { ' ' }; // Type Q (Quoted Printable), B (base64), ' ' None.
                 std::string encoding; // Encoding used
                 std::string contents; // Contents
@@ -127,7 +127,7 @@ namespace Antik {
             // PRIVATE METHODS
             // ===============
 
-            static std::vector<ParsedMIMEing> parseMIMEing(const std::string& mime);
+            static std::vector<ParsedMIMEString> parseMIMEString(const std::string& mime);
 
             // =================
             // PRIVATE VARIABLES

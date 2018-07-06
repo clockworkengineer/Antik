@@ -59,8 +59,8 @@ namespace Antik {
         // Set stream to redirect and start redirect
         //
 
-        explicit CRedirect(std::ostream& outStream, std::string outfileName, std::ios_base::openmode mode = std::ios_base::out);
-        explicit CRedirect(std::FILE* stdStream, std::string outfileName, const char *mode = "w");
+        explicit CRedirect(std::ostream& outStream, const std::string &outfileName, std::ios_base::openmode mode = std::ios_base::out);
+        explicit CRedirect(std::FILE* stdStream, const std::string &outfileName, const char *mode = "w");
 
         // ==========
         // DESTRUCTOR
@@ -76,8 +76,8 @@ namespace Antik {
         // Redirect stream to outfleName
         //
 
-        void change(std::string outfileName, std::ios_base::openmode mode = std::ios_base::out);
-        void change(std::string outfileName, const char* mode = "w");
+        void change(const std::string &outfileName, std::ios_base::openmode mode = std::ios_base::out);
+        void change(const std::string &outfileName, const char* mode = "w");
 
         //
         // Restore original output stream
