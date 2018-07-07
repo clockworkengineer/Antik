@@ -22,8 +22,7 @@
 // Dependencies: 
 // 
 // C11++              : Use of C11++ features.
-// Antik classes      : CSFTP
-// Boost              : File system.
+// Antik classes      : CSFTP, CFile, CPath
 //
 
 // =============
@@ -44,10 +43,12 @@
 #include "SFTPUtil.hpp"
 
 //
-// Boost file system
+// Antik Classes
 //
 
-#include <boost/filesystem.hpp>
+#include "CFile.hpp"
+#include "CPath.hpp"
+
 
 // =========
 // NAMESPACE
@@ -60,7 +61,7 @@ namespace Antik {
         // IMPORTS
         // =======
 
-        namespace fs = boost::filesystem;
+        using namespace Antik::File;
 
         // ===============
         // LOCAL FUNCTIONS
@@ -98,15 +99,15 @@ namespace Antik {
         static void makeRemotePath(CSFTP &sftpServer, const std::string &remotePath, const CSFTP::FilePermissions &permissions) {
 
             std::vector<std::string> pathComponents;
-            fs::path currentPath{ std::string(1, kServerPathSep)};
+            CPath currentPath {""};
 
             boost::split(pathComponents, remotePath, boost::is_any_of(std::string(1, kServerPathSep)));
 
             for (auto directory : pathComponents) {
-                currentPath /= directory;
+                currentPath.join(directory);
                 if (!directory.empty()) {
-                    if (!fileExists(sftpServer, currentPath.string())) {
-                        sftpServer.createDirectory(currentPath.string(), permissions);
+                    if (!fileExists(sftpServer, currentPath.toString())) {
+                        sftpServer.createDirectory(currentPath.toString(), permissions);
                     }
 
                 }
@@ -164,8 +165,8 @@ namespace Antik {
 
                 if (sftpServer.isARegularFile(fileAttributes)) {
 
-                    if (!fs::exists(fs::path(destinationFile).parent_path())) {
-                        fs::create_directories(fs::path(destinationFile).parent_path());
+                    if (!CFile::exists(CPath(destinationFile).parentPath())) {
+                        CFile::createDirectory(CPath(destinationFile).parentPath());
                     }
 
                     localFile.open(destinationFile, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
@@ -188,15 +189,15 @@ namespace Antik {
 
                     localFile.close();
 
-                    fs::permissions(destinationFile, static_cast<fs::perms> (fileAttributes->permissions));
-
+                    CFile::setPermissions(destinationFile, static_cast<CFile::Permissions> (fileAttributes->permissions));
+                            
                     if (completionFn) {
                         completionFn(destinationFile);
                     }
 
                 } else if (sftpServer.isADirectory(fileAttributes)) {
-                    if (!fs::exists(fs::path(destinationFile))) {
-                        fs::create_directories(fs::path(destinationFile));
+                    if (!CFile::exists(CPath(destinationFile))) {
+                        CFile::createDirectory(CPath(destinationFile));
                     }
                     if (completionFn) {
                         completionFn(destinationFile);
@@ -229,16 +230,16 @@ namespace Antik {
             try {
 
                 std::string remoteFilePath;
-                fs::file_status fileStatus;
+                CFile::Status fileStatus;
                 int bytesWritten{0};
                 bool transferFile{ false};
 
-                if (fs::is_directory(sourceFile)) {
+                if (CFile::isDirectory(sourceFile)) {
                     remoteFilePath = destinationFile;
-                    fileStatus = fs::status(sourceFile);
-                 } else if (fs::is_regular_file(sourceFile)) {
-                    remoteFilePath = fs::path(destinationFile).parent_path().string();
-                    fileStatus = fs::status(fs::path(sourceFile).parent_path());
+                    fileStatus = CFile::fileStatus(sourceFile);
+                 } else if (CFile::isFile(sourceFile)) {
+                    remoteFilePath = CPath(destinationFile).parentPath().toString();
+                    fileStatus = CFile::fileStatus(CPath(sourceFile).parentPath());
                     transferFile = true;
                  } else {
                     return; // Not valid for transfer NEXT FILE!
@@ -258,7 +259,7 @@ namespace Antik {
                         throw std::system_error(errno, std::system_category());
                     }
 
-                    fileStatus = fs::status(sourceFile);
+                    fileStatus = CFile::fileStatus(sourceFile);
 
                     remoteFile = sftpServer.openFile(destinationFile, O_CREAT | O_WRONLY | O_TRUNC, fileStatus.permissions());
 
@@ -361,8 +362,8 @@ namespace Antik {
 
                         std::string destinationFileName{ localFilePath + postFix};
 
-                        if (!fs::exists(fs::path(localFilePath).parent_path())) {
-                            fs::create_directories(fs::path(localFilePath).parent_path());
+                        if (!CFile::exists(CPath(localFilePath).parentPath())) {
+                            CFile::createDirectory(CPath(localFilePath).parentPath());
                         }
 
                         if (!safe) {
@@ -372,14 +373,14 @@ namespace Antik {
                         getFile(sftpServer, remoteFile, destinationFileName);
 
                         if (safe) {
-                            fs::rename(destinationFileName, localFilePath);
+                            CFile::rename(destinationFileName, localFilePath);
                         }
 
 
                     } else if (isDirectory(sftpServer, remoteFile)) {
 
-                        if (!fs::exists(localFilePath)) {
-                            fs::create_directories(localFilePath);
+                        if (!CFile::exists(localFilePath)) {
+                            CFile::createDirectory(localFilePath);
                         }
 
                     } else {
@@ -430,17 +431,17 @@ namespace Antik {
 
                 for (auto localFile : localFileList) {
 
-                    if (fs::exists(localFile)) {
+                    if (CFile::exists(localFile)) {
 
                         std::string remoteFilePath;
                         bool transferFile{ false};
 
                         // Create remote full remote path and set file to be transfered flag
 
-                        if (fs::is_directory(localFile)) {
+                        if (CFile::isDirectory(localFile)) {
                             remoteFilePath = fileMapper.toRemote(localFile);
-                        } else if (fs::is_regular_file(localFile)) {
-                            remoteFilePath = fileMapper.toRemote(fs::path(localFile).parent_path().string());
+                        } else if (CFile::isFile(localFile)) {
+                            remoteFilePath = fileMapper.toRemote(CPath(localFile).parentPath().toString());
                             transferFile = true;
                         } else {
                             continue; // Not valid for transfer NEXT FILE!
@@ -485,7 +486,7 @@ namespace Antik {
 
             } catch (const CSFTP::Exception &e) {
                 std::cerr << e.getMessage() << std::endl;
-            } catch (const boost::filesystem::filesystem_error & e) {
+            } catch (const CFile::Exception & e) {
                 std::cerr << e.what() << std::endl;
             } catch (const std::exception &e) {
                 std::cerr << e.what() << std::endl;

@@ -130,8 +130,8 @@ namespace Antik {
 
             // Encode/decode bytes to base64 string
 
-            static void encodeToBase64(const std::string& decodeding, std::string& encodeding, std::uint32_t numberOfBytes);
-            static void decodeFromBase64(const std::string& encodeding, std::string& decodeding, std::uint32_t numberOfBytes);
+            static void encodeToBase64(const std::string& decoding, std::string& encoding, std::uint32_t numberOfBytes);
+            static void decodeFromBase64(const std::string& encoding, std::string& decoding, std::uint32_t numberOfBytes);
 
 
             // ================
@@ -221,7 +221,7 @@ namespace Antik {
             CURL *m_curlHandle { nullptr }; // curl handle
             struct curl_slist *m_curlRecipients { nullptr }; // curl email recipients list
             CURLcode m_curlResult { CURLE_OK }; // curl status
-            char m_curlErrMsgBuffer[CURL_ERROR_SIZE]; // curl error string buffer  
+            char m_curlErrMsgBuffer[CURL_ERROR_SIZE] { }; // curl error string buffer  
             static bool m_curlVerbosity; // curl verbosity setting
 
             std::deque<std::string> m_mailPayload; // Email payload

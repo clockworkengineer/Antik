@@ -19,7 +19,7 @@
 #include <stdexcept>
 #include <vector>
 #include <memory>
-#include <assert.h>
+#include <cassert>
 #include <mutex>
 
 //
@@ -107,13 +107,13 @@ namespace Antik {
 
             };
             
-            typedef ssh_options_e Option;
+            using Option =  ssh_options_e;
 
             //
             // Encapsulate libssh session data in unique pointers.
             //
 
-            typedef std::unique_ptr<std::pointer_traits<ssh_key>::element_type, Deleter> Key;
+            using Key = std::unique_ptr<std::pointer_traits<ssh_key>::element_type, Deleter>;
             
             // ============        
             // CONSTRUCTORS
@@ -125,7 +125,7 @@ namespace Antik {
 
             explicit CSSHSession();
 
-            explicit CSSHSession(CSSHSession &session);
+            CSSHSession(CSSHSession &session);
             
             // ==========
             // DESTRUCTOR

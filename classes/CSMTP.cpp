@@ -181,24 +181,24 @@ namespace Antik {
 
         for (auto attachment : m_attachedFiles) {
 
-            std::string baseFileName { attachment.fileName.substr(attachment.fileName.find_last_of("/\\") + 1) };
+            std::string baseFileName { attachment.fileName.substr(attachment.fileName.find_last_of(R"(/\)") + 1) };
 
             encodeAttachment(attachment);
 
-            m_mailPayload.push_back(std::string("--") + kMimeBoundary + kEOL);
-            m_mailPayload.push_back("Content-Type: " + attachment.contentTypes + ";" + kEOL);
-            m_mailPayload.push_back("Content-transfer-encoding: " + attachment.contentTransferEncoding + kEOL);
-            m_mailPayload.push_back(std::string("Content-Disposition: attachment;") + kEOL);
-            m_mailPayload.push_back("     filename=\"" + baseFileName + "\"" + kEOL);
-            m_mailPayload.push_back(kEOL);
+            m_mailPayload.emplace_back(std::string("--") + kMimeBoundary + kEOL);
+            m_mailPayload.emplace_back("Content-Type: " + attachment.contentTypes + ";" + kEOL);
+            m_mailPayload.emplace_back("Content-transfer-encoding: " + attachment.contentTransferEncoding + kEOL);
+            m_mailPayload.emplace_back(std::string("Content-Disposition: attachment;") + kEOL);
+            m_mailPayload.emplace_back(R"(     filename=")" + baseFileName + R"(")" + kEOL);
+            m_mailPayload.emplace_back(kEOL);
 
             // Encoded file
 
             for (auto str : attachment.encodedContents) {
-                m_mailPayload.push_back(str);
+                m_mailPayload.emplace_back(str);
             }
 
-            m_mailPayload.push_back(kEOL); // EMPTY LINE 
+            m_mailPayload.emplace_back(kEOL); // EMPTY LINE 
 
         }
 
@@ -215,45 +215,45 @@ namespace Antik {
 
         // Email header.
 
-        m_mailPayload.push_back("Date: " + currentDateAndTime() + kEOL);
-        m_mailPayload.push_back("To: " + m_addressTo + kEOL);
-        m_mailPayload.push_back("From: " + m_addressFrom + kEOL);
+        m_mailPayload.emplace_back("Date: " + currentDateAndTime() + kEOL);
+        m_mailPayload.emplace_back("To: " + m_addressTo + kEOL);
+        m_mailPayload.emplace_back("From: " + m_addressFrom + kEOL);
 
         if (!m_addressCC.empty()) {
-            m_mailPayload.push_back("cc: " + m_addressCC + kEOL);
+            m_mailPayload.emplace_back("cc: " + m_addressCC + kEOL);
         }
 
-        m_mailPayload.push_back("Subject: " + m_mailSubject + kEOL);
-        m_mailPayload.push_back(std::string("MIME-Version: 1.0") + kEOL);
+        m_mailPayload.emplace_back("Subject: " + m_mailSubject + kEOL);
+        m_mailPayload.emplace_back(std::string("MIME-Version: 1.0") + kEOL);
 
         if (!bAttachments) {
-            m_mailPayload.push_back(std::string("Content-Type: text/plain; charset=UTF-8") + kEOL);
-            m_mailPayload.push_back(std::string("Content-Transfer-Encoding: 7bit") + kEOL);
+            m_mailPayload.emplace_back(std::string("Content-Type: text/plain; charset=UTF-8") + kEOL);
+            m_mailPayload.emplace_back(std::string("Content-Transfer-Encoding: 7bit") + kEOL);
         } else {
-            m_mailPayload.push_back(std::string("Content-Type: multipart/mixed;") + kEOL);
-            m_mailPayload.push_back(std::string("     boundary=\"") + kMimeBoundary + "\"" + kEOL);
+            m_mailPayload.emplace_back(std::string("Content-Type: multipart/mixed;") + kEOL);
+            m_mailPayload.emplace_back(std::string(R"(     boundary=")") + kMimeBoundary + R"(")" + kEOL);
         }
 
-        m_mailPayload.push_back(kEOL); // EMPTY LINE 
+        m_mailPayload.emplace_back(kEOL); // EMPTY LINE 
 
         if (bAttachments) {
-            m_mailPayload.push_back(std::string("--") + kMimeBoundary + kEOL);
-            m_mailPayload.push_back(std::string("Content-Type: text/plain") + kEOL);
-            m_mailPayload.push_back(std::string("Content-Transfer-Encoding: 7bit") + kEOL);
-            m_mailPayload.push_back(kEOL); // EMPTY LINE 
+            m_mailPayload.emplace_back(std::string("--") + kMimeBoundary + kEOL);
+            m_mailPayload.emplace_back(std::string("Content-Type: text/plain") + kEOL);
+            m_mailPayload.emplace_back(std::string("Content-Transfer-Encoding: 7bit") + kEOL);
+            m_mailPayload.emplace_back(kEOL); // EMPTY LINE 
         }
 
         // Message body
 
-        for (auto str : m_mailMessage) {
-            m_mailPayload.push_back(str + kEOL);
+        for (auto &str : m_mailMessage) {
+            m_mailPayload.emplace_back(str + kEOL);
         }
 
 
         if (bAttachments) {
-            m_mailPayload.push_back(kEOL); // EMPTY LINE 
+            m_mailPayload.emplace_back(kEOL); // EMPTY LINE 
             buildAttachments();
-            m_mailPayload.push_back(std::string("--") + kMimeBoundary + "--" + kEOL);
+            m_mailPayload.emplace_back(std::string("--") + kMimeBoundary + "--" + kEOL);
         }
 
     }
@@ -262,12 +262,13 @@ namespace Antik {
     // Decode character to base64 index.
     //
 
-    inline int CSMTP::decodeChar(char ch) {
+    int CSMTP::decodeChar(char ch) {
 
-        int index = 0;
-        do {
-            if (ch == kCB64[index]) return (index);
-        } while (kCB64[index++]);
+        auto basePtr = kCB64;
+        while (*basePtr){
+            if (ch == *basePtr) return (basePtr-kCB64);
+            basePtr++;
+        }
 
         return (0);
 
@@ -414,7 +415,7 @@ namespace Antik {
 
         std::string mailMessage;
 
-        for (auto line : m_mailMessage) {
+        for (auto &line : m_mailMessage) {
             mailMessage.append(line);
         }
 
@@ -511,8 +512,8 @@ namespace Antik {
     // Encode string to base64 string.
     //
 
-    void CSMTP::encodeToBase64(const std::string& decodeding,
-            std::string& encodeding, std::uint32_t numberOfBytes) {
+    void CSMTP::encodeToBase64(const std::string& decoding,
+            std::string& encoding, std::uint32_t numberOfBytes) {
 
         int trailing, byteIndex = 0;
         std::uint8_t byte1, byte2, byte3;
@@ -521,42 +522,42 @@ namespace Antik {
             return;
         }
 
-        encodeding.clear();
+        encoding.clear();
 
         trailing = (numberOfBytes % 3); // Trailing bytes
         numberOfBytes /= 3; // No of 3 byte values to encode
 
         while (numberOfBytes--) {
 
-            byte1 = decodeding[byteIndex++];
-            byte2 = decodeding[byteIndex++];
-            byte3 = decodeding[byteIndex++];
+            byte1 = decoding[byteIndex++];
+            byte2 = decoding[byteIndex++];
+            byte3 = decoding[byteIndex++];
 
-            encodeding += kCB64[(byte1 & 0xfc) >> 2];
-            encodeding += kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
-            encodeding += kCB64[((byte2 & 0x0f) << 2) + ((byte3 & 0xc0) >> 6)];
-            encodeding += kCB64[byte3 & 0x3f];
+            encoding.append(1, kCB64[(byte1 & 0xfc) >> 2]);
+            encoding.append(1, kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)]);
+            encoding.append(1, kCB64[((byte2 & 0x0f) << 2) + ((byte3 & 0xc0) >> 6)]);
+            encoding.append(1, kCB64[byte3 & 0x3f]);
 
         }
 
         // One trailing byte
 
         if (trailing == 1) {
-            byte1 = decodeding[byteIndex++];
-            encodeding += kCB64[(byte1 & 0xfc) >> 2];
-            encodeding += kCB64[((byte1 & 0x03) << 4)];
-            encodeding += '=';
-            encodeding += '=';
+            byte1 = decoding[byteIndex++];
+            encoding.append(1, kCB64[(byte1 & 0xfc) >> 2]);
+            encoding.append(1, kCB64[((byte1 & 0x03) << 4)]);
+            encoding.append(1,'=');
+            encoding.append(1, '=');
 
             // Two trailing bytes
 
         } else if (trailing == 2) {
-            byte1 = decodeding[byteIndex++];
-            byte2 = decodeding[byteIndex++];
-            encodeding += kCB64[(byte1 & 0xfc) >> 2];
-            encodeding += kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)];
-            encodeding += kCB64[((byte2 & 0x0f) << 2)];
-            encodeding += '=';
+            byte1 = decoding[byteIndex++];
+            byte2 = decoding[byteIndex++];
+            encoding.append(1, kCB64[(byte1 & 0xfc) >> 2]);
+            encoding.append(1, kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)]);
+            encoding.append(1, kCB64[((byte2 & 0x0f) << 2)]);
+            encoding.append(1, '=');
         }
 
     }
@@ -565,8 +566,8 @@ namespace Antik {
     // Decode string from base64 encoded string.
     //
 
-    void CSMTP::decodeFromBase64(const std::string& encoded,
-            std::string& decoded, std::uint32_t numberOfBytes) {
+    void CSMTP::decodeFromBase64(const std::string& encoding,
+            std::string& decoding, std::uint32_t numberOfBytes) {
 
         int byteIndex { 0 };
         std::uint8_t byte1, byte2, byte3, byte4;
@@ -575,15 +576,15 @@ namespace Antik {
             return;
         }
 
-        decoded.clear();
+        decoding.clear();
 
         numberOfBytes = (numberOfBytes / 4);
         while (numberOfBytes--) {
 
-            byte1 = encoded[byteIndex++];
-            byte2 = encoded[byteIndex++];
-            byte3 = encoded[byteIndex++];
-            byte4 = encoded[byteIndex++];
+            byte1 = encoding[byteIndex++];
+            byte2 = encoding[byteIndex++];
+            byte3 = encoding[byteIndex++];
+            byte4 = encoding[byteIndex++];
 
             byte1 = decodeChar(byte1);
             byte2 = decodeChar(byte2);
@@ -599,9 +600,9 @@ namespace Antik {
                 byte4 = decodeChar(byte4);
             }
 
-            decoded += ((byte1 << 2) + ((byte2 & 0x30) >> 4));
-            decoded += (((byte2 & 0xf) << 4) + ((byte3 & 0x3c) >> 2));
-            decoded += (((byte3 & 0x3) << 6) + byte4);
+            decoding.append(1, ((byte1 << 2) + ((byte2 & 0x30) >> 4)));
+            decoding.append(1, (((byte2 & 0xf) << 4) + ((byte3 & 0x3c) >> 2)));
+            decoding.append(1, (((byte3 & 0x3) << 6) + byte4));
 
         }
 
@@ -617,7 +618,7 @@ namespace Antik {
 
         buildMailPayload();
 
-        for (auto line : m_mailPayload) {
+        for (auto &line : m_mailPayload) {
             mailMessage.append(line);
         }
 

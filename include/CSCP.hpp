@@ -91,7 +91,7 @@ namespace Antik {
             // Re-map some linux types used (possibly make these more abstract at a later date).
             //
             
-            typedef mode_t FilePermissions;     // File permission (boost::filesystem status for portable way to get)
+            using FilePermissions = mode_t;     // File permission (boost::filesystem status for portable way to get)
             
             // ============
             // CONSTRUCTORS

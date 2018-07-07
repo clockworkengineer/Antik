@@ -55,6 +55,9 @@ namespace Antik {
 
             };
 
+            using Status = boost::filesystem::file_status;
+            using Permissions = boost::filesystem::perms;
+            
             // ============
             // CONSTRUCTORS
             // ============
@@ -83,6 +86,14 @@ namespace Antik {
                 } 
             }
             
+            static Status fileStatus(const CPath &filePath) {
+                try {
+                    return(boost::filesystem::status(filePath.toString()));
+                } catch (const boost::filesystem::filesystem_error & e) {
+                    throw Exception(e.what());
+                } 
+            }
+            
            static bool isDirectory(const CPath &filePath) {
                 try {
                     return(boost::filesystem::is_directory(filePath.toString()));
@@ -102,6 +113,14 @@ namespace Antik {
             static void remove(const CPath &filePath) {
                 try {
                     boost::filesystem::remove(filePath.toString());
+                } catch (const boost::filesystem::filesystem_error & e) {
+                    throw Exception(e.what());
+                }
+            }
+            
+            static void setPermissions(const CPath &filePath, Permissions permissions) {
+                try {
+                    boost::filesystem::permissions(filePath.toString(), permissions);
                 } catch (const boost::filesystem::filesystem_error & e) {
                     throw Exception(e.what());
                 }

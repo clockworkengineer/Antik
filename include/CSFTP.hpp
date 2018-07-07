@@ -21,7 +21,7 @@
 #include <string>
 #include <cstring>
 #include <memory>
-#include <assert.h>
+#include <cassert>
 
 //
 // Antik classes
@@ -132,19 +132,19 @@ namespace Antik {
             // Encapsulate libssh sftp data in unique pointers.
             //
             
-            typedef std::unique_ptr<std::pointer_traits<sftp_attributes>::element_type, Deleter> FileAttributes;
-            typedef std::unique_ptr<std::pointer_traits<sftp_file>::element_type, Deleter> File;
-            typedef std::unique_ptr<std::pointer_traits<sftp_dir>::element_type, Deleter> Directory;
-            typedef std::unique_ptr<std::pointer_traits<sftp_statvfs_t>::element_type, Deleter> FileSystemInfo;
+            using FileAttributes = std::unique_ptr<std::pointer_traits<sftp_attributes>::element_type, Deleter>;
+            using File = std::unique_ptr<std::pointer_traits<sftp_file>::element_type, Deleter>;
+            using Directory = std::unique_ptr<std::pointer_traits<sftp_dir>::element_type, Deleter>;
+            using FileSystemInfo = std::unique_ptr<std::pointer_traits<sftp_statvfs_t>::element_type, Deleter>;
 
             //
             // Re-map some linux types used (possibly make these more abstract at a later date).
             //
             
-            typedef mode_t FilePermissions;     // File permission (boost::filesystem status for portable way to get)
-            typedef uid_t FileOwner;            // File owner (Linux specific)
-            typedef gid_t FileGroup;            // File group (Linux specific)
-            typedef timeval Time;               // Time (Needs some work).
+            using FilePermissions = mode_t;     // File permission (boost::filesystem status for portable way to get)
+            using FileOwner = uid_t;            // File owner (Linux specific)
+            using FileGroup = gid_t;            // File group (Linux specific)
+            using Time = timeval;               // Time (Needs some work).
 
             // ============
             // CONSTRUCTORS

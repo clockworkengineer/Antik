@@ -482,7 +482,7 @@ namespace Antik {
 
             int32_t position = sftp_tell(fileHandle.get());
 
-            if (position < 0) {
+            if (position == -1) {
                 throw Exception(*this, __func__);
             }
 
@@ -498,7 +498,7 @@ namespace Antik {
 
             int64_t position = sftp_tell64(fileHandle.get());
 
-            if (position < 0) {
+            if (position == -1) {
                 throw Exception(*this, __func__);
             }
 
