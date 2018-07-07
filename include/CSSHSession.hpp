@@ -296,7 +296,7 @@ namespace Antik {
             std::string m_user;                // SSH server login account name
             std::string m_password;            // SSH server login account password
             bool m_authorized {false};         // SSH session authorised
-            std::uint32_t m_authorizarionType; // SSH session user authorization type
+            std::uint32_t m_authorizarionType {UserAuthorizationType::None }; // SSH session user authorization type
 
 
         };

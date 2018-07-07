@@ -52,7 +52,7 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& message)
+                explicit Exception(std::string const& message)
                 : std::runtime_error("CTask Failure: " + message) {
                 }
 
@@ -79,8 +79,8 @@ namespace Antik {
 
             explicit CTask
             (
-                    const std::string& watchFolder, // Watch folder path
-                    std::shared_ptr<IAction> taskActFcn, // Task action function
+                    const std::string& watchFolder,  // Watch folder path
+                    std::shared_ptr<IAction> action, // Task action function
                     int watchDepth, // Watch depth -1= all, 0=just watch folder
                     int killCount // Kill count
             );

@@ -60,7 +60,7 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& message)
+                explicit Exception(std::string const& message)
                 : std::runtime_error("CApprise Failure: " + message) {
                 }
 
@@ -85,8 +85,9 @@ namespace Antik {
             //
 
             struct Event {
-                EventId id;              // Event id
-                std::string message;     // Event file name / error message string
+                explicit Event(EventId id=EventId::Event_none, std::string message="") : id{id}, message{message} {}
+                EventId id;          // Event id
+                std::string message; // Event file name / error message string
             };
 
             // ============

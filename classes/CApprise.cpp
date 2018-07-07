@@ -223,7 +223,7 @@ namespace Antik {
         void CApprise::sendEvent(CApprise::EventId id, const std::string& fileName) {
 
             std::unique_lock<std::mutex> locker(m_queuedEventsMutex);
-            m_queuedEvents.push({id, fileName});
+            m_queuedEvents.push(Event(id, fileName));
             m_queuedEventsWaiting.notify_one();
 
         }

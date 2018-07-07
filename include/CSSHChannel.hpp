@@ -17,7 +17,7 @@
 //
 
 #include <stdexcept>
-#include <assert.h>
+#include <cassert>
 
 //
 // Antik classes
@@ -57,7 +57,7 @@ namespace Antik {
 
             struct Exception {
                 
-                Exception(CSSHChannel &channel, const std::string functionName) : m_errorCode{channel.getSession().getErrorCode()},
+                Exception(CSSHChannel &channel, const std::string &functionName) : m_errorCode{channel.getSession().getErrorCode()},
                 m_errorMessage{ channel.getSession().getError()}, m_functionName{functionName}
                 {
                 }

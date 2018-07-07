@@ -84,7 +84,7 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& message)
+                explicit Exception(std::string const& message)
                 : std::runtime_error("CFileZIPIO Failure: " + message) {
                 }
 
@@ -279,13 +279,13 @@ namespace Antik {
             // Extraxct ZIP64 extended information
             //
 
-            static void getZip64ExtendedInfoExtraField(Zip64ExtendedInfoExtraField& extendedInfo, std::vector<std::uint8_t> & info);
+            static void getZip64ExtendedInfoExtraField(Zip64ExtendedInfoExtraField& zip64ExtendedInfo, std::vector<std::uint8_t> & info);
 
             //
             // ZIP Archive file I/O 
             //
 
-            void openZIPFile(const std::string fileName, std::ios_base::openmode mode);
+            void openZIPFile(const std::string &fileName, std::ios_base::openmode mode);
             void closeZIPFile(void);
             void positionInZIPFile(std::uint64_t offset);
             std::uint64_t currentPositionZIPFile(void);

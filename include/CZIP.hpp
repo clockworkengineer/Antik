@@ -53,7 +53,7 @@ namespace Antik {
 
             struct Exception : public std::runtime_error {
 
-                Exception(std::string const& message)
+                explicit Exception(std::string const& message)
                 : std::runtime_error("CZIP Failure: " + message) {
                 }
 
@@ -86,7 +86,7 @@ namespace Antik {
             // DESTRUCTOR
             // ==========
 
-            virtual ~CZIP();
+            ~CZIP() override;
 
             // ==============
             // PUBLIC METHODS
@@ -113,7 +113,7 @@ namespace Antik {
             // Add/extract files to archive
             //
 
-            bool extract(const std::string& fileName, const std::string& destFolder);
+            bool extract(const std::string& fileName, const std::string& destFileName);
             bool add(const std::string& fileName, const std::string& zippedFileName);
 
             //
@@ -175,7 +175,7 @@ namespace Antik {
             std::uint32_t inflateFile(const std::string& fileName, std::uint64_t fileSize);
             std::uint32_t extractFile(const std::string& fileName, std::uint64_t fileSize);
             std::pair<std::uint32_t, std::uint64_t> deflateFile(const std::string& fileName, std::uint64_t fileSize);
-            void storeFile(const std::string& fileName, std::uint64_t fileLength);
+            void storeFile(const std::string& fileName, std::uint64_t fileSize);
 
             bool fileExists(const std::string& fileName);
             std::uint32_t getFileAttributes(const std::string& fileName);

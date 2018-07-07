@@ -215,7 +215,7 @@ namespace Antik {
             putField(entry.offsetCentralDirRecords, buffer);
             zipFileStream.write((char *) &buffer[0], entry.size);
 
-            if (entry.extensibleDataSector.size()) {
+            if (!entry.extensibleDataSector.empty()) {
                 zipFileStream.write((char *) &entry.extensibleDataSector[0], entry.extensibleDataSector.size());
             }
 
@@ -574,7 +574,7 @@ namespace Antik {
         // Open ZIP archive for I/O.
         //
 
-        void CZIPIO::openZIPFile(const std::string fileName, std::ios_base::openmode mode) {
+        void CZIPIO::openZIPFile(const std::string &fileName, std::ios_base::openmode mode) {
 
             m_zipFileStream.open(fileName, mode);
 
