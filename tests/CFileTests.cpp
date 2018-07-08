@@ -24,8 +24,7 @@
 
 #include <stdexcept>
 
-// CTask class
-
+// CTask clas
 #include "CFile.hpp" 
 
 using namespace Antik::File;
@@ -376,7 +375,7 @@ TEST_F(CFileTests, RenameToExistingFile) {
 }
 
 //
-// Remove file file.
+// Remove file.
 //
 
 TEST_F(CFileTests, RemoveFile) {
