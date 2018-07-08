@@ -77,48 +77,25 @@ namespace Antik {
             // PUBLIC METHODS
             // ==============
             
-            std::string toString() const {
-                return m_path.string();
-            };
+            std::string toString(void) const; 
             
-            CPath  parentPath () {
-                return(m_path.parent_path().string());
-            }
+            CPath  parentPath(void);
             
-            std::string fileName() const {
-                return m_path.filename().string();
-            };
+            std::string fileName(void) const;
             
-            std::string baseName() const {
-                return m_path.stem().string();
-            };
+            std::string baseName(void) const;
             
-            std::string extension() const {
-                return m_path.extension().string();
-            };
+            std::string extension(void) const;
             
-            void join(const std::string &partialPath) {
-                m_path /= partialPath;
-            }
+            void join(const std::string &partialPath) ;
             
-            void replaceExtension(const std::string &extension) {
-                m_path.replace_extension(extension);
-            }
+            void replaceExtension(const std::string &extension) ;
             
-            void normalize(void) {
-                m_path = m_path.normalize();
-            }
+            void normalize(void);
             
-            std::string absolutePath() {
-                std::string path =  boost::filesystem::absolute(m_path).lexically_normal().string();
-                if (path.back() == '.') path.pop_back();
-                return(path);
-            }
+            std::string absolutePath(void);
             
-            static std::string currentPath() {
-                return(boost::filesystem::current_path().string());
-            }
-            
+            static std::string currentPath(void);
                         
             // ================
             // PUBLIC VARIABLES
