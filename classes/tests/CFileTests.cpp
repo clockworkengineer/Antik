@@ -62,7 +62,9 @@ protected:
     static const std::string kTestPathName1;
     static const std::string kTestPathName2;
     static const std::string kTestPathName3;
-    
+    static const std::string kTestPathName4;
+
+        
 };
 
 // =================
@@ -70,8 +72,10 @@ protected:
 // =================
 
 const std::string CFileTests::kTestPathName1 { "/tmp/test1.txt"};
-const std::string CFileTests::kTestPathName2 { "/tmp/test"};
-const std::string CFileTests::kTestPathName3 { "/tmp/test/test1.txt"};
+const std::string CFileTests::kTestPathName2 { "/tmp/test2.txt"};
+const std::string CFileTests::kTestPathName3 { "/tmp/test"};
+const std::string CFileTests::kTestPathName4 { "/tmp/test/test1.txt"};
+
    
 // ===============
 // FIXTURE METHODS
@@ -143,7 +147,7 @@ TEST_F(CFileTests, CheckIfPathIsNormalFile) {
 
 TEST_F(CFileTests, CheckIfPathIsNotAFile) {
 
-    CPath filePath { kTestPathName2 };
+    CPath filePath { kTestPathName3 };
     
     CFile::createDirectory(filePath);
     
@@ -175,7 +179,7 @@ TEST_F(CFileTests, CheckIfPathIsNotADirectory) {
 
 TEST_F(CFileTests, CheckIfPathIsADirectory) {
 
-    CPath filePath { kTestPathName2 };
+    CPath filePath { kTestPathName3 };
     
     CFile::createDirectory(filePath);
     
@@ -205,7 +209,7 @@ TEST_F(CFileTests, CreatDirectoryWithEmptyName) {
 
 TEST_F(CFileTests, CreatDirectoryAndCheckForSuccess) {
 
-    CPath filePath {kTestPathName2};
+    CPath filePath {kTestPathName3};
     
     CFile::createDirectory(filePath);
     
@@ -239,7 +243,7 @@ TEST_F(CFileTests, RemoveANormalFile) {
 
 TEST_F(CFileTests, RemoveADirectory) {
 
-    CPath filePath {kTestPathName2};
+    CPath filePath {kTestPathName3};
     
     CFile::createDirectory(filePath);
     
@@ -257,7 +261,7 @@ TEST_F(CFileTests, RemoveADirectory) {
 
 TEST_F(CFileTests, RemoveANonEmptyDirectory) {
 
-    CPath filePath {kTestPathName3};
+    CPath filePath {kTestPathName4};
     
     CFile::createDirectory(filePath.parentPath());
     createFile(filePath);
@@ -268,6 +272,122 @@ TEST_F(CFileTests, RemoveANonEmptyDirectory) {
     
     CFile::remove(filePath);
     CFile::remove(filePath.parentPath());
+    
+}
+
+//
+// Copy a file.
+//
+
+TEST_F(CFileTests, CopyFile) {
+
+    CPath filePath{kTestPathName1};
+
+    createFile(filePath);
+
+    CFile::copy(filePath, kTestPathName2);
+
+    EXPECT_TRUE(CFile::exists(kTestPathName2));
+
+    CFile::remove(filePath);
+    CFile::remove(kTestPathName2);
+    
+}
+
+//
+// Copy file.
+//
+
+TEST_F(CFileTests, CopyNonExistantFile) {
+
+    CPath filePath{kTestPathName1};
+
+    EXPECT_THROW(CFile::copy(filePath, kTestPathName2), CFile::Exception);
+    
+}
+
+//
+// Copy file to an existing file.
+//
+
+TEST_F(CFileTests, CopyToExistingFile) {
+
+    CPath filePath{kTestPathName1};
+
+    createFile(filePath);
+    createFile(kTestPathName2);
+    
+    EXPECT_THROW(CFile::copy(filePath, kTestPathName2), CFile::Exception);
+    
+    CFile::remove(filePath);
+    CFile::remove(kTestPathName2);
+    
+}
+
+//
+// Rename a file.
+//
+
+TEST_F(CFileTests, RenameFile) {
+
+    CPath filePath{kTestPathName1};
+
+    createFile(filePath);
+
+    CFile::rename(filePath, kTestPathName2);
+
+    EXPECT_TRUE(CFile::exists(kTestPathName2));
+    EXPECT_FALSE(CFile::exists(kTestPathName1));
+ 
+    CFile::remove(kTestPathName2);
+    
+}
+
+//
+// Rename non-existant file.
+//
+
+TEST_F(CFileTests, RenameNonExistantFile) {
+
+    CPath filePath{kTestPathName1};
+
+    EXPECT_THROW(CFile::rename(filePath, kTestPathName2), CFile::Exception);
+    
+}
+
+//
+// Rename file to an existing file.
+//
+
+TEST_F(CFileTests, RenameToExistingFile) {
+
+    CPath filePath{kTestPathName1};
+
+    createFile(filePath);
+    createFile(kTestPathName2);
+    
+    CFile::rename(filePath, kTestPathName2);
+ 
+    EXPECT_FALSE(CFile::exists(kTestPathName1));
+    EXPECT_TRUE(CFile::exists(kTestPathName2));
+    
+    CFile::remove(kTestPathName2);
+    
+}
+
+//
+// Remove file file.
+//
+
+TEST_F(CFileTests, RemoveFile) {
+
+    CPath filePath{kTestPathName1};
+
+    createFile(filePath);
+    
+    CFile::remove(filePath);
+ 
+    EXPECT_FALSE(CFile::exists(kTestPathName1));
     
 }
 

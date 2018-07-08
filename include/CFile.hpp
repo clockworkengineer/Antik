@@ -57,6 +57,7 @@ namespace Antik {
 
             using Status = boost::filesystem::file_status;
             using Permissions = boost::filesystem::perms;
+            using Time = time_t;
             
             // ============
             // CONSTRUCTORS
@@ -90,7 +91,7 @@ namespace Antik {
             
             static FileList directoryContentsList(const CPath &localDirectory);
             
-            static time_t lastWriteTime(const CPath &filePath);
+            static Time lastWriteTime(const CPath &filePath);
             
             // ================
             // PUBLIC VARIABLES
