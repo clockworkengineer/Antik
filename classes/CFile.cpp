@@ -65,6 +65,10 @@ namespace Antik {
         // PUBLIC METHODS
         // ==============
 
+        //
+        // Return true of a path exists.
+        //
+        
         bool CFile::exists(const CPath &filePath) {
             try {
                 return (boost::filesystem::exists(filePath.toString()));
@@ -73,6 +77,10 @@ namespace Antik {
             }
         }
 
+        //
+        // Return true if a path is a regular file.
+        //
+        
         bool CFile::isFile(const CPath &filePath) {
             try {
                 return (boost::filesystem::is_regular(filePath.toString()));
@@ -81,6 +89,10 @@ namespace Antik {
             }
         }
 
+        //
+        // Get path type and permissions.
+        //
+        
         CFile::Status CFile::fileStatus(const CPath &filePath) {
             try {
                 return (boost::filesystem::status(filePath.toString()));
@@ -89,6 +101,10 @@ namespace Antik {
             }
         }
 
+        //
+        // Return true if a path is a directory.
+        //
+        
         bool CFile::isDirectory(const CPath &filePath) {
             try {
                 return (boost::filesystem::is_directory(filePath.toString()));
@@ -97,6 +113,10 @@ namespace Antik {
             }
         }
 
+        //
+        // Create a directory (recursively if necessary) returning true on success.
+        //
+        
         bool CFile::createDirectory(const CPath &directoryPath) {
             try {
                 return (boost::filesystem::create_directories(directoryPath.toString()));
@@ -105,6 +125,10 @@ namespace Antik {
             }
         }
 
+        //
+        // Remove a file.
+        //
+        
         void CFile::remove(const CPath &filePath) {
             try {
                 boost::filesystem::remove(filePath.toString());
@@ -113,6 +137,10 @@ namespace Antik {
             }
         }
 
+        //
+        // Set a files permissions.
+        //
+        
         void CFile::setPermissions(const CPath &filePath, Permissions permissions) {
             try {
                 boost::filesystem::permissions(filePath.toString(), permissions);
@@ -121,6 +149,10 @@ namespace Antik {
             }
         }
 
+        //
+        // Copy a file.
+        //
+        
         void CFile::copy(const CPath &sourcePath, const CPath &destinationPath) {
             try {
                 boost::filesystem::copy_file(sourcePath.toString(), destinationPath.toString(),
@@ -131,6 +163,10 @@ namespace Antik {
 
         }
 
+        //
+        // Rename a file.
+        //
+        
         void CFile::rename(const CPath &sourcePath, const CPath &destinationPath) {
             try {
                 boost::filesystem::rename(sourcePath.toString(), destinationPath.toString());
@@ -140,6 +176,10 @@ namespace Antik {
 
         }
 
+        //
+        // Produce a list of files in a directory structure (traversing all directories).
+        //
+        
         FileList CFile::directoryContentsList(const CPath &localDirectory) {
 
             FileList fileList;
@@ -158,17 +198,18 @@ namespace Antik {
             return (fileList);
 
         }
+        
+        //
+        // Return time that a file was last written to.
+        //
 
-        time_t CFile::lastWriteTime(const CPath &filePath) {
+        CFile::Time CFile::lastWriteTime(const CPath &filePath) {
 
             try {
-
                 return (boost::filesystem::last_write_time(filePath.toString()));
-
             } catch (const boost::filesystem::filesystem_error & e) {
                 throw Exception(e.what());
             }
-
 
         }
 

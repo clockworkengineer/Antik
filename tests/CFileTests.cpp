@@ -24,7 +24,8 @@
 
 #include <stdexcept>
 
-// CTask clas
+// CTask class
+
 #include "CFile.hpp" 
 
 using namespace Antik::File;
@@ -51,7 +52,7 @@ protected:
     void SetUp() override {
 
     }
-
+    
     void TearDown() override {
 
     }

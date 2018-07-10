@@ -55,6 +55,10 @@ namespace Antik {
 
             };
 
+            //
+            // File information, permissions and Time structures.
+            //
+            
             using Status = boost::filesystem::file_status;
             using Permissions = boost::filesystem::perms;
             using Time = time_t;
