@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   CPathTests.cpp
+ * File:   TCPath.cpp
  * 
  * Author: Robert Tizzard
  *
@@ -34,20 +34,20 @@ using namespace Antik::File;
 // UNIT TEST FIXTURE CLASS
 // =======================
 
-class CPathTests : public ::testing::Test {
+class TCPath : public ::testing::Test {
 protected:
 
     // Empty constructor
 
-    CPathTests() {
+    TCPath() {
     }
 
     // Empty destructor
 
-    ~CPathTests() override{
+    ~TCPath() override{
     }
 
-    // Keep initialization and cleanup code to SetUp() and TearDown() methods
+    // Keep initialisation and cleanup code to SetUp() and TearDown() methods
 
     void SetUp() override {
 
@@ -65,11 +65,11 @@ protected:
     
 };
 
-const std::string CPathTests::testPath1("/home/user1/test/temp.txt");
-const std::string CPathTests::testPath2("/home/user1/test");
-const std::string CPathTests::testFileName("temp.txt");
-const std::string CPathTests::testFileBaseName("temp");
-const std::string CPathTests::testFileExtension(".txt");
+const std::string TCPath::testPath1("/home/user1/test/temp.txt");
+const std::string TCPath::testPath2("/home/user1/test");
+const std::string TCPath::testFileName("temp.txt");
+const std::string TCPath::testFileBaseName("temp");
+const std::string TCPath::testFileExtension(".txt");
 
 // =================
 // FIXTURE CONSTANTS
@@ -87,7 +87,7 @@ const std::string CPathTests::testFileExtension(".txt");
 // Path creation
 //
 
-TEST_F(CPathTests, PathCreation) {
+TEST_F(TCPath, PathCreation) {
 
     CPath path{ this->testPath1};
 
@@ -99,7 +99,7 @@ TEST_F(CPathTests, PathCreation) {
 // Empty path creation
 //
 
-TEST_F(CPathTests, EmptyPathCreation) {
+TEST_F(TCPath, EmptyPathCreation) {
 
     CPath path{ ""};
 
@@ -117,7 +117,7 @@ TEST_F(CPathTests, EmptyPathCreation) {
 // Parent path
 //
 
-TEST_F(CPathTests, ParentPath) {
+TEST_F(TCPath, ParentPath) {
 
     CPath path{ this->testPath1};
 
@@ -129,7 +129,7 @@ TEST_F(CPathTests, ParentPath) {
 // Filename
 //
 
-TEST_F(CPathTests, FileName) {
+TEST_F(TCPath, FileName) {
 
     CPath path{ this->testPath1};
 
@@ -141,7 +141,7 @@ TEST_F(CPathTests, FileName) {
 // BaseName
 //
 
-TEST_F(CPathTests, BaseName) {
+TEST_F(TCPath, BaseName) {
 
     CPath path{ this->testPath1};
 
@@ -153,7 +153,7 @@ TEST_F(CPathTests, BaseName) {
 // Extension
 //
 
-TEST_F(CPathTests, Extension) {
+TEST_F(TCPath, Extension) {
 
     CPath path{ this->testPath1};
 
@@ -165,7 +165,7 @@ TEST_F(CPathTests, Extension) {
 // Extension
 //
 
-TEST_F(CPathTests, ReplaceExtension) {
+TEST_F(TCPath, ReplaceExtension) {
 
     CPath path{ this->testPath1};
     
@@ -179,7 +179,7 @@ TEST_F(CPathTests, ReplaceExtension) {
 // Extension
 //
 
-TEST_F(CPathTests, Join) {
+TEST_F(TCPath, Join) {
 
     CPath path{ this->testPath2};
     
@@ -193,7 +193,7 @@ TEST_F(CPathTests, Join) {
 // Extension
 //
 
-TEST_F(CPathTests, AbsolutePath) {
+TEST_F(TCPath, AbsolutePath) {
 
     CPath path{ "./test"};
 

@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   CFileTests.cpp
+ * File:   TCFile.cpp
  * 
  * Author: Robert Tizzard
  *
@@ -34,17 +34,17 @@ using namespace Antik::File;
 // UNIT TEST FIXTURE CLASS
 // =======================
 
-class CFileTests : public ::testing::Test {
+class TCFile : public ::testing::Test {
 protected:
     
     // Empty constructor
 
-    CFileTests() {
+    TCFile() {
     }
 
     // Empty destructor
     
-    ~CFileTests() override{
+    ~TCFile() override{
     }
     
     // Keep initialization and cleanup code to SetUp() and TearDown() methods
@@ -71,10 +71,10 @@ protected:
 // FIXTURE CONSTANTS
 // =================
 
-const std::string CFileTests::kTestPathName1 { "/tmp/test1.txt"};
-const std::string CFileTests::kTestPathName2 { "/tmp/test2.txt"};
-const std::string CFileTests::kTestPathName3 { "/tmp/test"};
-const std::string CFileTests::kTestPathName4 { "/tmp/test/test1.txt"};
+const std::string TCFile::kTestPathName1 { "/tmp/test1.txt"};
+const std::string TCFile::kTestPathName2 { "/tmp/test2.txt"};
+const std::string TCFile::kTestPathName3 { "/tmp/test"};
+const std::string TCFile::kTestPathName4 { "/tmp/test/test1.txt"};
 
    
 // ===============
@@ -85,7 +85,7 @@ const std::string CFileTests::kTestPathName4 { "/tmp/test/test1.txt"};
 // Create a file for test purposes.
 //
 
-void CFileTests::createFile(const CPath &filePath) {
+void TCFile::createFile(const CPath &filePath) {
 
     std::ofstream outfile(filePath.toString());
     outfile << "TEST TEXT" << std::endl;
@@ -101,7 +101,7 @@ void CFileTests::createFile(const CPath &filePath) {
 // Check to see file does not exist.
 //
 
-TEST_F(CFileTests, FileDoesNotExist) {
+TEST_F(TCFile, FileDoesNotExist) {
 
     CPath filePath { kTestPathName1 };
     
@@ -113,7 +113,7 @@ TEST_F(CFileTests, FileDoesNotExist) {
 // Check to see file does exist.
 //
 
-TEST_F(CFileTests, FileExists) {
+TEST_F(TCFile, FileExists) {
 
     CPath filePath { kTestPathName1 };
     
@@ -129,7 +129,7 @@ TEST_F(CFileTests, FileExists) {
 // Check to see path is a file.
 //
 
-TEST_F(CFileTests, CheckIfPathIsNormalFile) {
+TEST_F(TCFile, CheckIfPathIsNormalFile) {
 
     CPath filePath { kTestPathName1 };
     
@@ -145,7 +145,7 @@ TEST_F(CFileTests, CheckIfPathIsNormalFile) {
 // Check to see path is not a file.
 //
 
-TEST_F(CFileTests, CheckIfPathIsNotAFile) {
+TEST_F(TCFile, CheckIfPathIsNotAFile) {
 
     CPath filePath { kTestPathName3 };
     
@@ -161,7 +161,7 @@ TEST_F(CFileTests, CheckIfPathIsNotAFile) {
 // Check to see path is not a directory.
 //
 
-TEST_F(CFileTests, CheckIfPathIsNotADirectory) {
+TEST_F(TCFile, CheckIfPathIsNotADirectory) {
 
     CPath filePath { kTestPathName1 };
     
@@ -177,7 +177,7 @@ TEST_F(CFileTests, CheckIfPathIsNotADirectory) {
 // Check to see path is a directory
 //
 
-TEST_F(CFileTests, CheckIfPathIsADirectory) {
+TEST_F(TCFile, CheckIfPathIsADirectory) {
 
     CPath filePath { kTestPathName3 };
     
@@ -193,7 +193,7 @@ TEST_F(CFileTests, CheckIfPathIsADirectory) {
 // Create an directory with invalid name (empty)
 //
 
-TEST_F(CFileTests, CreatDirectoryWithEmptyName) {
+TEST_F(TCFile, CreatDirectoryWithEmptyName) {
 
     CPath filePath {""};
     
@@ -207,7 +207,7 @@ TEST_F(CFileTests, CreatDirectoryWithEmptyName) {
 // Create an directory and check that successful.
 //
 
-TEST_F(CFileTests, CreatDirectoryAndCheckForSuccess) {
+TEST_F(TCFile, CreatDirectoryAndCheckForSuccess) {
 
     CPath filePath {kTestPathName3};
     
@@ -223,7 +223,7 @@ TEST_F(CFileTests, CreatDirectoryAndCheckForSuccess) {
 // Remove a normal file.
 //
 
-TEST_F(CFileTests, RemoveANormalFile) {
+TEST_F(TCFile, RemoveANormalFile) {
 
     CPath filePath {kTestPathName1};
     
@@ -241,7 +241,7 @@ TEST_F(CFileTests, RemoveANormalFile) {
 // Remove a directory file.
 //
 
-TEST_F(CFileTests, RemoveADirectory) {
+TEST_F(TCFile, RemoveADirectory) {
 
     CPath filePath {kTestPathName3};
     
@@ -259,7 +259,7 @@ TEST_F(CFileTests, RemoveADirectory) {
 // Remove a non-empty directory file.
 //
 
-TEST_F(CFileTests, RemoveANonEmptyDirectory) {
+TEST_F(TCFile, RemoveANonEmptyDirectory) {
 
     CPath filePath {kTestPathName4};
     
@@ -279,7 +279,7 @@ TEST_F(CFileTests, RemoveANonEmptyDirectory) {
 // Copy a file.
 //
 
-TEST_F(CFileTests, CopyFile) {
+TEST_F(TCFile, CopyFile) {
 
     CPath filePath{kTestPathName1};
 
@@ -298,7 +298,7 @@ TEST_F(CFileTests, CopyFile) {
 // Copy file.
 //
 
-TEST_F(CFileTests, CopyNonExistantFile) {
+TEST_F(TCFile, CopyNonExistantFile) {
 
     CPath filePath{kTestPathName1};
 
@@ -310,7 +310,7 @@ TEST_F(CFileTests, CopyNonExistantFile) {
 // Copy file to an existing file.
 //
 
-TEST_F(CFileTests, CopyToExistingFile) {
+TEST_F(TCFile, CopyToExistingFile) {
 
     CPath filePath{kTestPathName1};
 
@@ -328,7 +328,7 @@ TEST_F(CFileTests, CopyToExistingFile) {
 // Rename a file.
 //
 
-TEST_F(CFileTests, RenameFile) {
+TEST_F(TCFile, RenameFile) {
 
     CPath filePath{kTestPathName1};
 
@@ -347,7 +347,7 @@ TEST_F(CFileTests, RenameFile) {
 // Rename non-existant file.
 //
 
-TEST_F(CFileTests, RenameNonExistantFile) {
+TEST_F(TCFile, RenameNonExistantFile) {
 
     CPath filePath{kTestPathName1};
 
@@ -359,7 +359,7 @@ TEST_F(CFileTests, RenameNonExistantFile) {
 // Rename file to an existing file.
 //
 
-TEST_F(CFileTests, RenameToExistingFile) {
+TEST_F(TCFile, RenameToExistingFile) {
 
     CPath filePath{kTestPathName1};
 
@@ -379,7 +379,7 @@ TEST_F(CFileTests, RenameToExistingFile) {
 // Remove file.
 //
 
-TEST_F(CFileTests, RemoveFile) {
+TEST_F(TCFile, RemoveFile) {
 
     CPath filePath{kTestPathName1};
 

@@ -1,12 +1,12 @@
 #include "HOST.hpp"
 /*
- * File:   CAppriseTests.cpp
+ * File:   TCApprise.cpp
  * 
  * Author: Robert Tizzard
  *
  * Created on October 24, 2016, 2:34 PM
  * 
- * Description: Google unit tests for classCFileApprise.
+ * Description: Google unit tests for class CApprise.
  *
  * Copyright 2016.
  *
@@ -42,7 +42,7 @@ using namespace Antik::File;
 // UNIT TEST FIXTURE CLASS
 // =======================
 
-class CAppriseTests : public ::testing::Test {
+class TCApprise : public ::testing::Test {
 protected:
 
     // Event counts
@@ -58,12 +58,12 @@ protected:
 
     // Empty constructor
 
-    CAppriseTests() {
+    TCApprise() {
     }
 
     // Empty destructor
 
-    ~CAppriseTests() override {
+    ~TCApprise() override {
     }
 
     // Keep initialization and cleanup code to SetUp() and TearDown() methods
@@ -72,14 +72,14 @@ protected:
 
         // Create watch folder.
 
-        if (!CFile::exists(CAppriseTests::kWatchFolder)) {
-            CFile::createDirectory(CAppriseTests::kWatchFolder);
+        if (!CFile::exists(TCApprise::kWatchFolder)) {
+            CFile::createDirectory(TCApprise::kWatchFolder);
         }
 
         // Create destination folder.
 
-        if (!CFile::exists(CAppriseTests::kDestinationFolder)) {
-            CFile::createDirectory(CAppriseTests::kDestinationFolder);
+        if (!CFile::exists(TCApprise::kDestinationFolder)) {
+            CFile::createDirectory(TCApprise::kDestinationFolder);
         }
 
     }
@@ -88,14 +88,14 @@ protected:
 
         // Remove watch folder.
 
-        if (CFile::exists(CAppriseTests::kWatchFolder)) {
-            CFile::remove(CAppriseTests::kWatchFolder);
+        if (CFile::exists(TCApprise::kWatchFolder)) {
+            CFile::remove(TCApprise::kWatchFolder);
         }
 
         // Remove destination folder.
 
-        if (CFile::exists(CAppriseTests::kDestinationFolder)) {
-            CFile::remove(CAppriseTests::kDestinationFolder);
+        if (CFile::exists(TCApprise::kDestinationFolder)) {
+            CFile::remove(TCApprise::kDestinationFolder);
         }
 
     }
@@ -126,11 +126,11 @@ protected:
 // FIXTURE CONSTANTS
 // =================
 
-const std::string CAppriseTests::kWatchFolder("/tmp/watch/");
-const std::string CAppriseTests::kDestinationFolder("/tmp/destination/");
+const std::string TCApprise::kWatchFolder("/tmp/watch/");
+const std::string TCApprise::kDestinationFolder("/tmp/destination/");
 
-const std::string CAppriseTests::kParamAssertion1("Assertion*"); // NEED TO MODIFY FOR SPECIFIC ASSERTS
-const std::string CAppriseTests::kParamAssertion2("Assertion*");
+const std::string TCApprise::kParamAssertion1("Assertion*"); // NEED TO MODIFY FOR SPECIFIC ASSERTS
+const std::string TCApprise::kParamAssertion2("Assertion*");
 
 // ===============
 // FIXTURE METHODS
@@ -140,7 +140,7 @@ const std::string CAppriseTests::kParamAssertion2("Assertion*");
 // Create a file for test purposes.
 //
 
-void CAppriseTests::createFile(const std::string &fileName) {
+void TCApprise::createFile(const std::string &fileName) {
 
     std::ofstream outfile(fileName);
     outfile << "TEST TEXT" << std::endl;
@@ -153,7 +153,7 @@ void CAppriseTests::createFile(const std::string &fileName) {
 // the loop not terminating is a major bug.
 //
 
-void CAppriseTests::gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loopCount ){
+void TCApprise::gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loopCount ){
   
 
     while (watcher.stillWatching() && (loopCount--)) {
@@ -184,7 +184,7 @@ void CAppriseTests::gatherEvents(CApprise& watcher , EventCounts& evtTotals, int
 // Generate updateCount changes on a file and verify.
 //
 
-void CAppriseTests::createChanges(int updateCount) {
+void TCApprise::createChanges(int updateCount) {
 
     // Initialise event counts
     
@@ -205,7 +205,7 @@ void CAppriseTests::createChanges(int updateCount) {
 
     watcher.startWatching();
 
-    filePath = CAppriseTests::kWatchFolder;
+    filePath = TCApprise::kWatchFolder;
 
     // Perform updates. Given the nature of modify events (i.e  the number and frequency not being 
     // predictable then perform one up and close file per expected event.
@@ -244,7 +244,7 @@ void CAppriseTests::createChanges(int updateCount) {
 // Create fileCount files and then remove. Count add/unlink events and verify.
 //
 
-void CAppriseTests::createRemoveFiles(int fileCount) {
+void TCApprise::createRemoveFiles(int fileCount) {
 
     // Initialise event counts
     
@@ -259,7 +259,7 @@ void CAppriseTests::createRemoveFiles(int fileCount) {
 
     watcher.startWatching();
 
-    filePath = CAppriseTests::kWatchFolder;
+    filePath = TCApprise::kWatchFolder;
 
     // Create fileCount files
     
@@ -314,7 +314,7 @@ void CAppriseTests::createRemoveFiles(int fileCount) {
 // Re-throw any exception passed.
 //
 
-void CAppriseTests::generateException(std::exception_ptr &e) {
+void TCApprise::generateException(std::exception_ptr &e) {
 
     if (e) {
         std::rethrow_exception(e);
@@ -330,12 +330,12 @@ void CAppriseTests::generateException(std::exception_ptr &e) {
 // Watch Depth < -1 ASSERT
 //
 
-TEST_F(CAppriseTests,AssertParam2) {
+TEST_F(TCApprise,AssertParam2) {
 
     watchFolder = kWatchFolder;
     watchDepth = -99;
 
-    EXPECT_DEATH(CApprise watcher(watchFolder, watchDepth), CAppriseTests::kParamAssertion2);
+    EXPECT_DEATH(CApprise watcher(watchFolder, watchDepth), TCApprise::kParamAssertion2);
 
 }
 
@@ -343,7 +343,7 @@ TEST_F(CAppriseTests,AssertParam2) {
 // Create 1 file in watcher folder
 //
 
-TEST_F(CAppriseTests,CreateFile1) {
+TEST_F(TCApprise,CreateFile1) {
 
     createRemoveFiles(1);
 
@@ -353,7 +353,7 @@ TEST_F(CAppriseTests,CreateFile1) {
 // Create 10 files in watcher folder
 //
 
-TEST_F(CAppriseTests, CreateFile10) {
+TEST_F(TCApprise, CreateFile10) {
 
     createRemoveFiles(10);
 
@@ -363,7 +363,7 @@ TEST_F(CAppriseTests, CreateFile10) {
 // Create 50 files in watcher folder
 //
 
-TEST_F(CAppriseTests, CreateFile50) {
+TEST_F(TCApprise, CreateFile50) {
 
     createRemoveFiles(50);
 
@@ -373,7 +373,7 @@ TEST_F(CAppriseTests, CreateFile50) {
 // Create 100 files in watcher folder
 //
 
-TEST_F(CAppriseTests,CreateFile100) {
+TEST_F(TCApprise,CreateFile100) {
 
     createRemoveFiles(100);
 
@@ -383,7 +383,7 @@ TEST_F(CAppriseTests,CreateFile100) {
 // Create 250 files in watcher folder
 //
 
-TEST_F(CAppriseTests, CreateFile250) {
+TEST_F(TCApprise, CreateFile250) {
 
     createRemoveFiles(250);
 
@@ -393,7 +393,7 @@ TEST_F(CAppriseTests, CreateFile250) {
 // Create 500 files in watcher folder
 //
 
-TEST_F(CAppriseTests, CreateFile500) {
+TEST_F(TCApprise, CreateFile500) {
 
     createRemoveFiles(500);
 
@@ -403,7 +403,7 @@ TEST_F(CAppriseTests, CreateFile500) {
 // Modify file one time
 //
 
-TEST_F(CAppriseTests, UpdateFile1) {
+TEST_F(TCApprise, UpdateFile1) {
 
     createChanges(1);
 
@@ -413,7 +413,7 @@ TEST_F(CAppriseTests, UpdateFile1) {
 // Modify file 10 times
 //
 
-TEST_F(CAppriseTests, UpdateFile10) {
+TEST_F(TCApprise, UpdateFile10) {
 
     createChanges(10);
 
@@ -423,7 +423,7 @@ TEST_F(CAppriseTests, UpdateFile10) {
 // Modify file 50 times
 //
 
-TEST_F(CAppriseTests, UpdateFile50) {
+TEST_F(TCApprise, UpdateFile50) {
 
     createChanges(50);
 
@@ -433,7 +433,7 @@ TEST_F(CAppriseTests, UpdateFile50) {
 // Modify file 100 times
 //
 
-TEST_F(CAppriseTests, UpdateFile100) {
+TEST_F(TCApprise, UpdateFile100) {
 
     createChanges(100);
 
@@ -443,7 +443,7 @@ TEST_F(CAppriseTests, UpdateFile100) {
 // Modify file 250 times
 //
 
-TEST_F(CAppriseTests, UpdateFile250) {
+TEST_F(TCApprise, UpdateFile250) {
 
     createChanges(250);
 
@@ -453,7 +453,7 @@ TEST_F(CAppriseTests, UpdateFile250) {
 // Modify file 500 times
 //
 
-TEST_F(CAppriseTests, UpdateFile500) {
+TEST_F(TCApprise, UpdateFile500) {
 
     createChanges(500);
 

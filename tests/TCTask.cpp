@@ -1,12 +1,12 @@
 #include "HOST.hpp"
 /*
- * File:   CTaskTests.cpp
+ * File:   TCTask.cpp
  * 
  * Author: Robert Tizzard
  *
  * Created on October 24, 2016, 2:34 PM
  * 
- * Description: Google unit tests for class CFileTask.
+ * Description: Google unit tests for class CTask.
  *
  * Copyright 2016.
  *
@@ -87,17 +87,17 @@ protected:
     std::string name; // Action name
 };
 
-class CTaskTests : public ::testing::Test {
+class TCTask : public ::testing::Test {
 protected:
     
     // Empty constructor
 
-    CTaskTests() {
+    TCTask() {
     }
 
     // Empty destructor
     
-    ~CTaskTests() override {
+    ~TCTask() override {
     }
     
     // Keep initialization and cleanup code to SetUp() and TearDown() methods
@@ -111,14 +111,14 @@ protected:
         
         // Create watch folder.
 
-        if (!CFile::exists(CTaskTests::kWatchFolder)) {
-            CFile::createDirectory(CTaskTests::kWatchFolder);
+        if (!CFile::exists(TCTask::kWatchFolder)) {
+            CFile::createDirectory(TCTask::kWatchFolder);
         }
 
         // Create destination folder.
 
-        if (!CFile::exists(CTaskTests::kDestinationFolder)) {
-            CFile::createDirectory(CTaskTests::kDestinationFolder);
+        if (!CFile::exists(TCTask::kDestinationFolder)) {
+            CFile::createDirectory(TCTask::kDestinationFolder);
         }
 
     }
@@ -127,14 +127,14 @@ protected:
 
         // Remove watch folder.
 
-        if (CFile::exists(CTaskTests::kWatchFolder)) {
-            CFile::remove(CTaskTests::kWatchFolder);
+        if (CFile::exists(TCTask::kWatchFolder)) {
+            CFile::remove(TCTask::kWatchFolder);
         }
 
         // Remove destination folder.
 
-        if (CFile::exists(CTaskTests::kDestinationFolder)) {
-            CFile::remove(CTaskTests::kDestinationFolder);
+        if (CFile::exists(TCTask::kDestinationFolder)) {
+            CFile::remove(TCTask::kDestinationFolder);
         }
 
     }
@@ -167,14 +167,14 @@ protected:
 // FIXTURE CONSTANTS
 // =================
 
-const std::string CTaskTests::kWatchFolder("/tmp/watch/");
-const std::string CTaskTests::kDestinationFolder("/tmp/destination/");
+const std::string TCTask::kWatchFolder("/tmp/watch/");
+const std::string TCTask::kDestinationFolder("/tmp/destination/");
 
-const std::string CTaskTests::kParamAssertion1("Assertion*"); // NEED TO MODIFY FOR SPECIFIC ASSERTS
-const std::string CTaskTests::kParamAssertion2("Assertion*");
-const std::string CTaskTests::kParamAssertion3("Assertion*");
-const std::string CTaskTests::kParamAssertion4("Assertion*");
-const std::string CTaskTests::kParamAssertion5("Assertion*");
+const std::string TCTask::kParamAssertion1("Assertion*"); // NEED TO MODIFY FOR SPECIFIC ASSERTS
+const std::string TCTask::kParamAssertion2("Assertion*");
+const std::string TCTask::kParamAssertion3("Assertion*");
+const std::string TCTask::kParamAssertion4("Assertion*");
+const std::string TCTask::kParamAssertion5("Assertion*");
 
 // ===============
 // FIXTURE METHODS
@@ -184,7 +184,7 @@ const std::string CTaskTests::kParamAssertion5("Assertion*");
 // Create a file for test purposes.
 //
 
-void CTaskTests::createFile(std::string fileName) {
+void TCTask::createFile(std::string fileName) {
 
     std::ofstream outfile(fileName);
     outfile << "TEST TEXT" << std::endl;
@@ -196,7 +196,7 @@ void CTaskTests::createFile(std::string fileName) {
 // Create fileCount files and check that action function called for each
 //
 
-void CTaskTests::createFiles(int fileCount) {
+void TCTask::createFiles(int fileCount) {
 
     taskName = "Test";
     watchFolder = kWatchFolder;
@@ -212,7 +212,7 @@ void CTaskTests::createFiles(int fileCount) {
 
     taskThread.reset(new std::thread(&CTask::monitor, &task));
      
-    filePath = CTaskTests::kWatchFolder;
+    filePath = TCTask::kWatchFolder;
 
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::stringstream file;
@@ -238,7 +238,7 @@ void CTaskTests::createFiles(int fileCount) {
 // Re-throw any exception passed.
 //
 
-void CTaskTests::generateException(const std::exception_ptr &e) {
+void TCTask::generateException(const std::exception_ptr &e) {
 
     if (e) {
         std::rethrow_exception(e);
@@ -254,9 +254,9 @@ void CTaskTests::generateException(const std::exception_ptr &e) {
 // Task Name length == 0 ASSERT
 //
 
-TEST_F(CTaskTests, AssertParam1) {
+TEST_F(TCTask, AssertParam1) {
 
-    EXPECT_DEATH(CTask task(watchFolder, testTaskAction1, 0, watchDepth), CTaskTests::kParamAssertion1);
+    EXPECT_DEATH(CTask task(watchFolder, testTaskAction1, 0, watchDepth), TCTask::kParamAssertion1);
 
 }
 
@@ -264,11 +264,11 @@ TEST_F(CTaskTests, AssertParam1) {
 // Watch Folder Name lengh == 0 ASSERT
 //
 
-TEST_F(CTaskTests, AssertParam2) {
+TEST_F(TCTask, AssertParam2) {
 
     taskName = "Test";
 
-    EXPECT_DEATH(CTask task(watchFolder, testTaskAction1,  watchDepth, 0), CTaskTests::kParamAssertion2);
+    EXPECT_DEATH(CTask task(watchFolder, testTaskAction1,  watchDepth, 0), TCTask::kParamAssertion2);
 
 }
 
@@ -276,13 +276,13 @@ TEST_F(CTaskTests, AssertParam2) {
 // Action Function Pointer == NULL ASSERT
 //
 
-TEST_F(CTaskTests, AssertParam3) {
+TEST_F(TCTask, AssertParam3) {
 
     taskName = "Test";
     watchFolder = kWatchFolder;
     watchDepth = -1;
 
-    EXPECT_DEATH(CTask task(watchFolder, nullptr, watchDepth, 0), CTaskTests::kParamAssertion3);
+    EXPECT_DEATH(CTask task(watchFolder, nullptr, watchDepth, 0), TCTask::kParamAssertion3);
 
 }
 
@@ -290,13 +290,13 @@ TEST_F(CTaskTests, AssertParam3) {
 // Action Function Data Pointer == NULL ASSERT
 //
 
-TEST_F(CTaskTests, AssertParam4) {
+TEST_F(TCTask, AssertParam4) {
 
     taskName = "Test";
     watchFolder = kWatchFolder;
     watchDepth = -1;
 
-    EXPECT_DEATH(CTask task(watchFolder, nullptr, watchDepth, 0), CTaskTests::kParamAssertion4);
+    EXPECT_DEATH(CTask task(watchFolder, nullptr, watchDepth, 0), TCTask::kParamAssertion4);
 
 }
 
@@ -304,13 +304,13 @@ TEST_F(CTaskTests, AssertParam4) {
 // Watch Depth < -1 ASSERT
 //
 
-TEST_F(CTaskTests, AssertParam5) {
+TEST_F(TCTask, AssertParam5) {
 
     taskName = "Test";
     watchFolder = kWatchFolder;
     watchDepth = -99;
 
-    EXPECT_DEATH(CTask task(watchFolder, testTaskAction1, watchDepth, 0), CTaskTests::kParamAssertion5);
+    EXPECT_DEATH(CTask task(watchFolder, testTaskAction1, watchDepth, 0), TCTask::kParamAssertion5);
 
 }
 
@@ -318,7 +318,7 @@ TEST_F(CTaskTests, AssertParam5) {
 // Create 1 file in watcher folder
 //
 
-TEST_F(CTaskTests, CreateFile1) {
+TEST_F(TCTask, CreateFile1) {
 
     createFiles(1);
 
@@ -328,7 +328,7 @@ TEST_F(CTaskTests, CreateFile1) {
 // Create 10 files in watcher folder
 //
 
-TEST_F(CTaskTests, CreateFile10) {
+TEST_F(TCTask, CreateFile10) {
 
     createFiles(10);
 
@@ -338,7 +338,7 @@ TEST_F(CTaskTests, CreateFile10) {
 // Create 50 files in watcher folder
 //
 
-TEST_F(CTaskTests, CreateFile50) {
+TEST_F(TCTask, CreateFile50) {
 
     createFiles(50);
 
@@ -348,7 +348,7 @@ TEST_F(CTaskTests, CreateFile50) {
 // Create 100 files in watcher folder
 //
 
-TEST_F(CTaskTests, CreateFile100) {
+TEST_F(TCTask, CreateFile100) {
 
     createFiles(100);
 
@@ -358,7 +358,7 @@ TEST_F(CTaskTests, CreateFile100) {
 // Create 250 files in watcher folder
 //
 
-TEST_F(CTaskTests, CreateFile250) {
+TEST_F(TCTask, CreateFile250) {
 
     createFiles(250);
 
@@ -368,7 +368,7 @@ TEST_F(CTaskTests, CreateFile250) {
 // Create 500 files in watcher folder
 //
 
-TEST_F(CTaskTests, CreateFile500) {
+TEST_F(TCTask, CreateFile500) {
 
     createFiles(500);
 
@@ -378,7 +378,7 @@ TEST_F(CTaskTests, CreateFile500) {
 // Watch folder does not exist exception.
 //
 
-TEST_F(CTaskTests, NoWatchFolder) {
+TEST_F(TCTask, NoWatchFolder) {
 
     taskName = "Test";
     watchFolder = "/tmp/tnothere";
@@ -394,7 +394,7 @@ TEST_F(CTaskTests, NoWatchFolder) {
 // Task action throw exception capture.
 //
 
-TEST_F(CTaskTests, ActionFunctionException) {
+TEST_F(TCTask, ActionFunctionException) {
 
     taskName = "Test";
     watchFolder = kWatchFolder;

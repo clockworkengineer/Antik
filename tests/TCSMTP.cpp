@@ -1,12 +1,12 @@
 #include "HOST.hpp"
 /*
- * File:   CSMTPTests.cpp
+ * File:   TCSMTP.cpp
  * 
  * Author: Robert Tizzard
  *
  * Created on October 24, 2016, 2:34 PM
  * 
- * Description: Google unit tests for class CMailSMTPs.
+ * Description: Google unit tests for class CSMTP.
  *
  * Copyright 2016.
  *
@@ -34,17 +34,17 @@ using namespace Antik::SMTP;
 // UNIT TEST FIXTURE CLASS
 // =======================
 
-class CSMTPTests : public ::testing::Test {
+class TCSMTP : public ::testing::Test {
 protected:
 
     // Empty constructor
 
-    CSMTPTests() {
+    TCSMTP() {
     }
 
     // Empty destructor
 
-    ~CSMTPTests() override {
+    ~TCSMTP() override {
     }
 
     void SetUp() override {
@@ -69,7 +69,7 @@ protected:
 // TASK CLASS UNIT TESTS
 // =====================
 
-TEST_F(CSMTPTests, SetServerURL) {
+TEST_F(TCSMTP, SetServerURL) {
 
     std::string serverURL;
     smtp.setServer("smtp://smtp.gmail.com:25");
@@ -77,42 +77,42 @@ TEST_F(CSMTPTests, SetServerURL) {
 
 }
 
-TEST_F(CSMTPTests, SetUser) {
+TEST_F(TCSMTP, SetUser) {
 
     smtp.setUserAndPassword("user01", "password01");
     ASSERT_STREQ("user01", smtp.getUser().c_str());
 
 }
 
-TEST_F(CSMTPTests, SetFromAddress) {
+TEST_F(TCSMTP, SetFromAddress) {
 
     smtp.setFromAddress("<user01@gmail.com>");
     ASSERT_STREQ("<user01@gmail.com>", smtp.getFromAddress().c_str());
 
 }
 
-TEST_F(CSMTPTests, SetToAddress) {
+TEST_F(TCSMTP, SetToAddress) {
 
     smtp.setToAddress("<user02@gmail.com>");
     ASSERT_STREQ("<user02@gmail.com>", smtp.getToAddress().c_str());
 
 }
 
-TEST_F(CSMTPTests, SetCCAddress) {
+TEST_F(TCSMTP, SetCCAddress) {
 
     smtp.setCCAddress("<user03@gmail.com>,<user04@gmail.com>,<user05@gmail.com>,<user06@gmail.com>");
     ASSERT_STREQ("<user03@gmail.com>,<user04@gmail.com>,<user05@gmail.com>,<user06@gmail.com>", smtp.getCCAddress().c_str());
 
 }
 
-TEST_F(CSMTPTests, SetMailSubject) {
+TEST_F(TCSMTP, SetMailSubject) {
 
     smtp.setMailSubject("Message From The Grave");
     ASSERT_STREQ("Message From The Grave", smtp.getMailSubject().c_str());
 
 }
 
-TEST_F(CSMTPTests, SetMailMessage) {
+TEST_F(TCSMTP, SetMailMessage) {
 
     smtp.setMailMessage({"Man is distinguished, not only by his reason, but by this singular passion from ",
         "other animals, which is a lust of the mind, that by a perseverance of delight ",
@@ -125,7 +125,7 @@ TEST_F(CSMTPTests, SetMailMessage) {
 
 }
 
-TEST_F(CSMTPTests, Base64EncodeDecode) {
+TEST_F(TCSMTP, Base64EncodeDecode) {
 
     std::string deocdedString;
     std::string encodedString;
@@ -178,7 +178,7 @@ TEST_F(CSMTPTests, Base64EncodeDecode) {
 
 }
 
-TEST_F(CSMTPTests, CheckForNulls) {
+TEST_F(TCSMTP, CheckForNulls) {
 
     CSMTP smtp;
     std::string mailMessage;
