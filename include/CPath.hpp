@@ -65,7 +65,7 @@ namespace Antik {
             // CONSTRUCTORS
             // ============
 
-            CPath(const std::string &path) : m_path(path) {};
+            CPath(const std::string &path="") : m_path(path) {};
                         
             // ==========
             // DESTRUCTOR
