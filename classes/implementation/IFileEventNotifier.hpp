@@ -71,7 +71,13 @@ namespace Antik {
             // Get any thrown exceptions
             //
          
-            virtual std::exception_ptr getThrownException() const = 0; // Get CApprise event (waiting if necessary)
+            virtual std::exception_ptr getThrownException() const = 0;
+            
+            //
+            // Set maximum watch depth
+            //
+            
+            virtual void setWatchDepth(int watchDepth) = 0;
             
             // ================
             // PUBLIC VARIABLES

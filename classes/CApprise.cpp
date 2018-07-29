@@ -38,8 +38,6 @@
 // C++ STL
 //
 
-//#include <mutex>
-//#include <system_error>
 #include <cassert>
 #include <algorithm>
 
@@ -107,9 +105,13 @@ namespace Antik {
                 m_watchDepth = watchDepth;
                 if (watchDepth != -1) {
                     m_watchDepth += std::count(watchFolder.begin(), watchFolder.end(), '/');
-                }
+                }   
 
             }
+            
+            // Set watch depth for notifier
+            
+            m_fileEventNotifier->setWatchDepth(watchDepth);
             
             // Add non empty watch folder
 

@@ -36,7 +36,6 @@
 
 #include <mutex>
 #include <system_error>
-#include <cassert>
 #include <algorithm>
 
 // =========
@@ -177,11 +176,11 @@ namespace Antik {
                 fileName.pop_back();
             }
 
-            // TODO :: FIXTHIS Deeper than max watch depth so ignore.
+            // Deeper than max watch depth so ignore.
 
-            //            if ((watchDepth != -1) && (std::count(fileName.begin(), fileName.end(), '/') > watchDepth)) {
-            //                return;
-            //            }
+            if ((m_watchDepth != -1) && (std::count(fileName.begin(), fileName.end(), '/') > m_watchDepth)) {
+                return;
+            }
 
             // Add watch to inotify 
 
@@ -272,15 +271,31 @@ namespace Antik {
             }
 
         }
+        
+        //
+        // Return true if event generation loop still running.
+        //
 
         bool CFileEventNotifier::stillWatching() const {
             return m_doWork.load();
         }
+        
+        //
+        // Return pointer to any excpetion thrown.
+        //
 
         std::exception_ptr CFileEventNotifier::getThrownException() const {
             return m_thrownException;
         }
 
+        //
+        // Set maximum watch depth.
+        //
+        
+        void CFileEventNotifier::setWatchDepth(int watchDepth) {
+            m_watchDepth = watchDepth;
+        }
+        
         //
         // Flag watch loop to stop.
         //
@@ -303,7 +318,7 @@ namespace Antik {
 
         //
         // Loop adding/removing watches for directory hierarchy  changes
-        // and also generating CFileEventNotifier events from inotify; until stopped.
+        // and also generating IApprise events from inotify; until stopped.
         //
 
         void CFileEventNotifier::generateEvents(void) {

@@ -93,6 +93,8 @@ namespace Antik {
 
             std::exception_ptr getThrownException() const  override; // Get last thrown exception
             
+            void setWatchDepth(int watchDepth) override; // Set maximum watch depth
+            
             // ================
             // PUBLIC VARIABLES
             // ================
@@ -165,6 +167,7 @@ namespace Antik {
 
             std::exception_ptr m_thrownException { nullptr }; // Pointer to any exception thrown
             std::atomic<bool> m_doWork { false };             // doWork=true (run watcher loop) false=(stop watcher loop)
+            int m_watchDepth{ -1}; // Watch depth -1=all,0=just watch folder,1=next level down etc.
 
             //
             // Event queue
