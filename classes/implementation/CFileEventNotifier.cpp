@@ -13,12 +13,8 @@
 //
 // Class: CFileEventNotifier
 // 
-// Description: A simple C++ class to enable files/folders to be watched and 
-// events generated. Supported events include the addition/deletion of files and
-// directories and the modification of files with a change event. It is recursive 
-// by default and any directories added/removed from the hierarchy will cause new 
-// watches to be added/removed respectively. The current implementation is for 
-// POSIX only or any platform that has inotify or a third party equivalent.
+// Description: File event notifier pass to CApprise class constructor. This is 
+// the default Linux inotify implementaion.
 //
 // Dependencies: C11++               - Language standard features used.    
 //               inotify/Linux       - Linux file system events
@@ -115,7 +111,7 @@ namespace Antik {
         // Initialize inotify and add watch for watchFolder.
         //
 
-        void CFileEventNotifier::initWatchTable(void) {
+        void CFileEventNotifier::initialiseWatchTable(void) {
 
             // Initialize inotify 
 
@@ -154,7 +150,7 @@ namespace Antik {
 
             // Create watch table
 
-            initWatchTable();
+            initialiseWatchTable();
 
         }
 
@@ -181,7 +177,7 @@ namespace Antik {
                 fileName.pop_back();
             }
 
-            // Deeper than max watch depth so ignore.
+            // TODO :: FIXTHIS Deeper than max watch depth so ignore.
 
             //            if ((watchDepth != -1) && (std::count(fileName.begin(), fileName.end(), '/') > watchDepth)) {
             //                return;

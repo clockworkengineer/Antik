@@ -133,7 +133,7 @@ namespace Antik {
             // Watch processing
             //
 
-            void initWatchTable(void); // Initialise table for watched folders
+            void initialiseWatchTable(void); // Initialise table for watched folders
             void destroyWatchTable(void); // Tare down watch table
    
             //

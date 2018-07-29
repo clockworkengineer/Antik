@@ -17,8 +17,8 @@
 // events generated. Supported events include the addition/deletion of files and
 // directories and the modification of files with a change event. It is recursive 
 // by default and any directories added/removed from the hierarchy will cause new 
-// watches to be added/removed respectively. The current implementation is for 
-// POSIX only or any platform that has inotify or a third party equivalent.
+// watches to be added/removed respectively. If no file event handler is passed then
+// it defaults to the Linux inotify implementation.
 //
 // Dependencies: C11++               - Language standard features used.    
 //
@@ -38,8 +38,8 @@
 // C++ STL
 //
 
-#include <mutex>
-#include <system_error>
+//#include <mutex>
+//#include <system_error>
 #include <cassert>
 #include <algorithm>
 
@@ -86,6 +86,8 @@ namespace Antik {
 
             assert(watchDepth >= -1); // < -1
 
+            // If no handler passed then use default
+            
             if (fileEventNotifier) {
                 m_fileEventNotifier.reset(fileEventNotifier);
             } else {
