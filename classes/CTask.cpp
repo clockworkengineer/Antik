@@ -27,6 +27,7 @@
 // =================
 
 #include "CTask.hpp"
+#include "CFileEventNotifier.hpp"
 
 // ====================
 // CLASS IMPLEMENTATION
@@ -88,7 +89,7 @@ namespace Antik {
 
             // Create CFileApprise watcher object.
 
-            m_watcher.reset(new CApprise{watchFolder, watchDepth});
+            m_watcher.reset(new CApprise{watchFolder, watchDepth, new CFileEventNotifier()});
 
         }
 
@@ -136,11 +137,11 @@ namespace Antik {
 
                 while (m_watcher->stillWatching()) {
 
-                    CApprise::Event evt;
+                    IApprise::Event evt;
 
-                    m_watcher->getEvent(evt);
+                    m_watcher->getNextEvent(evt);
 
-                    if ((evt.id == CApprise::Event_add) && !evt.message.empty()) {
+                    if ((evt.id == IApprise::Event_add) && !evt.message.empty()) {
 
                         m_taskAction->process(evt.message);
 

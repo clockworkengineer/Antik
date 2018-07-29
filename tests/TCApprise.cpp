@@ -30,6 +30,7 @@
 // CApprise class
 
 #include "CApprise.hpp"
+#include "CFileEventNotifier.hpp"
 
 // Used Antik classes
 
@@ -158,21 +159,21 @@ void TCApprise::gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loo
 
     while (watcher.stillWatching() && (loopCount--)) {
 
-        CApprise::Event evt;
+        IApprise::Event evt;
 
-        watcher.getEvent(evt);
+        watcher.getNextEvent(evt);
 
-        if ((evt.id == CApprise::Event_add) && !evt.message.empty()) {
+        if ((evt.id == IApprise::Event_add) && !evt.message.empty()) {
             evtTotals.add++;
-        } else if ((evt.id == CApprise::Event_addir) && !evt.message.empty()) {
+        } else if ((evt.id == IApprise::Event_addir) && !evt.message.empty()) {
             evtTotals.addir++;
-        } else if ((evt.id == CApprise::Event_unlinkdir) && !evt.message.empty()) {
+        } else if ((evt.id == IApprise::Event_unlinkdir) && !evt.message.empty()) {
             evtTotals.unlinkdir++;
-        } else if ((evt.id == CApprise::Event_unlink) && !evt.message.empty()) {
+        } else if ((evt.id == IApprise::Event_unlink) && !evt.message.empty()) {
             evtTotals.unlink++;
-        } else if ((evt.id == CApprise::Event_change) && !evt.message.empty()) {
+        } else if ((evt.id == IApprise::Event_change) && !evt.message.empty()) {
             evtTotals.change++;
-        } else if ((evt.id == CApprise::Event_error) && !evt.message.empty()) {
+        } else if ((evt.id == IApprise::Event_error) && !evt.message.empty()) {
             evtTotals.error++;
         } 
         
