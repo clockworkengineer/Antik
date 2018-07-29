@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
         
         for (auto file : filesToWatch) {
             boost::trim(file);
-            fileWatcher.addWatchFile(file);
+            fileWatcher.addWatch(file);
             std::cout << "Watching [" << file << "]" << std::endl;
         }
   
@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
         
         while(fileWatcher.stillWatching()) {
             CApprise::Event fileEvent;
-            fileWatcher.getEvent(fileEvent);
+            fileWatcher.getNextEvent(fileEvent);
             std::cout << getEventName(fileEvent.id) << " [" << fileEvent.message << "]" << std::endl;
         }
         
