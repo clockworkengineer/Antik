@@ -109,20 +109,15 @@ protected:
     void removeDirectories(int fileCount);          // Remove fileCount directories and check action function call count
     void generateException(std::exception_ptr &e);  // Generate an exception stored in CFileApprise class
     
-    // Collect loopCount CFileApprise events
-    
-    void gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loopCount);
+    void gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loopCount); // Collect loopCount CFileApprise events
 
-    std::string filePath;                       // Test file path
-    std::string fileName;                       // Test file name
-    int watchDepth = -1;                        // Folder Watch depth
-    std::string watchFolder { kWatchFolder };   // Watch Folder
+    int watchDepth { -1 };                        // Folder Watch depth
+
     EventCounts evtTotals { 0, 0, 0, 0, 0, 0};  // Event totals
 
     static const std::string kWatchFolder;          // Test Watch Folder
     static const std::string kDestinationFolder;    // Test Destination folder
 
-    static const std::string kParamAssertion1;  // Missing parameter 1 Assert REGEX
     static const std::string kParamAssertion2;  // Missing parameter 2 Assert REGEX
  
 };
@@ -133,8 +128,6 @@ protected:
 
 const std::string TCApprise::kWatchFolder("/tmp/watch/");
 const std::string TCApprise::kDestinationFolder("/tmp/destination/");
-
-const std::string TCApprise::kParamAssertion1("Assertion*"); // NEED TO MODIFY FOR SPECIFIC ASSERTS
 const std::string TCApprise::kParamAssertion2("Assertion*");
 
 // ===============
@@ -190,28 +183,23 @@ void TCApprise::gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loo
 //
 
 void TCApprise::updateFiles(int updateCount) {
-    
-    filePath = watchFolder;
-    fileName = "tmp.txt";
 
     // Create the file
     
-    createFile(filePath+fileName);
+    createFile(kWatchFolder+"tmp.txt");
 
     // Create CFileApprise object and start watching
 
-    CApprise watcher{watchFolder, watchDepth};
+    CApprise watcher{kWatchFolder, watchDepth};
 
     watcher.startWatching();
-
-    filePath = TCApprise::kWatchFolder;
 
     // Perform updates. Given the nature of modify events (i.e  the number and frequency not being 
     // predictable then perform one up and close file per expected event.
     
     for (auto cnt01 = 0; cnt01 < updateCount; cnt01++) {
             std::ofstream fileToUpdate;
-            fileToUpdate.open(filePath+fileName, std::ios::out | std::ios::app);
+            fileToUpdate.open(kWatchFolder+"tmp.txt", std::ios::out | std::ios::app);
             fileToUpdate << "Writing this to a file.\n";           
             fileToUpdate.close();
     }
@@ -231,7 +219,7 @@ void TCApprise::updateFiles(int updateCount) {
 
     // Remove file
     
-    CFile::remove(filePath+fileName);
+    CFile::remove(kWatchFolder+"tmp.txt");
         
     // Stop watching
     
@@ -247,18 +235,16 @@ void TCApprise::createFiles(int fileCount) {
     
     // Create CFileApprise object and start watching
 
-    CApprise watcher{watchFolder, watchDepth};
+    CApprise watcher{kWatchFolder, watchDepth};
 
     watcher.startWatching();
-
-    filePath = TCApprise::kWatchFolder;
 
     // Create fileCount files
     
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::stringstream file;
         file << "temp" << cnt01 << ".txt" ;
-        createFile(filePath + file.str());
+        createFile(kWatchFolder + file.str());
     }
     
     // Loop getting add events
@@ -279,7 +265,7 @@ void TCApprise::createFiles(int fileCount) {
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::stringstream file;
         file << "temp" << cnt01 << ".txt" ;
-        CFile::remove(filePath + file.str());
+        CFile::remove(kWatchFolder + file.str());
     }
     
     watcher.stopWatching();
@@ -294,16 +280,14 @@ void TCApprise::removeFiles(int fileCount) {
 
     // Create CFileApprise object and start watching
 
-    CApprise watcher{watchFolder, watchDepth};
-  
-    filePath = TCApprise::kWatchFolder;
+    CApprise watcher{kWatchFolder, watchDepth};
 
     // Create fileCount files
     
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::stringstream file;
         file << "temp" << cnt01 << ".txt" ;
-        createFile(filePath + file.str());
+        createFile(kWatchFolder + file.str());
     }
     
     watcher.startWatching();
@@ -313,7 +297,7 @@ void TCApprise::removeFiles(int fileCount) {
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::stringstream file;
         file << "temp" << cnt01 << ".txt" ;
-        CFile::remove(filePath + file.str());
+        CFile::remove(kWatchFolder + file.str());
     }
     
      // Loop getting unlink events
@@ -343,18 +327,16 @@ void TCApprise::createDirectories(int fileCount) {
 
     // Create CFileApprise object and start watching
 
-    CApprise watcher{watchFolder, watchDepth};
+    CApprise watcher{kWatchFolder, watchDepth};
 
     watcher.startWatching();
-
-    filePath = TCApprise::kWatchFolder;
 
     // Create fileCount files
     
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::stringstream file;
         file << "temp" << cnt01;
-        CFile::createDirectory(filePath + file.str());
+        CFile::createDirectory(kWatchFolder + file.str());
     }
     
     // Loop getting add events
@@ -377,7 +359,7 @@ void TCApprise::createDirectories(int fileCount) {
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::stringstream file;
         file << "temp" << cnt01;
-        CFile::remove(filePath + file.str());
+        CFile::remove(kWatchFolder + file.str());
     }
 
 }
@@ -388,22 +370,16 @@ void TCApprise::createDirectories(int fileCount) {
 
 void TCApprise::removeDirectories(int fileCount) {
 
-    
-//    watchFolder = kWatchFolder;
-//    watchDepth = -1;
-
     // Create CFileApprise object and start watching
 
-    CApprise watcher{watchFolder, watchDepth};
-
-    filePath = TCApprise::kWatchFolder;
+    CApprise watcher{kWatchFolder, watchDepth};
 
     // Create fileCount files
     
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::stringstream file;
         file << "temp" << cnt01;
-        CFile::createDirectory(filePath + file.str());
+        CFile::createDirectory(kWatchFolder + file.str());
     }
 
     watcher.startWatching();
@@ -413,7 +389,7 @@ void TCApprise::removeDirectories(int fileCount) {
     for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
         std::stringstream file;
         file << "temp" << cnt01;
-        CFile::remove(filePath + file.str());
+        CFile::remove(kWatchFolder + file.str());
     }
 
     // Loop getting add events
@@ -457,7 +433,7 @@ TEST_F(TCApprise,AssertParam2) {
 
     watchDepth = -99;
 
-    EXPECT_DEATH(CApprise watcher(watchFolder, watchDepth), TCApprise::kParamAssertion2);
+    EXPECT_DEATH(CApprise watcher(kWatchFolder, watchDepth), TCApprise::kParamAssertion2);
 
 }
 
@@ -522,7 +498,7 @@ TEST_F(TCApprise, CreateFile500) {
 }
 
 //
-// Modify file one time
+// Update file one time
 //
 
 TEST_F(TCApprise, UpdateFile1) {
@@ -532,7 +508,7 @@ TEST_F(TCApprise, UpdateFile1) {
 }
 
 //
-// Modify file 10 times
+// Update file 10 times
 //
 
 TEST_F(TCApprise, UpdateFile10) {
@@ -542,7 +518,7 @@ TEST_F(TCApprise, UpdateFile10) {
 }
 
 //
-// Modify file 50 times
+// Update file 50 times
 //
 
 TEST_F(TCApprise, UpdateFile50) {
@@ -552,7 +528,7 @@ TEST_F(TCApprise, UpdateFile50) {
 }
 
 //
-// Modify file 100 times
+// Update file 100 times
 //
 
 TEST_F(TCApprise, UpdateFile100) {
@@ -562,7 +538,7 @@ TEST_F(TCApprise, UpdateFile100) {
 }
 
 //
-// Modify file 250 times
+// Update file 250 times
 //
 
 TEST_F(TCApprise, UpdateFile250) {
@@ -572,7 +548,7 @@ TEST_F(TCApprise, UpdateFile250) {
 }
 
 //
-// Modify file 500 times
+// Update file 500 times
 //
 
 TEST_F(TCApprise, UpdateFile500) {
@@ -767,7 +743,7 @@ TEST_F(TCApprise, removeDirectory500) {
 
 TEST_F(TCApprise, NonExistantWatchFolder) {
 
-    EXPECT_THROW(new CApprise(watchFolder+"x", watchDepth), CApprise::Exception);
+    EXPECT_THROW(new CApprise(kWatchFolder+"x", watchDepth), CApprise::Exception);
 
 }
 
@@ -779,7 +755,19 @@ TEST_F(TCApprise, AddNonExistantWatchFolder) {
 
     CApprise watcher;
         
-    EXPECT_THROW(watcher.addWatch(watchFolder+"x"), CApprise::Exception);
+    EXPECT_THROW(watcher.addWatch(kWatchFolder+"x"), CApprise::Exception);
+       
+}
+
+//
+// Remove non-existant watch folder
+//
+
+TEST_F(TCApprise, RemoveNonExistantWatchFolder) {
+
+    CApprise watcher;
+        
+    EXPECT_THROW(watcher.removeWatch(kWatchFolder+"x"), CApprise::Exception);
        
 }
 

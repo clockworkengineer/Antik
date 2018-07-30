@@ -234,6 +234,8 @@ namespace Antik {
                         throw std::system_error(std::error_code(errno, std::system_category()), "inotify_rm_watch() error");
                     }
 
+                } else {
+                    throw std::logic_error ("watch not present");             
                 }
 
 
