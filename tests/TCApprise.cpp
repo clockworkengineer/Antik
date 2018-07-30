@@ -113,10 +113,11 @@ protected:
     
     void gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loopCount);
 
-    std::string filePath = "";          // Test file path
-    std::string fileName = "";          // Test file name
-    int watchDepth = -1;                // Folder Watch depth
-    std::string watchFolder = "";       // Watch Folder
+    std::string filePath;                       // Test file path
+    std::string fileName;                       // Test file name
+    int watchDepth = -1;                        // Folder Watch depth
+    std::string watchFolder { kWatchFolder };   // Watch Folder
+    EventCounts evtTotals { 0, 0, 0, 0, 0, 0};  // Event totals
 
     static const std::string kWatchFolder;          // Test Watch Folder
     static const std::string kDestinationFolder;    // Test Destination folder
@@ -189,13 +190,7 @@ void TCApprise::gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loo
 //
 
 void TCApprise::updateFiles(int updateCount) {
-
-    // Initialise event counts
     
-    EventCounts evtTotals { 0, 0, 0, 0, 0, 0};
-    
-    watchFolder = kWatchFolder;
-    watchDepth = -1;
     filePath = watchFolder;
     fileName = "tmp.txt";
 
@@ -249,14 +244,7 @@ void TCApprise::updateFiles(int updateCount) {
 //
 
 void TCApprise::createFiles(int fileCount) {
-
-    // Initialise event counts
     
-    EventCounts evtTotals { 0, 0, 0, 0, 0, 0};
-    
-    watchFolder = kWatchFolder;
-    watchDepth = -1;
-
     // Create CFileApprise object and start watching
 
     CApprise watcher{watchFolder, watchDepth};
@@ -303,13 +291,6 @@ void TCApprise::createFiles(int fileCount) {
 //
 
 void TCApprise::removeFiles(int fileCount) {
-
-    // Initialise event counts
-    
-    EventCounts evtTotals { 0, 0, 0, 0, 0, 0};
-    
-    watchFolder = kWatchFolder;
-    watchDepth = -1;
 
     // Create CFileApprise object and start watching
 
@@ -360,13 +341,6 @@ void TCApprise::removeFiles(int fileCount) {
 
 void TCApprise::createDirectories(int fileCount) {
 
-    // Initialise event counts
-    
-    EventCounts evtTotals { 0, 0, 0, 0, 0, 0};
-    
-    watchFolder = kWatchFolder;
-    watchDepth = -1;
-
     // Create CFileApprise object and start watching
 
     CApprise watcher{watchFolder, watchDepth};
@@ -414,12 +388,9 @@ void TCApprise::createDirectories(int fileCount) {
 
 void TCApprise::removeDirectories(int fileCount) {
 
-    // Initialise event counts
     
-    EventCounts evtTotals { 0, 0, 0, 0, 0, 0};
-    
-    watchFolder = kWatchFolder;
-    watchDepth = -1;
+//    watchFolder = kWatchFolder;
+//    watchDepth = -1;
 
     // Create CFileApprise object and start watching
 
@@ -484,7 +455,6 @@ void TCApprise::generateException(std::exception_ptr &e) {
 
 TEST_F(TCApprise,AssertParam2) {
 
-    watchFolder = kWatchFolder;
     watchDepth = -99;
 
     EXPECT_DEATH(CApprise watcher(watchFolder, watchDepth), TCApprise::kParamAssertion2);
@@ -796,13 +766,8 @@ TEST_F(TCApprise, removeDirectory500) {
 //
 
 TEST_F(TCApprise, NonExistantWatchFolder) {
-    
-    watchFolder = kWatchFolder+"x";
-    watchDepth = -1;
 
-    // Create CFileApprise object and start watching
-
-    EXPECT_THROW(new CApprise(watchFolder, watchDepth), CApprise::Exception);
+    EXPECT_THROW(new CApprise(watchFolder+"x", watchDepth), CApprise::Exception);
 
 }
 
@@ -811,10 +776,6 @@ TEST_F(TCApprise, NonExistantWatchFolder) {
 //
 
 TEST_F(TCApprise, AddNonExistantWatchFolder) {
-
-    watchFolder = kWatchFolder;
-
-    // Create CFileApprise object and start watching
 
     CApprise watcher;
         
