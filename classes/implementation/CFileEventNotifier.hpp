@@ -82,19 +82,19 @@ namespace Antik {
             void stopEventGeneration(void)  override;              // Stop watch loop/thread
             void getNextEvent(IApprise::Event& message) override;  // Get next queued event
             bool stillWatching() const override;                   // Events still being generated
-            void clearEventQueue() override;
+            void clearEventQueue() override;                       // Clear event queue
             
             //
             // Watch processing
             //
-
+                        
+            void setWatchDepth(int watchDepth) override;            // Set maximum watch depth
             void addWatch(const std::string& filePath) override;    // Add path to be watched
             void removeWatch(const std::string& filePath) override; // Remove path being watched
 
-
-            std::exception_ptr getThrownException() const  override; // Get last thrown exception
+            // Exception handling
             
-            void setWatchDepth(int watchDepth) override; // Set maximum watch depth
+            std::exception_ptr getThrownException() const  override; // Get last thrown exception
             
             // ================
             // PUBLIC VARIABLES

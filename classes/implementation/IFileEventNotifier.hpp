@@ -59,26 +59,21 @@ namespace Antik {
             virtual void stopEventGeneration(void) = 0;               // Stop watch loop/thread
             virtual void getNextEvent(IApprise::Event& message) = 0;  // Get next queued event
             virtual bool stillWatching() const = 0;                   // Events still being generated
-            virtual void clearEventQueue() = 0;
+            virtual void clearEventQueue() = 0;                       // Clear event queue
                    
             //
             // Watch processing
             //
 
-            virtual void addWatch(const std::string& filePath) = 0; // Add path to be watched
+            virtual void addWatch(const std::string& filePath) = 0;    // Add path to be watched
             virtual void removeWatch(const std::string& filePath) = 0; // Remove path being watched
+            virtual void setWatchDepth(int watchDepth) = 0;            // Set maximum watch depth
  
             //
             // Get any thrown exceptions
             //
          
             virtual std::exception_ptr getThrownException() const = 0;
-            
-            //
-            // Set maximum watch depth
-            //
-            
-            virtual void setWatchDepth(int watchDepth) = 0;
             
             // ================
             // PUBLIC VARIABLES

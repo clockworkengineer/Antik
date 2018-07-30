@@ -77,12 +77,7 @@ namespace Antik {
             void startWatching(bool clearQueue=true) override;
             void stopWatching(void) override;
             bool stillWatching(void) override;
-
-            //
-            // Queue access
-            //
-
-            void getNextEvent(CApprise::Event& message) override; // Get IApprise event (waiting if necessary)
+            void getNextEvent(CApprise::Event& message) override;
 
             //
             // Watch handling

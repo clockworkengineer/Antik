@@ -386,7 +386,7 @@ TEST_F(TCTask, NoWatchFolder) {
 
     // Create task object
 
-    EXPECT_THROW(CTask task(watchFolder, testTaskAction1, watchDepth, 0), std::system_error);
+    EXPECT_THROW(CTask task(watchFolder, testTaskAction1, watchDepth, 0), CApprise::Exception);
 
 }
 

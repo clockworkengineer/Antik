@@ -84,39 +84,45 @@ namespace Antik {
 
             assert(watchDepth >= -1); // < -1
 
-            // If no handler passed then use default
-            
-            if (fileEventNotifier) {
-                m_fileEventNotifier.reset(fileEventNotifier);
-            } else {
-                m_fileEventNotifier.reset(new CFileEventNotifier());
-            }
-            
-            if (!watchFolder.empty()) {
+            try {
 
-                // Remove path trailing '/'
+                // If no handler passed then use default
 
-                if ((m_watchFolder).back() == '/') {
-                    (m_watchFolder).pop_back();
+                if (fileEventNotifier) {
+                    m_fileEventNotifier.reset(fileEventNotifier);
+                } else {
+                    m_fileEventNotifier.reset(new CFileEventNotifier());
                 }
 
-                // Save away max watch depth and modify with watch folder depth value if not all (-1).
+                if (!watchFolder.empty()) {
 
-                m_watchDepth = watchDepth;
-                if (watchDepth != -1) {
-                    m_watchDepth += std::count(watchFolder.begin(), watchFolder.end(), '/');
-                }   
+                    // Remove path trailing '/'
 
-            }
-            
-            // Set watch depth for notifier
-            
-            m_fileEventNotifier->setWatchDepth(watchDepth);
-            
-            // Add non empty watch folder
+                    if ((m_watchFolder).back() == '/') {
+                        (m_watchFolder).pop_back();
+                    }
 
-            if (!m_watchFolder.empty()) {
-                m_fileEventNotifier->addWatch(m_watchFolder);
+                    // Save away max watch depth and modify with watch folder depth value if not all (-1).
+
+                    m_watchDepth = watchDepth;
+                    if (watchDepth != -1) {
+                        m_watchDepth += std::count(watchFolder.begin(), watchFolder.end(), '/');
+                    }
+
+                }
+
+                // Set watch depth for notifier
+
+                m_fileEventNotifier->setWatchDepth(watchDepth);
+
+                // Add non empty watch folder
+
+                if (!m_watchFolder.empty()) {
+                    m_fileEventNotifier->addWatch(m_watchFolder);
+                }
+
+            } catch (const std::exception & e) {
+                throw Exception(e.what());
             }
 
         }
@@ -135,7 +141,11 @@ namespace Antik {
 
         bool CApprise::stillWatching(void) {
 
-            return (m_fileEventNotifier->stillWatching());
+            try {
+                return (m_fileEventNotifier->stillWatching());
+            } catch (const std::exception & e) {
+                throw Exception(e.what());
+            }
 
         }
 
@@ -145,7 +155,11 @@ namespace Antik {
 
         std::exception_ptr CApprise::getThrownException(void) {
 
-            return (m_fileEventNotifier->getThrownException());
+            try {
+                return (m_fileEventNotifier->getThrownException());
+            } catch (const std::exception & e) {
+                throw Exception(e.what());
+            }
 
         }
 
@@ -155,8 +169,12 @@ namespace Antik {
 
         void CApprise::addWatch(const std::string& filePath) {
 
-            m_fileEventNotifier->addWatch(filePath);
-
+            try {
+                m_fileEventNotifier->addWatch(filePath);
+            } catch (const std::exception & e) {
+                throw Exception(e.what());
+            }
+            
         }
 
         //
@@ -165,7 +183,11 @@ namespace Antik {
 
         void CApprise::removeWatch(const std::string& filePath) {
 
-            m_fileEventNotifier->removeWatch(filePath);
+            try {
+                m_fileEventNotifier->removeWatch(filePath);
+            } catch (const std::exception & e) {
+                throw Exception(e.what());
+            }
 
         }
 
@@ -175,8 +197,12 @@ namespace Antik {
 
         void CApprise::getNextEvent(CApprise::Event& evt) {
 
-            m_fileEventNotifier->getNextEvent(evt);
-
+            try {
+                m_fileEventNotifier->getNextEvent(evt);
+            } catch (const std::exception & e) {
+                throw Exception(e.what());
+            }
+            
         }
 
         //
@@ -184,12 +210,15 @@ namespace Antik {
         //
 
         void CApprise::startWatching(bool clearQueue) {
-            
-            if (clearQueue) {
-                m_fileEventNotifier->clearEventQueue();
-            }
-            m_watcherThread.reset(new std::thread(&IFileEventNotifier::generateEvents, m_fileEventNotifier));
 
+            try {
+                if (clearQueue) {
+                    m_fileEventNotifier->clearEventQueue();
+                }
+                m_watcherThread.reset(new std::thread(&IFileEventNotifier::generateEvents, m_fileEventNotifier));
+            } catch (const std::exception & e) {
+                throw Exception(e.what());
+            }
         }
 
         //
@@ -198,10 +227,14 @@ namespace Antik {
 
         void CApprise::stopWatching(void) {
 
-            m_fileEventNotifier->stopEventGeneration();
+            try {
+                m_fileEventNotifier->stopEventGeneration();
 
-            if (m_watcherThread) {
-                m_watcherThread->join();
+                if (m_watcherThread) {
+                    m_watcherThread->join();
+                }
+            } catch (const std::exception & e) {
+                throw Exception(e.what());
             }
 
         }

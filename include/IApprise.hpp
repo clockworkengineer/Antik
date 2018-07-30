@@ -78,12 +78,7 @@ namespace Antik {
             virtual void startWatching(bool clearQueue) = 0;
             virtual void stopWatching(void) = 0;
             virtual bool stillWatching(void) = 0;
-            
-            //
-            // Queue access
-            //
-
-            virtual void getNextEvent(IApprise::Event& message) = 0; // Get CApprise event (waiting if necessary)
+            virtual void getNextEvent(IApprise::Event& message) = 0;      
 
             //
             // Watch handling

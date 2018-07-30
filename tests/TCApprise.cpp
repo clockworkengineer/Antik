@@ -791,6 +791,37 @@ TEST_F(TCApprise, removeDirectory500) {
 
 }
 
+//
+// Create watcher with non-existant folder.
+//
+
+TEST_F(TCApprise, NonExistantWatchFolder) {
+    
+    watchFolder = kWatchFolder+"x";
+    watchDepth = -1;
+
+    // Create CFileApprise object and start watching
+
+    EXPECT_THROW(new CApprise(watchFolder, watchDepth), CApprise::Exception);
+
+}
+
+//
+// Add non-existant watch folder
+//
+
+TEST_F(TCApprise, AddNonExistantWatchFolder) {
+
+    watchFolder = kWatchFolder;
+
+    // Create CFileApprise object and start watching
+
+    CApprise watcher;
+        
+    EXPECT_THROW(watcher.addWatch(watchFolder+"x"), CApprise::Exception);
+       
+}
+
 // =====================
 // RUN GOOGLE UNIT TESTS
 // =====================

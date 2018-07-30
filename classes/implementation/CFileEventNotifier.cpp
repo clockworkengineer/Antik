@@ -14,7 +14,7 @@
 // Class: CFileEventNotifier
 // 
 // Description: File event notifier pass to CApprise class constructor. This is 
-// the default Linux inotify implementaion.
+// the default Linux inotify implementation.
 //
 // Dependencies: C11++               - Language standard features used.    
 //               inotify/Linux       - Linux file system events
@@ -37,6 +37,10 @@
 #include <mutex>
 #include <system_error>
 #include <algorithm>
+
+//
+// Linux
+//
 
 #include <sys/ioctl.h>
 
@@ -323,19 +327,23 @@ namespace Antik {
         //
         
         void CFileEventNotifier::clearEventQueue() {
-            unsigned int avail{0};
+            
+            unsigned int bytesAvailable{0};
             std::uint8_t * buffer{ m_inotifyBuffer.get()};
-            ioctl(m_inotifyFd, FIONREAD, &avail);
-            if (avail) {
+            
+            ioctl(m_inotifyFd, FIONREAD, &bytesAvailable);
+            
+            if (bytesAvailable) {
                 while (true) {
                     int readLen{ 0};
                     if ((readLen = read(m_inotifyFd, buffer, kInotifyEventBuffLen)) == -1) {
                         throw std::system_error(std::error_code(errno, std::system_category()), "inotify read() error");
                     }
-                    avail -= readLen;
-                    if (avail == 0) break;
+                    bytesAvailable -= readLen;
+                    if (bytesAvailable == 0) break;
                 }
-            }           
+            } 
+            
         }
         
         //
@@ -494,7 +502,6 @@ namespace Antik {
             stopEventGeneration(); // If not asked to stop then call anyway (cleanup)
 
         }
-
 
     } // namespace File
 } // namespace Antik
