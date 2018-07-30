@@ -89,7 +89,7 @@ namespace Antik {
 
             // Create CFileApprise watcher object.
 
-            m_watcher.reset(new CApprise{watchFolder, watchDepth, new CFileEventNotifier()});
+            m_watcher.reset(new CApprise{watchFolder, watchDepth});
 
         }
 
@@ -131,7 +131,7 @@ namespace Antik {
 
                 m_taskAction->init();
 
-                m_watcher->startWatching();
+                m_watcher->startWatching(false);
 
                 // Loop until watcher stopped
 

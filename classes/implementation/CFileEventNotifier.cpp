@@ -38,6 +38,8 @@
 #include <system_error>
 #include <algorithm>
 
+#include <sys/ioctl.h>
+
 // =========
 // NAMESPACE
 // =========
@@ -317,6 +319,26 @@ namespace Antik {
         }
 
         //
+        // Clear event queue.
+        //
+        
+        void CFileEventNotifier::clearEventQueue() {
+            unsigned int avail{0};
+            std::uint8_t * buffer{ m_inotifyBuffer.get()};
+            ioctl(m_inotifyFd, FIONREAD, &avail);
+            if (avail) {
+                while (true) {
+                    int readLen{ 0};
+                    if ((readLen = read(m_inotifyFd, buffer, kInotifyEventBuffLen)) == -1) {
+                        throw std::system_error(std::error_code(errno, std::system_category()), "inotify read() error");
+                    }
+                    avail -= readLen;
+                    if (avail == 0) break;
+                }
+            }           
+        }
+        
+        //
         // Loop adding/removing watches for directory hierarchy  changes
         // and also generating IApprise events from inotify; until stopped.
         //
@@ -331,7 +353,7 @@ namespace Antik {
             std::string filePath;
 
             try {
-
+                
                 // Loop until told to stop
 
                 while (m_doWork.load()) {

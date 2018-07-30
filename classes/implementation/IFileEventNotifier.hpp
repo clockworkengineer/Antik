@@ -59,6 +59,7 @@ namespace Antik {
             virtual void stopEventGeneration(void) = 0;               // Stop watch loop/thread
             virtual void getNextEvent(IApprise::Event& message) = 0;  // Get next queued event
             virtual bool stillWatching() const = 0;                   // Events still being generated
+            virtual void clearEventQueue() = 0;
                    
             //
             // Watch processing

@@ -102,9 +102,12 @@ protected:
     }
 
     void createFile(const std::string &fileName);   // Create a test file.
-    void createRemoveFiles(int fileCount);          // Create fileCount files and check action function call count
-    void createChanges(int updateCount);            // Perform updateCount changes to a file and verify event count
-    void generateException(std::exception_ptr &e);   // Generate an exception stored in CFileApprise class
+    void createFiles(int fileCount);                // Create fileCount files and check action function call count
+    void removeFiles(int fileCount);                // RemovefileCount files and check action function call count
+    void updateFiles(int updateCount);              // Perform updateCount changes to a file and verify event count
+    void createDirectories(int fileCount);          // Create fileCount directories and check action function call count
+    void removeDirectories(int fileCount);          // Remove fileCount directories and check action function call count
+    void generateException(std::exception_ptr &e);  // Generate an exception stored in CFileApprise class
     
     // Collect loopCount CFileApprise events
     
@@ -185,7 +188,7 @@ void TCApprise::gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loo
 // Generate updateCount changes on a file and verify.
 //
 
-void TCApprise::createChanges(int updateCount) {
+void TCApprise::updateFiles(int updateCount) {
 
     // Initialise event counts
     
@@ -242,10 +245,10 @@ void TCApprise::createChanges(int updateCount) {
 }
 
 //
-// Create fileCount files and then remove. Count add/unlink events and verify.
+// Create fileCount files.Count add events and verify.
 //
 
-void TCApprise::createRemoveFiles(int fileCount) {
+void TCApprise::createFiles(int fileCount) {
 
     // Initialise event counts
     
@@ -291,9 +294,49 @@ void TCApprise::createRemoveFiles(int fileCount) {
         CFile::remove(filePath + file.str());
     }
     
+    watcher.stopWatching();
+
+}
+
+//
+// Create fileCount files and then remove. Count unlink events and verify.
+//
+
+void TCApprise::removeFiles(int fileCount) {
+
+    // Initialise event counts
+    
+    EventCounts evtTotals { 0, 0, 0, 0, 0, 0};
+    
+    watchFolder = kWatchFolder;
+    watchDepth = -1;
+
+    // Create CFileApprise object and start watching
+
+    CApprise watcher{watchFolder, watchDepth};
+  
+    filePath = TCApprise::kWatchFolder;
+
+    // Create fileCount files
+    
+    for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
+        std::stringstream file;
+        file << "temp" << cnt01 << ".txt" ;
+        createFile(filePath + file.str());
+    }
+    
+    watcher.startWatching();
+
+    // Remove files
+    
+    for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
+        std::stringstream file;
+        file << "temp" << cnt01 << ".txt" ;
+        CFile::remove(filePath + file.str());
+    }
+    
      // Loop getting unlink events
 
-    evtTotals = { 0, 0, 0, 0, 0, 0};
     gatherEvents(watcher, evtTotals, fileCount);
        
     // Stop watcher
@@ -309,6 +352,114 @@ void TCApprise::createRemoveFiles(int fileCount) {
     EXPECT_EQ(0, evtTotals.change);
     EXPECT_EQ(0, evtTotals.error);
 
+}
+
+//
+// Create fileCount directroies.Count add events and verify.
+//
+
+void TCApprise::createDirectories(int fileCount) {
+
+    // Initialise event counts
+    
+    EventCounts evtTotals { 0, 0, 0, 0, 0, 0};
+    
+    watchFolder = kWatchFolder;
+    watchDepth = -1;
+
+    // Create CFileApprise object and start watching
+
+    CApprise watcher{watchFolder, watchDepth};
+
+    watcher.startWatching();
+
+    filePath = TCApprise::kWatchFolder;
+
+    // Create fileCount files
+    
+    for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
+        std::stringstream file;
+        file << "temp" << cnt01;
+        CFile::createDirectory(filePath + file.str());
+    }
+    
+    // Loop getting add events
+
+    gatherEvents(watcher, evtTotals, fileCount);
+    
+    // Check events generated
+    
+    EXPECT_EQ(0, evtTotals.add);
+    EXPECT_EQ(fileCount, evtTotals.addir);
+    EXPECT_EQ(0, evtTotals.unlinkdir);
+    EXPECT_EQ(0, evtTotals.unlink);
+    EXPECT_EQ(0, evtTotals.change);
+    EXPECT_EQ(0, evtTotals.error);
+
+    watcher.stopWatching();
+        
+    // Remove files
+    
+    for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
+        std::stringstream file;
+        file << "temp" << cnt01;
+        CFile::remove(filePath + file.str());
+    }
+
+}
+
+//
+// Remove fileCount directroies.Count add events and verify.
+//
+
+void TCApprise::removeDirectories(int fileCount) {
+
+    // Initialise event counts
+    
+    EventCounts evtTotals { 0, 0, 0, 0, 0, 0};
+    
+    watchFolder = kWatchFolder;
+    watchDepth = -1;
+
+    // Create CFileApprise object and start watching
+
+    CApprise watcher{watchFolder, watchDepth};
+
+    filePath = TCApprise::kWatchFolder;
+
+    // Create fileCount files
+    
+    for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
+        std::stringstream file;
+        file << "temp" << cnt01;
+        CFile::createDirectory(filePath + file.str());
+    }
+
+    watcher.startWatching();
+    
+    // Remove files
+    
+    for (auto cnt01 = 0; cnt01 < fileCount; cnt01++) {
+        std::stringstream file;
+        file << "temp" << cnt01;
+        CFile::remove(filePath + file.str());
+    }
+
+    // Loop getting add events
+
+    gatherEvents(watcher, evtTotals, fileCount);
+    
+    // Check events generated
+    
+    EXPECT_EQ(0, evtTotals.add);
+    EXPECT_EQ(0, evtTotals.addir);
+    EXPECT_EQ(fileCount, evtTotals.unlinkdir);
+    EXPECT_EQ(0, evtTotals.unlink);
+    EXPECT_EQ(0, evtTotals.change);
+    EXPECT_EQ(0, evtTotals.error);
+
+    watcher.stopWatching();
+    
 }
 
 //
@@ -346,7 +497,7 @@ TEST_F(TCApprise,AssertParam2) {
 
 TEST_F(TCApprise,CreateFile1) {
 
-    createRemoveFiles(1);
+    createFiles(1);
 
 }
 
@@ -356,7 +507,7 @@ TEST_F(TCApprise,CreateFile1) {
 
 TEST_F(TCApprise, CreateFile10) {
 
-    createRemoveFiles(10);
+    createFiles(10);
 
 }
 
@@ -366,7 +517,7 @@ TEST_F(TCApprise, CreateFile10) {
 
 TEST_F(TCApprise, CreateFile50) {
 
-    createRemoveFiles(50);
+    createFiles(50);
 
 }
 
@@ -376,7 +527,7 @@ TEST_F(TCApprise, CreateFile50) {
 
 TEST_F(TCApprise,CreateFile100) {
 
-    createRemoveFiles(100);
+    createFiles(100);
 
 }
 
@@ -386,7 +537,7 @@ TEST_F(TCApprise,CreateFile100) {
 
 TEST_F(TCApprise, CreateFile250) {
 
-    createRemoveFiles(250);
+    createFiles(250);
 
 }
 
@@ -396,7 +547,7 @@ TEST_F(TCApprise, CreateFile250) {
 
 TEST_F(TCApprise, CreateFile500) {
 
-    createRemoveFiles(500);
+    createFiles(500);
 
 }
 
@@ -406,7 +557,7 @@ TEST_F(TCApprise, CreateFile500) {
 
 TEST_F(TCApprise, UpdateFile1) {
 
-    createChanges(1);
+    updateFiles(1);
 
 }
 
@@ -416,7 +567,7 @@ TEST_F(TCApprise, UpdateFile1) {
 
 TEST_F(TCApprise, UpdateFile10) {
 
-    createChanges(10);
+    updateFiles(10);
 
 }
 
@@ -426,7 +577,7 @@ TEST_F(TCApprise, UpdateFile10) {
 
 TEST_F(TCApprise, UpdateFile50) {
 
-    createChanges(50);
+    updateFiles(50);
 
 }
 
@@ -436,7 +587,7 @@ TEST_F(TCApprise, UpdateFile50) {
 
 TEST_F(TCApprise, UpdateFile100) {
 
-    createChanges(100);
+    updateFiles(100);
 
 }
 
@@ -446,7 +597,7 @@ TEST_F(TCApprise, UpdateFile100) {
 
 TEST_F(TCApprise, UpdateFile250) {
 
-    createChanges(250);
+    updateFiles(250);
 
 }
 
@@ -456,7 +607,187 @@ TEST_F(TCApprise, UpdateFile250) {
 
 TEST_F(TCApprise, UpdateFile500) {
 
-    createChanges(500);
+    updateFiles(500);
+
+}
+
+//
+// Remove 1 file
+//
+
+TEST_F(TCApprise, RemoveFile1) {
+
+    removeFiles(1);
+
+}
+
+//
+// Remove 10 files
+//
+
+TEST_F(TCApprise, RemoveFile10) {
+
+    removeFiles(10);
+
+}
+
+//
+// Remove 50 files
+//
+
+TEST_F(TCApprise, RemoveFile50) {
+
+    removeFiles(50);
+
+}
+
+//
+// Remove 100 files
+//
+
+TEST_F(TCApprise, RemoveFile100) {
+
+    removeFiles(100);
+
+}
+
+//
+// Remove 250 files
+//
+
+TEST_F(TCApprise, RemoveFile250) {
+
+    removeFiles(250);
+
+}
+
+//
+// Remove 500 files
+//
+
+TEST_F(TCApprise, RemoveFile500) {
+
+    removeFiles(500);
+
+}
+
+//
+// Create one directory
+//
+
+TEST_F(TCApprise, CreateDirectory1) {
+
+    createDirectories(1);
+
+}
+
+//
+// Create 10 directories
+//
+
+TEST_F(TCApprise, CreateDirectory10) {
+
+    createDirectories(10);
+
+}
+
+//
+// Create 50 directories
+//
+
+TEST_F(TCApprise, CreateDirectory50) {
+
+    createDirectories(50);
+
+}
+
+//
+// Create 100 directories
+//
+
+TEST_F(TCApprise, CreateDirectory100) {
+
+    createDirectories(100);
+
+}
+
+//
+// Create 250 directories
+//
+
+TEST_F(TCApprise, CreateDirectory250) {
+
+    createDirectories(250);
+
+}
+
+//
+// Create 500 directories
+//
+
+TEST_F(TCApprise, CreateDirectory500) {
+
+    createDirectories(500);
+
+}
+
+//
+// Remove one directory
+//
+
+TEST_F(TCApprise, RemoveDirectory1) {
+
+    removeDirectories(1);
+
+}
+
+//
+// Remove 10 directories
+//
+
+TEST_F(TCApprise, RemoveDirectory10) {
+
+    removeDirectories(10);
+
+}
+
+//
+// Remove 50 directories
+//
+
+TEST_F(TCApprise, RemoveDirectory50) {
+
+    removeDirectories(50);
+
+}
+
+//
+// Remove 100 directories
+//
+
+TEST_F(TCApprise, RemoveDirectory100) {
+
+    removeDirectories(100);
+
+}
+
+//
+// Remove 250 directories
+//
+
+TEST_F(TCApprise, removeDirectory250) {
+
+    removeDirectories(250);
+
+}
+
+//
+// Remove 500 directories
+//
+
+TEST_F(TCApprise, removeDirectory500) {
+
+    removeDirectories(500);
 
 }
 

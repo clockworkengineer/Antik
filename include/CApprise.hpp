@@ -74,28 +74,28 @@ namespace Antik {
             // Event control
             //
 
-            void startWatching(void);
-            void stopWatching(void);
-            bool stillWatching(void);
+            void startWatching(bool clearQueue=true) override;
+            void stopWatching(void) override;
+            bool stillWatching(void) override;
 
             //
             // Queue access
             //
 
-            void getNextEvent(CApprise::Event& message); // Get IApprise event (waiting if necessary)
+            void getNextEvent(CApprise::Event& message) override; // Get IApprise event (waiting if necessary)
 
             //
             // Watch handling
             //
 
-            void addWatch(const std::string& filePath); // Add directory/file to be watched
-            void removeWatch(const std::string& filePath); // Remove directory/file being watched
+            void addWatch(const std::string& filePath) override; // Add directory/file to be watched
+            void removeWatch(const std::string& filePath) override; // Remove directory/file being watched
 
             //
             // Get any thrown exceptions
             //
 
-            std::exception_ptr getThrownException(void); // Get any exception thrown by watcher to pass down chain
+            std::exception_ptr getThrownException(void) override; // Get any exception thrown by watcher to pass down chain
 
             // ================
             // PUBLIC VARIABLES

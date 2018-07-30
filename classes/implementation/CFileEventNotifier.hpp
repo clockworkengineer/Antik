@@ -82,6 +82,7 @@ namespace Antik {
             void stopEventGeneration(void)  override;              // Stop watch loop/thread
             void getNextEvent(IApprise::Event& message) override;  // Get next queued event
             bool stillWatching() const override;                   // Events still being generated
+            void clearEventQueue() override;
             
             //
             // Watch processing

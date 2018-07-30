@@ -76,8 +76,8 @@ namespace Antik {
         // Main CApprise object constructor. 
         //
 
-        CApprise::CApprise(const std::string& watchFolder, int watchDepth,  IFileEventNotifier *fileEventNotifier)
-        : m_watchFolder{watchFolder}, m_watchDepth{watchDepth}
+        CApprise::CApprise(const std::string& watchFolder, int watchDepth,  
+                IFileEventNotifier *fileEventNotifier) : m_watchFolder{watchFolder}, m_watchDepth{watchDepth}
         {
 
             // ASSERT if passed parameters invalid
@@ -183,8 +183,11 @@ namespace Antik {
         // Start watching for file events
         //
 
-        void CApprise::startWatching(void) {
-
+        void CApprise::startWatching(bool clearQueue) {
+            
+            if (clearQueue) {
+                m_fileEventNotifier->clearEventQueue();
+            }
             m_watcherThread.reset(new std::thread(&IFileEventNotifier::generateEvents, m_fileEventNotifier));
 
         }

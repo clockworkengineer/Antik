@@ -50,13 +50,13 @@ namespace Antik {
             //
 
             enum EventId {
-                Event_none = 0, // None
-                Event_add, // File added to watched folder hierarchy
-                Event_change, // File changed
-                Event_unlink, // File deleted from watched folder hierarchy
-                Event_addir, // Directory added to watched folder hierarchy
+                Event_none = 0,  // None
+                Event_add,       // File added to watched folder hierarchy
+                Event_change,    // File changed
+                Event_unlink,    // File deleted from watched folder hierarchy
+                Event_addir,     // Directory added to watched folder hierarchy
                 Event_unlinkdir, // Directory deleted from watched folder hierarchy
-                Event_error // Exception error
+                Event_error      // Exception error
             };
 
             //
@@ -67,7 +67,7 @@ namespace Antik {
                 explicit Event(EventId id = EventId::Event_none, std::string message = "") : id{id}, message{message}
                 {
                 }
-                EventId id; // Event id
+                EventId id;          // Event id
                 std::string message; // Event file name / error message string
             };
 
@@ -75,7 +75,7 @@ namespace Antik {
             // Event control
             //
 
-            virtual void startWatching(void) = 0;
+            virtual void startWatching(bool clearQueue) = 0;
             virtual void stopWatching(void) = 0;
             virtual bool stillWatching(void) = 0;
             
@@ -89,7 +89,7 @@ namespace Antik {
             // Watch handling
             //
 
-            virtual void addWatch(const std::string& filePath) = 0; // Add directory/file to be watched
+            virtual void addWatch(const std::string& filePath) = 0;    // Add directory/file to be watched
             virtual void removeWatch(const std::string& filePath) = 0; // Remove directory/file being watched
 
             //
