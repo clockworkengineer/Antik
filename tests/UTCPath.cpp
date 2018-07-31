@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   TCPath.cpp
+ * File:   UTCPath.cpp
  * 
  * Author: Robert Tizzard
  *
@@ -34,17 +34,17 @@ using namespace Antik::File;
 // UNIT TEST FIXTURE CLASS
 // =======================
 
-class TCPath : public ::testing::Test {
+class UTCPath : public ::testing::Test {
 protected:
 
     // Empty constructor
 
-    TCPath() {
+    UTCPath() {
     }
 
     // Empty destructor
 
-    ~TCPath() override{
+    ~UTCPath() override{
     }
 
     // Keep initialisation and cleanup code to SetUp() and TearDown() methods
@@ -65,11 +65,11 @@ protected:
     
 };
 
-const std::string TCPath::testPath1("/home/user1/test/temp.txt");
-const std::string TCPath::testPath2("/home/user1/test");
-const std::string TCPath::testFileName("temp.txt");
-const std::string TCPath::testFileBaseName("temp");
-const std::string TCPath::testFileExtension(".txt");
+const std::string UTCPath::testPath1("/home/user1/test/temp.txt");
+const std::string UTCPath::testPath2("/home/user1/test");
+const std::string UTCPath::testFileName("temp.txt");
+const std::string UTCPath::testFileBaseName("temp");
+const std::string UTCPath::testFileExtension(".txt");
 
 // =================
 // FIXTURE CONSTANTS
@@ -87,7 +87,7 @@ const std::string TCPath::testFileExtension(".txt");
 // Path creation
 //
 
-TEST_F(TCPath, PathCreation) {
+TEST_F(UTCPath, PathCreation) {
 
     CPath path{ this->testPath1};
 
@@ -99,7 +99,7 @@ TEST_F(TCPath, PathCreation) {
 // Empty path creation
 //
 
-TEST_F(TCPath, EmptyPathCreation) {
+TEST_F(UTCPath, EmptyPathCreation) {
 
     CPath path{ ""};
 
@@ -117,7 +117,7 @@ TEST_F(TCPath, EmptyPathCreation) {
 // Parent path
 //
 
-TEST_F(TCPath, ParentPath) {
+TEST_F(UTCPath, ParentPath) {
 
     CPath path{ this->testPath1};
 
@@ -129,7 +129,7 @@ TEST_F(TCPath, ParentPath) {
 // Filename
 //
 
-TEST_F(TCPath, FileName) {
+TEST_F(UTCPath, FileName) {
 
     CPath path{ this->testPath1};
 
@@ -141,7 +141,7 @@ TEST_F(TCPath, FileName) {
 // BaseName
 //
 
-TEST_F(TCPath, BaseName) {
+TEST_F(UTCPath, BaseName) {
 
     CPath path{ this->testPath1};
 
@@ -153,7 +153,7 @@ TEST_F(TCPath, BaseName) {
 // Extension
 //
 
-TEST_F(TCPath, Extension) {
+TEST_F(UTCPath, Extension) {
 
     CPath path{ this->testPath1};
 
@@ -165,7 +165,7 @@ TEST_F(TCPath, Extension) {
 // Extension
 //
 
-TEST_F(TCPath, ReplaceExtension) {
+TEST_F(UTCPath, ReplaceExtension) {
 
     CPath path{ this->testPath1};
     
@@ -179,7 +179,7 @@ TEST_F(TCPath, ReplaceExtension) {
 // Extension
 //
 
-TEST_F(TCPath, Join) {
+TEST_F(UTCPath, Join) {
 
     CPath path{ this->testPath2};
     
@@ -193,7 +193,7 @@ TEST_F(TCPath, Join) {
 // Extension
 //
 
-TEST_F(TCPath, AbsolutePath) {
+TEST_F(UTCPath, AbsolutePath) {
 
     CPath path{ "./test"};
 

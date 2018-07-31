@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   TCFile.cpp
+ * File:   UTCFile.cpp
  * 
  * Author: Robert Tizzard
  *
@@ -34,17 +34,17 @@ using namespace Antik::File;
 // UNIT TEST FIXTURE CLASS
 // =======================
 
-class TCFile : public ::testing::Test {
+class UTCFile : public ::testing::Test {
 protected:
     
     // Empty constructor
 
-    TCFile() {
+    UTCFile() {
     }
 
     // Empty destructor
     
-    ~TCFile() override{
+    ~UTCFile() override{
     }
     
     // Keep initialization and cleanup code to SetUp() and TearDown() methods
@@ -71,10 +71,10 @@ protected:
 // FIXTURE CONSTANTS
 // =================
 
-const std::string TCFile::kTestPathName1 { "/tmp/test1.txt"};
-const std::string TCFile::kTestPathName2 { "/tmp/test2.txt"};
-const std::string TCFile::kTestPathName3 { "/tmp/test"};
-const std::string TCFile::kTestPathName4 { "/tmp/test/test1.txt"};
+const std::string UTCFile::kTestPathName1 { "/tmp/test1.txt"};
+const std::string UTCFile::kTestPathName2 { "/tmp/test2.txt"};
+const std::string UTCFile::kTestPathName3 { "/tmp/test"};
+const std::string UTCFile::kTestPathName4 { "/tmp/test/test1.txt"};
 
    
 // ===============
@@ -85,7 +85,7 @@ const std::string TCFile::kTestPathName4 { "/tmp/test/test1.txt"};
 // Create a file for test purposes.
 //
 
-void TCFile::createFile(const CPath &filePath) {
+void UTCFile::createFile(const CPath &filePath) {
 
     std::ofstream outfile(filePath.toString());
     outfile << "TEST TEXT" << std::endl;
@@ -101,7 +101,7 @@ void TCFile::createFile(const CPath &filePath) {
 // Check to see file does not exist.
 //
 
-TEST_F(TCFile, FileDoesNotExist) {
+TEST_F(UTCFile, FileDoesNotExist) {
 
     CPath filePath { kTestPathName1 };
     
@@ -113,7 +113,7 @@ TEST_F(TCFile, FileDoesNotExist) {
 // Check to see file does exist.
 //
 
-TEST_F(TCFile, FileExists) {
+TEST_F(UTCFile, FileExists) {
 
     CPath filePath { kTestPathName1 };
     
@@ -129,7 +129,7 @@ TEST_F(TCFile, FileExists) {
 // Check to see path is a file.
 //
 
-TEST_F(TCFile, CheckIfPathIsNormalFile) {
+TEST_F(UTCFile, CheckIfPathIsNormalFile) {
 
     CPath filePath { kTestPathName1 };
     
@@ -145,7 +145,7 @@ TEST_F(TCFile, CheckIfPathIsNormalFile) {
 // Check to see path is not a file.
 //
 
-TEST_F(TCFile, CheckIfPathIsNotAFile) {
+TEST_F(UTCFile, CheckIfPathIsNotAFile) {
 
     CPath filePath { kTestPathName3 };
     
@@ -161,7 +161,7 @@ TEST_F(TCFile, CheckIfPathIsNotAFile) {
 // Check to see path is not a directory.
 //
 
-TEST_F(TCFile, CheckIfPathIsNotADirectory) {
+TEST_F(UTCFile, CheckIfPathIsNotADirectory) {
 
     CPath filePath { kTestPathName1 };
     
@@ -177,7 +177,7 @@ TEST_F(TCFile, CheckIfPathIsNotADirectory) {
 // Check to see path is a directory
 //
 
-TEST_F(TCFile, CheckIfPathIsADirectory) {
+TEST_F(UTCFile, CheckIfPathIsADirectory) {
 
     CPath filePath { kTestPathName3 };
     
@@ -193,7 +193,7 @@ TEST_F(TCFile, CheckIfPathIsADirectory) {
 // Create an directory with invalid name (empty)
 //
 
-TEST_F(TCFile, CreatDirectoryWithEmptyName) {
+TEST_F(UTCFile, CreatDirectoryWithEmptyName) {
 
     CPath filePath {""};
     
@@ -207,7 +207,7 @@ TEST_F(TCFile, CreatDirectoryWithEmptyName) {
 // Create an directory and check that successful.
 //
 
-TEST_F(TCFile, CreatDirectoryAndCheckForSuccess) {
+TEST_F(UTCFile, CreatDirectoryAndCheckForSuccess) {
 
     CPath filePath {kTestPathName3};
     
@@ -223,7 +223,7 @@ TEST_F(TCFile, CreatDirectoryAndCheckForSuccess) {
 // Remove a normal file.
 //
 
-TEST_F(TCFile, RemoveANormalFile) {
+TEST_F(UTCFile, RemoveANormalFile) {
 
     CPath filePath {kTestPathName1};
     
@@ -241,7 +241,7 @@ TEST_F(TCFile, RemoveANormalFile) {
 // Remove a directory file.
 //
 
-TEST_F(TCFile, RemoveADirectory) {
+TEST_F(UTCFile, RemoveADirectory) {
 
     CPath filePath {kTestPathName3};
     
@@ -259,7 +259,7 @@ TEST_F(TCFile, RemoveADirectory) {
 // Remove a non-empty directory file.
 //
 
-TEST_F(TCFile, RemoveANonEmptyDirectory) {
+TEST_F(UTCFile, RemoveANonEmptyDirectory) {
 
     CPath filePath {kTestPathName4};
     
@@ -279,7 +279,7 @@ TEST_F(TCFile, RemoveANonEmptyDirectory) {
 // Copy a file.
 //
 
-TEST_F(TCFile, CopyFile) {
+TEST_F(UTCFile, CopyFile) {
 
     CPath filePath{kTestPathName1};
 
@@ -298,7 +298,7 @@ TEST_F(TCFile, CopyFile) {
 // Copy file.
 //
 
-TEST_F(TCFile, CopyNonExistantFile) {
+TEST_F(UTCFile, CopyNonExistantFile) {
 
     CPath filePath{kTestPathName1};
 
@@ -310,7 +310,7 @@ TEST_F(TCFile, CopyNonExistantFile) {
 // Copy file to an existing file.
 //
 
-TEST_F(TCFile, CopyToExistingFile) {
+TEST_F(UTCFile, CopyToExistingFile) {
 
     CPath filePath{kTestPathName1};
 
@@ -328,7 +328,7 @@ TEST_F(TCFile, CopyToExistingFile) {
 // Rename a file.
 //
 
-TEST_F(TCFile, RenameFile) {
+TEST_F(UTCFile, RenameFile) {
 
     CPath filePath{kTestPathName1};
 
@@ -347,7 +347,7 @@ TEST_F(TCFile, RenameFile) {
 // Rename non-existant file.
 //
 
-TEST_F(TCFile, RenameNonExistantFile) {
+TEST_F(UTCFile, RenameNonExistantFile) {
 
     CPath filePath{kTestPathName1};
 
@@ -359,7 +359,7 @@ TEST_F(TCFile, RenameNonExistantFile) {
 // Rename file to an existing file.
 //
 
-TEST_F(TCFile, RenameToExistingFile) {
+TEST_F(UTCFile, RenameToExistingFile) {
 
     CPath filePath{kTestPathName1};
 
@@ -379,7 +379,7 @@ TEST_F(TCFile, RenameToExistingFile) {
 // Remove file.
 //
 
-TEST_F(TCFile, RemoveFile) {
+TEST_F(UTCFile, RemoveFile) {
 
     CPath filePath{kTestPathName1};
 

@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   TCIMAPParse.cpp
+ * File:   UTCIMAPParse.cpp
  * 
  * Author: Robert Tizzard
  *
@@ -35,17 +35,17 @@ using namespace Antik::IMAP;
 // UNIT TEST FIXTURE CLASS
 // =======================
 
-class TCIMAPParse : public ::testing::Test {
+class UTCIMAPParse : public ::testing::Test {
 protected:
 
     // Empty constructor
 
-    TCIMAPParse() {
+    UTCIMAPParse() {
     }
 
     // Empty destructor
 
-    ~TCIMAPParse() override {
+    ~UTCIMAPParse() override {
     }
 
     void SetUp() override {
@@ -67,7 +67,7 @@ protected:
 // FIXTURE METHODS
 // ===============
 
-void TCIMAPParse::checkListRespData(CIMAPParse::ListRespData &respData, std::uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr) {
+void UTCIMAPParse::checkListRespData(CIMAPParse::ListRespData &respData, std::uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr) {
 
     EXPECT_EQ(hierDel, respData.hierDel);
     ASSERT_STREQ(attributesStr.c_str(), respData.attributes.c_str());
@@ -79,7 +79,7 @@ void TCIMAPParse::checkListRespData(CIMAPParse::ListRespData &respData, std::uin
 // TASK CLASS UNIT TESTS
 // =====================
 
-TEST_F(TCIMAPParse, SELECTValid) {
+TEST_F(UTCIMAPParse, SELECTValid) {
 
     std::vector<std::string> selectResponseStr = {
         { "A000001 SELECT INBOX"},
@@ -124,7 +124,7 @@ TEST_F(TCIMAPParse, SELECTValid) {
     
 }
 
-TEST_F(TCIMAPParse, SELECTInvalidMailBox) {
+TEST_F(UTCIMAPParse, SELECTInvalidMailBox) {
 
     std::vector<std::string> selectResponseStr = {
         { "A000002 SELECT NOTHERE"},
@@ -146,7 +146,7 @@ TEST_F(TCIMAPParse, SELECTInvalidMailBox) {
     
 }
 
-TEST_F(TCIMAPParse, EXAMINEValid) {
+TEST_F(UTCIMAPParse, EXAMINEValid) {
 
     std::vector<std::string> examineResponseStr = {
         {"A000002 EXAMINE INBOX"},
@@ -194,7 +194,7 @@ TEST_F(TCIMAPParse, EXAMINEValid) {
        
 }
 
-TEST_F(TCIMAPParse, EXAMINEInvalidMailBox) {
+TEST_F(UTCIMAPParse, EXAMINEInvalidMailBox) {
 
     std::vector<std::string> examineResponseStr = {
         { "A000002 EXAMINE NOTTHERE"},
@@ -216,7 +216,7 @@ TEST_F(TCIMAPParse, EXAMINEInvalidMailBox) {
        
 }
 
-TEST_F(TCIMAPParse, STATUSValid) {
+TEST_F(UTCIMAPParse, STATUSValid) {
 
     std::vector<std::string> statusResponseStr = {
        { "A000003 STATUS INBOX (UIDNEXT MESSAGES RECENT UIDVALIDITY UNSEEN)" },
@@ -252,7 +252,7 @@ TEST_F(TCIMAPParse, STATUSValid) {
 
 }
 
-TEST_F(TCIMAPParse, STATUSInvalidMailBox) {
+TEST_F(UTCIMAPParse, STATUSInvalidMailBox) {
 
     std::vector<std::string> statusResponseStr = {
         { "A000002 STATUS NOTTHERE (UIDNEXT MESSAGES RECENT UIDVALIDITY UNSEEN)"},
@@ -274,7 +274,7 @@ TEST_F(TCIMAPParse, STATUSInvalidMailBox) {
        
 }
 
-TEST_F(TCIMAPParse, LISTValid) {
+TEST_F(UTCIMAPParse, LISTValid) {
 
     std::vector<std::string> listResponseStr = { 
         { "A000002 LIST \"\" *"},
@@ -335,7 +335,7 @@ TEST_F(TCIMAPParse, LISTValid) {
        
 }
 
-TEST_F(TCIMAPParse, SEARCHValid) {
+TEST_F(UTCIMAPParse, SEARCHValid) {
 
     std::vector<std::string> searchResponseStr = {
         { "A000002 SEARCH 1:*"},
@@ -371,7 +371,7 @@ TEST_F(TCIMAPParse, SEARCHValid) {
        
 }
 
-TEST_F(TCIMAPParse, UIDSEARCHValid) {
+TEST_F(UTCIMAPParse, UIDSEARCHValid) {
 
     std::vector<std::string> searchResponseStr = {
         { "A000002 UID SEARCH 1:*"},
@@ -407,7 +407,7 @@ TEST_F(TCIMAPParse, UIDSEARCHValid) {
        
 }
 
-TEST_F(TCIMAPParse, LSUBValid) {
+TEST_F(UTCIMAPParse, LSUBValid) {
 
     std::vector<std::string> LSubResponseStr = { 
         { "A000002 LSUB \"\" *"},
@@ -468,7 +468,7 @@ TEST_F(TCIMAPParse, LSUBValid) {
        
 }
 
-TEST_F(TCIMAPParse, EXPUNGEValid) {
+TEST_F(UTCIMAPParse, EXPUNGEValid) {
 
     std::vector<std::string> ExpungeResponseStr = { 
         { "A000002 EXPUNGE" },
@@ -496,7 +496,7 @@ TEST_F(TCIMAPParse, EXPUNGEValid) {
 
 }
 
-TEST_F(TCIMAPParse, STOREValid) {
+TEST_F(UTCIMAPParse, STOREValid) {
 
     std::vector<std::string> StoreResponseStr = { 
        { "A000008 STORE 1:* +FLAGS (\\Deleted)"},
@@ -554,7 +554,7 @@ TEST_F(TCIMAPParse, STOREValid) {
        
 }
 
-TEST_F(TCIMAPParse, CAPABILITYValid) {
+TEST_F(UTCIMAPParse, CAPABILITYValid) {
 
     std::vector<std::string> capabilityResponseStr = { 
        { "A000002 CAPABILITY"},
@@ -581,7 +581,7 @@ TEST_F(TCIMAPParse, CAPABILITYValid) {
 
 }
 
-TEST_F(TCIMAPParse, NOOPValid) {
+TEST_F(UTCIMAPParse, NOOPValid) {
 
     std::vector<std::string> noOpResponseStr = { 
        { "A000002 NOOP" },
@@ -608,7 +608,7 @@ TEST_F(TCIMAPParse, NOOPValid) {
     EXPECT_FALSE(parsedResponse->byeSent);
     
 }
-TEST_F(TCIMAPParse, IDLEValid) {
+TEST_F(UTCIMAPParse, IDLEValid) {
 
     std::vector<std::string> idleResponseStr = { 
        { "A000002 IDLE" },
@@ -636,7 +636,7 @@ TEST_F(TCIMAPParse, IDLEValid) {
     
 }
 
-TEST_F(TCIMAPParse, LOGOUTValid) {
+TEST_F(UTCIMAPParse, LOGOUTValid) {
 
     std::vector<std::string> logOutResponseStr = { 
        { "A000003 LOGOUT" },
@@ -658,7 +658,7 @@ TEST_F(TCIMAPParse, LOGOUTValid) {
     
 }
 
-TEST_F(TCIMAPParse, FETCHValid) {
+TEST_F(UTCIMAPParse, FETCHValid) {
 
     std::vector<std::string> fetchResponseStr = { 
        { "A000004 FETCH 1 (BODYSTRUCTURE FLAGS UID)" },
@@ -700,7 +700,7 @@ TEST_F(TCIMAPParse, FETCHValid) {
 
 }
 
-TEST_F(TCIMAPParse, FETCHValidWithBYE) {
+TEST_F(UTCIMAPParse, FETCHValidWithBYE) {
 
     std::vector<std::string> fetchResponseStr = { 
        { "A000004 FETCH 1 (BODYSTRUCTURE FLAGS UID)" },

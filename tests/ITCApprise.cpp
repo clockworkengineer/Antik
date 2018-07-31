@@ -1,12 +1,13 @@
 #include "HOST.hpp"
 /*
- * File:   TCApprise.cpp
+ * File:   ITCApprise.cpp
  * 
  * Author: Robert Tizzard
  *
  * Created on October 24, 2016, 2:34 PM
  * 
- * Description: Google unit tests for class CApprise.
+ * Description: Google integration tests for class CApprise with the default file
+ * event notifier.
  *
  * Copyright 2016.
  *
@@ -43,7 +44,7 @@ using namespace Antik::File;
 // UNIT TEST FIXTURE CLASS
 // =======================
 
-class TCApprise : public ::testing::Test {
+class ITCApprise : public ::testing::Test {
 protected:
 
     // Event counts
@@ -59,12 +60,12 @@ protected:
 
     // Empty constructor
 
-    TCApprise() {
+    ITCApprise() {
     }
 
     // Empty destructor
 
-    ~TCApprise() override {
+    ~ITCApprise() override {
     }
 
     // Keep initialization and cleanup code to SetUp() and TearDown() methods
@@ -73,14 +74,14 @@ protected:
 
         // Create watch folder.
 
-        if (!CFile::exists(TCApprise::kWatchFolder)) {
-            CFile::createDirectory(TCApprise::kWatchFolder);
+        if (!CFile::exists(ITCApprise::kWatchFolder)) {
+            CFile::createDirectory(ITCApprise::kWatchFolder);
         }
 
         // Create destination folder.
 
-        if (!CFile::exists(TCApprise::kDestinationFolder)) {
-            CFile::createDirectory(TCApprise::kDestinationFolder);
+        if (!CFile::exists(ITCApprise::kDestinationFolder)) {
+            CFile::createDirectory(ITCApprise::kDestinationFolder);
         }
 
     }
@@ -89,14 +90,14 @@ protected:
 
         // Remove watch folder.
 
-        if (CFile::exists(TCApprise::kWatchFolder)) {
-            CFile::remove(TCApprise::kWatchFolder);
+        if (CFile::exists(ITCApprise::kWatchFolder)) {
+            CFile::remove(ITCApprise::kWatchFolder);
         }
 
         // Remove destination folder.
 
-        if (CFile::exists(TCApprise::kDestinationFolder)) {
-            CFile::remove(TCApprise::kDestinationFolder);
+        if (CFile::exists(ITCApprise::kDestinationFolder)) {
+            CFile::remove(ITCApprise::kDestinationFolder);
         }
 
     }
@@ -126,9 +127,9 @@ protected:
 // FIXTURE CONSTANTS
 // =================
 
-const std::string TCApprise::kWatchFolder("/tmp/watch/");
-const std::string TCApprise::kDestinationFolder("/tmp/destination/");
-const std::string TCApprise::kParamAssertion2("Assertion*");
+const std::string ITCApprise::kWatchFolder("/tmp/watch/");
+const std::string ITCApprise::kDestinationFolder("/tmp/destination/");
+const std::string ITCApprise::kParamAssertion2("Assertion*");
 
 // ===============
 // FIXTURE METHODS
@@ -138,7 +139,7 @@ const std::string TCApprise::kParamAssertion2("Assertion*");
 // Create a file for test purposes.
 //
 
-void TCApprise::createFile(const std::string &fileName) {
+void ITCApprise::createFile(const std::string &fileName) {
 
     std::ofstream outfile(fileName);
     outfile << "TEST TEXT" << std::endl;
@@ -151,7 +152,7 @@ void TCApprise::createFile(const std::string &fileName) {
 // the loop not terminating is a major bug.
 //
 
-void TCApprise::gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loopCount ){
+void ITCApprise::gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loopCount ){
   
 
     while (watcher.stillWatching() && (loopCount--)) {
@@ -182,7 +183,7 @@ void TCApprise::gatherEvents(CApprise& watcher , EventCounts& evtTotals, int loo
 // Generate updateCount changes on a file and verify.
 //
 
-void TCApprise::updateFiles(int updateCount) {
+void ITCApprise::updateFiles(int updateCount) {
 
     // Create the file
     
@@ -231,7 +232,7 @@ void TCApprise::updateFiles(int updateCount) {
 // Create fileCount files.Count add events and verify.
 //
 
-void TCApprise::createFiles(int fileCount) {
+void ITCApprise::createFiles(int fileCount) {
     
     // Create CFileApprise object and start watching
 
@@ -276,7 +277,7 @@ void TCApprise::createFiles(int fileCount) {
 // Create fileCount files and then remove. Count unlink events and verify.
 //
 
-void TCApprise::removeFiles(int fileCount) {
+void ITCApprise::removeFiles(int fileCount) {
 
     // Create CFileApprise object and start watching
 
@@ -323,7 +324,7 @@ void TCApprise::removeFiles(int fileCount) {
 // Create fileCount directroies.Count add events and verify.
 //
 
-void TCApprise::createDirectories(int fileCount) {
+void ITCApprise::createDirectories(int fileCount) {
 
     // Create CFileApprise object and start watching
 
@@ -368,7 +369,7 @@ void TCApprise::createDirectories(int fileCount) {
 // Remove fileCount directroies.Count add events and verify.
 //
 
-void TCApprise::removeDirectories(int fileCount) {
+void ITCApprise::removeDirectories(int fileCount) {
 
     // Create CFileApprise object and start watching
 
@@ -413,7 +414,7 @@ void TCApprise::removeDirectories(int fileCount) {
 // Re-throw any exception passed.
 //
 
-void TCApprise::generateException(std::exception_ptr &e) {
+void ITCApprise::generateException(std::exception_ptr &e) {
 
     if (e) {
         std::rethrow_exception(e);
@@ -429,11 +430,11 @@ void TCApprise::generateException(std::exception_ptr &e) {
 // Watch Depth < -1 ASSERT
 //
 
-TEST_F(TCApprise,AssertParam2) {
+TEST_F(ITCApprise,AssertParam2) {
 
     watchDepth = -99;
 
-    EXPECT_DEATH(CApprise watcher(kWatchFolder, watchDepth), TCApprise::kParamAssertion2);
+    EXPECT_DEATH(CApprise watcher(kWatchFolder, watchDepth), ITCApprise::kParamAssertion2);
 
 }
 
@@ -441,7 +442,7 @@ TEST_F(TCApprise,AssertParam2) {
 // Create 1 file in watcher folder
 //
 
-TEST_F(TCApprise,CreateFile1) {
+TEST_F(ITCApprise,CreateFile1) {
 
     createFiles(1);
 
@@ -451,7 +452,7 @@ TEST_F(TCApprise,CreateFile1) {
 // Create 10 files in watcher folder
 //
 
-TEST_F(TCApprise, CreateFile10) {
+TEST_F(ITCApprise, CreateFile10) {
 
     createFiles(10);
 
@@ -461,7 +462,7 @@ TEST_F(TCApprise, CreateFile10) {
 // Create 50 files in watcher folder
 //
 
-TEST_F(TCApprise, CreateFile50) {
+TEST_F(ITCApprise, CreateFile50) {
 
     createFiles(50);
 
@@ -471,7 +472,7 @@ TEST_F(TCApprise, CreateFile50) {
 // Create 100 files in watcher folder
 //
 
-TEST_F(TCApprise,CreateFile100) {
+TEST_F(ITCApprise,CreateFile100) {
 
     createFiles(100);
 
@@ -481,7 +482,7 @@ TEST_F(TCApprise,CreateFile100) {
 // Create 250 files in watcher folder
 //
 
-TEST_F(TCApprise, CreateFile250) {
+TEST_F(ITCApprise, CreateFile250) {
 
     createFiles(250);
 
@@ -491,7 +492,7 @@ TEST_F(TCApprise, CreateFile250) {
 // Create 500 files in watcher folder
 //
 
-TEST_F(TCApprise, CreateFile500) {
+TEST_F(ITCApprise, CreateFile500) {
 
     createFiles(500);
 
@@ -501,7 +502,7 @@ TEST_F(TCApprise, CreateFile500) {
 // Update file one time
 //
 
-TEST_F(TCApprise, UpdateFile1) {
+TEST_F(ITCApprise, UpdateFile1) {
 
     updateFiles(1);
 
@@ -511,7 +512,7 @@ TEST_F(TCApprise, UpdateFile1) {
 // Update file 10 times
 //
 
-TEST_F(TCApprise, UpdateFile10) {
+TEST_F(ITCApprise, UpdateFile10) {
 
     updateFiles(10);
 
@@ -521,7 +522,7 @@ TEST_F(TCApprise, UpdateFile10) {
 // Update file 50 times
 //
 
-TEST_F(TCApprise, UpdateFile50) {
+TEST_F(ITCApprise, UpdateFile50) {
 
     updateFiles(50);
 
@@ -531,7 +532,7 @@ TEST_F(TCApprise, UpdateFile50) {
 // Update file 100 times
 //
 
-TEST_F(TCApprise, UpdateFile100) {
+TEST_F(ITCApprise, UpdateFile100) {
 
     updateFiles(100);
 
@@ -541,7 +542,7 @@ TEST_F(TCApprise, UpdateFile100) {
 // Update file 250 times
 //
 
-TEST_F(TCApprise, UpdateFile250) {
+TEST_F(ITCApprise, UpdateFile250) {
 
     updateFiles(250);
 
@@ -551,7 +552,7 @@ TEST_F(TCApprise, UpdateFile250) {
 // Update file 500 times
 //
 
-TEST_F(TCApprise, UpdateFile500) {
+TEST_F(ITCApprise, UpdateFile500) {
 
     updateFiles(500);
 
@@ -561,7 +562,7 @@ TEST_F(TCApprise, UpdateFile500) {
 // Remove 1 file
 //
 
-TEST_F(TCApprise, RemoveFile1) {
+TEST_F(ITCApprise, RemoveFile1) {
 
     removeFiles(1);
 
@@ -571,7 +572,7 @@ TEST_F(TCApprise, RemoveFile1) {
 // Remove 10 files
 //
 
-TEST_F(TCApprise, RemoveFile10) {
+TEST_F(ITCApprise, RemoveFile10) {
 
     removeFiles(10);
 
@@ -581,7 +582,7 @@ TEST_F(TCApprise, RemoveFile10) {
 // Remove 50 files
 //
 
-TEST_F(TCApprise, RemoveFile50) {
+TEST_F(ITCApprise, RemoveFile50) {
 
     removeFiles(50);
 
@@ -591,7 +592,7 @@ TEST_F(TCApprise, RemoveFile50) {
 // Remove 100 files
 //
 
-TEST_F(TCApprise, RemoveFile100) {
+TEST_F(ITCApprise, RemoveFile100) {
 
     removeFiles(100);
 
@@ -601,7 +602,7 @@ TEST_F(TCApprise, RemoveFile100) {
 // Remove 250 files
 //
 
-TEST_F(TCApprise, RemoveFile250) {
+TEST_F(ITCApprise, RemoveFile250) {
 
     removeFiles(250);
 
@@ -611,7 +612,7 @@ TEST_F(TCApprise, RemoveFile250) {
 // Remove 500 files
 //
 
-TEST_F(TCApprise, RemoveFile500) {
+TEST_F(ITCApprise, RemoveFile500) {
 
     removeFiles(500);
 
@@ -621,7 +622,7 @@ TEST_F(TCApprise, RemoveFile500) {
 // Create one directory
 //
 
-TEST_F(TCApprise, CreateDirectory1) {
+TEST_F(ITCApprise, CreateDirectory1) {
 
     createDirectories(1);
 
@@ -631,7 +632,7 @@ TEST_F(TCApprise, CreateDirectory1) {
 // Create 10 directories
 //
 
-TEST_F(TCApprise, CreateDirectory10) {
+TEST_F(ITCApprise, CreateDirectory10) {
 
     createDirectories(10);
 
@@ -641,7 +642,7 @@ TEST_F(TCApprise, CreateDirectory10) {
 // Create 50 directories
 //
 
-TEST_F(TCApprise, CreateDirectory50) {
+TEST_F(ITCApprise, CreateDirectory50) {
 
     createDirectories(50);
 
@@ -651,7 +652,7 @@ TEST_F(TCApprise, CreateDirectory50) {
 // Create 100 directories
 //
 
-TEST_F(TCApprise, CreateDirectory100) {
+TEST_F(ITCApprise, CreateDirectory100) {
 
     createDirectories(100);
 
@@ -661,7 +662,7 @@ TEST_F(TCApprise, CreateDirectory100) {
 // Create 250 directories
 //
 
-TEST_F(TCApprise, CreateDirectory250) {
+TEST_F(ITCApprise, CreateDirectory250) {
 
     createDirectories(250);
 
@@ -671,7 +672,7 @@ TEST_F(TCApprise, CreateDirectory250) {
 // Create 500 directories
 //
 
-TEST_F(TCApprise, CreateDirectory500) {
+TEST_F(ITCApprise, CreateDirectory500) {
 
     createDirectories(500);
 
@@ -681,7 +682,7 @@ TEST_F(TCApprise, CreateDirectory500) {
 // Remove one directory
 //
 
-TEST_F(TCApprise, RemoveDirectory1) {
+TEST_F(ITCApprise, RemoveDirectory1) {
 
     removeDirectories(1);
 
@@ -691,7 +692,7 @@ TEST_F(TCApprise, RemoveDirectory1) {
 // Remove 10 directories
 //
 
-TEST_F(TCApprise, RemoveDirectory10) {
+TEST_F(ITCApprise, RemoveDirectory10) {
 
     removeDirectories(10);
 
@@ -701,7 +702,7 @@ TEST_F(TCApprise, RemoveDirectory10) {
 // Remove 50 directories
 //
 
-TEST_F(TCApprise, RemoveDirectory50) {
+TEST_F(ITCApprise, RemoveDirectory50) {
 
     removeDirectories(50);
 
@@ -711,7 +712,7 @@ TEST_F(TCApprise, RemoveDirectory50) {
 // Remove 100 directories
 //
 
-TEST_F(TCApprise, RemoveDirectory100) {
+TEST_F(ITCApprise, RemoveDirectory100) {
 
     removeDirectories(100);
 
@@ -721,7 +722,7 @@ TEST_F(TCApprise, RemoveDirectory100) {
 // Remove 250 directories
 //
 
-TEST_F(TCApprise, removeDirectory250) {
+TEST_F(ITCApprise, removeDirectory250) {
 
     removeDirectories(250);
 
@@ -731,7 +732,7 @@ TEST_F(TCApprise, removeDirectory250) {
 // Remove 500 directories
 //
 
-TEST_F(TCApprise, removeDirectory500) {
+TEST_F(ITCApprise, removeDirectory500) {
 
     removeDirectories(500);
 
@@ -741,7 +742,7 @@ TEST_F(TCApprise, removeDirectory500) {
 // Create watcher with non-existant folder.
 //
 
-TEST_F(TCApprise, NonExistantWatchFolder) {
+TEST_F(ITCApprise, NonExistantWatchFolder) {
 
     EXPECT_THROW(new CApprise(kWatchFolder+"x", watchDepth), CApprise::Exception);
 
@@ -751,7 +752,7 @@ TEST_F(TCApprise, NonExistantWatchFolder) {
 // Add non-existant watch folder
 //
 
-TEST_F(TCApprise, AddNonExistantWatchFolder) {
+TEST_F(ITCApprise, AddNonExistantWatchFolder) {
 
     CApprise watcher;
         
@@ -763,7 +764,7 @@ TEST_F(TCApprise, AddNonExistantWatchFolder) {
 // Remove non-existant watch folder
 //
 
-TEST_F(TCApprise, RemoveNonExistantWatchFolder) {
+TEST_F(ITCApprise, RemoveNonExistantWatchFolder) {
 
     CApprise watcher;
         

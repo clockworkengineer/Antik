@@ -1,6 +1,6 @@
 #include "HOST.hpp"
 /*
- * File:   FTPStandaloneTests.cpp
+ * File:   ITCFTP.cpp
  * 
  * Author: Robert Tizzard
  * 
@@ -11,17 +11,17 @@
  */
 
 //
-// Program: FTPStandaloneTests
+// Program: ITCFTP
 //
-// Description: Run a series of standalone tests on an FTP server using class CFTP.
+// Description: Run a series of integration  tests on an FTP server using class CFTP.
 // This not only tests CFTP but the FTP servers (CogWheel, vsftp etc) response. The
 // of tests will grow over time and at the moment consist of both stress tests and
 // general tests such as file transfer.
 // 
-// Dependencies: C11++, Classes (CFTP).
+// Dependencies: C11++, Classes (CFTP, CFile,).
 //               Linux, Boost C++ Libraries.
 //
-// FTPStandaloneTests
+// ITCFTP
 // Program Options:
 //   --help                 Print help messages
 //   -c [ --config ] arg    Config File Name
@@ -45,25 +45,24 @@
 #include <iostream>
 
 //
-// Antikythera Classes
+// Antik Classes
 //
 
+#include "CFile.hpp"
+#include "CPath.hpp"
 #include "CFTP.hpp"
 #include "FTPUtil.hpp"
 
 using namespace Antik::FTP;
+using namespace Antik::File;
 
 //
-// Boost program options  & file system library
+// Boost program options
 //
 
 #include <boost/program_options.hpp>  
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/range/iterator_range.hpp>
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 // ======================
 // LOCAL TYES/DEFINITIONS
@@ -151,15 +150,15 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         // Display options and exit with success
 
         if (vm.count("help")) {
-            std::cout << "FTPStandaloneTests" << std::endl << commandLine << std::endl;
+            std::cout << "ITCFTP" << std::endl << commandLine << std::endl;
             exit(EXIT_SUCCESS);
         }
 
         if (vm.count("config")) {
-            if (fs::exists(vm["config"].as<std::string>().c_str())) {
-                std::ifstream ifs{vm["config"].as<std::string>().c_str()};
-                if (ifs) {
-                    po::store(po::parse_config_file(ifs, configFile), vm);
+            if (CFile::exists(vm["config"].as<std::string>())) {
+                std::ifstream configFileStream{vm["config"].as<std::string>()};
+                if (configFileStream) {
+                    po::store(po::parse_config_file(configFileStream, configFile), vm);
                 }
             } else {
                 throw po::error("Specified config file does not exist.");
@@ -169,7 +168,7 @@ void procCmdLine(int argc, char** argv, ParamArgData &argData) {
         po::notify(vm);
 
     } catch (po::error& e) {
-        std::cerr << "FTPStandaloneTests Error: " << e.what() << std::endl << std::endl;
+        std::cerr << "ITCFTP Error: " << e.what() << std::endl << std::endl;
         std::cerr << commandLine << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -251,7 +250,7 @@ int main(int argc, char** argv) {
 
         // Enable SSL
 
-        ftpServer.setSslEnabled(true);
+        ftpServer.setSslEnabled(false);
 
         // Passive mode list root (stress test)
 
@@ -364,55 +363,55 @@ int main(int argc, char** argv) {
 
             // Delete File
 
-            ftpServer.deleteFile(argData.fileList[1]);
+            ftpServer.deleteFile(argData.fileList[0]);
             checkFTPCommandResponse(ftpServer,{250});
 
             // Delete non-existent file
 
-            ftpServer.deleteFile(argData.fileList[1]);
+            ftpServer.deleteFile(argData.fileList[0]);
             checkFTPCommandResponse(ftpServer,{550});
 
             // Upload deleted file to server
 
-            ftpServer.putFile(argData.fileList[1], argData.localDirectory + argData.fileList[1]);
+            ftpServer.putFile(argData.fileList[0], argData.localDirectory + argData.fileList[0]);
             checkFTPCommandResponse(ftpServer,{226});
             
             // Rename file 
 
-            ftpServer.renameFile(argData.fileList[1], argData.fileList[1]+"~");
+            ftpServer.renameFile(argData.fileList[0], argData.fileList[0]+"~");
             checkFTPCommandResponse(ftpServer,{250});
             
             // Rename file back again
 
-            ftpServer.renameFile(argData.fileList[1]+"~", argData.fileList[1]);
+            ftpServer.renameFile(argData.fileList[0]+"~", argData.fileList[0]);
             checkFTPCommandResponse(ftpServer,{250});
             
             // Rename file that does not exist
 
-            ftpServer.renameFile(argData.fileList[1]+"~", argData.fileList[1]);
+            ftpServer.renameFile(argData.fileList[0]+"~", argData.fileList[0]);
             checkFTPCommandResponse(ftpServer,{550});
 
             // Get files size
 
             size_t fileSize;
-            ftpServer.fileSize(argData.fileList[2], fileSize);
+            ftpServer.fileSize(argData.fileList[1], fileSize);
             checkFTPCommandResponse(ftpServer,{213});
             std::cout << "File Size = " << fileSize << std::endl;
 
             // Get size of non-existent file
 
-            ftpServer.fileSize(argData.fileList[2] + "xx", fileSize);
+            ftpServer.fileSize(argData.fileList[1] + "xx", fileSize);
             checkFTPCommandResponse(ftpServer,{550});
 
             // Get files last modified time
 
             CFTP::DateTime modifiedDateTime;
-            ftpServer.getModifiedDateTime(argData.fileList[2], modifiedDateTime);
+            ftpServer.getModifiedDateTime(argData.fileList[1], modifiedDateTime);
             checkFTPCommandResponse(ftpServer,{213});
 
             // Get files last modified time of non-existent file
 
-            ftpServer.getModifiedDateTime(argData.fileList[2] + "xx", modifiedDateTime);
+            ftpServer.getModifiedDateTime(argData.fileList[1] + "xx", modifiedDateTime);
             checkFTPCommandResponse(ftpServer,{550});
             
             // Remove files
