@@ -86,9 +86,8 @@ struct ParamArgData {
 
 static void exitWithError(std::string errMsg) {
 
-    // Closedown email, display error and exit.
+    // Display error and exit.
 
-    CIMAP::closedown();
     std::cerr << errMsg << std::endl;
     exit(EXIT_FAILURE);
 
@@ -371,10 +370,6 @@ int main(int argc, char** argv) {
 
         procCmdLine(argc, argv, argData);
 
-        // Initialise CMailIMAP internals
-
-        CIMAP::init();
-
         std::cout << "SERVER [" << argData.serverURL << "]" << std::endl;
         std::cout << "USER [" << argData.userName << "]" << std::endl;
 
@@ -441,8 +436,6 @@ int main(int argc, char** argv) {
     } catch (const std::exception & e) {
         exitWithError(e.what());
     }
-
-    CIMAP::closedown();
 
     exit(EXIT_SUCCESS);
 

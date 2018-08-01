@@ -273,34 +273,40 @@ namespace Antik {
 
         void CIMAP::connect(void) {
 
-            if (m_connected) {
-                Exception("Already connected to a server.");
-            }
-            
-            // Allocate IO Buffer
-            
-            m_ioBuffer.reset(new char[m_ioBufferSize]);
-            
-            // Specify TLS version 1.2
-            
-            m_imapSocket.setTLSVersion(Antik::Network::CSocket::TLSVerion::v1_2);
-            
-            // Connect and perform TLS handshake 
-            
-            m_imapSocket.connect();
-            m_imapSocket.setSslEnabled(true);
-            m_imapSocket.tlsHandshake();
-            m_connected = true;
-            
-            // Login using set credentials
+            try {
 
-            CIMAPParse::COMMANDRESPONSE parsedResponse = CIMAPParse::parseResponse(sendCommand(
-                    static_cast<std::string> (IMAP::kLOGIN) + " " + this->m_userName + " " + this->m_userPassword));
-            
-            if (parsedResponse->byeSent) {
-                throw CIMAP::Exception("Received BYE from server: " + parsedResponse->errorMessage);
-            } else if (parsedResponse->status != CIMAPParse::RespCode::OK) {
-                throw CIMAP::Exception(static_cast<std::string> (IMAP::kLOGIN) + " : " + parsedResponse->errorMessage);
+                if (m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                // Allocate IO Buffer
+
+                m_ioBuffer.reset(new char[m_ioBufferSize]);
+
+                // Specify TLS version 1.2
+
+                m_imapSocket.setTLSVersion(Antik::Network::CSocket::TLSVerion::v1_2);
+
+                // Connect and perform TLS handshake 
+
+                m_imapSocket.connect();
+                m_imapSocket.setSslEnabled(true);
+                m_imapSocket.tlsHandshake();
+                m_connected = true;
+
+                // Login using set credentials
+
+                CIMAPParse::COMMANDRESPONSE parsedResponse = CIMAPParse::parseResponse(sendCommand(
+                        static_cast<std::string> (IMAP::kLOGIN) + " " + this->m_userName + " " + this->m_userPassword));
+
+                if (parsedResponse->byeSent) {
+                    throw std::runtime_error("Received BYE from server: " + parsedResponse->errorMessage);
+                } else if (parsedResponse->status != CIMAPParse::RespCode::OK) {
+                    throw std::runtime_error(static_cast<std::string> (IMAP::kLOGIN) + " : " + parsedResponse->errorMessage);
+                }
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
 
         }
@@ -311,19 +317,25 @@ namespace Antik {
 
         void CIMAP::disconnect(void) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
-            }
+            try {
 
-            m_imapSocket.close();
-            m_imapSocket.setSslEnabled(false);
-                       
-            m_tagCount = 1;
-            m_connected = false;
-                   
-            // Free IO Buffer
-            
-            m_ioBuffer.reset();
+                if (!m_connected) {
+                    throw std::logic_error("Not connected to server.");
+                }
+
+                m_imapSocket.close();
+                m_imapSocket.setSslEnabled(false);
+
+                m_tagCount = 1;
+                m_connected = false;
+
+                // Free IO Buffer
+
+                m_ioBuffer.reset();
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
+            }
 
         }
 
@@ -333,30 +345,36 @@ namespace Antik {
 
         std::string CIMAP::sendCommand(const std::string& commandLine) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
+            try {
+
+                if (!m_connected) {
+                    throw Exception("Not connected to server.");
+                }
+
+                generateTag();
+
+                if (commandLine.compare(kIDLE) == 0) {
+                    sendCommandIDLE(m_currentTag + " " + commandLine + kEOL);
+                } else if (commandLine.compare(kAPPEND) == 0) {
+                    sendCommandAPPEND(m_currentTag + " " + commandLine);
+                } else {
+                    sendIMAPCommand(m_currentTag + " " + commandLine + kEOL);
+                    waitForIMAPCommandResponse(m_currentTag, m_commandResponse);
+                }
+
+                // If response is empty then server disconnect without BYE
+
+                if (m_commandResponse.empty()) {
+                    disconnect();
+                    throw std::runtime_error("Server Disconnect without BYE.");
+                }
+
+                return (m_currentTag + " " + commandLine + kEOL + m_commandResponse);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            generateTag();
-
-            if (commandLine.compare(kIDLE) == 0) {
-                sendCommandIDLE(m_currentTag + " " + commandLine + kEOL);
-            } else if (commandLine.compare(kAPPEND) == 0) {
-                sendCommandAPPEND(m_currentTag + " " + commandLine);
-            } else {
-                sendIMAPCommand(m_currentTag + " " + commandLine + kEOL);
-                waitForIMAPCommandResponse(m_currentTag, m_commandResponse);
-            }
-
-            // If response is empty then server disconnect without BYE
-
-            if (m_commandResponse.empty()) {
-                disconnect();
-                throw Exception("Server Disconnect without BYE.");
-            }
-
-            return (m_currentTag + " " + commandLine + kEOL + m_commandResponse);
-
+            
         }
 
         //
@@ -383,24 +401,6 @@ namespace Antik {
         //
 
         CIMAP::~CIMAP() {
-
-        }
-
-        //
-        // CIMAP initialization
-        //
-
-        void CIMAP::init(void) {
-
-
-        }
-
-        //
-        // CIMAP closedown
-        //
-
-        void CIMAP::closedown(void) {
-
 
         }
 

@@ -102,9 +102,8 @@ constexpr int kPollPeriod = 15;
 
 static void exitWithError(std::string errMsg) {
 
-    // Closedown email, display error and exit.
+    // Display error and exit.
 
-    CIMAP::closedown();
     std::cerr << errMsg << std::endl;
     exit(EXIT_FAILURE);
 
@@ -262,10 +261,6 @@ int main(int argc, char** argv) {
 
         procCmdLine(argc, argv, argData);
 
-        // Initialise CMailIMAP internals
-
-        CIMAP::init();
-
         // Set mail account user name and password
 
         imap.setServer(argData.serverURL);
@@ -347,10 +342,6 @@ int main(int argc, char** argv) {
     } catch (const std::exception & e) {
         exitWithError(e.what());
     }
-
-    // IMAP closedown
-
-    CIMAP::closedown();
 
     exit(EXIT_SUCCESS);
 

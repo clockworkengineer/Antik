@@ -188,13 +188,6 @@ namespace Antik {
             //
 
             void setIOBufferSize(std::uint32_t bufferSize);
-            
-            //
-            // IMAP initialization and closedown processing
-            //
-
-            static void init(void);
-            static void closedown(void);
 
             // ================
             // PUBLIC VARIABLES
