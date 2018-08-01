@@ -78,30 +78,33 @@ namespace Antik {
         //
 
         void CSocket::connectionListener() {
-            
-            boost::asio::ip::tcp::acceptor acceptor(m_ioService, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 0));
-            
-            m_hostPort = std::to_string(acceptor.local_endpoint().port());
 
-            m_isListenThreadRunning = true;
-            
-            std::unique_ptr<SSLSocket> socket { new SSLSocket(m_ioService, *m_sslContext) };
-            if (!socket) {
-                m_isListenThreadRunning = false;
-                throw Exception("Could not create socket.");
-            }
+            try {
 
-            acceptor.accept(socket->next_layer(), m_socketError);
-            if (m_socketError) {
-                m_isListenThreadRunning = false;
-                throw Exception(m_socketError.message());
+                boost::asio::ip::tcp::acceptor acceptor(m_ioService, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 0));
+
+                m_hostPort = std::to_string(acceptor.local_endpoint().port());
+
+                m_isListenThreadRunning = true;
+
+                std::unique_ptr<SSLSocket> socket{ new SSLSocket(m_ioService, *m_sslContext)};
+                if (!socket) {
+                    throw std::runtime_error("Could not create socket.");
+                }
+
+                acceptor.accept(socket->next_layer(), m_socketError);
+                if (m_socketError) {
+                    throw std::runtime_error(m_socketError.message());
+                }
+
+                m_socket = std::move(socket);
+
+            } catch (const std::exception &e) {
+                m_thrownException = std::current_exception();
             }
-            
-            m_socket = std::move(socket);
 
             m_isListenThreadRunning = false;
-
-
+            
         }
 
         // ==============
@@ -116,20 +119,26 @@ namespace Antik {
 
         void CSocket::cleanup() {
 
-            if (m_isListenThreadRunning && m_socketListenThread) {
-                m_isListenThreadRunning = false;
-                try {
-                    boost::asio::ip::tcp::socket socket{ m_ioService};
-                    boost::asio::ip::tcp::resolver::query query(m_hostAddress, m_hostPort);
-                    boost::asio::connect(socket, m_ioQueryResolver.resolve(query));
-                    socket.close();
-                } catch (std::exception &e) {
-                    throw Exception("Could not wake listener thread with fake connect.");
-                }
-                m_socketListenThread->join();
-            }
+            try {
 
-            close();
+                if (m_isListenThreadRunning && m_socketListenThread) {
+                    m_isListenThreadRunning = false;
+                    try {
+                        boost::asio::ip::tcp::socket socket{ m_ioService};
+                        boost::asio::ip::tcp::resolver::query query(m_hostAddress, m_hostPort);
+                        boost::asio::connect(socket, m_ioQueryResolver.resolve(query));
+                        socket.close();
+                    } catch (std::exception &e) {
+                        throw std::runtime_error("Could not wake listener thread with fake connect.");
+                    }
+                    m_socketListenThread->join();
+                }
+
+                close();
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
+            }
 
         }
 
@@ -139,11 +148,21 @@ namespace Antik {
 
         void CSocket::listenForConnection() {
 
-            // Start connection listener thread and wait until its listening
-            
-            m_socketListenThread.reset(new std::thread(&CSocket::connectionListener, this));
-            while (!m_isListenThreadRunning) {
-                continue; 
+            try {
+
+                // Start connection listener thread and wait until its listening
+
+                m_socketListenThread.reset(new std::thread(&CSocket::connectionListener, this));
+                while (!m_isListenThreadRunning) {
+                    continue;
+                }
+                
+                if (m_thrownException) {
+                    std::rethrow_exception(m_thrownException); 
+                }
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
 
         }
@@ -154,15 +173,21 @@ namespace Antik {
 
         void CSocket::waitUntilConnected() {
 
-            // Listener thread is running (wait for it to finish)
+            try {
 
-            if (m_socketListenThread) {
-                m_socketListenThread->join();
+                // Listener thread is running (wait for it to finish)
+
+                if (m_socketListenThread) {
+                    m_socketListenThread->join();
+                }
+
+                // TLS handshake if SSL enabled
+
+                tlsHandshake();
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            // TLS handshake if SSL enabled
-
-            tlsHandshake();
 
         }
 
@@ -172,20 +197,26 @@ namespace Antik {
         //
 
         void CSocket::connect() {
-     
-            std::unique_ptr<SSLSocket> socket { new SSLSocket(m_ioService, *m_sslContext) };
-            if (!socket) {
-                throw Exception("Could not create socket.");
-            }
-            
-            boost::asio::ip::tcp::resolver::query query { m_hostAddress, m_hostPort };        
-            socket->next_layer().connect(*m_ioQueryResolver.resolve(query), m_socketError);
-            if (m_socketError) {
-                throw Exception(m_socketError.message());
-            }
-            
-            m_socket = std::move(socket);
 
+            try {
+
+                std::unique_ptr<SSLSocket> socket{ new SSLSocket(m_ioService, *m_sslContext)};
+                if (!socket) {
+                    throw std::logic_error("Could not create socket.");
+                }
+
+                boost::asio::ip::tcp::resolver::query query{ m_hostAddress, m_hostPort};
+                socket->next_layer().connect(*m_ioQueryResolver.resolve(query), m_socketError);
+                if (m_socketError) {
+                    throw std::runtime_error(m_socketError.message());
+                }
+
+                m_socket = std::move(socket);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
+            }
+            
         }
 
         //
@@ -194,29 +225,35 @@ namespace Antik {
 
         size_t CSocket::read(char *readBuffer, size_t bufferLength) {
 
-            size_t bytesRead { 0 };
-            
-            // No socket present
+            try {
 
-            if (!m_socket) {
-                throw Exception("No socket present.");
-            }
+                size_t bytesRead{ 0};
 
-            // Read data
-            
-            if (m_sslActive) {
-                bytesRead = m_socket->read_some(boost::asio::buffer(readBuffer, bufferLength), m_socketError);
-            } else {
-                bytesRead = m_socket->next_layer().read_some(boost::asio::buffer(readBuffer, bufferLength), m_socketError);
-            }
+                // No socket present
 
-            // Signal any non end of file  error
-            
-            if (m_socketError && m_socketError != boost::asio::error::eof) {
-                throw Exception(m_socketError.message());
+                if (!m_socket) {
+                    throw std::logic_error("No socket present.");
+                }
+
+                // Read data
+
+                if (m_sslActive) {
+                    bytesRead = m_socket->read_some(boost::asio::buffer(readBuffer, bufferLength), m_socketError);
+                } else {
+                    bytesRead = m_socket->next_layer().read_some(boost::asio::buffer(readBuffer, bufferLength), m_socketError);
+                }
+
+                // Signal any non end of file  error
+
+                if (m_socketError && m_socketError != boost::asio::error::eof) {
+                    throw std::runtime_error(m_socketError.message());
+                }
+
+                return (bytesRead);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-            
-            return(bytesRead);
             
         }
 
@@ -226,30 +263,36 @@ namespace Antik {
 
         size_t CSocket::write(const char *writeBuffer, size_t writeLength) {
 
-            size_t bytesWritten  { 0 };
+            try {
 
-            // No socket present
+                size_t bytesWritten{ 0};
 
-            if (!m_socket) {
-                throw Exception("No socket present.");
+                // No socket present
+
+                if (!m_socket) {
+                    throw std::logic_error("No socket present.");
+                }
+
+                // Write data
+
+                if (m_sslActive) {
+                    bytesWritten = m_socket->write_some(boost::asio::buffer(writeBuffer, writeLength), m_socketError);
+                } else {
+                    bytesWritten = m_socket->next_layer().write_some(boost::asio::buffer(writeBuffer, writeLength), m_socketError);
+                }
+
+                // Signal any non end of file error
+
+                if (m_socketError && m_socketError != boost::asio::error::eof) {
+                    throw std::runtime_error(m_socketError.message());
+                }
+
+                return (bytesWritten);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            // Write data
             
-            if (m_sslActive) {
-                bytesWritten = m_socket->write_some(boost::asio::buffer(writeBuffer, writeLength), m_socketError);
-            } else {
-                bytesWritten = m_socket->next_layer().write_some(boost::asio::buffer(writeBuffer, writeLength), m_socketError);
-            }
-
-            // Signal any non end of file error
-            
-            if (m_socketError && m_socketError != boost::asio::error::eof) {
-                throw Exception(m_socketError.message());
-            }
-
-            return (bytesWritten);
-
         }
 
         //
@@ -257,26 +300,32 @@ namespace Antik {
         //
 
         void CSocket::tlsHandshake() {
-            
-            // If SSL not enabled return
 
-            if (!m_sslEnabled) {
-                return;
-            }
-                       
-            // No socket present
+            try {
 
-            if (!m_socket) {
-                throw Exception("No socket present.");
+                // If SSL not enabled return
+
+                if (!m_sslEnabled) {
+                    return;
+                }
+
+                // No socket present
+
+                if (!m_socket) {
+                    throw std::logic_error("No socket present.");
+                }
+
+                m_socket->handshake(SSLSocket::client, m_socketError);
+                if (m_socketError) {
+                    throw std::runtime_error(m_socketError.message());
+                }
+
+                m_sslActive = true;
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
 
-            m_socket->handshake(SSLSocket::client, m_socketError);
-            if (m_socketError) {
-                throw Exception(m_socketError.message());
-            }
-            
-            m_sslActive = true;
-        
         }
 
         //
@@ -286,34 +335,40 @@ namespace Antik {
 
         void CSocket::close() {
 
-            std::unique_ptr<SSLSocket> socket{ std::move(m_socket)};
+            try {
 
-            // Socket exists and is open
-            
-            if (socket && socket->next_layer().is_open()) {
-            
-                // Shutdown TLS
-                
-                if (m_sslActive) {
-                    m_sslActive = false;
-                    socket->shutdown(m_socketError);
+                std::unique_ptr<SSLSocket> socket{ std::move(m_socket)};
+
+                // Socket exists and is open
+
+                if (socket && socket->next_layer().is_open()) {
+
+                    // Shutdown TLS
+
+                    if (m_sslActive) {
+                        m_sslActive = false;
+                        socket->shutdown(m_socketError);
+                    }
+
+                    // Close socket
+
+                    socket->next_layer().close(m_socketError);
+                    if (m_socketError) {
+                        throw std::runtime_error(m_socketError.message());
+                    }
+
                 }
-                
-                // Close socket
-                
-                socket->next_layer().close(m_socketError);
-                if (m_socketError) {
-                    throw Exception(m_socketError.message());
+
+                // Remove any listen thread
+
+                if (m_socketListenThread) {
+                    m_socketListenThread.reset();
                 }
 
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            // Remove any listen thread
             
-            if (m_socketListenThread) {
-                m_socketListenThread.reset();
-            }
-
         }
         
         //

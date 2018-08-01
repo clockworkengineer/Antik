@@ -192,6 +192,8 @@ namespace Antik {
             std::unique_ptr<boost::asio::ssl::context> m_sslContext { nullptr };   // SSL context (initialised in constructor).          
             std::unique_ptr<SSLSocket> m_socket { nullptr };                       // SSL socket allocated at run time 
 
+            std::exception_ptr m_thrownException { nullptr }; // Pointer to any exception thrown in connectionListener
+            
         };
 
         //
