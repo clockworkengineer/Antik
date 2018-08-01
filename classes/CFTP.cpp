@@ -93,8 +93,8 @@ namespace Antik {
                 m_dataChannelSocket.setHostAddress(passiveParams);
                 m_dataChannelSocket.setHostPort(std::to_string(port));
 
-            } catch (std::exception &e) {
-                throw CFTP::Exception(e.what());
+            } catch (const std::exception &e) {
+                throw;
             }
 
         }
@@ -116,8 +116,8 @@ namespace Antik {
                 }
                 portCommand += "," + std::to_string((port & 0xFF00) >> 8) + "," + std::to_string(port & 0xFF);
 
-            } catch (std::exception &e) {
-                throw CFTP::Exception(e.what());
+            } catch (const std::exception &e) {
+                throw;
             }
 
             return (portCommand);
@@ -249,10 +249,8 @@ namespace Antik {
 
                 }
 
-            } catch (CFTP::Exception &e) {
-                m_dataChannelSocket.cleanup();
-                throw;
-            } catch (std::exception &e) {
+
+            } catch (const std::exception &e) {
                 m_dataChannelSocket.cleanup();
                 throw;
             }
@@ -315,13 +313,13 @@ namespace Antik {
             } while ( (m_commandResponse[3] == '-') && (!m_controlChannelSocket.closedByRemotePeer()));
 
             if (m_controlChannelSocket.closedByRemotePeer()) {
-                throw Exception("Control channel connection closed by peer.");
+                throw std::runtime_error("Control channel connection closed by peer.");
             }
 
             try {
                 m_commandStatusCode = std::stoi(m_commandResponse);
-            } catch (...) {
-                throw Exception("Invalid FTP command response status code.");
+            } catch (const  std::exception &e) {
+                throw std::runtime_error("Invalid FTP command response status code.");
             }
 
         }
@@ -452,53 +450,60 @@ namespace Antik {
 
         std::uint16_t CFTP::connect(void) {
 
-            if (m_connected) {
-                Exception("Already connected to a server.");
-            }
+            try {
 
-            // Allocate IO Buffer
-            
-            m_ioBuffer.reset(new char[m_ioBufferSize]);
-            
-            m_dataChannelSocket.setHostAddress(Antik::Network::CSocket::localIPAddress());;
+                if (m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
 
-            m_controlChannelSocket.setHostAddress(m_serverName);
-            m_controlChannelSocket.setHostPort(m_serverPort);
-            m_controlChannelSocket.connect();
+                // Allocate IO Buffer
 
-            ftpResponse();
+                m_ioBuffer.reset(new char[m_ioBufferSize]);
 
-            if (m_commandStatusCode == 220) {
-                
-                // Fetch FTP server features list
-                
-                ftpServerFeatures();
+                m_dataChannelSocket.setHostAddress(Antik::Network::CSocket::localIPAddress());
+                ;
 
-                if (m_sslEnabled) {
-                    ftpCommand("AUTH TLS");
-                    if (m_commandStatusCode == 234) {
-                        m_controlChannelSocket.setSslEnabled(true);
-                        m_controlChannelSocket.tlsHandshake();
-                        m_dataChannelSocket.setSslEnabled(true);
-                        ftpCommand("PBSZ 0");
-                        if (m_commandStatusCode == 200) {
-                            ftpCommand("PROT P");
+                m_controlChannelSocket.setHostAddress(m_serverName);
+                m_controlChannelSocket.setHostPort(m_serverPort);
+                m_controlChannelSocket.connect();
+
+                ftpResponse();
+
+                if (m_commandStatusCode == 220) {
+
+                    // Fetch FTP server features list
+
+                    ftpServerFeatures();
+
+                    if (m_sslEnabled) {
+                        ftpCommand("AUTH TLS");
+                        if (m_commandStatusCode == 234) {
+                            m_controlChannelSocket.setSslEnabled(true);
+                            m_controlChannelSocket.tlsHandshake();
+                            m_dataChannelSocket.setSslEnabled(true);
+                            ftpCommand("PBSZ 0");
+                            if (m_commandStatusCode == 200) {
+                                ftpCommand("PROT P");
+                            }
                         }
+
+                    }
+
+                    m_connected = true;
+
+                    ftpCommand("USER " + m_userName);
+
+                    if (m_commandStatusCode == 331) {
+                        ftpCommand("PASS " + m_userPassword);
                     }
 
                 }
 
-                m_connected = true;
-                
-                ftpCommand("USER " + m_userName);
+                return (m_commandStatusCode);
 
-                if (m_commandStatusCode == 331) {
-                    ftpCommand("PASS " + m_userPassword);
-                }
-
+             } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            return (m_commandStatusCode);
 
         }
 
@@ -508,25 +513,31 @@ namespace Antik {
 
         std::uint16_t CFTP::disconnect(void) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
+            try {
+
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                ftpCommand("QUIT");
+
+                m_connected = false;
+
+                m_controlChannelSocket.close();
+
+                m_controlChannelSocket.setSslEnabled(false);
+                m_dataChannelSocket.setSslEnabled(false);
+
+                // Free IO Buffer
+
+                m_ioBuffer.reset();
+
+                return (m_commandStatusCode);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            ftpCommand("QUIT");
-
-            m_connected = false;
-
-            m_controlChannelSocket.close();
-
-            m_controlChannelSocket.setSslEnabled(false);
-            m_dataChannelSocket.setSslEnabled(false);
             
-            // Free IO Buffer
-            
-            m_ioBuffer.reset();
-
-            return (m_commandStatusCode);
-
         }
 
         //
@@ -546,25 +557,30 @@ namespace Antik {
 
         std::uint16_t CFTP::getFile(const std::string &remoteFilePath, const std::string &localFilePath) {
 
-            std::ofstream localFile{ localFilePath, std::ofstream::binary};
+            try {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
-            }
+                std::ofstream localFile{ localFilePath, std::ofstream::binary};
 
-            if (localFile) {
-                localFile.close();
-                if (sendTransferMode()) {
-                    ftpCommand("RETR " + remoteFilePath);
-                    transferOnDataChannel(localFilePath, DataTransferType::download);
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
                 }
-            } else {
-                m_commandStatusCode = 550;
-                throw Exception("Local file " + localFilePath + " could not be created.");
+
+                if (localFile) {
+                    localFile.close();
+                    if (sendTransferMode()) {
+                        ftpCommand("RETR " + remoteFilePath);
+                        transferOnDataChannel(localFilePath, DataTransferType::download);
+                    }
+                } else {
+                    m_commandStatusCode = 550;
+                    throw std::runtime_error("Local file " + localFilePath + " could not be created.");
+                }
+
+                return (m_commandStatusCode);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            return (m_commandStatusCode);
-
 
         }
 
@@ -574,25 +590,31 @@ namespace Antik {
 
         std::uint16_t CFTP::putFile(const std::string &remoteFilePath, const std::string &localFilePath) {
 
-            std::ifstream localFile{ localFilePath, std::ifstream::binary};
+            try {
+                
+                std::ifstream localFile{ localFilePath, std::ifstream::binary};
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
-            }
-
-            if (localFile) {
-                localFile.close();
-                if (sendTransferMode()) {
-                    ftpCommand("STOR " + remoteFilePath);
-                    transferOnDataChannel(localFilePath, DataTransferType::upload);
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
                 }
-            } else {
-                m_commandStatusCode = 550;
-                throw Exception("Local file " + localFilePath + " does not exist.");
+
+                if (localFile) {
+                    localFile.close();
+                    if (sendTransferMode()) {
+                        ftpCommand("STOR " + remoteFilePath);
+                        transferOnDataChannel(localFilePath, DataTransferType::upload);
+                    }
+                } else {
+                    m_commandStatusCode = 550;
+                    throw std::runtime_error("Local file " + localFilePath + " does not exist.");
+                }
+
+                return (m_commandStatusCode);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            return (m_commandStatusCode);
-
+            
         }
 
         //
@@ -602,19 +624,25 @@ namespace Antik {
 
         std::uint16_t CFTP::list(const std::string &directoryPath, std::string &listOutput) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
+            try {
+
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                listOutput.clear();
+
+                if (sendTransferMode()) {
+                    ftpCommand("LIST " + directoryPath);
+                    transferOnDataChannel(listOutput);
+                }
+
+                return (m_commandStatusCode);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            listOutput.clear();
-
-            if (sendTransferMode()) {
-                ftpCommand("LIST " + directoryPath);
-                transferOnDataChannel(listOutput);
-            }
-
-            return (m_commandStatusCode);
-
+            
         }
 
         //
@@ -624,29 +652,34 @@ namespace Antik {
 
         std::uint16_t CFTP::listFiles(const std::string &directoryPath, FileList &fileList) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
-            }
+            try {
 
-            fileList.clear();
-
-            if (sendTransferMode()) {
-                std::string listOutput;
-                ftpCommand("NLST " + directoryPath);
-                transferOnDataChannel(listOutput);
-                if (m_commandStatusCode == 226) {
-                    std::string file;
-                    std::istringstream listOutputStream{ listOutput};
-                    while (std::getline(listOutputStream, file, '\n')) {
-                        file.pop_back();
-                        fileList.push_back(file);
-                    }
-
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
                 }
+
+                fileList.clear();
+
+                if (sendTransferMode()) {
+                    std::string listOutput;
+                    ftpCommand("NLST " + directoryPath);
+                    transferOnDataChannel(listOutput);
+                    if (m_commandStatusCode == 226) {
+                        std::string file;
+                        std::istringstream listOutputStream{ listOutput};
+                        while (std::getline(listOutputStream, file, '\n')) {
+                            file.pop_back();
+                            fileList.push_back(file);
+                        }
+
+                    }
+                }
+
+                return (m_commandStatusCode);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            return (m_commandStatusCode);
-
 
         }
 
@@ -657,19 +690,24 @@ namespace Antik {
 
         std::uint16_t CFTP::listDirectory(const std::string &directoryPath, std::string &listOutput) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
+            try {
+
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                listOutput.clear();
+
+                if (sendTransferMode()) {
+                    ftpCommand("MLSD " + directoryPath);
+                    transferOnDataChannel(listOutput);
+                }
+
+                return (m_commandStatusCode);
+
+             } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            listOutput.clear();
-
-            if (sendTransferMode()) {
-                ftpCommand("MLSD " + directoryPath);
-                transferOnDataChannel(listOutput);
-            }
-
-            return (m_commandStatusCode);
-
 
         }
 
@@ -681,21 +719,26 @@ namespace Antik {
 
         std::uint16_t CFTP::listFile(const std::string &filePath, std::string &listOutput) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
+            try {
+
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                listOutput.clear();
+
+                ftpCommand("MLST " + filePath);
+
+                if (m_commandStatusCode == 250) {
+                    listOutput = m_commandResponse.substr(m_commandResponse.find('\n') + 1);
+                    listOutput = listOutput.substr(0, listOutput.find('\r'));
+                }
+
+                return (m_commandStatusCode);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            listOutput.clear();
-
-            ftpCommand("MLST " + filePath);
-
-            if (m_commandStatusCode == 250) {
-                listOutput = m_commandResponse.substr(m_commandResponse.find('\n') + 1);
-                listOutput = listOutput.substr(0, listOutput.find('\r'));
-            }
-
-            return (m_commandStatusCode);
-
 
         }
 
@@ -705,14 +748,20 @@ namespace Antik {
 
         std::uint16_t CFTP::makeDirectory(const std::string &directoryName) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
+            try {
+                
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                ftpCommand("MKD " + directoryName);
+
+                return (m_commandStatusCode);
+                
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            ftpCommand("MKD " + directoryName);
             
-            return (m_commandStatusCode);
-
         }
 
         //
@@ -721,14 +770,20 @@ namespace Antik {
 
         std::uint16_t CFTP::removeDirectory(const std::string &directoryName) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
+            try {
+                
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                ftpCommand("RMD " + directoryName);
+
+                return (m_commandStatusCode);
+                
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            ftpCommand("RMD " + directoryName);
             
-            return (m_commandStatusCode);
-
         }
 
         //
@@ -737,17 +792,23 @@ namespace Antik {
 
         std::uint16_t CFTP::fileSize(const std::string &fileName, size_t &fileSize) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
+            try {
+
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                ftpCommand("SIZE " + fileName);
+
+                if (m_commandStatusCode == 213) {
+                    fileSize = std::stoi(m_commandResponse.substr(m_commandResponse.find(' ') + 1));
+                }
+
+                return (m_commandStatusCode);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            ftpCommand("SIZE " + fileName);
-
-            if (m_commandStatusCode == 213) {
-                fileSize = std::stoi(m_commandResponse.substr(m_commandResponse.find(' ') + 1));
-            }
-
-            return (m_commandStatusCode);
 
         }
 
@@ -757,13 +818,19 @@ namespace Antik {
 
         std::uint16_t CFTP::deleteFile(const std::string &fileName) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
-            }
+            try {
 
-            ftpCommand("DELE " + fileName);
-            
-            return (m_commandStatusCode);
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                ftpCommand("DELE " + fileName);
+
+                return (m_commandStatusCode);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
+            }
 
         }
         
@@ -772,17 +839,23 @@ namespace Antik {
         //
 
         std::uint16_t CFTP::renameFile(const std::string &srcFileName, const std::string &dstFileName) {
-            
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
-            }
 
-            ftpCommand("RNFR " + srcFileName);
-            if (m_commandStatusCode == 350) {
-                ftpCommand("RNTO " + dstFileName);
-            }
+            try {
 
-            return (m_commandStatusCode);
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                ftpCommand("RNFR " + srcFileName);
+                if (m_commandStatusCode == 350) {
+                    ftpCommand("RNTO " + dstFileName);
+                }
+
+                return (m_commandStatusCode);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
+            }
 
         }
 
@@ -792,13 +865,19 @@ namespace Antik {
 
         std::uint16_t CFTP::changeWorkingDirectory(const std::string &workingDirectoryPath) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
-            }
+            try {
 
-            ftpCommand("CWD " + workingDirectoryPath);
-            
-            return (m_commandStatusCode);
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                ftpCommand("CWD " + workingDirectoryPath);
+
+                return (m_commandStatusCode);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
+            }
 
         }
 
@@ -808,21 +887,27 @@ namespace Antik {
 
         std::uint16_t CFTP::getCurrentWoringDirectory(std::string &currentWoringDirectoryPath) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
+            try {
+
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                currentWoringDirectoryPath.clear();
+
+                ftpCommand("PWD");
+
+                if (m_commandStatusCode == 257) {
+                    currentWoringDirectoryPath = m_commandResponse.substr(m_commandResponse.find_first_of('\"') + 1);
+                    currentWoringDirectoryPath = currentWoringDirectoryPath.substr(0, currentWoringDirectoryPath.find_first_of('\"'));
+                }
+
+                return (m_commandStatusCode);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            currentWoringDirectoryPath.clear();
-
-            ftpCommand("PWD");
-
-            if (m_commandStatusCode == 257) {
-                currentWoringDirectoryPath = m_commandResponse.substr(m_commandResponse.find_first_of('\"') + 1);
-                currentWoringDirectoryPath = currentWoringDirectoryPath.substr(0, currentWoringDirectoryPath.find_first_of('\"'));
-            }
-
-            return (m_commandStatusCode);
-
+            
         }
 
         //
@@ -831,23 +916,29 @@ namespace Antik {
 
         std::uint16_t CFTP::getModifiedDateTime(const std::string &filePath, DateTime &modifiedDateTime) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
+            try {
+
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                ftpCommand("MDTM " + filePath);
+
+                if (m_commandStatusCode == 213) {
+                    std::string dateTime = m_commandResponse.substr(m_commandResponse.find(' ') + 1);
+                    modifiedDateTime.year = std::stoi(dateTime.substr(0, 4));
+                    modifiedDateTime.month = std::stoi(dateTime.substr(4, 2));
+                    modifiedDateTime.day = std::stoi(dateTime.substr(6, 2));
+                    modifiedDateTime.hour = std::stoi(dateTime.substr(8, 2));
+                    modifiedDateTime.minute = std::stoi(dateTime.substr(10, 2));
+                    modifiedDateTime.second = std::stoi(dateTime.substr(12, 2));
+                }
+
+                return (m_commandStatusCode);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            ftpCommand("MDTM " + filePath);
-
-            if (m_commandStatusCode == 213) {
-                std::string dateTime = m_commandResponse.substr(m_commandResponse.find(' ') + 1);
-                modifiedDateTime.year = std::stoi(dateTime.substr(0, 4));
-                modifiedDateTime.month = std::stoi(dateTime.substr(4, 2));
-                modifiedDateTime.day = std::stoi(dateTime.substr(6, 2));
-                modifiedDateTime.hour = std::stoi(dateTime.substr(8, 2));
-                modifiedDateTime.minute = std::stoi(dateTime.substr(10, 2));
-                modifiedDateTime.second = std::stoi(dateTime.substr(12, 2));
-            }
-
-            return (m_commandStatusCode);
 
         }
 
@@ -857,36 +948,42 @@ namespace Antik {
 
         bool CFTP::isDirectory(const std::string &fileName) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
-            }
-
-            // Try MLST first then STAT
-            
-            ftpCommand("MLST " + fileName);          
-            
-            if (m_commandStatusCode == 250) {
+            try {
                 
-                size_t dirPosition = m_commandResponse.find("Type=dir;");
-                if (dirPosition != std::string::npos) {
-                    return (true);
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
                 }
-                
-            } else if (m_commandStatusCode == 500) {
 
-                ftpCommand("STAT " + fileName);
-                
-                if ((m_commandStatusCode == 213) || (m_commandStatusCode == 212)) {
-                    size_t dirPosition = m_commandResponse.find("\r\n") + 2;
-                    if ((dirPosition != std::string::npos) &&
-                            (m_commandResponse[dirPosition] == 'd')) {
+                // Try MLST first then STAT
+
+                ftpCommand("MLST " + fileName);
+
+                if (m_commandStatusCode == 250) {
+
+                    size_t dirPosition = m_commandResponse.find("Type=dir;");
+                    if (dirPosition != std::string::npos) {
                         return (true);
                     }
-                }
-                
-            }
 
-            return (false);
+                } else if (m_commandStatusCode == 500) {
+
+                    ftpCommand("STAT " + fileName);
+
+                    if ((m_commandStatusCode == 213) || (m_commandStatusCode == 212)) {
+                        size_t dirPosition = m_commandResponse.find("\r\n") + 2;
+                        if ((dirPosition != std::string::npos) &&
+                                (m_commandResponse[dirPosition] == 'd')) {
+                            return (true);
+                        }
+                    }
+
+                }
+
+                return (false);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
+            }
 
         }
         
@@ -896,35 +993,41 @@ namespace Antik {
 
         bool CFTP::fileExists(const std::string &fileName) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
-            }
+            try {
 
-            // Try MLST first then STAT
-            
-            ftpCommand("MLST " + fileName);
-
-            if (m_commandStatusCode == 250) {
-                return (true);
-
-            } else if (m_commandStatusCode == 500) {
-
-                ftpCommand("STAT " + fileName);
-
-                // If 212/213 returned check the response is not empty; if it is
-                // file does not exist.
-
-                if ((m_commandStatusCode == 213) || (m_commandStatusCode == 212)) {
-                    size_t statusCodePosition = m_commandResponse.find("\r\n") + 2;
-                    if ((statusCodePosition != std::string::npos) &&
-                            (m_commandResponse[statusCodePosition] != '2')) {
-                        return (true);
-                    }
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
                 }
 
-            }
+                // Try MLST first then STAT
 
-            return (false);
+                ftpCommand("MLST " + fileName);
+
+                if (m_commandStatusCode == 250) {
+                    return (true);
+
+                } else if (m_commandStatusCode == 500) {
+
+                    ftpCommand("STAT " + fileName);
+
+                    // If 212/213 returned check the response is not empty; if it is
+                    // file does not exist.
+
+                    if ((m_commandStatusCode == 213) || (m_commandStatusCode == 212)) {
+                        size_t statusCodePosition = m_commandResponse.find("\r\n") + 2;
+                        if ((statusCodePosition != std::string::npos) &&
+                                (m_commandResponse[statusCodePosition] != '2')) {
+                            return (true);
+                        }
+                    }
+
+                }
+
+                return (false);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
+            }
 
         }
 
@@ -934,14 +1037,20 @@ namespace Antik {
 
         std::uint16_t CFTP::cdUp() {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
+            try {
+                
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
+
+                ftpCommand("CDUP");
+
+                return (m_commandStatusCode);
+                
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
             }
-
-            ftpCommand("CDUP");
-             
-            return (m_commandStatusCode);
-
+            
         }
         
         //
@@ -950,20 +1059,26 @@ namespace Antik {
 
         void CFTP::setBinaryTransfer(bool binaryTransfer) {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
-            }
+            try {
 
-            if (binaryTransfer) {
-                ftpCommand("TYPE I");
-            } else {
-                ftpCommand("TYPE A");
-            }
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
 
-            if (m_commandStatusCode == 200) {
-                m_binaryTransfer = binaryTransfer;
-            }
+                if (binaryTransfer) {
+                    ftpCommand("TYPE I");
+                } else {
+                    ftpCommand("TYPE A");
+                }
 
+                if (m_commandStatusCode == 200) {
+                    m_binaryTransfer = binaryTransfer;
+                }
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
+            }
+            
         }
         
         bool CFTP::isBinaryTransfer() const {
@@ -977,15 +1092,21 @@ namespace Antik {
 
         std::vector<std::string> CFTP::getServerFeatures() {
 
-            if (!m_connected) {
-                throw Exception("Not connected to server.");
-            }
+            try {
 
-            if (m_serverFeatures.empty()) {
-                ftpServerFeatures();
-            }
+                if (!m_connected) {
+                    throw std::logic_error("Already connected to a server.");
+                }
 
-            return (m_serverFeatures);
+                if (m_serverFeatures.empty()) {
+                    ftpServerFeatures();
+                }
+
+                return (m_serverFeatures);
+
+            } catch (const std::exception &e) {
+                throw Exception(e.what());
+            }
 
         }
         

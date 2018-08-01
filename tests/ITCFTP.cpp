@@ -16,7 +16,9 @@
 // Description: Run a series of integration  tests on an FTP server using class CFTP.
 // This not only tests CFTP but the FTP servers (CogWheel, vsftp etc) response. The
 // of tests will grow over time and at the moment consist of both stress tests and
-// general tests such as file transfer.
+// general tests such as file transfer. 
+//
+// TODO: Convert to google test.
 // 
 // Dependencies: C11++, Classes (CFTP, CFile,).
 //               Linux, Boost C++ Libraries.

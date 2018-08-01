@@ -223,10 +223,6 @@ int main(int argc, char** argv) {
         
         fileWatcher.stopWatching();
         
-    } catch (const CApprise::Exception &e) {
-       exitWithError(fileWatcher, e.what());
-    } catch (const CFile::Exception & e) {
-        exitWithError(fileWatcher, e.what());
     } catch (const std::exception & e) {
         exitWithError(fileWatcher, e.what());
     }
