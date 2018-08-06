@@ -202,7 +202,7 @@ namespace Antik {
 
                 std::unique_ptr<SSLSocket> socket{ new SSLSocket(m_ioService, *m_sslContext)};
                 if (!socket) {
-                    throw std::logic_error("Could not create socket.");
+                    throw std::runtime_error("Could not create socket.");
                 }
 
                 boost::asio::ip::tcp::resolver::query query{ m_hostAddress, m_hostPort};
@@ -449,7 +449,6 @@ namespace Antik {
         std::string CSocket::getHostPort() const {
             return m_hostPort;
         }
-
 
     } // namespace Network
 } // namespace Antik
