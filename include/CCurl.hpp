@@ -62,18 +62,17 @@ namespace Antik {
 
             };
 
-            class OptionValue {
+            class IOptionValue {
             public:
                 virtual long getValue() = 0;
             };
             
             template <typename T>
-            class Parameter : public OptionValue {
+            class OptionValue : public IOptionValue {
             public:
-                Parameter(T value) : m_value{value}
+                OptionValue(T value) : m_value{value}
                 {
                 }
-
                 long getValue() override {
                     return (reinterpret_cast<long> (m_value));
                 }
@@ -81,12 +80,12 @@ namespace Antik {
                 T m_value;
             };
             
-            struct Options {
-                Options(CURLoption option, OptionValue* value) : m_option{option}, m_value{value}
+            struct OptionAndValue {
+                OptionAndValue(CURLoption option, IOptionValue* value) : m_option{option}, m_value{value}
                 {
                 }
                 CURLoption m_option;
-                std::shared_ptr<OptionValue> m_value;
+                std::shared_ptr<IOptionValue> m_value;
             };
 
             using StatusCode = CURLcode;
@@ -114,7 +113,8 @@ namespace Antik {
 
             void setErrorBuffer(size_t errorBufferSize);
 
-            void setOptions(std::vector<Options> &options);
+            void setOption(OptionAndValue &option);
+            void setOptions(std::vector<OptionAndValue> &options);   
 
             void transfer();
             

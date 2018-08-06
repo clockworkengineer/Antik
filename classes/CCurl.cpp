@@ -108,18 +108,22 @@ namespace Antik {
 
         }
 
-        void CCurl::setOptions(std::vector<Options> &options) {
-
-            for (auto &item : options) {
-                auto code = curl_easy_setopt(m_curlConnection, item.m_option, item.m_value->getValue());
-                if (code != CURLE_OK) {
-                    if (m_errorBuffer[0]) {
-                        throw Exception("Failed to set option." + m_errorBuffer);
-                    } else {
-                        throw Exception(std::string("Failed to set option.") + curl_easy_strerror(code) + ".");
-                    }
-
+        void CCurl::setOption(OptionAndValue &option) {
+            auto code = curl_easy_setopt(m_curlConnection, option.m_option, option.m_value->getValue());
+            if (code != CURLE_OK) {
+                if (m_errorBuffer[0]) {
+                    throw Exception("Failed to set option." + m_errorBuffer);
+                } else {
+                    throw Exception(std::string("Failed to set option.") + curl_easy_strerror(code) + ".");
                 }
+
+            }        
+        }
+        
+        void CCurl::setOptions(std::vector<OptionAndValue> &options) {
+
+            for (auto &option : options) {
+                setOption(option);
             }
 
         }
@@ -135,6 +139,7 @@ namespace Antik {
                     throw Exception(std::string("Connection transfer failed.") + curl_easy_strerror(code) + ".");
                 }
             }
+            
         }
 
     } //namespace Network
