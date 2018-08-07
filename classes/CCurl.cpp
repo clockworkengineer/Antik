@@ -113,7 +113,7 @@ namespace Antik {
         //
         
         void CCurl::setOption(const OptionAndValue &option) {
-            auto code = curl_easy_setopt(m_curlConnection, option.m_option, option.m_value->getValue());
+            auto code = curl_easy_setopt(m_curlConnection, option.m_option, option.m_value.getValue());
             if (code != CURLE_OK) {
                 if (m_errorBuffer[0]) {
                     throw Exception("Failed to set option." + m_errorBuffer);

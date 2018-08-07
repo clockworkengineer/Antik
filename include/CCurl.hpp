@@ -121,11 +121,10 @@ namespace Antik {
             };
             
             struct OptionAndValue {
-                OptionAndValue(CURLoption option, IOptionValue* value) : m_option{option}, m_value{value}
-                {
-                }
+                OptionAndValue(CURLoption option, IOptionValue &&value) : m_option{option}, m_value{value} {}
+                OptionAndValue(CURLoption option, IOptionValue &value) : m_option{option}, m_value{value} {}
                 CURLoption m_option;
-                std::shared_ptr<IOptionValue> m_value;
+                IOptionValue &m_value;
             };
 
             
