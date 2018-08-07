@@ -89,6 +89,7 @@ namespace Antik {
             };
 
             using StatusCode = CURLcode;
+            using Info = CURLINFO;
 
             // ============
             // CONSTRUCTORS
@@ -113,9 +114,11 @@ namespace Antik {
 
             void setErrorBuffer(size_t errorBufferSize);
 
-            void setOption(OptionAndValue &option);
-            void setOptions(std::vector<OptionAndValue> &options);   
+            void setOption(const OptionAndValue &option);
+            void setOptions(const std::vector<OptionAndValue> &options);   
 
+            template <typename T> T getInfo(const Info &info);
+            
             void transfer();
             
             static void globalCleanup() {  curl_global_cleanup(); }
@@ -152,6 +155,20 @@ namespace Antik {
             static bool m_globalInitialised;
 
         };
+
+        template <typename T>
+        T CCurl::getInfo(const Info &info) {
+            T infoValue;
+            auto code = curl_easy_getinfo(m_curlConnection, info, &infoValue);
+            if (code != CURLE_OK) {
+                if (m_errorBuffer[0]) {
+                    throw Exception("Failed to get information." + m_errorBuffer);
+                } else {
+                    throw Exception(std::string("Failed to get information.") + curl_easy_strerror(code) + ".");
+                }
+            }
+            return (infoValue);
+        }
 
     } // namespace Network
 } // namespace Antik

@@ -12,10 +12,10 @@
 //
 // Class: CCurl
 // 
-// Description:    Simple C++ wrapper class for libcurl.
+// Description:    Simple C++ wrapper class for the libcurl easy interface.
 //
 // Dependencies:   C11++     - Language standard features used.
-//                 libcurl   - Used to talk to SMTP server.
+//                 libcurl   - Used to talk to servers.
 //
 
 // =================
@@ -27,10 +27,6 @@
 // ====================
 // CLASS IMPLEMENTATION
 // ====================
-
-//
-// C++ STL
-//
 
 // =========
 // NAMESPACE
@@ -88,7 +84,7 @@ namespace Antik {
         }
 
         //
-        // Curl Destructor
+        // Curl Destructor.
         //
 
         CCurl::~CCurl() {
@@ -99,6 +95,10 @@ namespace Antik {
 
         }
 
+        //
+        // Set extended error message buffer.
+        //
+        
         void CCurl::setErrorBuffer(size_t errorBufferSize) {
             this->m_errorBuffer.resize(errorBufferSize);
             auto code = curl_easy_setopt(m_curlConnection, CURLOPT_ERRORBUFFER, m_errorBuffer.c_str());
@@ -108,7 +108,11 @@ namespace Antik {
 
         }
 
-        void CCurl::setOption(OptionAndValue &option) {
+        //
+        // Set a single libcurl connection option.
+        //
+        
+        void CCurl::setOption(const OptionAndValue &option) {
             auto code = curl_easy_setopt(m_curlConnection, option.m_option, option.m_value->getValue());
             if (code != CURLE_OK) {
                 if (m_errorBuffer[0]) {
@@ -117,17 +121,24 @@ namespace Antik {
                     throw Exception(std::string("Failed to set option.") + curl_easy_strerror(code) + ".");
                 }
 
-            }        
+            }
         }
-        
-        void CCurl::setOptions(std::vector<OptionAndValue> &options) {
 
+        //
+        // Set multiple libcurl connection options.
+        //
+        
+        void CCurl::setOptions(const std::vector<OptionAndValue> &options) {
             for (auto &option : options) {
                 setOption(option);
             }
 
         }
 
+        //
+        // Perform setup connection transfer.
+        //
+        
         void CCurl::transfer() {
 
             auto code = curl_easy_perform(m_curlConnection);
@@ -139,7 +150,7 @@ namespace Antik {
                     throw Exception(std::string("Connection transfer failed.") + curl_easy_strerror(code) + ".");
                 }
             }
-            
+
         }
 
     } //namespace Network
