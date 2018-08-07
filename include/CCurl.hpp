@@ -62,22 +62,59 @@ namespace Antik {
 
             };
 
+            //
+            // Option / value used in setOption(s).
+            //
+            
             class IOptionValue {
             public:
                 virtual long getValue() = 0;
             };
-            
+
             template <typename T>
             class OptionValue : public IOptionValue {
             public:
                 OptionValue(T value) : m_value{value}
                 {
                 }
+
                 long getValue() override {
                     return (reinterpret_cast<long> (m_value));
                 }
             private:
                 T m_value;
+            };
+            
+            //
+            // String list
+            //
+            
+            class StringList : public IOptionValue {
+            public:
+
+                StringList() {
+                }
+
+                ~StringList() {
+                    if (m_stringList) curl_slist_free_all(m_stringList);
+                    m_stringList = NULL;
+                }
+
+                long append(char *string) {
+                    m_stringList = curl_slist_append(m_stringList, string);
+                    if (m_stringList == NULL) {
+                        throw Exception("Failed to append to string list.");
+                    }
+                }
+
+                long getValiue() {
+                    return (reinterpret_cast<long> (m_stringList));
+                }
+
+            private:
+
+                struct curl_slist *m_stringList { NULL };
+                
             };
             
             struct OptionAndValue {
@@ -88,6 +125,11 @@ namespace Antik {
                 std::shared_ptr<IOptionValue> m_value;
             };
 
+            
+            //
+            // Curl return status code and get info.
+            //
+
             using StatusCode = CURLcode;
             using Info = CURLINFO;
 
@@ -96,7 +138,7 @@ namespace Antik {
             // ============
 
             //
-            // Main constructor
+            // Main constructor.
             //
 
             CCurl(void);
@@ -107,21 +149,42 @@ namespace Antik {
 
             virtual ~CCurl();
 
-
             // ==============
             // PUBLIC METHODS
             // ==============
 
+            //
+            // Set extended error buffer size.
+            //
+            
             void setErrorBuffer(size_t errorBufferSize);
 
+            //
+            // Set connection options.
+            //
+            
             void setOption(const OptionAndValue &option);
-            void setOptions(const std::vector<OptionAndValue> &options);   
+            void setOptions(const std::vector<OptionAndValue> &options);
 
+            //
+            // Get connection information.
+            //
+            
             template <typename T> T getInfo(const Info &info);
+
+            //
+            // Perform connection transfer.
+            //
             
             void transfer();
+
+            //
+            // Curl global closedown(cleanup).
+            //
             
-            static void globalCleanup() {  curl_global_cleanup(); }
+            static void globalCleanup() {
+                curl_global_cleanup();
+            }
 
             // ================
             // PUBLIC VARIABLES
@@ -149,13 +212,16 @@ namespace Antik {
             // PRIVATE VARIABLES
             // =================
 
-            std::string m_errorBuffer;
-            CURL *m_curlConnection;
-
-            static bool m_globalInitialised;
+            std::string m_errorBuffer;          // Extended error buffer
+            CURL *m_curlConnection;             // Curl connection
+            static bool m_globalInitialised;    // == true global intialisation performed.
 
         };
 
+        //
+        // Get connection information.
+        //
+        
         template <typename T>
         T CCurl::getInfo(const Info &info) {
             T infoValue;
