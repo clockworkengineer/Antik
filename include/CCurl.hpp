@@ -100,14 +100,17 @@ namespace Antik {
                     m_stringList = NULL;
                 }
 
-                long append(char *string) {
+                StringList(const StringList &other) = delete;
+                StringList(const StringList &&other) = delete;
+                
+                void append(const char *string) {
                     m_stringList = curl_slist_append(m_stringList, string);
                     if (m_stringList == NULL) {
                         throw Exception("Failed to append to string list.");
                     }
                 }
 
-                long getValiue() {
+                long getValue() override {
                     return (reinterpret_cast<long> (m_stringList));
                 }
 
