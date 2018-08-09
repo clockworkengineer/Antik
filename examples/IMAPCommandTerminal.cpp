@@ -425,14 +425,10 @@ int main(int argc, char** argv) {
 
         } while (true);
 
-        //
-        // Catch any errors
-        //    
-
-    } catch (const CIMAP::Exception &e) {
-        exitWithError(e.what());
-    } catch (const CFile::Exception & e) {
-        exitWithError(e.what());
+    //
+    // Catch any errors
+    //    
+ 
     } catch (const std::exception & e) {
         exitWithError(e.what());
     }

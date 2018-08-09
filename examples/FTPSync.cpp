@@ -326,14 +326,10 @@ int main(int argc, char** argv) {
 
         std::cout << "*** Files synchronized with server ***" << std::endl; 
               
-        //
-        // Catch any errors
-        //    
+    //
+    // Catch any errors
+    //    
 
-    } catch (CFTP::Exception &e) {
-        exitWithError(e.what());
-    } catch (const CFile::Exception &e) {
-        exitWithError(e.what());
     } catch (std::exception &e) {
         exitWithError(e.what());
     }

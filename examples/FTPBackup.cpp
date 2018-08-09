@@ -229,10 +229,6 @@ int main(int argc, char** argv) {
     // Catch any errors
     //    
 
-    } catch (const CFTP::Exception &e) {
-        exitWithError(e.what());
-    } catch (const CFile::Exception &e) {
-        exitWithError(e.what());
     } catch (const std::exception &e) {
         exitWithError(e.what());
     }

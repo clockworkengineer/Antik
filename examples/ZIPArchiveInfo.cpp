@@ -305,14 +305,10 @@ int main(int argc, char** argv) {
         }
 
 
-        //
-        // Catch any errors
-        //
+    //
+    // Catch any errors
+    //
 
-    } catch (const CZIPIO::Exception & e) {
-        exitWithError(e.what());
-    } catch (const CFile::Exception & e) {
-        exitWithError(e.what());
     } catch (const std::exception & e) {
         exitWithError(e.what());
     }

@@ -329,16 +329,10 @@ int main(int argc, char** argv) {
         imap.disconnect();
 
 
-        //
-        // Catch any errors
-        //    
+    //
+    // Catch any errors
+    //    
 
-    } catch (const CIMAP::Exception &e) {
-        exitWithError(e.what());
-    } catch (const CIMAPParse::Exception &e) {
-        exitWithError(e.what());
-    } catch (const CFile::Exception & e) {
-        exitWithError(e.what());
     } catch (const std::exception & e) {
         exitWithError(e.what());
     }

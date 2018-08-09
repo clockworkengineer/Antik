@@ -223,6 +223,10 @@ int main(int argc, char** argv) {
         
         fileWatcher.stopWatching();
         
+    //
+    // Catch any errors
+    //    
+        
     } catch (const std::exception & e) {
         exitWithError(fileWatcher, e.what());
     }
