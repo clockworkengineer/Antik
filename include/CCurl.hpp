@@ -63,77 +63,13 @@ namespace Antik {
             };
 
             //
-            // Option / value used in setOption(s).
-            //
-            
-            class IOptionValue {
-            public:
-                virtual long getValue() = 0;
-            };
-
-            template <typename T>
-            class OptionValue : public IOptionValue {
-            public:
-                OptionValue(T value) : m_value{value}
-                {
-                }
-
-                long getValue() override {
-                    return (reinterpret_cast<long> (m_value));
-                }
-            private:
-                T m_value;
-            };
-            
-            //
-            // String list
-            //
-            
-            class StringList : public IOptionValue {
-            public:
-
-                StringList() {
-                }
-
-                ~StringList() {
-                    if (m_stringList) curl_slist_free_all(m_stringList);
-                    m_stringList = NULL;
-                }
-
-                StringList(const StringList &other) = delete;
-                StringList(const StringList &&other) = delete;
-                
-                void append(const char *string) {
-                    m_stringList = curl_slist_append(m_stringList, string);
-                    if (m_stringList == NULL) {
-                        throw Exception("Failed to append to string list.");
-                    }
-                }
-
-                long getValue() override {
-                    return (reinterpret_cast<long> (m_stringList));
-                }
-
-            private:
-
-                struct curl_slist *m_stringList { NULL };
-                
-            };
-            
-            struct OptionAndValue {
-                OptionAndValue(CURLoption option, IOptionValue &&value) : m_option{option}, m_value{value} {}
-                OptionAndValue(CURLoption option, IOptionValue &value) : m_option{option}, m_value{value} {}
-                CURLoption m_option;
-                IOptionValue &m_value;
-            };
-
-            
-            //
-            // Curl return status code and get info.
+            // Curl return status code, get info, set option and string list.
             //
 
             using StatusCode = CURLcode;
             using Info = CURLINFO;
+            using Option = CURLoption;
+            using StringList = struct curl_slist *;
 
             // ============
             // CONSTRUCTORS
@@ -162,11 +98,10 @@ namespace Antik {
             void setErrorBuffer(size_t errorBufferSize);
 
             //
-            // Set connection options.
+            // Set connection option.
             //
             
-            void setOption(const OptionAndValue &option);
-            void setOptions(const std::vector<OptionAndValue> &options);
+            template <typename T> void setOption(const Option &option, T value);
 
             //
             // Get connection information.
@@ -188,6 +123,31 @@ namespace Antik {
                 curl_global_cleanup();
             }
 
+            //
+            // Append character string to string list.
+            //
+            
+            static StringList stringListAppend(const StringList &inStringList, const char *string) {
+
+                StringList outStringList = curl_slist_append(inStringList, string);
+                if (outStringList == NULL) {
+                    throw Exception("Failed to append to string list.");
+                }
+                return (outStringList);
+                
+            }
+            
+            //
+            // Free string list memory.
+            //
+            
+            static StringList stringListFree(const StringList &stringList) {
+
+                curl_slist_free_all(stringList);
+                
+            }
+            
+            
             // ================
             // PUBLIC VARIABLES
             // ================
@@ -220,6 +180,24 @@ namespace Antik {
 
         };
 
+        
+        //
+        // Set connection options
+        //
+        
+        template <typename T>
+        void CCurl::setOption(const Option &option, T value) {
+            auto code = curl_easy_setopt(m_curlConnection, option, value);
+            if (code != CURLE_OK) {
+                if (m_errorBuffer[0]) {
+                    throw Exception("Failed to set option." + m_errorBuffer);
+                } else {
+                    throw Exception(std::string("Failed to set option.") + curl_easy_strerror(code) + ".");
+                }
+            }
+            
+        }
+               
         //
         // Get connection information.
         //

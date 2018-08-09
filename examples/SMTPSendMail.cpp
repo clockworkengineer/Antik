@@ -113,8 +113,8 @@ static void addCommonOptions(po::options_description& commonOptions, ParamArgDat
             ("user,u", po::value<std::string>(&argData.userName)->required(), "Account username")
             ("password,p", po::value<std::string>(&argData.userPassword)->required(), "User password")
             ("recipients,r", po::value<std::string>(&argData.recipients)->required(), "Recipients list")
-            ("subject,s", po::value<std::string>(&argData.subject)->required(), "Email subject")
-            ("contents,c", po::value<std::string>(&argData.mailContentsFile)->required(), "File containing email contents")
+            ("subject,b", po::value<std::string>(&argData.subject)->required(), "Email subject")
+            ("contents,o", po::value<std::string>(&argData.mailContentsFile)->required(), "File containing email contents")
             ("attachments,a", po::value<std::string>(&argData.attachmentList)->required(), "File Attachments List");
 
 }
@@ -133,7 +133,7 @@ static void procCmdLine(int argc, char** argv, ParamArgData &argData) {
     po::options_description commandLine("Program Options");
     commandLine.add_options()
             ("help", "Print help messages")
-            ("config,c", po::value<std::string>(&argData.configFileName)->required(), "Config File Name");
+            ("config,c", po::value<std::string>(&argData.configFileName), "Config File Name");
 
     addCommonOptions(commandLine, argData);
 
@@ -245,14 +245,10 @@ int main(int argc, char** argv) {
         
         mail.postMail();
         
-        //
-        // Catch any errors
-        //    
+    //
+    // Catch any errors
+    //    
 
-    } catch (const CSMTP::Exception &e) {
-        exitWithError(e.what());
-    } catch (const CFile::Exception & e) {
-        exitWithError(e.what());
     } catch (const std::exception & e) {
         exitWithError(e.what());
     }

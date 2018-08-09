@@ -26,12 +26,13 @@
 //
 
 #include "CommonAntik.hpp"
+#include "CCurl.hpp"
 
 //
 // libcurl
 //
 
-#include <curl/curl.h>
+//#include <curl/curl.h>
 
 // =========
 // NAMESPACE
@@ -187,7 +188,7 @@ namespace Antik {
 
             // libcurl read callback for payload
 
-            static size_t payloadSource(void *ptr, size_t size, size_t nmemb, std::deque<std::string> *mailPayload);
+            static size_t payloadSource(char *ptr, size_t size, size_t nmemb, void *userData);
 
             // Date and time for email
 
@@ -218,11 +219,9 @@ namespace Antik {
 
             std::string m_mailCABundle; // Path to CA bundle (Untested at present)
 
-            CURL *m_curlHandle { nullptr }; // curl handle
-            struct curl_slist *m_curlRecipients { nullptr }; // curl email recipients list
-            CURLcode m_curlResult { CURLE_OK }; // curl status
-            char m_curlErrMsgBuffer[CURL_ERROR_SIZE] { }; // curl error string buffer  
-            static bool m_curlVerbosity; // curl verbosity setting
+            Antik::Network::CCurl m_connection;                           // Connection handle
+            Antik::Network::CCurl::StringList m_recipientsList { NULL };  // Email recipients list  
+            static bool m_curlVerbosity; // curl verbosity setting        // Curl verbosity flag.
 
             std::deque<std::string> m_mailPayload; // Email payload
 

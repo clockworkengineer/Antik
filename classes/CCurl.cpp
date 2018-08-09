@@ -23,6 +23,8 @@
 // =================
 
 #include "CCurl.hpp"
+#include <iostream>
+
 
 // ====================
 // CLASS IMPLEMENTATION
@@ -100,6 +102,7 @@ namespace Antik {
         //
         
         void CCurl::setErrorBuffer(size_t errorBufferSize) {
+            
             this->m_errorBuffer.resize(errorBufferSize);
             auto code = curl_easy_setopt(m_curlConnection, CURLOPT_ERRORBUFFER, m_errorBuffer.c_str());
             if (code != CURLE_OK) {
@@ -112,28 +115,17 @@ namespace Antik {
         // Set a single libcurl connection option.
         //
         
-        void CCurl::setOption(const OptionAndValue &option) {
-            auto code = curl_easy_setopt(m_curlConnection, option.m_option, option.m_value.getValue());
-            if (code != CURLE_OK) {
-                if (m_errorBuffer[0]) {
-                    throw Exception("Failed to set option." + m_errorBuffer);
-                } else {
-                    throw Exception(std::string("Failed to set option.") + curl_easy_strerror(code) + ".");
-                }
-
-            }
-        }
-
-        //
-        // Set multiple libcurl connection options.
-        //
-        
-        void CCurl::setOptions(const std::vector<OptionAndValue> &options) {
-            for (auto &option : options) {
-                setOption(option);
-            }
-
-        }
+//        void CCurl::setOption(const Option &option, IOptionValue &value) {
+//            auto code = curl_easy_setopt(m_curlConnection, option, value.getValue());
+//            if (code != CURLE_OK) {
+//                if (m_errorBuffer[0]) {
+//                    throw Exception("Failed to set option." + m_errorBuffer);
+//                } else {
+//                    throw Exception(std::string("Failed to set option.") + curl_easy_strerror(code) + ".");
+//                }
+//            }
+//            
+//        }
 
         //
         // Perform setup connection transfer.
