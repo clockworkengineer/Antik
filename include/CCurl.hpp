@@ -116,6 +116,12 @@ namespace Antik {
             void transfer();
 
             //
+            // Perform connection reset.
+            //
+            
+            void reset();
+
+            //
             // Curl global closedown(cleanup).
             //
             

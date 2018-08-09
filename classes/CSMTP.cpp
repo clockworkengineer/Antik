@@ -14,11 +14,11 @@
 // Class: CSMTP
 // 
 // Description: Class that enables an email to be setup and sent
-// to a specified address using the libcurl library. SSL is supported
+// to a specified address using the CCurl class. SSL is supported
 // and attached files in either 7bit or base64 encoded format.
 //
 // Dependencies:   C11++     - Language standard features used.
-//                 libcurl   - Used to talk to SMTP server.
+//                 CCUrl     - Used to talk to SMTP server.
 //
 
 // =================
