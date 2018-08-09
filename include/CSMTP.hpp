@@ -28,12 +28,6 @@
 #include "CommonAntik.hpp"
 #include "CCurl.hpp"
 
-//
-// libcurl
-//
-
-//#include <curl/curl.h>
-
 // =========
 // NAMESPACE
 // =========
