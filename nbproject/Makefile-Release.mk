@@ -111,127 +111,127 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libantik.a: ${OBJECTFILES}
 ${OBJECTDIR}/classes/CApprise.o: classes/CApprise.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CApprise.o classes/CApprise.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CApprise.o classes/CApprise.cpp
 
 ${OBJECTDIR}/classes/CCurl.o: classes/CCurl.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CCurl.o classes/CCurl.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CCurl.o classes/CCurl.cpp
 
 ${OBJECTDIR}/classes/CFTP.o: classes/CFTP.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CFTP.o classes/CFTP.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CFTP.o classes/CFTP.cpp
 
 ${OBJECTDIR}/classes/CFile.o: classes/CFile.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CFile.o classes/CFile.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CFile.o classes/CFile.cpp
 
 ${OBJECTDIR}/classes/CIMAP.o: classes/CIMAP.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CIMAP.o classes/CIMAP.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CIMAP.o classes/CIMAP.cpp
 
 ${OBJECTDIR}/classes/CIMAPBodyStruct.o: classes/CIMAPBodyStruct.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CIMAPBodyStruct.o classes/CIMAPBodyStruct.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CIMAPBodyStruct.o classes/CIMAPBodyStruct.cpp
 
 ${OBJECTDIR}/classes/CIMAPParse.o: classes/CIMAPParse.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CIMAPParse.o classes/CIMAPParse.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CIMAPParse.o classes/CIMAPParse.cpp
 
 ${OBJECTDIR}/classes/CMIME.o: classes/CMIME.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CMIME.o classes/CMIME.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CMIME.o classes/CMIME.cpp
 
 ${OBJECTDIR}/classes/CPath.o: classes/CPath.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CPath.o classes/CPath.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CPath.o classes/CPath.cpp
 
 ${OBJECTDIR}/classes/CRedirect.o: classes/CRedirect.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CRedirect.o classes/CRedirect.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CRedirect.o classes/CRedirect.cpp
 
 ${OBJECTDIR}/classes/CSCP.o: classes/CSCP.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSCP.o classes/CSCP.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSCP.o classes/CSCP.cpp
 
 ${OBJECTDIR}/classes/CSFTP.o: classes/CSFTP.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSFTP.o classes/CSFTP.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSFTP.o classes/CSFTP.cpp
 
 ${OBJECTDIR}/classes/CSMTP.o: classes/CSMTP.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSMTP.o classes/CSMTP.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSMTP.o classes/CSMTP.cpp
 
 ${OBJECTDIR}/classes/CSSHChannel.o: classes/CSSHChannel.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSSHChannel.o classes/CSSHChannel.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSSHChannel.o classes/CSSHChannel.cpp
 
 ${OBJECTDIR}/classes/CSSHSession.o: classes/CSSHSession.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSSHSession.o classes/CSSHSession.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSSHSession.o classes/CSSHSession.cpp
 
 ${OBJECTDIR}/classes/CSocket.o: classes/CSocket.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSocket.o classes/CSocket.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSocket.o classes/CSocket.cpp
 
 ${OBJECTDIR}/classes/CTask.o: classes/CTask.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CTask.o classes/CTask.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CTask.o classes/CTask.cpp
 
 ${OBJECTDIR}/classes/CZIP.o: classes/CZIP.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CZIP.o classes/CZIP.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CZIP.o classes/CZIP.cpp
 
 ${OBJECTDIR}/classes/CZIPIO.o: classes/CZIPIO.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CZIPIO.o classes/CZIPIO.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CZIPIO.o classes/CZIPIO.cpp
 
 ${OBJECTDIR}/classes/implementation/CFileEventNotifier.o: classes/implementation/CFileEventNotifier.cpp
 	${MKDIR} -p ${OBJECTDIR}/classes/implementation
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/implementation/CFileEventNotifier.o classes/implementation/CFileEventNotifier.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/implementation/CFileEventNotifier.o classes/implementation/CFileEventNotifier.cpp
 
 ${OBJECTDIR}/utility/FTPUtil.o: utility/FTPUtil.cpp
 	${MKDIR} -p ${OBJECTDIR}/utility
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/FTPUtil.o utility/FTPUtil.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/FTPUtil.o utility/FTPUtil.cpp
 
 ${OBJECTDIR}/utility/SCPUtil.o: utility/SCPUtil.cpp
 	${MKDIR} -p ${OBJECTDIR}/utility
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SCPUtil.o utility/SCPUtil.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SCPUtil.o utility/SCPUtil.cpp
 
 ${OBJECTDIR}/utility/SFTPUtil.o: utility/SFTPUtil.cpp
 	${MKDIR} -p ${OBJECTDIR}/utility
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SFTPUtil.o utility/SFTPUtil.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SFTPUtil.o utility/SFTPUtil.cpp
 
 ${OBJECTDIR}/utility/SSHChannelUtil.o: utility/SSHChannelUtil.cpp
 	${MKDIR} -p ${OBJECTDIR}/utility
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SSHChannelUtil.o utility/SSHChannelUtil.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SSHChannelUtil.o utility/SSHChannelUtil.cpp
 
 ${OBJECTDIR}/utility/SSHSessionUtil.o: utility/SSHSessionUtil.cpp
 	${MKDIR} -p ${OBJECTDIR}/utility
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SSHSessionUtil.o utility/SSHSessionUtil.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SSHSessionUtil.o utility/SSHSessionUtil.cpp
 
 # Subprojects
 .build-subprojects:
@@ -268,37 +268,37 @@ ${TESTDIR}/TestFiles/f6: ${TESTDIR}/tests/UTCTask.o ${OBJECTFILES:%.o=%_nomain.o
 ${TESTDIR}/tests/ITCApprise.o: tests/ITCApprise.cpp 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/ITCApprise.o tests/ITCApprise.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/ITCApprise.o tests/ITCApprise.cpp
 
 
 ${TESTDIR}/tests/UTCFile.o: tests/UTCFile.cpp 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCFile.o tests/UTCFile.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCFile.o tests/UTCFile.cpp
 
 
 ${TESTDIR}/tests/UTCIMAPParse.o: tests/UTCIMAPParse.cpp 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCIMAPParse.o tests/UTCIMAPParse.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCIMAPParse.o tests/UTCIMAPParse.cpp
 
 
 ${TESTDIR}/tests/UTCPath.o: tests/UTCPath.cpp 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCPath.o tests/UTCPath.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCPath.o tests/UTCPath.cpp
 
 
 ${TESTDIR}/tests/UTCSMTP.o: tests/UTCSMTP.cpp 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCSMTP.o tests/UTCSMTP.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCSMTP.o tests/UTCSMTP.cpp
 
 
 ${TESTDIR}/tests/UTCTask.o: tests/UTCTask.cpp 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCTask.o tests/UTCTask.cpp
+	$(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCTask.o tests/UTCTask.cpp
 
 
 ${OBJECTDIR}/classes/CApprise_nomain.o: ${OBJECTDIR}/classes/CApprise.o classes/CApprise.cpp 
@@ -309,7 +309,7 @@ ${OBJECTDIR}/classes/CApprise_nomain.o: ${OBJECTDIR}/classes/CApprise.o classes/
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CApprise_nomain.o classes/CApprise.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CApprise_nomain.o classes/CApprise.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CApprise.o ${OBJECTDIR}/classes/CApprise_nomain.o;\
 	fi
@@ -322,7 +322,7 @@ ${OBJECTDIR}/classes/CCurl_nomain.o: ${OBJECTDIR}/classes/CCurl.o classes/CCurl.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CCurl_nomain.o classes/CCurl.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CCurl_nomain.o classes/CCurl.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CCurl.o ${OBJECTDIR}/classes/CCurl_nomain.o;\
 	fi
@@ -335,7 +335,7 @@ ${OBJECTDIR}/classes/CFTP_nomain.o: ${OBJECTDIR}/classes/CFTP.o classes/CFTP.cpp
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CFTP_nomain.o classes/CFTP.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CFTP_nomain.o classes/CFTP.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CFTP.o ${OBJECTDIR}/classes/CFTP_nomain.o;\
 	fi
@@ -348,7 +348,7 @@ ${OBJECTDIR}/classes/CFile_nomain.o: ${OBJECTDIR}/classes/CFile.o classes/CFile.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CFile_nomain.o classes/CFile.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CFile_nomain.o classes/CFile.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CFile.o ${OBJECTDIR}/classes/CFile_nomain.o;\
 	fi
@@ -361,7 +361,7 @@ ${OBJECTDIR}/classes/CIMAP_nomain.o: ${OBJECTDIR}/classes/CIMAP.o classes/CIMAP.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CIMAP_nomain.o classes/CIMAP.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CIMAP_nomain.o classes/CIMAP.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CIMAP.o ${OBJECTDIR}/classes/CIMAP_nomain.o;\
 	fi
@@ -374,7 +374,7 @@ ${OBJECTDIR}/classes/CIMAPBodyStruct_nomain.o: ${OBJECTDIR}/classes/CIMAPBodyStr
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CIMAPBodyStruct_nomain.o classes/CIMAPBodyStruct.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CIMAPBodyStruct_nomain.o classes/CIMAPBodyStruct.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CIMAPBodyStruct.o ${OBJECTDIR}/classes/CIMAPBodyStruct_nomain.o;\
 	fi
@@ -387,7 +387,7 @@ ${OBJECTDIR}/classes/CIMAPParse_nomain.o: ${OBJECTDIR}/classes/CIMAPParse.o clas
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CIMAPParse_nomain.o classes/CIMAPParse.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CIMAPParse_nomain.o classes/CIMAPParse.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CIMAPParse.o ${OBJECTDIR}/classes/CIMAPParse_nomain.o;\
 	fi
@@ -400,7 +400,7 @@ ${OBJECTDIR}/classes/CMIME_nomain.o: ${OBJECTDIR}/classes/CMIME.o classes/CMIME.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CMIME_nomain.o classes/CMIME.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CMIME_nomain.o classes/CMIME.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CMIME.o ${OBJECTDIR}/classes/CMIME_nomain.o;\
 	fi
@@ -413,7 +413,7 @@ ${OBJECTDIR}/classes/CPath_nomain.o: ${OBJECTDIR}/classes/CPath.o classes/CPath.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CPath_nomain.o classes/CPath.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CPath_nomain.o classes/CPath.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CPath.o ${OBJECTDIR}/classes/CPath_nomain.o;\
 	fi
@@ -426,7 +426,7 @@ ${OBJECTDIR}/classes/CRedirect_nomain.o: ${OBJECTDIR}/classes/CRedirect.o classe
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CRedirect_nomain.o classes/CRedirect.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CRedirect_nomain.o classes/CRedirect.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CRedirect.o ${OBJECTDIR}/classes/CRedirect_nomain.o;\
 	fi
@@ -439,7 +439,7 @@ ${OBJECTDIR}/classes/CSCP_nomain.o: ${OBJECTDIR}/classes/CSCP.o classes/CSCP.cpp
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSCP_nomain.o classes/CSCP.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSCP_nomain.o classes/CSCP.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CSCP.o ${OBJECTDIR}/classes/CSCP_nomain.o;\
 	fi
@@ -452,7 +452,7 @@ ${OBJECTDIR}/classes/CSFTP_nomain.o: ${OBJECTDIR}/classes/CSFTP.o classes/CSFTP.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSFTP_nomain.o classes/CSFTP.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSFTP_nomain.o classes/CSFTP.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CSFTP.o ${OBJECTDIR}/classes/CSFTP_nomain.o;\
 	fi
@@ -465,7 +465,7 @@ ${OBJECTDIR}/classes/CSMTP_nomain.o: ${OBJECTDIR}/classes/CSMTP.o classes/CSMTP.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSMTP_nomain.o classes/CSMTP.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSMTP_nomain.o classes/CSMTP.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CSMTP.o ${OBJECTDIR}/classes/CSMTP_nomain.o;\
 	fi
@@ -478,7 +478,7 @@ ${OBJECTDIR}/classes/CSSHChannel_nomain.o: ${OBJECTDIR}/classes/CSSHChannel.o cl
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSSHChannel_nomain.o classes/CSSHChannel.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSSHChannel_nomain.o classes/CSSHChannel.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CSSHChannel.o ${OBJECTDIR}/classes/CSSHChannel_nomain.o;\
 	fi
@@ -491,7 +491,7 @@ ${OBJECTDIR}/classes/CSSHSession_nomain.o: ${OBJECTDIR}/classes/CSSHSession.o cl
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSSHSession_nomain.o classes/CSSHSession.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSSHSession_nomain.o classes/CSSHSession.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CSSHSession.o ${OBJECTDIR}/classes/CSSHSession_nomain.o;\
 	fi
@@ -504,7 +504,7 @@ ${OBJECTDIR}/classes/CSocket_nomain.o: ${OBJECTDIR}/classes/CSocket.o classes/CS
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSocket_nomain.o classes/CSocket.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CSocket_nomain.o classes/CSocket.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CSocket.o ${OBJECTDIR}/classes/CSocket_nomain.o;\
 	fi
@@ -517,7 +517,7 @@ ${OBJECTDIR}/classes/CTask_nomain.o: ${OBJECTDIR}/classes/CTask.o classes/CTask.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CTask_nomain.o classes/CTask.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CTask_nomain.o classes/CTask.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CTask.o ${OBJECTDIR}/classes/CTask_nomain.o;\
 	fi
@@ -530,7 +530,7 @@ ${OBJECTDIR}/classes/CZIP_nomain.o: ${OBJECTDIR}/classes/CZIP.o classes/CZIP.cpp
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CZIP_nomain.o classes/CZIP.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CZIP_nomain.o classes/CZIP.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CZIP.o ${OBJECTDIR}/classes/CZIP_nomain.o;\
 	fi
@@ -543,7 +543,7 @@ ${OBJECTDIR}/classes/CZIPIO_nomain.o: ${OBJECTDIR}/classes/CZIPIO.o classes/CZIP
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CZIPIO_nomain.o classes/CZIPIO.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/CZIPIO_nomain.o classes/CZIPIO.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/CZIPIO.o ${OBJECTDIR}/classes/CZIPIO_nomain.o;\
 	fi
@@ -556,7 +556,7 @@ ${OBJECTDIR}/classes/implementation/CFileEventNotifier_nomain.o: ${OBJECTDIR}/cl
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/implementation/CFileEventNotifier_nomain.o classes/implementation/CFileEventNotifier.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/classes/implementation/CFileEventNotifier_nomain.o classes/implementation/CFileEventNotifier.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/classes/implementation/CFileEventNotifier.o ${OBJECTDIR}/classes/implementation/CFileEventNotifier_nomain.o;\
 	fi
@@ -569,7 +569,7 @@ ${OBJECTDIR}/utility/FTPUtil_nomain.o: ${OBJECTDIR}/utility/FTPUtil.o utility/FT
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/FTPUtil_nomain.o utility/FTPUtil.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/FTPUtil_nomain.o utility/FTPUtil.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/utility/FTPUtil.o ${OBJECTDIR}/utility/FTPUtil_nomain.o;\
 	fi
@@ -582,7 +582,7 @@ ${OBJECTDIR}/utility/SCPUtil_nomain.o: ${OBJECTDIR}/utility/SCPUtil.o utility/SC
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SCPUtil_nomain.o utility/SCPUtil.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SCPUtil_nomain.o utility/SCPUtil.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/utility/SCPUtil.o ${OBJECTDIR}/utility/SCPUtil_nomain.o;\
 	fi
@@ -595,7 +595,7 @@ ${OBJECTDIR}/utility/SFTPUtil_nomain.o: ${OBJECTDIR}/utility/SFTPUtil.o utility/
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SFTPUtil_nomain.o utility/SFTPUtil.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SFTPUtil_nomain.o utility/SFTPUtil.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/utility/SFTPUtil.o ${OBJECTDIR}/utility/SFTPUtil_nomain.o;\
 	fi
@@ -608,7 +608,7 @@ ${OBJECTDIR}/utility/SSHChannelUtil_nomain.o: ${OBJECTDIR}/utility/SSHChannelUti
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SSHChannelUtil_nomain.o utility/SSHChannelUtil.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SSHChannelUtil_nomain.o utility/SSHChannelUtil.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/utility/SSHChannelUtil.o ${OBJECTDIR}/utility/SSHChannelUtil_nomain.o;\
 	fi
@@ -621,7 +621,7 @@ ${OBJECTDIR}/utility/SSHSessionUtil_nomain.o: ${OBJECTDIR}/utility/SSHSessionUti
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SSHSessionUtil_nomain.o utility/SSHSessionUtil.cpp;\
+	    $(COMPILE.cc) -O2 -Iinclude -Iclasses/implementation -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/utility/SSHSessionUtil_nomain.o utility/SSHSessionUtil.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/utility/SSHSessionUtil.o ${OBJECTDIR}/utility/SSHSessionUtil_nomain.o;\
 	fi
