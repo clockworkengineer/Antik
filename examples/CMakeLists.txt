@@ -1,25 +1,28 @@
 cmake_minimum_required(VERSION 3.10.2)
 
-set(PROGRAM_NAME "pendulum")
+set(PROGRAM_NAME "Examples")
 set(PROGRAM_VERSION 0.1.0)
 
-project(${PROGRAM_NAME} VERSION ${PROGRAM_VERSION} DESCRIPTION "E-mail Archive Program")
+project(${PROGRAM_NAME} VERSION ${PROGRAM_VERSION} DESCRIPTION "Antik C++ Library Example Programs")
 
 # Build Antik library
 
-add_subdirectory(../Antik antik)
+add_subdirectory(../ antik)
 
-# Pendulum sources and includes
+# Get example program list
 
-file(GLOB PROGRAM_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-file(GLOB PROGRAM_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp" )
+file( GLOB EXAMPLE_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" )
 
-# Pendulum target
+# Build each program
 
-add_executable(${PROGRAM_NAME} ${PROGRAM_SOURCES} )
-target_include_directories(${PROGRAM_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(${PROGRAM_NAME} antik)
+foreach( exampleprogram ${EXAMPLE_SOURCES} )
+    # I used a simple string replace, to cut off .cpp.
+    string( REPLACE ".cpp" "" exampletarget ${exampleprogram} )
+    add_executable( ${exampletarget} ${exampleprogram} )
+    # Make sure antik is linked to each program
+    target_link_libraries( ${exampletarget} antik )
+    install(TARGETS ${exampletarget} DESTINATION bin)
+endforeach( exampleprogram ${EXAMPLE_SOURCES} )
 
-# Install Pendulum
 
-install(TARGETS ${PROGRAM_NAME} DESTINATION bin)
+
