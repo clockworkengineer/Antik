@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.10.2)
 
-set(PROGRAM_NAME "Examples")
-set(PROGRAM_VERSION 0.1.0)
-
-project(${PROGRAM_NAME} VERSION ${PROGRAM_VERSION} DESCRIPTION "Antik C++ Library Example Programs")
+project("Examples" VERSION 0.1.0 DESCRIPTION "Antik C++ Library Example Programs")
 
 # Build Antik library
 
@@ -15,14 +12,12 @@ file( GLOB EXAMPLE_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT
 
 # Build each program
 
-foreach( exampleprogram ${EXAMPLE_SOURCES} )
-    # I used a simple string replace, to cut off .cpp.
-    string( REPLACE ".cpp" "" exampletarget ${exampleprogram} )
-    add_executable( ${exampletarget} ${exampleprogram} )
-    # Make sure antik is linked to each program
-    target_link_libraries( ${exampletarget} antik )
-    install(TARGETS ${exampletarget} DESTINATION bin)
-endforeach( exampleprogram ${EXAMPLE_SOURCES} )
+foreach( EXAMPLE_PROGRAM ${EXAMPLE_SOURCES} )
+    string( REPLACE ".cpp" "" EXAMPLE_TARGET ${EXAMPLE_PROGRAM} )
+    add_executable( ${EXAMPLE_TARGET} ${EXAMPLE_PROGRAM} )
+    target_link_libraries( ${EXAMPLE_TARGET} antik )
+    install(TARGETS ${EXAMPLE_TARGET} DESTINATION bin)
+endforeach( EXAMPLE_PROGRAM ${EXAMPLE_SOURCES} )
 
 
 

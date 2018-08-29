@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.10.2)
 
-set(LIBRARY_NAME "antik")
-set(LIBRARY_VERSION 0.1.0)
-
-project(${LIBRARY_NAME} VERSION ${LIBRARY_VERSION} DESCRIPTION "Antik C++ Static Library")
+project("antik" VERSION 0.1.0 DESCRIPTION "Antik C++ Static Library")
 
 # Add Boost, threads, curl, libssh, openssl, zlib libraries
 
@@ -35,6 +32,6 @@ add_library(${PROJECT_NAME} STATIC ${ANTIK_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/classes/implementation)
 target_link_libraries(${PROJECT_NAME} Boost::program_options Boost::filesystem Threads::Threads curl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_LIBRARIES} ssh ssh_threads)
 
-#install(TARGETS ${LIBRARY_NAME} DESTINATION ${LIBRARY_NAME}/lib)
-#install(FILES ${ANTIK_INCLUDES} DESTINATION ${LIBRARY_NAME}/include)
+#install(TARGETS ${PROJECT_NAME} DESTINATION ${PROJECT_NAME}/lib)
+#install(FILES ${ANTIK_INCLUDES} DESTINATION ${PROJECT_NAME}/include)
 
