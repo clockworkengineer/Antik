@@ -267,7 +267,7 @@ namespace Antik {
             // Set IO buffer parameters.
             //
             
-            std::shared_ptr<char> getIoBuffer();
+            std::shared_ptr<char[]> getIoBuffer();
             void setIoBufferSize(std::uint32_t ioBufferSize);
             std::uint32_t getIoBufferSize() const;
 
@@ -310,7 +310,7 @@ namespace Antik {
 
             sftp_session m_sftp;            // libssh sftp structure.
             
-            std::shared_ptr<char> m_ioBuffer { nullptr };  // IO buffer
+            std::shared_ptr<char[]> m_ioBuffer { nullptr };  // IO buffer
             std::uint32_t m_ioBufferSize     { 32*1024 };  // IO buffer size
 
         };

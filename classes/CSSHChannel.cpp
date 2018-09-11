@@ -378,7 +378,7 @@ namespace Antik {
         // Set/Get IO buffer parameters.
         //
 
-        std::shared_ptr<char> CSSHChannel::getIoBuffer() {
+        std::shared_ptr<char[]> CSSHChannel::getIoBuffer() {
                    
             if (!m_ioBuffer) {
                 setIoBufferSize(m_ioBufferSize);

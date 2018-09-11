@@ -249,7 +249,7 @@ namespace Antik {
             
             Antik::Network::CSocket m_imapSocket;   // IMAP CSocket
             
-            std::unique_ptr<char> m_ioBuffer;                       // I/O Buffer
+            std::unique_ptr<char[]> m_ioBuffer { nullptr };         // I/O Buffer
             std::uint32_t m_ioBufferSize { kIODefaultBufferSize };  // I/O Buffer Size
 
             std::string m_commandResponse; // IMAP command response

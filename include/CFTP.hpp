@@ -300,7 +300,7 @@ namespace Antik {
             
             bool m_passiveMode { false }; // == true passive mode enabled, == false active mode
 
-            std::unique_ptr<char> m_ioBuffer { nullptr };  // io Buffer
+            std::unique_ptr<char[]> m_ioBuffer { nullptr };  // I/O Buffer
             std::uint32_t m_ioBufferSize     { 64*1024 };
 
             Antik::Network::CSocket m_controlChannelSocket;

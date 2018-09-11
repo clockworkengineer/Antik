@@ -310,7 +310,7 @@ namespace Antik {
         // Set/Get IO buffer parameters.
         //
 
-        std::shared_ptr<char> CSCP::getIoBuffer() {
+        std::shared_ptr<char[]> CSCP::getIoBuffer() {
             
             if (!m_ioBuffer) {
                 setIoBufferSize(m_ioBufferSize);

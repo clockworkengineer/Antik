@@ -663,7 +663,7 @@ namespace Antik {
         // Set/Get IO buffer parameters.
         //
 
-        std::shared_ptr<char> CSFTP::getIoBuffer() {
+        std::shared_ptr<char[]> CSFTP::getIoBuffer() {
             
             if (!m_ioBuffer) {
                 setIoBufferSize(m_ioBufferSize);

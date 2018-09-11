@@ -279,10 +279,6 @@ namespace Antik {
                     throw std::logic_error("Already connected to a server.");
                 }
 
-                // Allocate IO Buffer
-
-                m_ioBuffer.reset(new char[m_ioBufferSize]);
-
                 // Specify TLS version 1.2
 
                 m_imapSocket.setTLSVersion(Antik::Network::CSocket::TLSVerion::v1_2);
@@ -293,6 +289,10 @@ namespace Antik {
                 m_imapSocket.setSslEnabled(true);
                 m_imapSocket.tlsHandshake();
                 m_connected = true;
+                
+                // Allocate IO Buffer
+
+                m_ioBuffer.reset(new char[m_ioBufferSize]);
 
                 // Login using set credentials
 
