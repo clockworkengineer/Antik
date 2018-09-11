@@ -74,7 +74,6 @@ namespace Antik {
 
         bool ServerVerificationContext::serverFoundOther() {
             if (m_contextData) {
-                CSSHSession * sshSession{ static_cast<CSSHSession *> (m_contextData)};
                 std::cerr << "The host key for this server was not found but an other type of key exists.\n";
                 std::cerr << "An attacker might change the default server key to confuse your client into ";
                 std::cerr << "thinking the key does not exist" << std::endl;
@@ -84,7 +83,6 @@ namespace Antik {
 
         bool ServerVerificationContext::serverFileNotFound(std::vector<unsigned char> &keyHash) {
             if (m_contextData) {
-                CSSHSession * sshSession{ static_cast<CSSHSession *> (m_contextData)};
                 std::cerr << "Could not find known host file.\n";
                 std::cerr << "If you accept the host key here, the file will be automatically created." << std::endl;
             }

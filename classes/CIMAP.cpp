@@ -82,7 +82,7 @@ namespace Antik {
 
         void CIMAP::sendIMAPCommand(const std::string& command) {
 
-            int bytesCopied { 0 };
+            std::size_t bytesCopied { 0 };
 
             do {
                 bytesCopied += m_imapSocket.write(&command[bytesCopied], command.length() - bytesCopied);

@@ -310,7 +310,7 @@ namespace Antik {
                 buffptr = getField(entry.externalFileAttrib, buffptr);
                 buffptr = getField(entry.fileHeaderOffset, buffptr);
 
-                if ((entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength) > buffer.size()) {
+                if (static_cast<size_t>(entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength) > buffer.size()) {
                     buffer.resize(entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
                 }
 

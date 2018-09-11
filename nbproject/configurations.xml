@@ -125,6 +125,7 @@
             <pElem>include</pElem>
             <pElem>classes/implementation</pElem>
           </incDir>
+          <commandLine>-Wall -Werror</commandLine>
         </ccTool>
         <archiverTool>
         </archiverTool>

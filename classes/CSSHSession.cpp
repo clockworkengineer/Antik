@@ -325,7 +325,7 @@ namespace Antik {
             Key serverPublicKey;
             ssh_key key;
             
-            if (ssh_get_publickey(m_session, &key)!=SSH_OK) {
+            if (ssh_get_server_publickey(m_session, &key)!=SSH_OK) {
                 return (serverPublicKey);
             }
             

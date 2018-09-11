@@ -147,7 +147,7 @@ namespace Antik {
             // Free string list memory.
             //
             
-            static StringList stringListFree(const StringList &stringList) {
+            static void stringListFree(const StringList &stringList) {
 
                 curl_slist_free_all(stringList);
                 

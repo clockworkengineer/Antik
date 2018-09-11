@@ -93,7 +93,7 @@ namespace Antik {
 
                     if (!terminalBuffer.empty()) {
                         std::lock_guard<std::mutex> keyBufferGuard(keyBuffferLock);
-                        std:;copy(terminalBuffer.begin(), terminalBuffer.end(), std::back_inserter(keyBuffer));
+                        copy(terminalBuffer.begin(), terminalBuffer.end(), std::back_inserter(keyBuffer));
                         terminalBuffer.clear();
                     }
 

@@ -670,7 +670,7 @@ namespace Antik {
 
         std::istringstream subjectStream(mime);
         ParsedMIMEString parsedEntry;
-        std::vector<ParsedMIMEString> parseding;
+        std::vector<ParsedMIMEString> parsedString;
 
         for (std::string line; std::getline(subjectStream, line, '\n');) {
 
@@ -707,12 +707,12 @@ namespace Antik {
 
                 }
 
-                parseding.push_back(parsedEntry);
+                parsedString.push_back(parsedEntry);
 
             }
         }
 
-        return (parseding);
+        return (parsedString);
 
     }
 
@@ -722,14 +722,14 @@ namespace Antik {
 
     std::string CMIME::convertMIMEStringToASCII(const std::string& mime) {
 
-        std::vector<ParsedMIMEString> parseding { parseMIMEString(mime) };
+        std::vector<ParsedMIMEString> parsedString { parseMIMEString(mime) };
         std::string convertedMIME;
 
-        for (auto& parsedEntry : parseding) {
+        for (auto& parsedEntry : parsedString) {
             if (parsedEntry.type == kEncodedWordTypeNone) {
                 convertedMIME += parsedEntry.contents;
             } else if (parsedEntry.type == kEncodedWordTypeQuoted) {
-                int cnt01 = 0;
+                unsigned long cnt01 = 0;
                 while (cnt01 < parsedEntry.contents.length()) {
                     if (parsedEntry.contents[cnt01] != kQuotedPrintPrefix) {
                         convertedMIME.append(1, parsedEntry.contents[cnt01++]);
