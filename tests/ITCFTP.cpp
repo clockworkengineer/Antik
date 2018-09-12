@@ -18,7 +18,8 @@
 // of tests will grow over time and at the moment consist of both stress tests and
 // general tests such as file transfer. 
 //
-// TODO: Convert to google test.
+// TODO: 1) Convert to google test. 
+//       2) Fix file list > 1 issues.
 // 
 // Dependencies: C11++, Classes (CFTP, CFile,).
 //               Linux, Boost C++ Libraries.
