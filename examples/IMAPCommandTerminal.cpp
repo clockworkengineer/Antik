@@ -190,6 +190,7 @@ struct WalkData {
 static void walkFn(std::unique_ptr<CIMAPBodyStruct::BodyNode>& bodyNode, CIMAPBodyStruct::BodyPart& bodyPart, std::shared_ptr<void>& walkData) {
 
     auto wlkData = static_cast<WalkData *> (walkData.get());
+    (void)wlkData;
 
     std::cout << std::string(120, '#') << std::endl;
 

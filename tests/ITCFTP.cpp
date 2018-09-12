@@ -396,24 +396,24 @@ int main(int argc, char** argv) {
             // Get files size
 
             size_t fileSize;
-            ftpServer.fileSize(argData.fileList[1], fileSize);
+            ftpServer.fileSize(argData.fileList[0], fileSize);
             checkFTPCommandResponse(ftpServer,{213});
             std::cout << "File Size = " << fileSize << std::endl;
 
             // Get size of non-existent file
 
-            ftpServer.fileSize(argData.fileList[1] + "xx", fileSize);
+            ftpServer.fileSize(argData.fileList[0] + "xx", fileSize);
             checkFTPCommandResponse(ftpServer,{550});
 
             // Get files last modified time
 
             CFTP::DateTime modifiedDateTime;
-            ftpServer.getModifiedDateTime(argData.fileList[1], modifiedDateTime);
+            ftpServer.getModifiedDateTime(argData.fileList[0], modifiedDateTime);
             checkFTPCommandResponse(ftpServer,{213});
 
             // Get files last modified time of non-existent file
 
-            ftpServer.getModifiedDateTime(argData.fileList[1] + "xx", modifiedDateTime);
+            ftpServer.getModifiedDateTime(argData.fileList[0] + "xx", modifiedDateTime);
             checkFTPCommandResponse(ftpServer,{550});
             
             // Remove files

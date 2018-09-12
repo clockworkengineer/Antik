@@ -175,6 +175,8 @@ static const std::string getEventName(CApprise::EventId id) {
             return ("Error");
             break;
     }
+    
+    return("Unknown event");
 
 }
 
