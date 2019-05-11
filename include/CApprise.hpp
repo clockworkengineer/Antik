@@ -57,7 +57,7 @@ namespace Antik {
             (
                 const std::string& watchFolder = "", // Watch folder path;;
                 int watchDepth = -1,                 // Watch depth -1=all,0=just watch folder,1=next level down etc.
-                IFileEventNotifier *fileEventNotifier = nullptr // File event notifier
+                std::shared_ptr<IFileEventNotifier> fileEventNotifier = {} // File event notifier
             );
 
             // ==========

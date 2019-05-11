@@ -120,12 +120,11 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <commandlineTool>g++</commandlineTool>
           <incDir>
             <pElem>include</pElem>
             <pElem>classes/implementation</pElem>
           </incDir>
-          <commandLine>-Wall -Werror -std=c++17</commandLine>
+          <commandLine>-Wall -Werror -std=c++17 -fsanitize=address</commandLine>
         </ccTool>
         <archiverTool>
         </archiverTool>
@@ -189,6 +188,9 @@
             flavor2="0">
       </item>
       <folder path="TestFiles">
+        <ccTool>
+          <commandLine>-Wall -Werror -std=c++17</commandLine>
+        </ccTool>
         <linkerTool>
           <linkerLibItems>
             <linkerOptionItem>-lboost_system</linkerOptionItem>

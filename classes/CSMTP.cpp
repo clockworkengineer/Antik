@@ -628,7 +628,7 @@ namespace Antik {
 
         void CSMTP::init(bool bCurlVerbosity) {
 
-            bCurlVerbosity = bCurlVerbosity;
+            m_curlVerbosity = bCurlVerbosity;
 
         }
 

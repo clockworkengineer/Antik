@@ -158,7 +158,7 @@ namespace Antik {
 
             int m_inotifyFd { 0 }; // file descriptor for read
             std::uint32_t m_inotifyWatchMask { CFileEventNotifier::kInofityEvents }; // watch event mask
-            std::unique_ptr<std::uint8_t> m_inotifyBuffer; // read buffer
+            std::unique_ptr<std::uint8_t []> m_inotifyBuffer; // read buffer
             std::unordered_map<int32_t, std::string> m_watchMap; // Watch table indexed by watch variable
             std::set<std::string> m_inProcessOfCreation; // Set to hold files being created.
             

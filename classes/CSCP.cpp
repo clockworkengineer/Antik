@@ -76,8 +76,7 @@ namespace Antik {
         // Main CSCP object constructor. 
         //
 
-        CSCP::CSCP(CSSHSession &session, int mode, const std::string &location) : m_session {session},
-                m_mode {mode }, m_location {location }
+        CSCP::CSCP(CSSHSession &session, int mode, const std::string &location) : m_session {session}, m_location {location }
         {
    
             if ((m_scp = ssh_scp_new(m_session.getSession(), mode, location.c_str()))== NULL) {

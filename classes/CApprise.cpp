@@ -77,7 +77,7 @@ namespace Antik {
         //
 
         CApprise::CApprise(const std::string& watchFolder, int watchDepth,  
-                IFileEventNotifier *fileEventNotifier) : m_watchFolder{watchFolder}, m_watchDepth{watchDepth}
+                std::shared_ptr<IFileEventNotifier> fileEventNotifier) : m_watchFolder{watchFolder}, m_watchDepth{watchDepth}
         {
 
             // ASSERT if passed parameters invalid
@@ -88,8 +88,8 @@ namespace Antik {
 
                 // If no handler passed then use default
 
-                if (fileEventNotifier) {
-                    m_fileEventNotifier.reset(fileEventNotifier);
+                if (fileEventNotifier.get()) {
+                    m_fileEventNotifier = fileEventNotifier;
                 } else {
                     m_fileEventNotifier.reset(new CFileEventNotifier());
                 }

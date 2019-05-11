@@ -191,9 +191,9 @@ namespace Antik {
             
             CSSHSession &m_session;         // SSH session
 
-            ssh_scp m_scp;                  // SCP sonenction
+            ssh_scp m_scp;                  // SCP connection
             
-            int m_mode;                     // SCP mode
+          //  int m_mode {};                  // SCP mode
             std::string m_location;         // SCP location
             
             std::shared_ptr<char[]> m_ioBuffer { nullptr };  // IO buffer
