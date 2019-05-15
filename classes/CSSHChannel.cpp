@@ -16,11 +16,11 @@
 // Description:   A class for the creation of channels over an SSH session for the
 // transport of data/commands to and from a remote host. The protocol used on the channel
 // can be any standard internet protocol from IMAP/HTTP etc or a custom designed one.
-// It also tries to hide as much of its implementation using libssh as possible and use/return 
-// C11++ data structures/ exceptions. It is not complete by any means but may be updated to 
+// It also tries to hide as much of its implementation using libssh as possible and use/return
+// C11++ data structures/ exceptions. It is not complete by any means but may be updated to
 // future to use more libssh features.
 //
-// Dependencies: 
+// Dependencies:
 //
 // C11++        - Language standard features used.
 // libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.7.5)
@@ -44,383 +44,397 @@
 // NAMESPACE
 // =========
 
-namespace Antik {
-    namespace SSH {
+namespace Antik::SSH
+{
 
-        // ===========================
-        // PRIVATE TYPES AND CONSTANTS
-        // ===========================
+// ===========================
+// PRIVATE TYPES AND CONSTANTS
+// ===========================
 
-        // ==========================
-        // PUBLIC TYPES AND CONSTANTS
-        // ==========================
+// ==========================
+// PUBLIC TYPES AND CONSTANTS
+// ==========================
 
-        // ========================
-        // PRIVATE STATIC VARIABLES
-        // ========================
+// ========================
+// PRIVATE STATIC VARIABLES
+// ========================
+
+// =======================
+// PUBLIC STATIC VARIABLES
+// =======================
+
+// ===============
+// PRIVATE METHODS
+// ===============
 
-        // =======================
-        // PUBLIC STATIC VARIABLES
-        // =======================
+// ==============
+// PUBLIC METHODS
+// ==============
 
-        // ===============
-        // PRIVATE METHODS
-        // ===============
+//
+// Main CSSHChannel object constructors. The passed in session has to be
+// connected and authorized for a channel  to be created.
+//
 
-        // ==============
-        // PUBLIC METHODS
-        // ==============
+CSSHChannel::CSSHChannel(CSSHSession &session) : m_session{session}
+{
 
-        //
-        // Main CSSHChannel object constructors. The passed in session has to be
-        // connected and authorized for a channel  to be created.
-        //
+    assert(session.isConnected() && session.isAuthorized());
 
-        CSSHChannel::CSSHChannel(CSSHSession &session) : m_session{session}
-        {
+    if ((m_channel = ssh_channel_new(m_session.getSession())) == NULL)
+    {
+        throw Exception("Could not allocate new channel.", __func__);
+    }
+}
 
-            assert(session.isConnected() && session.isAuthorized());
+CSSHChannel::CSSHChannel(CSSHSession &session, ssh_channel channel) : m_session{session}, m_channel{channel}
+{
 
-            if ((m_channel = ssh_channel_new(m_session.getSession())) == NULL) {
-                throw Exception("Could not allocate new channel.", __func__);
-            }
+    assert(session.isConnected() && session.isAuthorized());
 
-        }
+    if ((m_channel = ssh_channel_new(m_session.getSession())) == NULL)
+    {
+        throw Exception("Could not allocate new channel.", __func__);
+    }
+}
 
-        CSSHChannel::CSSHChannel(CSSHSession &session, ssh_channel channel) : m_session{session}, m_channel{channel}
-        {
+//
+// CSSHChannel Destructor
+//
 
-            assert(session.isConnected() && session.isAuthorized());
+CSSHChannel::~CSSHChannel()
+{
+}
 
-            if ((m_channel = ssh_channel_new(m_session.getSession())) == NULL) {
-                throw Exception("Could not allocate new channel.", __func__);
-            }
+//
+// Open a channel for reading/writing of data.
+//
 
-        }
+void CSSHChannel::open()
+{
 
-        //
-        // CSSHChannel Destructor
-        //
+    if (ssh_channel_open_session(m_channel) != SSH_OK)
+    {
+        throw Exception(*this, __func__);
+    }
+}
 
-        CSSHChannel::~CSSHChannel() {
+//
+// Close an open channel and free its resources.
+//
 
-        }
+void CSSHChannel::close()
+{
 
-        //
-        // Open a channel for reading/writing of data.
-        //
+    if (m_channel)
+    {
+        ssh_channel_close(m_channel);
+        ssh_channel_free(m_channel);
+        m_channel = NULL;
+    }
 
-        void CSSHChannel::open() {
+    m_ioBuffer.reset();
+}
 
-            if (ssh_channel_open_session(m_channel) != SSH_OK) {
-                throw Exception(*this, __func__);
-            }
+//
+// Send end of file on channel to remote host.
+//
 
-        }
+void CSSHChannel::sendEndOfFile()
+{
 
-        //
-        // Close an open channel and free its resources.
-        //
+    ssh_channel_send_eof(m_channel);
+}
 
-        void CSSHChannel::close() {
+//
+// Execute a shell command on the remote host associated with a channel.
+//
 
-            if (m_channel) {
-                ssh_channel_close(m_channel);
-                ssh_channel_free(m_channel);
-                m_channel = NULL;
-            }
+void CSSHChannel::execute(const std::string &commandToRun)
+{
 
-            m_ioBuffer.reset();
+    if (ssh_channel_request_exec(m_channel, commandToRun.c_str()) != SSH_OK)
+    {
+        throw Exception(*this, __func__);
+    }
+}
 
-        }
+//
+// Read data from a channel. isStdErr== true then data comes from stderr.
+//
 
-        //
-        // Send end of file on channel to remote host.
-        //
+int CSSHChannel::read(void *buffer, uint32_t bytesToRead, bool isStdErr)
+{
 
-        void CSSHChannel::sendEndOfFile() {
+    uint32_t bytesRead = ssh_channel_read(m_channel, buffer, bytesToRead, isStdErr);
 
-            ssh_channel_send_eof(m_channel);
+    if (static_cast<int>(bytesRead) == SSH_ERROR)
+    {
+        throw Exception(*this, __func__);
+    }
 
-        }
+    return (bytesRead);
+}
 
-        //
-        // Execute a shell command on the remote host associated with a channel.
-        //
+//
+// Read data from a channel (non-blocking). isStdErr== true then data comes from stderr.
+//
 
-        void CSSHChannel::execute(const std::string &commandToRun) {
+int CSSHChannel::readNonBlocking(void *buffer, uint32_t bytesToRead, bool isStdErr)
+{
 
-            if (ssh_channel_request_exec(m_channel, commandToRun.c_str()) != SSH_OK) {
-                throw Exception(*this, __func__);
-            }
+    uint32_t bytesRead = ssh_channel_read_nonblocking(m_channel, buffer, bytesToRead, isStdErr);
 
-        }
+    if (static_cast<int>(bytesRead) == SSH_ERROR)
+    {
+        throw Exception(*this, __func__);
+    }
 
-        //
-        // Read data from a channel. isStdErr== true then data comes from stderr.
-        //
+    return (bytesRead);
+}
 
-        int CSSHChannel::read(void *buffer, uint32_t bytesToRead, bool isStdErr) {
+//
+// Write data to a channel.
+//
 
-            uint32_t bytesRead = ssh_channel_read(m_channel, buffer, bytesToRead, isStdErr);
+int CSSHChannel::write(void *buffer, uint32_t bytesToWrite)
+{
 
-            if (static_cast<int> (bytesRead) == SSH_ERROR) {
-                throw Exception(*this, __func__);
-            }
+    uint32_t bytesWritten = ssh_channel_write(m_channel, buffer, bytesToWrite);
 
-            return (bytesRead);
+    if (static_cast<int>(bytesWritten) == SSH_ERROR)
+    {
+        throw Exception(*this, __func__);
+    }
 
-        }
+    return (bytesWritten);
+}
 
+//
+// Request a PTY (pseudoterminal) of given type and size is attached to channel.
+//
 
-        //
-        // Read data from a channel (non-blocking). isStdErr== true then data comes from stderr.
-        //
+void CSSHChannel::requestTerminalOfTypeSize(const std::string &termialType, int columns, int rows)
+{
 
-        int CSSHChannel::readNonBlocking(void *buffer, uint32_t bytesToRead, bool isStdErr) {
- 
-            uint32_t bytesRead = ssh_channel_read_nonblocking(m_channel, buffer, bytesToRead, isStdErr);
+    int returnCode = ssh_channel_request_pty_size(m_channel, termialType.c_str(), columns, rows);
 
-            if (static_cast<int> (bytesRead) == SSH_ERROR) {
-                throw Exception(*this, __func__);
-            }
+    if (returnCode == SSH_ERROR)
+    {
+        throw Exception(*this, __func__);
+    }
+}
 
-            return (bytesRead);
+//
+// Request a PTY (pseudoterminal) is attached to channel.
+//
 
-        }
+void CSSHChannel::requestTerminal()
+{
 
-        //
-        // Write data to a channel.
-        //
+    int returnCode = ssh_channel_request_pty(m_channel);
 
-        int CSSHChannel::write(void *buffer, uint32_t bytesToWrite) {
- 
-            uint32_t bytesWritten = ssh_channel_write(m_channel, buffer, bytesToWrite);
+    if (returnCode == SSH_ERROR)
+    {
+        throw Exception(*this, __func__);
+    }
+}
 
-            if (static_cast<int> (bytesWritten) == SSH_ERROR) {
-                throw Exception(*this, __func__);
-            }
+//
+// Set PTY (pseudoterminal) terminal size.
+//
 
-            return (bytesWritten);
-        }
+void CSSHChannel::changeTerminalSize(int columns, int rows)
+{
 
-        //
-        // Request a PTY (pseudoterminal) of given type and size is attached to channel.
-        //
+    int returnCode = ssh_channel_change_pty_size(m_channel, columns, rows);
 
-        void CSSHChannel::requestTerminalOfTypeSize(const std::string &termialType, int columns, int rows) {
+    if (returnCode == SSH_ERROR)
+    {
+        throw Exception(*this, __func__);
+    }
+}
 
-            int returnCode = ssh_channel_request_pty_size(m_channel, termialType.c_str(), columns, rows);
+//
+// Request that a remote shell is attache to a channel.
+//
 
-            if (returnCode == SSH_ERROR) {
-                throw Exception(*this, __func__);
-            }
+void CSSHChannel::requestShell()
+{
 
-        }
+    int returnCode = ssh_channel_request_shell(m_channel);
 
-        //
-        // Request a PTY (pseudoterminal) is attached to channel.
-        //
+    if (returnCode == SSH_ERROR)
+    {
+        throw Exception(*this, __func__);
+    }
+}
 
-        void CSSHChannel::requestTerminal() {
+//
+// Return true if a channel is open.
+//
 
-            int returnCode = ssh_channel_request_pty(m_channel);
+bool CSSHChannel::isOpen()
+{
 
-            if (returnCode == SSH_ERROR) {
-                throw Exception(*this, __func__);
-            }
+    return (ssh_channel_is_open(m_channel));
+}
 
-        }
+//
+// Return true if a channel is closed.
+//
 
-        //
-        // Set PTY (pseudoterminal) terminal size.
-        //
+bool CSSHChannel::isClosed()
+{
 
-        void CSSHChannel::changeTerminalSize(int columns, int rows) {
+    return (ssh_channel_is_closed(m_channel));
+}
 
-            int returnCode = ssh_channel_change_pty_size(m_channel, columns, rows);
+//
+// Return true if end of file has been sent by remote host on channel.
+//
 
-            if (returnCode == SSH_ERROR) {
-                throw Exception(*this, __func__);
-            }
+bool CSSHChannel::isEndOfFile()
+{
 
-        }
+    return (ssh_channel_is_eof(m_channel));
+}
 
-        //
-        // Request that a remote shell is attache to a channel.
-        //
+//
+// Return the exit status of a channel.
+//
 
-        void CSSHChannel::requestShell() {
+int CSSHChannel::getExitStatus()
+{
 
-            int returnCode = ssh_channel_request_shell(m_channel);
+    return (ssh_channel_get_exit_status(m_channel));
+}
 
-            if (returnCode == SSH_ERROR) {
-                throw Exception(*this, __func__);
-            }
+//
+// Set an environment variable for remote shell attached to channel.
+//
 
-        }
+void CSSHChannel::setEnvironmentVariable(const std::string &variable, const std::string &value)
+{
 
-        //
-        // Return true if a channel is open.
-        //
+    int returnCode = ssh_channel_request_env(m_channel, variable.c_str(), value.c_str());
 
-        bool CSSHChannel::isOpen() {
+    if (returnCode == SSH_ERROR)
+    {
+        throw Exception(*this, __func__);
+    }
+}
 
-            return (ssh_channel_is_open(m_channel));
+//
+// Open a direct forwarding channel on the remote host.
+//
 
-        }
+void CSSHChannel::openForward(const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort)
+{
 
-        //
-        // Return true if a channel is closed.
-        //
+    int returnCode = ssh_channel_open_forward(m_channel, remoteHost.c_str(), remotePort, localHost.c_str(), localPort);
 
-        bool CSSHChannel::isClosed() {
+    if (returnCode == SSH_ERROR)
+    {
+        throw Exception(*this, __func__);
+    }
+}
 
-            return (ssh_channel_is_closed(m_channel));
+//
+// Setup a reverse forwarding channel from remote host.
+//
 
-        }
+void CSSHChannel::listenForward(CSSHSession &session, const std::string &address, int port, int *boundPort)
+{
 
-        //
-        // Return true if end of file has been sent by remote host on channel.
-        //
+    int returnCode = ssh_channel_listen_forward(session.getSession(), address.c_str(), port, boundPort);
 
-        bool CSSHChannel::isEndOfFile() {
+    if (returnCode == SSH_ERROR)
+    {
+        throw CSSHSession::Exception(session, __func__);
+    }
+}
 
-            return (ssh_channel_is_eof(m_channel));
+//
+// Cancel a reverse forwarding channel from remote host.
+//
 
-        }
+void CSSHChannel::cancelForward(CSSHSession &session, const std::string &address, int port)
+{
 
-        //
-        // Return the exit status of a channel.
-        //
+    int returnCode = ssh_channel_cancel_forward(session.getSession(), address.c_str(), port);
 
-        int CSSHChannel::getExitStatus() {
+    if (returnCode == SSH_ERROR)
+    {
+        throw CSSHSession::Exception(session, __func__);
+    }
+}
 
-            return (ssh_channel_get_exit_status(m_channel));
+//
+// Wait for a reverse forwarding channel from remote host (with timeout).
+//
 
-        }
+std::unique_ptr<CSSHChannel> CSSHChannel::acceptForward(CSSHSession &session, int timeout, int *port)
+{
 
-        //
-        // Set an environment variable for remote shell attached to channel.
-        //
+    ssh_channel forwardChannel = ssh_channel_accept_forward(session.getSession(), timeout, port);
 
-        void CSSHChannel::setEnvironmentVariable(const std::string &variable, const std::string &value) {
+    std::unique_ptr<CSSHChannel> returnChannel;
 
-            int returnCode = ssh_channel_request_env(m_channel, variable.c_str(), value.c_str());
+    if (forwardChannel)
+    {
+        returnChannel.reset(new CSSHChannel(session, forwardChannel));
+    }
 
-            if (returnCode == SSH_ERROR) {
-                throw Exception(*this, __func__);
-            }
+    return (returnChannel);
+}
 
-        }
+//
+// Set/Get IO buffer parameters.
+//
 
-        //
-        // Open a direct forwarding channel on the remote host.
-        //
+std::shared_ptr<char[]> CSSHChannel::getIoBuffer()
+{
 
-        void CSSHChannel::openForward(const std::string &remoteHost, int remotePort, const std::string &localHost, int localPort) {
+    if (!m_ioBuffer)
+    {
+        setIoBufferSize(m_ioBufferSize);
+    }
 
-            int returnCode = ssh_channel_open_forward(m_channel, remoteHost.c_str(), remotePort, localHost.c_str(), localPort);
+    return m_ioBuffer;
+}
 
-            if (returnCode == SSH_ERROR) {
-                throw Exception(*this, __func__);
-            }
+void CSSHChannel::setIoBufferSize(std::uint32_t ioBufferSize)
+{
 
-        }
+    m_ioBufferSize = ioBufferSize;
+    m_ioBuffer.reset(new char[m_ioBufferSize]);
+}
 
-        //
-        // Setup a reverse forwarding channel from remote host.
-        //
+std::uint32_t CSSHChannel::getIoBufferSize() const
+{
 
-        void CSSHChannel::listenForward(CSSHSession &session, const std::string &address, int port, int *boundPort) {
+    return m_ioBufferSize;
+}
 
-            int returnCode = ssh_channel_listen_forward(session.getSession(), address.c_str(), port, boundPort);
+//
+// Return CSSHSession reference associated with channel.
+//
 
-            if (returnCode == SSH_ERROR) {
-                throw CSSHSession::Exception(session, __func__);
-            }
+CSSHSession &CSSHChannel::getSession() const
+{
 
-        }
+    return m_session;
+}
 
-        //
-        // Cancel a reverse forwarding channel from remote host.
-        //
+//
+// Return internal libssh channel reference,
+//
 
-        void CSSHChannel::cancelForward(CSSHSession &session, const std::string &address, int port) {
-                   
-            int returnCode = ssh_channel_cancel_forward(session.getSession(), address.c_str(), port);
+ssh_channel CSSHChannel::getChannel() const
+{
 
-            if (returnCode == SSH_ERROR) {
-                throw CSSHSession::Exception(session, __func__);
-            }
+    return m_channel;
+}
 
-        }
-
-        //
-        // Wait for a reverse forwarding channel from remote host (with timeout).
-        //
-
-        std::unique_ptr<CSSHChannel> CSSHChannel::acceptForward(CSSHSession &session, int timeout, int *port) {
-                   
-            ssh_channel forwardChannel = ssh_channel_accept_forward(session.getSession(), timeout, port);
-
-            std::unique_ptr<CSSHChannel> returnChannel;
-
-            if (forwardChannel) {
-                returnChannel.reset(new CSSHChannel(session, forwardChannel));
-            }
-
-            return (returnChannel);
-
-        }
-
-        //
-        // Set/Get IO buffer parameters.
-        //
-
-        std::shared_ptr<char[]> CSSHChannel::getIoBuffer() {
-                   
-            if (!m_ioBuffer) {
-                setIoBufferSize(m_ioBufferSize);
-            }
-
-            return m_ioBuffer;
-
-        }
-
-        void CSSHChannel::setIoBufferSize(std::uint32_t ioBufferSize) {
-                   
-            m_ioBufferSize = ioBufferSize;
-            m_ioBuffer.reset(new char[m_ioBufferSize]);
-
-        }
-
-        std::uint32_t CSSHChannel::getIoBufferSize() const {
-                   
-            return m_ioBufferSize;
-
-        }
-
-        //
-        // Return CSSHSession reference associated with channel.
-        //
-
-        CSSHSession& CSSHChannel::getSession() const {
-
-            return m_session;
-
-        }
-
-        //
-        // Return internal libssh channel reference,
-        //
-
-        ssh_channel CSSHChannel::getChannel() const {
-
-            return m_channel;
-
-        }
-
-
-    } // namespace SSH
-} // namespace Antik
+} // namespace Antik::SSH

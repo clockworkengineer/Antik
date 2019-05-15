@@ -29,106 +29,103 @@
 // NAMESPACE
 // =========
 
-namespace Antik {
-    namespace File {
+namespace Antik::File
+{
 
-        // ================
-        // CLASS DEFINITION
-        // ================
+// ================
+// CLASS DEFINITION
+// ================
 
-        class CFile {
-        public:
+class CFile
+{
+public:
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
 
-            // ==========================
-            // PUBLIC TYPES AND CONSTANTS
-            // ==========================
+    //
+    // Class exception
+    //
 
-            //
-            // Class exception
-            //
+    struct Exception : public std::runtime_error
+    {
 
-            struct Exception : public std::runtime_error {
+        Exception(std::string const &message)
+            : std::runtime_error("CFile Failure: " + message)
+        {
+        }
+    };
 
-                Exception(std::string const& message)
-                : std::runtime_error("CFile Failure: " + message) {
-                }
+    //
+    // File information, permissions and Time structures.
+    //
 
-            };
+    using Status = boost::filesystem::file_status;
+    using Permissions = boost::filesystem::perms;
+    using Time = time_t;
 
-            //
-            // File information, permissions and Time structures.
-            //
-            
-            using Status = boost::filesystem::file_status;
-            using Permissions = boost::filesystem::perms;
-            using Time = time_t;
-            
-            // ============
-            // CONSTRUCTORS
-            // ============
+    // ============
+    // CONSTRUCTORS
+    // ============
 
-            // ==========
-            // DESTRUCTOR
-            // ==========
+    // ==========
+    // DESTRUCTOR
+    // ==========
 
-            // ==============
-            // PUBLIC METHODS
-            // ==============
+    // ==============
+    // PUBLIC METHODS
+    // ==============
 
-            static bool exists(const CPath &filePath);
-            
-            static bool isFile(const CPath &filePath);
-            
-            static Status fileStatus(const CPath &filePath);
-            
-            static bool isDirectory(const CPath &filePath);
-            
-            static bool createDirectory(const CPath &directoryPath);
-            
-            static void remove(const CPath &filePath);
-            
-            static void setPermissions(const CPath &filePath, Permissions permissions);
-            
-            static void copy(const CPath &sourcePath, const CPath &destinationPath);
-            
-            static void rename(const CPath &sourcePath, const CPath &destinationPath);
-            
-            static FileList directoryContentsList(const CPath &localDirectory);
-            
-            static Time lastWriteTime(const CPath &filePath);
-            
-            // ================
-            // PUBLIC VARIABLES
-            // ================
+    static bool exists(const CPath &filePath);
 
-        private:
+    static bool isFile(const CPath &filePath);
 
-            // ===========================
-            // PRIVATE TYPES AND CONSTANTS
-            // ===========================
+    static Status fileStatus(const CPath &filePath);
 
-            // ===========================================
-            // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
-            // ===========================================
+    static bool isDirectory(const CPath &filePath);
 
-            CFile() = delete;
-            virtual ~CFile() = delete;
-            CFile(const CFile & orig) = delete;
-            CFile(const CFile && orig) = delete;
-            CFile& operator=(CFile other) = delete;
-            
-            // ===============
-            // PRIVATE METHODS
-            // ===============
+    static bool createDirectory(const CPath &directoryPath);
 
-            // =================
-            // PRIVATE VARIABLES
-            // =================
-            
-        };
+    static void remove(const CPath &filePath);
 
-    } // namespace File
-} // namespace Antik
+    static void setPermissions(const CPath &filePath, Permissions permissions);
+
+    static void copy(const CPath &sourcePath, const CPath &destinationPath);
+
+    static void rename(const CPath &sourcePath, const CPath &destinationPath);
+
+    static FileList directoryContentsList(const CPath &localDirectory);
+
+    static Time lastWriteTime(const CPath &filePath);
+
+    // ================
+    // PUBLIC VARIABLES
+    // ================
+
+private:
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
+
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
+
+    CFile() = delete;
+    virtual ~CFile() = delete;
+    CFile(const CFile &orig) = delete;
+    CFile(const CFile &&orig) = delete;
+    CFile &operator=(CFile other) = delete;
+
+    // ===============
+    // PRIVATE METHODS
+    // ===============
+
+    // =================
+    // PRIVATE VARIABLES
+    // =================
+};
+
+} // namespace Antik::File
 
 #endif /* CFILE_HPP */
-

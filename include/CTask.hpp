@@ -32,129 +32,126 @@
 // NAMESPACE
 // =========
 
-namespace Antik {
-    namespace File {
+namespace Antik::File
+{
 
-        // ================
-        // CLASS DEFINITION
-        // ================
+// ================
+// CLASS DEFINITION
+// ================
 
-        class CTask {
-        public:
+class CTask
+{
+public:
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
 
-            // ==========================
-            // PUBLIC TYPES AND CONSTANTS
-            // ==========================
+    //
+    // Class exception
+    //
 
-            //
-            // Class exception
-            //
+    struct Exception : public std::runtime_error
+    {
 
-            struct Exception : public std::runtime_error {
+        explicit Exception(std::string const &message)
+            : std::runtime_error("CTask Failure: " + message)
+        {
+        }
+    };
 
-                explicit Exception(std::string const& message)
-                : std::runtime_error("CTask Failure: " + message) {
-                }
+    //
+    // Base action interface class
+    //
 
-            };
+    class IAction
+    {
+    public:
+        virtual void init(void) = 0;
+        virtual bool process(const std::string &file) = 0;
+        virtual void term(void) = 0;
+    };
 
-            //
-            // Base action interface class
-            //
+    // ===========
+    // CONSTRUCTOR
+    // ===========
 
-            class IAction {
-            public:            
-                virtual void init(void) = 0;
-                virtual bool process(const std::string &file) = 0;
-                virtual void term(void) = 0;
-            };
+    //
+    // Main constructor
+    //
 
-            // ===========
-            // CONSTRUCTOR
-            // ===========
+    explicit CTask(
+        const std::string &watchFolder,  // Watch folder path
+        std::shared_ptr<IAction> action, // Task action function
+        int watchDepth,                  // Watch depth -1= all, 0=just watch folder
+        int killCount                    // Kill count
+    );
 
-            //
-            // Main constructor
-            //
+    // ==========
+    // DESTRUCTOR
+    // ==========
 
-            explicit CTask
-            (
-                    const std::string& watchFolder,  // Watch folder path
-                    std::shared_ptr<IAction> action, // Task action function
-                    int watchDepth, // Watch depth -1= all, 0=just watch folder
-                    int killCount // Kill count
-            );
+    virtual ~CTask(); // Task class cleanup
 
-            // ==========
-            // DESTRUCTOR
-            // ==========
+    // ==============
+    // PUBLIC METHODS
+    //===============
 
-            virtual ~CTask(); // Task class cleanup
+    //
+    // Control
+    //
 
-            // ==============
-            // PUBLIC METHODS
-            //===============
+    void monitor(void); // Monitor watch folder for directory file events and process added files
+    void stop(void);    // Stop task
 
-            //
-            // Control
-            //
+    //
+    // Private data accessors
+    //
 
-            void monitor(void); // Monitor watch folder for directory file events and process added files
-            void stop(void);    // Stop task
+    std::exception_ptr getThrownException(void); // Get any exception thrown by task to pass down chain
 
-            //
-            // Private data accessors
-            //
+private:
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
 
-            std::exception_ptr getThrownException(void); // Get any exception thrown by task to pass down chain
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
 
-        private:
+    CTask() = delete;
+    CTask(const CTask &orig) = delete;
+    CTask(const CTask &&orig) = delete;
+    CTask &operator=(CTask other) = delete;
 
-            // ===========================
-            // PRIVATE TYPES AND CONSTANTS
-            // ===========================
+    // ===============
+    // PRIVATE METHODS
+    // ===============
 
-            // ===========================================
-            // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
-            // ===========================================
+    // =================
+    // PRIVATE VARIABLES
+    // =================
 
-            CTask() = delete;
-            CTask(const CTask & orig) = delete;
-            CTask(const CTask && orig) = delete;
-            CTask& operator=(CTask other) = delete;
+    //
+    // Constructor passed in and intialized
+    //
 
-            // ===============
-            // PRIVATE METHODS
-            // ===============
+    std::string m_watchFolder;             // Watch Folder
+    std::shared_ptr<IAction> m_taskAction; // Task action function
+    int m_killCount{0};                    // Task Kill Count
 
-            // =================
-            // PRIVATE VARIABLES
-            // =================
+    //
+    // CFileApprise file watcher
+    //
 
-            //
-            // Constructor passed in and intialized
-            //
+    std::shared_ptr<CApprise> m_watcher; // Folder watcher
 
-            std::string m_watchFolder;             // Watch Folder
-            std::shared_ptr<IAction> m_taskAction; // Task action function 
-            int m_killCount { 0 };                   // Task Kill Count
+    //
+    // Publicly accessed via accessors
+    //
 
-            //
-            // CFileApprise file watcher
-            //
+    std::exception_ptr m_thrownException{nullptr}; // Pointer to any exception thrown
+};
 
-            std::shared_ptr<CApprise> m_watcher; // Folder watcher
-
-            //
-            // Publicly accessed via accessors
-            //
-
-            std::exception_ptr m_thrownException{ nullptr}; // Pointer to any exception thrown
-
-        };
-
-    } // namespace File
-} // namespace Antik
+} // namespace Antik::File
 
 #endif /* CTASK_HPP */
-

@@ -39,270 +39,269 @@
 // NAMESPACE
 // =========
 
-namespace Antik {
-    namespace SSH {
+namespace Antik::SSH
+{
 
-        // ==========================
-        // PUBLIC TYPES AND CONSTANTS
-        // ==========================
+// ==========================
+// PUBLIC TYPES AND CONSTANTS
+// ==========================
 
-        enum UserAuthorizationType {
-            None=0x1,
-            Password=0x2,
-            PublicKey=0x4,
-            Interactice=0x8
-        };
-        
-        // ================
-        // CLASS DEFINITION
-        // ================
+enum UserAuthorizationType
+{
+    None = 0x1,
+    Password = 0x2,
+    PublicKey = 0x4,
+    Interactice = 0x8
+};
 
-        class CSSHSession {
-        public:
+// ================
+// CLASS DEFINITION
+// ================
 
-            // ==========================
-            // PUBLIC TYPES AND CONSTANTS
-            // ==========================
+class CSSHSession
+{
+public:
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
 
-            //
-            // Class exception        
-            //
+    //
+    // Class exception
+    //
 
-            struct Exception {
-                
-                Exception(CSSHSession &session, const std::string &functionName) : m_errorCode{session.getErrorCode()},
-                m_errorMessage{ session.getError()}, m_functionName{functionName}
-                {
-                }
-                
-                Exception(const std::string &errorMessage, const std::string &functionName) : m_errorMessage{ errorMessage }, 
-                m_functionName{functionName}
-                {
-                }
+    struct Exception
+    {
 
-                int getCode() const {
-                    return m_errorCode;
-                }
+        Exception(CSSHSession &session, const std::string &functionName) : m_errorCode{session.getErrorCode()},
+                                                                           m_errorMessage{session.getError()}, m_functionName{functionName}
+        {
+        }
 
-                std::string getMessage() const {
-                    return static_cast<std::string> ("CSSHSession Failure: (") + m_functionName + ") [" + m_errorMessage + "]";
-                }
+        Exception(const std::string &errorMessage, const std::string &functionName) : m_errorMessage{errorMessage},
+                                                                                      m_functionName{functionName}
+        {
+        }
 
-            private:
-                int m_errorCode {SSH_OK};   // SSH error code
-                std::string m_errorMessage; // SSH error message
-                std::string m_functionName; // Current function name
+        int getCode() const
+        {
+            return m_errorCode;
+        }
 
-            };
+        std::string getMessage() const
+        {
+            return static_cast<std::string>("CSSHSession Failure: (") + m_functionName + ") [" + m_errorMessage + "]";
+        }
 
-            //
-            // Custom deleter for re-mapped libssh session data structures.
-            //
+    private:
+        int m_errorCode{SSH_OK};    // SSH error code
+        std::string m_errorMessage; // SSH error message
+        std::string m_functionName; // Current function name
+    };
 
-            struct Deleter {
+    //
+    // Custom deleter for re-mapped libssh session data structures.
+    //
 
-                void operator()(ssh_key key) const {
-                    ssh_key_free(key);
-                }
+    struct Deleter
+    {
 
-            };
-            
-            using Option =  ssh_options_e;
+        void operator()(ssh_key key) const
+        {
+            ssh_key_free(key);
+        }
+    };
 
-            //
-            // Encapsulate libssh session data in unique pointers.
-            //
+    using Option = ssh_options_e;
 
-            using Key = std::unique_ptr<std::pointer_traits<ssh_key>::element_type, Deleter>;
-            
-            // ============        
-            // CONSTRUCTORS
-            // ============
+    //
+    // Encapsulate libssh session data in unique pointers.
+    //
 
-            //
-            // Main constructors
-            //
+    using Key = std::unique_ptr<std::pointer_traits<ssh_key>::element_type, Deleter>;
 
-            explicit CSSHSession();
+    // ============
+    // CONSTRUCTORS
+    // ============
 
-            CSSHSession(CSSHSession &session);
-            
-            // ==========
-            // DESTRUCTOR
-            // ==========
+    //
+    // Main constructors
+    //
 
-            virtual ~CSSHSession();
+    explicit CSSHSession();
 
-            // ==============
-            // PUBLIC METHODS
-            // ==============
-            
-            //
-            // Set session details
-            //
+    CSSHSession(CSSHSession &session);
 
-            void setServer(const std::string &server);
-            void setPort(unsigned int port);
-            void setUser(const std::string &user);
-            void setUserPassword(const std::string &password);
+    // ==========
+    // DESTRUCTOR
+    // ==========
 
-            //
-            // Connect/disconnect sessions
-            //
+    virtual ~CSSHSession();
 
-            void connect();
-            void disconnect(bool silent = false);
+    // ==============
+    // PUBLIC METHODS
+    // ==============
 
-            //
-            // User authorization functions
-            //
+    //
+    // Set session details
+    //
 
-            int userAuthorizationList();
+    void setServer(const std::string &server);
+    void setPort(unsigned int port);
+    void setUser(const std::string &user);
+    void setUserPassword(const std::string &password);
 
-            //
-            // Overridable user authorization functions
-            //
+    //
+    // Connect/disconnect sessions
+    //
 
-            virtual int userAuthorizationNone();
-            virtual int userAuthorizationWithPublicKeyAuto();
-            virtual int userAuthorizationWithPassword();
-            virtual int userAuthorizationWithPublicKey();
-            virtual int userAuthorizationWithKeyboardInteractive();
+    void connect();
+    void disconnect(bool silent = false);
 
-            //
-            // Verify server
-            //
+    //
+    // User authorization functions
+    //
 
-            int isServerKnown();
+    int userAuthorizationList();
 
-            //
-            // Write server details away to local config
-            //
+    //
+    // Overridable user authorization functions
+    //
 
-            void writeKnownHost();
+    virtual int userAuthorizationNone();
+    virtual int userAuthorizationWithPublicKeyAuto();
+    virtual int userAuthorizationWithPassword();
+    virtual int userAuthorizationWithPublicKey();
+    virtual int userAuthorizationWithKeyboardInteractive();
 
-            //
-            // Get names of session cipher/HMAC in/out methods, key exchange algorithm
-            //
+    //
+    // Verify server
+    //
 
-            std::string getCipherIn();
-            std::string getCipherOut();
-            std::string getHMACIn();
-            std::string getHMACOut();
-            std::string getKeyExchangeAlgorithm(); 
-            
-            //
-            // Public key methods
-            //
+    int isServerKnown();
 
-            Key getPublicKey();
-            void getPublicKeyHash(Key &serverPublicKey, std::vector<unsigned char> &keyHash);
-            std::string convertKeyHashToHex(std::vector<unsigned char> &keyHash);
+    //
+    // Write server details away to local config
+    //
 
-            //
-            // Get various banners and disconnect message
-            //
+    void writeKnownHost();
 
-            std::string getBanner() const;
-            std::string getClientBanner() const;
-            std::string getServerBanner() const;
-            std::string getDisconnectMessage() const;
+    //
+    // Get names of session cipher/HMAC in/out methods, key exchange algorithm
+    //
 
-            //
-            // Get SSH/OpenSSH versions
-            //
-            
-            int getSSHVersion() const;
-            int getOpenSSHVersion() const;       
+    std::string getCipherIn();
+    std::string getCipherOut();
+    std::string getHMACIn();
+    std::string getHMACOut();
+    std::string getKeyExchangeAlgorithm();
 
-            //
-            // Session status methods
-            //
+    //
+    // Public key methods
+    //
 
-            int getStatus() const;
-            bool isConnected() const;
-            bool isAuthorized() const;
-  
-            //
-            // Get/Set option values for a session and also copy options,
-            //
-            
-            void setOption(Option sessionOption,  const void *optionValue);
-            void getOption(Option sessionOption, std::string &optionValue);
-            void copyOptions(CSSHSession &source);
-            
-            //
-            // Get SSH error code and message
-            //
+    Key getPublicKey();
+    void getPublicKeyHash(Key &serverPublicKey, std::vector<unsigned char> &keyHash);
+    std::string convertKeyHashToHex(std::vector<unsigned char> &keyHash);
 
-            std::string getError() const;
-            int getErrorCode() const;
+    //
+    // Get various banners and disconnect message
+    //
 
-            //
-            // Get libssh session structure
-            //
-            
-            ssh_session getSession() const;
-            
-            //
-            // Get session user authorization type
-            //
-            
-            std::uint32_t getAuthorizarionType() const;
-            
-            //
-            // Set logging verbosity
-            //
-            
-            void setLogging(int logging);
-            
-            // ================
-            // PUBLIC VARIABLES
-            // ================
+    std::string getBanner() const;
+    std::string getClientBanner() const;
+    std::string getServerBanner() const;
+    std::string getDisconnectMessage() const;
 
-        private:
+    //
+    // Get SSH/OpenSSH versions
+    //
 
-            // ===========================
-            // PRIVATE TYPES AND CONSTANTS
-            // ===========================
+    int getSSHVersion() const;
+    int getOpenSSHVersion() const;
 
-            // ===========================================
-            // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
-            // ===========================================
+    //
+    // Session status methods
+    //
 
-            CSSHSession(const CSSHSession & orig) = delete;
-            CSSHSession(const CSSHSession && orig) = delete;
-            CSSHSession& operator=(CSSHSession other) = delete;
+    int getStatus() const;
+    bool isConnected() const;
+    bool isAuthorized() const;
 
-            // ===============
-            // PRIVATE METHODS
-            // ===============
+    //
+    // Get/Set option values for a session and also copy options,
+    //
 
-            //
-            // Initialisation
-            //
-            
-            static void initialise();
-            
-            // =================
-            // PRIVATE VARIABLES
-            // =================
+    void setOption(Option sessionOption, const void *optionValue);
+    void getOption(Option sessionOption, std::string &optionValue);
+    void copyOptions(CSSHSession &source);
 
-            ssh_session m_session;            // libssh session
-            int m_logging {SSH_LOG_NOLOG };   // libssh logging
+    //
+    // Get SSH error code and message
+    //
 
-            std::string m_server;              // SSH server name
-            unsigned int m_port{ 22};          // SSH server port
-            std::string m_user;                // SSH server login account name
-            std::string m_password;            // SSH server login account password
-            bool m_authorized {false};         // SSH session authorised
-            std::uint32_t m_authorizarionType {UserAuthorizationType::None }; // SSH session user authorization type
+    std::string getError() const;
+    int getErrorCode() const;
 
+    //
+    // Get libssh session structure
+    //
 
-        };
+    ssh_session getSession() const;
 
-    } // namespace SSH
-} // namespace Antik
+    //
+    // Get session user authorization type
+    //
+
+    std::uint32_t getAuthorizarionType() const;
+
+    //
+    // Set logging verbosity
+    //
+
+    void setLogging(int logging);
+
+    // ================
+    // PUBLIC VARIABLES
+    // ================
+
+private:
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
+
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
+
+    CSSHSession(const CSSHSession &orig) = delete;
+    CSSHSession(const CSSHSession &&orig) = delete;
+    CSSHSession &operator=(CSSHSession other) = delete;
+
+    // ===============
+    // PRIVATE METHODS
+    // ===============
+
+    //
+    // Initialisation
+    //
+
+    static void initialise();
+
+    // =================
+    // PRIVATE VARIABLES
+    // =================
+
+    ssh_session m_session;        // libssh session
+    int m_logging{SSH_LOG_NOLOG}; // libssh logging
+
+    std::string m_server;                                           // SSH server name
+    unsigned int m_port{22};                                        // SSH server port
+    std::string m_user;                                             // SSH server login account name
+    std::string m_password;                                         // SSH server login account password
+    bool m_authorized{false};                                       // SSH session authorised
+    std::uint32_t m_authorizarionType{UserAuthorizationType::None}; // SSH session user authorization type
+};
+
+} // namespace Antik::SSH
 
 #endif /* CSSHSESSION_HPP */
-

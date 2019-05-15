@@ -30,93 +30,89 @@
 // NAMESPACE
 // =========
 
-namespace Antik {
-    namespace Util {
+namespace Antik::Util
+{
 
-    // ================
-    // CLASS DEFINITION
-    // ================
+// ================
+// CLASS DEFINITION
+// ================
 
-    class CRedirect {
-    public:
+class CRedirect
+{
+public:
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
 
-        // ==========================
-        // PUBLIC TYPES AND CONSTANTS
-        // ==========================
+    // ============
+    // CONSTRUCTORS
+    // ============
 
-        // ============
-        // CONSTRUCTORS
-        // ============ 
+    //
+    // Set stream to redirect
+    //
 
-        //
-        // Set stream to redirect
-        //
+    explicit CRedirect(std::ostream &outStream);
+    explicit CRedirect(std::FILE *stdStream);
 
-        explicit CRedirect(std::ostream& outStream);
-        explicit CRedirect(std::FILE* stdStream);
+    //
+    // Set stream to redirect and start redirect
+    //
 
-        //
-        // Set stream to redirect and start redirect
-        //
+    explicit CRedirect(std::ostream &outStream, const std::string &outfileName, std::ios_base::openmode mode = std::ios_base::out);
+    explicit CRedirect(std::FILE *stdStream, const std::string &outfileName, const char *mode = "w");
 
-        explicit CRedirect(std::ostream& outStream, const std::string &outfileName, std::ios_base::openmode mode = std::ios_base::out);
-        explicit CRedirect(std::FILE* stdStream, const std::string &outfileName, const char *mode = "w");
+    // ==========
+    // DESTRUCTOR
+    // ==========
 
-        // ==========
-        // DESTRUCTOR
-        // ==========
+    ~CRedirect();
 
-        ~CRedirect();
+    // ==============
+    // PUBLIC METHODS
+    // ==============
 
-        // ==============
-        // PUBLIC METHODS
-        // ==============
+    //
+    // Redirect stream to outfleName
+    //
 
-        //
-        // Redirect stream to outfleName
-        //
+    void change(const std::string &outfileName, std::ios_base::openmode mode = std::ios_base::out);
+    void change(const std::string &outfileName, const char *mode = "w");
 
-        void change(const std::string &outfileName, std::ios_base::openmode mode = std::ios_base::out);
-        void change(const std::string &outfileName, const char* mode = "w");
+    //
+    // Restore original output stream
+    //
 
-        //
-        // Restore original output stream
-        //
+    void restore(void);
 
-        void restore(void);
+private:
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
 
-    private:
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
 
-        // ===========================
-        // PRIVATE TYPES AND CONSTANTS
-        // ===========================
+    CRedirect() = delete;
+    CRedirect(const CRedirect &orig) = delete;
+    CRedirect(const CRedirect &&orig) = delete;
+    CRedirect &operator=(CRedirect other) = delete;
 
-        // ===========================================
-        // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
-        // ===========================================
+    // ===============
+    // PRIVATE METHODS
+    // ===============
 
-        CRedirect() = delete;
-        CRedirect(const CRedirect & orig) = delete;
-        CRedirect(const CRedirect && orig) = delete;
-        CRedirect& operator=(CRedirect other) = delete;
+    // =================
+    // PRIVATE VARIABLES
+    // =================
 
-        // ===============
-        // PRIVATE METHODS
-        // ===============
+    std::unique_ptr<std::ofstream> m_newFileStream{nullptr}; // New file stream
+    std::ostream *m_savedStream{nullptr};                    // saved stream
+    std::streambuf *m_outputBuffer{nullptr};                 // Saved readbuffer
+    std::FILE *m_savedStdOutErr{nullptr};                    // Saved stdout/stderr
+};
 
-        // =================
-        // PRIVATE VARIABLES
-        // =================
-
-        std::unique_ptr<std::ofstream> m_newFileStream { nullptr }; // New file stream
-        std::ostream *m_savedStream { nullptr };                    // saved stream
-        std::streambuf *m_outputBuffer { nullptr };                 // Saved readbuffer
-        std::FILE *m_savedStdOutErr { nullptr };                    // Saved stdout/stderr
-
-    };
-
-    } // namespace Util
-} // namespace Antik
+} // namespace Antik::Util
 
 #endif /* REDIRECT_HPP */
-

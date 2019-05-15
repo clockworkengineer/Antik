@@ -30,31 +30,31 @@
 
 #include <iostream>
 
-namespace Antik {
-    namespace SSH {
+namespace Antik::SSH
+{
 
-        //
-        // Context for server verification feedback
-        //
-        
-        class ServerVerificationContext {
-        public:
-            explicit ServerVerificationContext(void *context=nullptr) : m_contextData{context}{ }
-            virtual void serverKnown();
-            virtual bool serverKnownChanged(std::vector<unsigned char> &keyHash);
-            virtual bool serverFoundOther();
-            virtual bool serverFileNotFound(std::vector<unsigned char> &keyHash);
-            virtual bool serverNotKnown(std::vector<unsigned char> &keyHash);
-            virtual bool serverError();
-        protected:
-            void *m_contextData{nullptr};
-        };
-        
-        bool userAuthorize(CSSHSession &session);
-        bool verifyKnownServer(CSSHSession &sshSession, ServerVerificationContext &verificationContext);
-        
-    } // namespace SSH
-} // namespace Antik
+//
+// Context for server verification feedback
+//
+
+class ServerVerificationContext
+{
+public:
+    explicit ServerVerificationContext(void *context = nullptr) : m_contextData{context} {}
+    virtual void serverKnown();
+    virtual bool serverKnownChanged(std::vector<unsigned char> &keyHash);
+    virtual bool serverFoundOther();
+    virtual bool serverFileNotFound(std::vector<unsigned char> &keyHash);
+    virtual bool serverNotKnown(std::vector<unsigned char> &keyHash);
+    virtual bool serverError();
+
+protected:
+    void *m_contextData{nullptr};
+};
+
+bool userAuthorize(CSSHSession &session);
+bool verifyKnownServer(CSSHSession &sshSession, ServerVerificationContext &verificationContext);
+
+} // namespace Antik::SSH
 
 #endif /* SSHSESSIONUTIL_HPP */
-

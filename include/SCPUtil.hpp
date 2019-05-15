@@ -45,16 +45,14 @@
 #include "CSSHSession.hpp"
 #include "CSCP.hpp"
 
-namespace Antik {
-    namespace SSH {
-        
-        void getFile(CSSHSession &sshSession, const std::string &sourceFile, const std::string &destinationFile);
-        void putFile(CSSHSession &sshSession, const std::string &sourceFile, const std::string &destinationFile);      
-        FileList getFiles(CSSHSession &sshSession, FileMapper &fileMapper, FileCompletionFn completionFn = nullptr);
-        FileList putFiles(CSSHSession &sshSession, FileMapper &fileMapper, FileCompletionFn completionFn  = nullptr);
+namespace Antik::SSH
+{
 
-    } // namespace SSH
-} // namespace Antik
+void getFile(CSSHSession &sshSession, const std::string &sourceFile, const std::string &destinationFile);
+void putFile(CSSHSession &sshSession, const std::string &sourceFile, const std::string &destinationFile);
+FileList getFiles(CSSHSession &sshSession, FileMapper &fileMapper, FileCompletionFn completionFn = nullptr);
+FileList putFiles(CSSHSession &sshSession, FileMapper &fileMapper, FileCompletionFn completionFn = nullptr);
+
+} // namespace Antik::SSH
 
 #endif /* SCPUTIL_HPP */
-

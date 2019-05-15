@@ -29,78 +29,74 @@
 // NAMESPACE
 // =========
 
-namespace Antik {
-    namespace File {
+namespace Antik::File
+{
 
-        // ================
-        // CLASS DEFINITION
-        // ================
+// ================
+// CLASS DEFINITION
+// ================
 
-        class IFileEventNotifier {
-        public:
+class IFileEventNotifier
+{
+public:
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
 
-            // ==========================
-            // PUBLIC TYPES AND CONSTANTS
-            // ==========================
+    // ============
+    // CONSTRUCTORS
+    // ============
 
-            // ============
-            // CONSTRUCTORS
-            // ============
+    // ==============
+    // PUBLIC METHODS
+    // ==============
 
-            // ==============
-            // PUBLIC METHODS
-            // ==============
+    //
+    // Event queue
+    //
 
-            //
-            // Event queue
-            //
-               
-            virtual void generateEvents(void) = 0;                    // Watch folder(s) for file events
-            virtual void stopEventGeneration(void) = 0;               // Stop watch loop/thread
-            virtual void getNextEvent(IApprise::Event& message) = 0;  // Get next queued event
-            virtual bool stillWatching() const = 0;                   // Events still being generated
-            virtual void clearEventQueue() = 0;                       // Clear event queue
-                   
-            //
-            // Watch processing
-            //
+    virtual void generateEvents(void) = 0;                   // Watch folder(s) for file events
+    virtual void stopEventGeneration(void) = 0;              // Stop watch loop/thread
+    virtual void getNextEvent(IApprise::Event &message) = 0; // Get next queued event
+    virtual bool stillWatching() const = 0;                  // Events still being generated
+    virtual void clearEventQueue() = 0;                      // Clear event queue
 
-            virtual void addWatch(const std::string& filePath) = 0;    // Add path to be watched
-            virtual void removeWatch(const std::string& filePath) = 0; // Remove path being watched
-            virtual void setWatchDepth(int watchDepth) = 0;            // Set maximum watch depth
- 
-            //
-            // Get any thrown exceptions
-            //
-         
-            virtual std::exception_ptr getThrownException() const = 0;
-            
-            // ================
-            // PUBLIC VARIABLES
-            // ================
+    //
+    // Watch processing
+    //
 
-        private:
+    virtual void addWatch(const std::string &filePath) = 0;    // Add path to be watched
+    virtual void removeWatch(const std::string &filePath) = 0; // Remove path being watched
+    virtual void setWatchDepth(int watchDepth) = 0;            // Set maximum watch depth
 
-            // ===========================
-            // PRIVATE TYPES AND CONSTANTS
-            // ===========================
+    //
+    // Get any thrown exceptions
+    //
 
-            // ===========================================
-            // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
-            // ===========================================
+    virtual std::exception_ptr getThrownException() const = 0;
 
-            // ===============
-            // PRIVATE METHODS
-            // ===============
+    // ================
+    // PUBLIC VARIABLES
+    // ================
 
-            // =================
-            // PRIVATE VARIABLES
-            // =================
+private:
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
 
-        };
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
 
-    } // namespace File
-} // namespace Antik
+    // ===============
+    // PRIVATE METHODS
+    // ===============
+
+    // =================
+    // PRIVATE VARIABLES
+    // =================
+};
+
+} // namespace Antik::File
 
 #endif /* IFILEEVENTNOTIFIER_HPP */
-

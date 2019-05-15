@@ -86,8 +86,8 @@ TESTOBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-Wall -Werror -std=c++17
-CXXFLAGS=-Wall -Werror -std=c++17
+CCFLAGS=-Wall -Werror -Wextra -std=c++17
+CXXFLAGS=-Wall -Werror -Wextra -std=c++17
 
 # Fortran Compiler Flags
 FFLAGS=

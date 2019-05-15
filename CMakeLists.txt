@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.10.2)
 
 project("antik" VERSION 0.1.0 DESCRIPTION "Antik C++ Static Library")
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra")
+
 # Add Boost, threads, curl, libssh, openssl, zlib libraries
 
 set(Boost_USE_STATIC_LIBS OFF) 

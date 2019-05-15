@@ -37,108 +37,105 @@
 // NAMESPACE
 // =========
 
-namespace Antik {
-    namespace File {
+namespace Antik::File
+{
 
-        // ================
-        // CLASS DEFINITION
-        // ================
+// ================
+// CLASS DEFINITION
+// ================
 
-        class CMIME {
-        public:
+class CMIME
+{
+public:
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
 
-            // ==========================
-            // PUBLIC TYPES AND CONSTANTS
-            // ==========================
+    //
+    // Class exception
+    //
 
-            //
-            // Class exception
-            //
+    struct Exception : public std::runtime_error
+    {
 
-            struct Exception : public std::runtime_error {
+        explicit Exception(std::string const &message)
+            : std::runtime_error("CMIME Failure: " + message)
+        {
+        }
+    };
 
-                explicit Exception(std::string const& message)
-                : std::runtime_error("CMIME Failure: " + message) {
-                }
+    //
+    // Parsed MIME string entry
+    //
 
-            };
+    struct ParsedMIMEString
+    {
+        unsigned char type{' '}; // Type Q (Quoted Printable), B (base64), ' ' None.
+        std::string encoding;    // Encoding used
+        std::string contents;    // Contents
+    };
 
-            //
-            // Parsed MIME string entry
-            //
+    // ============
+    // CONSTRUCTORS
+    // ============
 
-            struct ParsedMIMEString {
-                unsigned char type  { ' ' }; // Type Q (Quoted Printable), B (base64), ' ' None.
-                std::string encoding; // Encoding used
-                std::string contents; // Contents
-            };
+    // ==========
+    // DESTRUCTOR
+    // ==========
 
-            // ============
-            // CONSTRUCTORS
-            // ============
+    // ==============
+    // PUBLIC METHODS
+    // ==============
 
-            // ==========
-            // DESTRUCTOR
-            // ==========
+    static std::string getFileMIMEType(const std::string &fileName);
+    static std::string convertMIMEStringToASCII(const std::string &mime);
 
-            // ==============
-            // PUBLIC METHODS
-            // ==============
+    // ================
+    // PUBLIC VARIABLES
+    // ================
 
-            static std::string getFileMIMEType(const std::string& fileName);
-            static std::string convertMIMEStringToASCII(const std::string& mime);
+private:
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
 
-            // ================
-            // PUBLIC VARIABLES
-            // ================
+    //
+    // MIME encoded word
+    //
 
-        private:
+    static const char *kEncodedWordPrefix;
+    static const char *kEncodedWordPostfix;
+    static const char *kEncodedWordSeparator;
+    static const char *kEncodedWordASCII;
 
-            // ===========================
-            // PRIVATE TYPES AND CONSTANTS
-            // ===========================
+    static const char kEncodedWordTypeBase64;
+    static const char kEncodedWordTypeQuoted;
+    static const char kEncodedWordTypeNone;
+    static const char kQuotedPrintPrefix;
 
-            //
-            // MIME encoded word
-            //
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
 
-            static const char *kEncodedWordPrefix;
-            static const char *kEncodedWordPostfix;
-            static const char *kEncodedWordSeparator;
-            static const char *kEncodedWordASCII;
+    CMIME() = delete;
+    virtual ~CMIME() = delete;
+    CMIME(const CMIME &orig) = delete;
+    CMIME(const CMIME &&orig) = delete;
+    CMIME &operator=(CMIME other) = delete;
 
-            static const char kEncodedWordTypeBase64;
-            static const char kEncodedWordTypeQuoted;
-            static const char kEncodedWordTypeNone;
-            static const char kQuotedPrintPrefix;
+    // ===============
+    // PRIVATE METHODS
+    // ===============
 
+    static std::vector<ParsedMIMEString> parseMIMEString(const std::string &mime);
 
-            // ===========================================
-            // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
-            // ===========================================
+    // =================
+    // PRIVATE VARIABLES
+    // =================
 
-            CMIME() = delete;
-            virtual ~CMIME() = delete;
-            CMIME(const CMIME & orig) = delete;
-            CMIME(const CMIME && orig) = delete;
-            CMIME& operator=(CMIME other) = delete;
-            
-            // ===============
-            // PRIVATE METHODS
-            // ===============
+    static std::unordered_map<std::string, std::string> m_extToMimeType; // File extension to MIME type
+};
 
-            static std::vector<ParsedMIMEString> parseMIMEString(const std::string& mime);
-
-            // =================
-            // PRIVATE VARIABLES
-            // =================
-
-            static std::unordered_map<std::string, std::string> m_extToMimeType; // File extension to MIME type
-
-        };
-
-    } // namespace File
-} // namespace Antik
+} // namespace Antik::File
 
 #endif /* CMIME_HPP */
-

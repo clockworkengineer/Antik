@@ -32,269 +32,271 @@
 // NAMESPACE
 // =========
 
-namespace Antik {
-    namespace IMAP {
+namespace Antik::IMAP
+{
 
-        // ================
-        // CLASS DEFINITION
-        // ================
+// ================
+// CLASS DEFINITION
+// ================
 
-        class CIMAPParse {
-        public:
+class CIMAPParse
+{
+public:
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
 
-            // ==========================
-            // PUBLIC TYPES AND CONSTANTS
-            // ==========================
+    //
+    // Class exception
+    //
 
-            //
-            // Class exception
-            //
+    struct Exception : public std::runtime_error
+    {
 
-            struct Exception : public std::runtime_error {
+        Exception(std::string const &message)
+            : std::runtime_error("ClIMAPParse Failure: " + message)
+        {
+        }
+    };
 
-                Exception(std::string const& message)
-                : std::runtime_error("ClIMAPParse Failure: " + message) {
-                }
+    //
+    // Enumeration of command codes.
+    //
 
-            };
+    enum class Commands
+    {
+        NONE = -1,
+        STARTTLS = 0, // Un-Supported (connect does tls handshakes automatically).
+        AUTHENTICATE, // Un-Supported
+        LOGIN,        // Un-Supported (connect logs user in)
+        CAPABILITY,   // Supported
+        SELECT,       // Supported
+        EXAMINE,      // Supported
+        CREATE,       // Supported
+        DELETE,       // Supported
+        RENAME,       // Supported
+        SUBSCRIBE,    // Supported
+        UNSUBSCRIBE,  // Supported
+        LIST,         // Supported
+        LSUB,         // Supported
+        STATUS,       // Supported
+        APPEND,       // Supported
+        CHECK,        // Supported
+        CLOSE,        // Supported
+        EXPUNGE,      // Supported
+        SEARCH,       // Supported
+        FETCH,        // Supported
+        STORE,        // Supported
+        COPY,         // Supported
+        UID,          // Supported
+        NOOP,         // Supported
+        LOGOUT,       // Supported
+        IDLE          // Supported
+    };
 
-            //
-            // Enumeration of command codes.
-            //
+    //
+    // Command response code enumeration.
+    //
 
-            enum class Commands {
-                NONE = -1,
-                STARTTLS = 0, // Un-Supported (connect does tls handshakes automatically).
-                AUTHENTICATE, // Un-Supported
-                LOGIN, // Un-Supported (connect logs user in)
-                CAPABILITY, // Supported
-                SELECT, // Supported
-                EXAMINE, // Supported
-                CREATE, // Supported
-                DELETE, // Supported
-                RENAME, // Supported
-                SUBSCRIBE, // Supported
-                UNSUBSCRIBE, // Supported
-                LIST, // Supported
-                LSUB, // Supported
-                STATUS, // Supported
-                APPEND, // Supported
-                CHECK, // Supported
-                CLOSE, // Supported
-                EXPUNGE, // Supported
-                SEARCH, // Supported
-                FETCH, // Supported
-                STORE, // Supported
-                COPY, // Supported
-                UID, // Supported
-                NOOP, // Supported
-                LOGOUT, // Supported
-                IDLE // Supported
-            };
+    enum class RespCode
+    {
+        NONE = -1,
+        OK = 0,
+        NO,
+        BAD
+    };
 
+    //
+    // Command response map (item/value string pairs)
+    //
 
-            //
-            // Command response code enumeration.
-            //
+    typedef std::unordered_map<std::string, std::string> CommandResponseMap;
 
-            enum class RespCode {
-                NONE = -1,
-                OK = 0,
-                NO,
-                BAD
-            };
+    //
+    // FETCH response data
+    //
 
-            //
-            // Command response map (item/value string pairs)
-            //
+    struct FetchRespData
+    {
+        std::uint64_t index{0};         // EMail Index/UID
+        CommandResponseMap responseMap; // Fetch command response map
+    };
 
-            typedef std::unordered_map<std::string, std::string> CommandResponseMap;
+    //
+    // LIST response data
+    //
 
-            //
-            // FETCH response data
-            //
+    struct ListRespData
+    {
+        std::uint8_t hierDel{' '}; // Hierarchy Delimeter
+        std::string attributes;    // Mailbox attributes
+        std::string mailBoxName;   // Mailbox name
+    };
 
-            struct FetchRespData {
-                std::uint64_t index{ 0}; // EMail Index/UID
-                CommandResponseMap responseMap; // Fetch command response map
-            };
+    //
+    // STORE response data
+    //
 
-            //
-            // LIST response data
-            //
+    struct StoreRespData
+    {
+        std::uint64_t index{0}; // EMail Index/UID
+        std::string flagsList;  // EMail flags list
+    };
 
-            struct ListRespData {
-                std::uint8_t hierDel{ ' '}; // Hierarchy Delimeter
-                std::string attributes; // Mailbox attributes
-                std::string mailBoxName; // Mailbox name
-            };
+    //
+    // Parsed command response structure.
+    //
 
-            //
-            // STORE response data
-            //
+    struct CommandResponse
+    {
+        CommandResponse(Commands command) : command{command}
+        {
+        }
 
-            struct StoreRespData {
-                std::uint64_t index{ 0}; // EMail Index/UID
-                std::string flagsList; // EMail flags list
-            };
+        Commands command{Commands::NONE}; // Command code
+        RespCode status{RespCode::NONE};  // Command status
+        std::string errorMessage;         // Command error string
+        bool byeSent{false};              // ==true then BYE sent as part of response
+        CommandResponseMap responseMap;   // Command response map
 
-            //
-            // Parsed command response structure.
-            // 
+        std::vector<std::uint64_t> indexes;    // Vector of SEARCH index(s)/UID(s)
+        std::vector<ListRespData> mailBoxList; // Vector of LIST response data
+        std::vector<StoreRespData> storeList;  // Vector of STORE response data
+        std::vector<FetchRespData> fetchList;  // Vector of FETCH response data
+    };
 
-            struct CommandResponse {
-                CommandResponse(Commands command) : command{command}
-                {
-                }
+    typedef std::unique_ptr<CommandResponse> COMMANDRESPONSE;
 
-                Commands command{ Commands::NONE}; // Command code
-                RespCode status{ RespCode::NONE};  // Command status
-                std::string errorMessage;          // Command error string
-                bool byeSent{ false};              // ==true then BYE sent as part of response
-                CommandResponseMap responseMap;    // Command response map 
+    //
+    // Command data structure
+    //
 
-                std::vector<std::uint64_t> indexes; // Vector of SEARCH index(s)/UID(s)
-                std::vector<ListRespData> mailBoxList; // Vector of LIST response data
-                std::vector<StoreRespData> storeList; // Vector of STORE response data
-                std::vector<FetchRespData> fetchList; // Vector of FETCH response data
+    struct CommandData
+    {
+        std::string tag;                       // Command tag
+        std::string commandLine;               // Full command line
+        std::istringstream &commandRespStream; // Command response stream (Note reference)
+        COMMANDRESPONSE resp {};               // Parsed command response structure
+    };
 
-            };
+    // ============
+    // CONSTRUCTORS
+    // ============
 
-            typedef std::unique_ptr<CommandResponse> COMMANDRESPONSE;
+    // ==========
+    // DESTRUCTOR
+    // ==========
 
-            //
-            // Command data structure
-            //
+    // ==============
+    // PUBLIC METHODS
+    // ==============
 
-            struct CommandData {
-                std::string tag;                       // Command tag
-                std::string commandLine;               // Full command line
-                std::istringstream& commandRespStream; // Command response stream (Note reference)
-                COMMANDRESPONSE resp;                  // Parsed command response structure
-            };
+    //
+    // Get command string representation from internal code.
+    //
 
-            // ============
-            // CONSTRUCTORS
-            // ============
+    static std::string commandCodeString(Commands commandCode);
 
-            // ==========
-            // DESTRUCTOR
-            // ==========
+    //
+    // Parse IMAP command response and return parsed response structure.
+    //
 
-            // ==============
-            // PUBLIC METHODS
-            // ==============
+    static COMMANDRESPONSE parseResponse(const std::string &commandResponse);
 
-            //
-            // Get command string representation from internal code.
-            //
+    //
+    // Command response parse string utility methods
+    //
 
-            static std::string commandCodeString(Commands commandCode);
+    static std::string stringToUpper(std::string line);
+    static bool stringStartsWith(const std::string &line, const std::string &start);
+    static std::string stringBetween(const std::string &line, const char first, const char last);
+    static std::string stringTag(const std::string &line);
+    static std::string stringCommand(const std::string &line);
+    static std::string stringList(const std::string &line);
+    static std::string stringUntaggedNumber(const std::string &line);
 
-            //
-            // Parse IMAP command response and return parsed response structure.
-            //
+    // ================
+    // PUBLIC VARIABLES
+    // ================
 
-            static COMMANDRESPONSE parseResponse(const std::string& commandResponse);
+private:
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
 
-            //
-            // Command response parse string utility methods
-            //
+    //
+    // Parse function pointer
+    //
 
-            static std::string stringToUpper(std::string line);
-            static bool stringStartsWith(const std::string& line, const std::string& start);
-            static std::string stringBetween(const std::string& line, const char first, const char last);
-            static std::string stringTag(const std::string& line);
-            static std::string stringCommand(const std::string& line);
-            static std::string stringList(const std::string& line);
-            static std::string stringUntaggedNumber(const std::string& line);
+    typedef std::function<void(CommandData &commandData)> ParseFunction;
 
-            // ================
-            // PUBLIC VARIABLES
-            // ================
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
 
-        private:
+    CIMAPParse() = delete;
+    virtual ~CIMAPParse() = delete;
+    CIMAPParse(const CIMAPParse &orig) = delete;
+    CIMAPParse(const CIMAPParse &&orig) = delete;
+    CIMAPParse &operator=(CIMAPParse other) = delete;
 
-            // ===========================
-            // PRIVATE TYPES AND CONSTANTS
-            // ===========================
+    // ===============
+    // PRIVATE METHODS
+    // ===============
 
-            //
-            // Parse function pointer
-            //
+    //
+    // Get next line from response
+    //
 
-            typedef std::function<void (CommandData& commandData) > ParseFunction;
+    static bool parseGetNextLine(std::istringstream &responseStream, std::string &line);
 
-            // ===========================================
-            // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
-            // ===========================================
+    //
+    // Command response parse utility methods
+    //
 
-            CIMAPParse() = delete;
-            virtual ~CIMAPParse() = delete;
-            CIMAPParse(const CIMAPParse & orig) = delete;
-            CIMAPParse(const CIMAPParse && orig) = delete;
-            CIMAPParse& operator=(CIMAPParse other) = delete;
+    static void parseOctets(const std::string &item, FetchRespData &fetchData, std::string &line, std::istringstream &responseStream);
+    static void parseList(const std::string &item, FetchRespData &fetchData, std::string &line);
+    static void parseString(const std::string &item, FetchRespData &fetchData, std::string &line);
+    static void parseNumber(const std::string &item, FetchRespData &fetchData, std::string &line);
 
-            // ===============
-            // PRIVATE METHODS
-            // ===============
+    //
+    // Command response common parsing
 
-            //
-            // Get next line from response
-            //
+    //
+    static bool parseCommonUntaggedNumeric(const std::string &item, const std::string &line, CommandResponse *resp);
+    static bool parseCommonStatus(const std::string &tag, const std::string &line, CommandResponse *resp);
+    static void parseCommon(const std::string &tag, const std::string &line, CommandResponse *statusResponse);
 
-            static bool parseGetNextLine(std::istringstream& responseStream, std::string& line);
+    //
+    // Command response parse methods
+    //
 
-            //
-            // Command response parse utility methods
-            //
+    static void parseFETCH(CommandData &commandData);
+    static void parseLIST(CommandData &commandData);
+    static void parseSEARCH(CommandData &commandData);
+    static void parseSELECT(CommandData &commandData);
+    static void parseSTATUS(CommandData &commandData);
+    static void parseSTORE(CommandData &commandData);
+    static void parseCAPABILITY(CommandData &commandData);
+    static void parseDefault(CommandData &commandData);
 
-            static void parseOctets(const std::string& item, FetchRespData& fetchData, std::string& line, std::istringstream& responseStream);
-            static void parseList(const std::string& item, FetchRespData& fetchData, std::string& line);
-            static void parseString(const std::string& item, FetchRespData& fetchData, std::string& line);
-            static void parseNumber(const std::string& item, FetchRespData& fetchData, std::string& line);
+    // =================
+    // PRIVATE VARIABLES
+    // =================
 
-            //
-            // Command response common parsing
-            
-            //
-            static bool parseCommonUntaggedNumeric(const std::string& item, const std::string& line, CommandResponse * resp);
-            static bool parseCommonStatus(const std::string& tag, const std::string& line, CommandResponse * resp);
-            static void parseCommon(const std::string& tag, const std::string& line, CommandResponse* statusResponse);
+    //
+    // IMAP command code to parse response function mapping table
+    //
 
-            //
-            // Command response parse methods
-            //
+    static std::unordered_map<int, ParseFunction> m_parseCommmandMap;
 
-            static void parseFETCH(CommandData& commandData);
-            static void parseLIST(CommandData& commandData);
-            static void parseSEARCH(CommandData& commandData);
-            static void parseSELECT(CommandData& commandData);
-            static void parseSTATUS(CommandData& commandData);
-            static void parseSTORE(CommandData& commandData);
-            static void parseCAPABILITY(CommandData& commandData);
-            static void parseDefault(CommandData& commandData);
+    //
+    // IMAP command string to code mapping table
+    //
 
-            // =================
-            // PRIVATE VARIABLES
-            // =================
+    static std::unordered_map<std::string, Commands> m_stringToCodeMap;
+};
 
-            //
-            // IMAP command code to parse response function mapping table
-            //
-
-            static std::unordered_map<int, ParseFunction> m_parseCommmandMap;
-
-            //
-            // IMAP command string to code mapping table
-            //
-
-            static std::unordered_map<std::string, Commands> m_stringToCodeMap;
-
-        };
-
-    } // namespace IMAP
-} // namespace Antik
+} // namespace Antik::IMAP
 
 #endif /* CIMAPPARSE_HPP */
-

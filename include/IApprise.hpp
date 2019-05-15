@@ -23,80 +23,80 @@
 // NAMESPACE
 // =========
 
-namespace Antik {
-    namespace File {
+namespace Antik::File
+{
 
-        //
-        // Apprise interface
-        //
+//
+// Apprise interface
+//
 
-        class IApprise {
-        public:
+class IApprise
+{
+public:
+    //
+    // Class exception
+    //
 
-            //
-            // Class exception
-            //
+    struct Exception : public std::runtime_error
+    {
 
-            struct Exception : public std::runtime_error {
+        explicit Exception(std::string const &message)
+            : std::runtime_error("CApprise Failure: " + message)
+        {
+        }
+    };
 
-                explicit Exception(std::string const& message)
-                : std::runtime_error("CApprise Failure: " + message) {
-                }
+    //
+    // CApprise event identifiers
+    //
 
-            };
+    enum EventId
+    {
+        Event_none = 0,  // None
+        Event_add,       // File added to watched folder hierarchy
+        Event_change,    // File changed
+        Event_unlink,    // File deleted from watched folder hierarchy
+        Event_addir,     // Directory added to watched folder hierarchy
+        Event_unlinkdir, // Directory deleted from watched folder hierarchy
+        Event_error      // Exception error
+    };
 
-            //
-            // CApprise event identifiers
-            //
+    //
+    // CApprise event structure
+    //
 
-            enum EventId {
-                Event_none = 0,  // None
-                Event_add,       // File added to watched folder hierarchy
-                Event_change,    // File changed
-                Event_unlink,    // File deleted from watched folder hierarchy
-                Event_addir,     // Directory added to watched folder hierarchy
-                Event_unlinkdir, // Directory deleted from watched folder hierarchy
-                Event_error      // Exception error
-            };
+    struct Event
+    {
+        explicit Event(EventId id = EventId::Event_none, std::string message = "") : id{id}, message{message}
+        {
+        }
+        EventId id;          // Event id
+        std::string message; // Event file name / error message string
+    };
 
-            //
-            // CApprise event structure
-            //
+    //
+    // Event control
+    //
 
-            struct Event {
-                explicit Event(EventId id = EventId::Event_none, std::string message = "") : id{id}, message{message}
-                {
-                }
-                EventId id;          // Event id
-                std::string message; // Event file name / error message string
-            };
+    virtual void startWatching(bool clearQueue) = 0;
+    virtual void stopWatching(void) = 0;
+    virtual bool stillWatching(void) = 0;
+    virtual void getNextEvent(IApprise::Event &message) = 0;
 
-            //
-            // Event control
-            //
+    //
+    // Watch handling
+    //
 
-            virtual void startWatching(bool clearQueue) = 0;
-            virtual void stopWatching(void) = 0;
-            virtual bool stillWatching(void) = 0;
-            virtual void getNextEvent(IApprise::Event& message) = 0;      
+    virtual void addWatch(const std::string &filePath) = 0;    // Add directory/file to be watched
+    virtual void removeWatch(const std::string &filePath) = 0; // Remove directory/file being watched
 
-            //
-            // Watch handling
-            //
+    //
+    // Get any thrown exceptions
+    //
 
-            virtual void addWatch(const std::string& filePath) = 0;    // Add directory/file to be watched
-            virtual void removeWatch(const std::string& filePath) = 0; // Remove directory/file being watched
+    virtual std::exception_ptr getThrownException(void) = 0; // Get any exception thrown by watcher to pass down chain
+};
 
-            //
-            // Get any thrown exceptions
-            //
-
-            virtual std::exception_ptr getThrownException(void) = 0; // Get any exception thrown by watcher to pass down chain          
-
-        };
-
-    } // namespace File
-} // namespace Antik
+} // namespace Antik::File
 
 #endif /* IAPPRISE_HPP */
-

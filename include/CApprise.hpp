@@ -31,112 +31,106 @@
 // NAMESPACE
 // =========
 
-namespace Antik {
-    namespace File {
+namespace Antik::File
+{
 
-        // ================
-        // CLASS DEFINITION
-        // ================
+// ================
+// CLASS DEFINITION
+// ================
 
-        class CApprise : public IApprise {
-        public:
+class CApprise : public IApprise
+{
+public:
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
 
-            // ==========================
-            // PUBLIC TYPES AND CONSTANTS
-            // ==========================
+    // ============
+    // CONSTRUCTORS
+    // ============
 
-            // ============
-            // CONSTRUCTORS
-            // ============
+    //
+    // Main constructor
+    //
 
-            //
-            // Main constructor
-            //
+    explicit CApprise(
+        const std::string &watchFolder = "",                       // Watch folder path;;
+        int watchDepth = -1,                                       // Watch depth -1=all,0=just watch folder,1=next level down etc.
+        std::shared_ptr<IFileEventNotifier> fileEventNotifier = {} // File event notifier
+    );
 
-            explicit CApprise
-            (
-                const std::string& watchFolder = "", // Watch folder path;;
-                int watchDepth = -1,                 // Watch depth -1=all,0=just watch folder,1=next level down etc.
-                std::shared_ptr<IFileEventNotifier> fileEventNotifier = {} // File event notifier
-            );
+    // ==========
+    // DESTRUCTOR
+    // ==========
 
-            // ==========
-            // DESTRUCTOR
-            // ==========
+    virtual ~CApprise();
 
-            virtual ~CApprise();
+    // ==============
+    // PUBLIC METHODS
+    // ==============
 
-            // ==============
-            // PUBLIC METHODS
-            // ==============
+    //
+    // Event control
+    //
 
-            //
-            // Event control
-            //
+    void startWatching(bool clearQueue = true) override;
+    void stopWatching(void) override;
+    bool stillWatching(void) override;
+    void getNextEvent(CApprise::Event &message) override;
 
-            void startWatching(bool clearQueue=true) override;
-            void stopWatching(void) override;
-            bool stillWatching(void) override;
-            void getNextEvent(CApprise::Event& message) override;
+    //
+    // Watch handling
+    //
 
-            //
-            // Watch handling
-            //
+    void addWatch(const std::string &filePath) override;    // Add directory/file to be watched
+    void removeWatch(const std::string &filePath) override; // Remove directory/file being watched
 
-            void addWatch(const std::string& filePath) override; // Add directory/file to be watched
-            void removeWatch(const std::string& filePath) override; // Remove directory/file being watched
+    //
+    // Get any thrown exceptions
+    //
 
-            //
-            // Get any thrown exceptions
-            //
+    std::exception_ptr getThrownException(void) override; // Get any exception thrown by watcher to pass down chain
 
-            std::exception_ptr getThrownException(void) override; // Get any exception thrown by watcher to pass down chain
+    // ================
+    // PUBLIC VARIABLES
+    // ================
 
-            // ================
-            // PUBLIC VARIABLES
-            // ================
+private:
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
 
-        private:
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
 
-            // ===========================
-            // PRIVATE TYPES AND CONSTANTS
-            // ===========================
+    CApprise(const CApprise &orig) = delete;
+    CApprise(const CApprise &&orig) = delete;
+    CApprise &operator=(CApprise other) = delete;
 
-            // ===========================================
-            // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
-            // ===========================================
+    // ===============
+    // PRIVATE METHODS
+    // ===============
 
-            CApprise(const CApprise & orig) = delete;
-            CApprise(const CApprise && orig) = delete;
-            CApprise& operator=(CApprise other) = delete;
+    // =================
+    // PRIVATE VARIABLES
+    // =================
 
-            // ===============
-            // PRIVATE METHODS
-            // ===============
+    //
+    // Constructor passed in and intialised
+    //
 
-            // =================
-            // PRIVATE VARIABLES
-            // =================
+    std::string m_watchFolder;                               // Watch Folder
+    int m_watchDepth{-1};                                    // Watch depth -1=all,0=just watch folder,1=next level down etc.
+    std::shared_ptr<IFileEventNotifier> m_fileEventNotifier; // File event notifier
 
-            //
-            // Constructor passed in and intialised
-            //
+    //
+    // Watcher thread
+    //
 
-            std::string m_watchFolder; // Watch Folder
-            int m_watchDepth{ -1}; // Watch depth -1=all,0=just watch folder,1=next level down etc.
-            std::shared_ptr<IFileEventNotifier> m_fileEventNotifier; // File event notifier
+    std::unique_ptr<std::thread> m_watcherThread;
+};
 
-            //
-            // Watcher thread
-            //
-
-            std::unique_ptr<std::thread> m_watcherThread;
-
-        };
-
-
-    } // namespace File
-} // namespace Antik
+} // namespace Antik::File
 
 #endif /* CAPPRISE_HPP */
-

@@ -124,7 +124,7 @@
             <pElem>include</pElem>
             <pElem>classes/implementation</pElem>
           </incDir>
-          <commandLine>-Wall -Werror -std=c++17 -fsanitize=address</commandLine>
+          <commandLine>-Wall -Werror -Wextra -std=c++17 -fsanitize=address</commandLine>
         </ccTool>
         <archiverTool>
         </archiverTool>
@@ -388,7 +388,7 @@
             <pElem>include</pElem>
             <pElem>classes/implementation</pElem>
           </incDir>
-          <commandLine>-Wall -Werror -std=c++17</commandLine>
+          <commandLine>-Wall -Werror -Wextra -std=c++17</commandLine>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>

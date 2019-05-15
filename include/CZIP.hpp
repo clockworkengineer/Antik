@@ -33,206 +33,202 @@
 // NAMESPACE
 // =========
 
-namespace Antik {
-    namespace ZIP {
+namespace Antik::ZIP
+{
 
-        // ================
-        // CLASS DEFINITION
-        // ================
+// ================
+// CLASS DEFINITION
+// ================
 
-        class CZIP : private CZIPIO {
-        public:
+class CZIP : private CZIPIO
+{
+public:
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
 
-            // ==========================
-            // PUBLIC TYPES AND CONSTANTS
-            // ==========================
+    //
+    // Class exception
+    //
 
-            //
-            // Class exception
-            //
+    struct Exception : public std::runtime_error
+    {
 
-            struct Exception : public std::runtime_error {
+        explicit Exception(std::string const &message)
+            : std::runtime_error("CZIP Failure: " + message)
+        {
+        }
+    };
 
-                explicit Exception(std::string const& message)
-                : std::runtime_error("CZIP Failure: " + message) {
-                }
+    //
+    // ZIP file archive file details entry
+    //
 
-            };
+    struct FileDetail
+    {
+        std::string fileName;                 // Name
+        std::string fileComment;              // Comment
+        std::tm modificationDateTime{};      // Last modified date/time
+        std::uint64_t uncompressedSize{};    // Uncompressed size
+        std::uint64_t compressedSize{};      // Compressed size
+        std::uint16_t compression{};         // Compression stored as
+        std::uint16_t creatorVersion{};      // Archive creator
+        std::uint32_t externalFileAttrib{};  // Attributes
+        std::vector<std::uint8_t> extraField; // Extra data field
+        bool bZIP64{false};                   // true then in ZIP64 format
+    };
 
-            //
-            // ZIP file archive file details entry
-            //
+    // ============
+    // CONSTRUCTORS
+    // ============
 
-            struct FileDetail {
-                std::string fileName; // Name
-                std::string fileComment; // Comment
-                std::tm modificationDateTime{0}; // Last modified date/time
-                std::uint64_t uncompressedSize{0}; // Uncompressed size
-                std::uint64_t compressedSize{0}; // Compressed size
-                std::uint16_t compression{0}; // Compression stored as
-                std::uint16_t creatorVersion{0}; // Archive creator
-                std::uint32_t externalFileAttrib{0}; // Attributes
-                std::vector<std::uint8_t>extraField; // Extra data field
-                bool bZIP64{ false}; // true then in ZIP64 format
-            };
+    explicit CZIP(const std::string &zipFileName);
 
-            // ============
-            // CONSTRUCTORS
-            // ============
+    // ==========
+    // DESTRUCTOR
+    // ==========
 
-            explicit CZIP(const std::string& zipFileName);
+    ~CZIP() override;
 
-            // ==========
-            // DESTRUCTOR
-            // ==========
+    // ==============
+    // PUBLIC METHODS
+    // ==============
 
-            ~CZIP() override;
+    //
+    // Set ZIP archive name
+    //
 
-            // ==============
-            // PUBLIC METHODS
-            // ==============
+    void name(const std::string &zipFileName);
 
-            //
-            // Set ZIP archive name
-            //
+    //
+    // Create an empty archive file
+    //
+    void create(void);
 
-            void name(const std::string& zipFileName);
+    //
+    // Open/close archive file
+    //
+    void open(void);
+    void close(void);
 
-            //
-            // Create an empty archive file
-            //
-            void create(void);
+    //
+    // Add/extract files to archive
+    //
 
-            //
-            // Open/close archive file
-            //
-            void open(void);
-            void close(void);
+    bool extract(const std::string &fileName, const std::string &destFileName);
+    bool add(const std::string &fileName, const std::string &zippedFileName);
 
-            //
-            // Add/extract files to archive
-            //
+    //
+    // Get archives contents
+    //
 
-            bool extract(const std::string& fileName, const std::string& destFileName);
-            bool add(const std::string& fileName, const std::string& zippedFileName);
+    std::vector<CZIP::FileDetail> contents(void);
 
-            //
-            // Get archives contents
-            //
+    //
+    // Return true if archive file entry is a directory
+    //
 
-            std::vector<CZIP::FileDetail> contents(void);
+    bool isDirectory(const CZIP::FileDetail &fileEntry);
 
-            //
-            // Return true if archive file entry is a directory
-            //
+    //
+    // Return true if archive is in ZIP64 format.
+    //
 
-            bool isDirectory(const CZIP::FileDetail& fileEntry);
+    bool isZIP64(void);
 
-            //
-            // Return true if archive is in ZIP64 format.
-            //
+    //
+    // Set ZIP I/O buffer size.
+    //
 
-            bool isZIP64(void);
+    void setZIPBufferSize(std::uint64_t newBufferSize);
 
-            //
-            // Set ZIP I/O buffer size.
-            //
+    // ================
+    // PUBLIC VARIABLES
+    // ================
 
-            void setZIPBufferSize(std::uint64_t newBufferSize);
+private:
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
 
-            // ================
-            // PUBLIC VARIABLES
-            // ================
+    //
+    // ZIP inflate/deflate buffer size.
+    //
 
-        private:
+    static const std::uint64_t kZIPDefaultBufferSize{16384};
 
-            // ===========================
-            // PRIVATE TYPES AND CONSTANTS
-            // ===========================
+    // ===========================================
+    // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
+    // ===========================================
 
-            //
-            // ZIP inflate/deflate buffer size.
-            //
+    CZIP() = delete;
+    CZIP(const CZIP &orig) = delete;
+    CZIP(const CZIP &&orig) = delete;
+    CZIP &operator=(CZIP other) = delete;
 
-            static const std::uint64_t kZIPDefaultBufferSize{ 16384};
+    // ===============
+    // PRIVATE METHODS
+    // ===============
 
+    std::tm convertModificationDateTime(std::uint16_t dateWord, std::uint16_t timeWord);
 
-            // ===========================================
-            // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
-            // ===========================================
+    std::uint32_t inflateFile(const std::string &fileName, std::uint64_t fileSize);
+    std::uint32_t extractFile(const std::string &fileName, std::uint64_t fileSize);
+    std::pair<std::uint32_t, std::uint64_t> deflateFile(const std::string &fileName, std::uint64_t fileSize);
+    void storeFile(const std::string &fileName, std::uint64_t fileSize);
 
-            CZIP() = delete;
-            CZIP(const CZIP & orig) = delete;
-            CZIP(const CZIP && orig) = delete;
-            CZIP& operator=(CZIP other) = delete;
+    bool fileExists(const std::string &fileName);
+    std::uint32_t getFileAttributes(const std::string &fileName);
+    std::uint64_t getFileSize(const std::string &fileName);
+    std::pair<std::uint16_t, std::uint16_t> getFileModificationDateTime(const std::string &fileName);
 
-            // ===============
-            // PRIVATE METHODS
-            // ===============
+    void addFileHeaderAndContents(const std::string &fileName, const std::string &zippedFileName);
+    void UpdateCentralDirectory(void);
 
-            std::tm convertModificationDateTime(std::uint16_t dateWord, std::uint16_t timeWord);
+    // =================
+    // PRIVATE VARIABLES
+    // =================
 
-            std::uint32_t inflateFile(const std::string& fileName, std::uint64_t fileSize);
-            std::uint32_t extractFile(const std::string& fileName, std::uint64_t fileSize);
-            std::pair<std::uint32_t, std::uint64_t> deflateFile(const std::string& fileName, std::uint64_t fileSize);
-            void storeFile(const std::string& fileName, std::uint64_t fileSize);
+    //
+    // ZIP archive status
+    //
 
-            bool fileExists(const std::string& fileName);
-            std::uint32_t getFileAttributes(const std::string& fileName);
-            std::uint64_t getFileSize(const std::string& fileName);
-            std::pair<std::uint16_t, std::uint16_t> getFileModificationDateTime(const std::string& fileName);
+    bool m_open{false};
+    bool m_modified{false};
+    bool m_ZIP64{true};
 
-            void addFileHeaderAndContents(const std::string& fileName, const std::string& zippedFileName);
-            void UpdateCentralDirectory(void);
+    //
+    // ZIP archive filename and added contents list
+    //
 
-            // =================
-            // PRIVATE VARIABLES
-            // =================
+    std::string m_zipFileName;
 
-            //
-            // ZIP archive status
-            //
+    //
+    // Inflate/deflate buffers.
+    //
 
-            bool m_open{ false};
-            bool m_modified{ false};
-            bool m_ZIP64{ true};
+    std::vector<std::uint8_t> m_zipInBuffer;
+    std::vector<std::uint8_t> m_zipOutBuffer;
 
-            //
-            // ZIP archive filename and added contents list
-            //
+    //
+    //  ZIP(64) archive End Of Central Directory record  and  Central Directory
+    //
 
-            std::string m_zipFileName;
+    std::vector<CentralDirectoryFileHeader> m_zipCentralDirectory;
 
-            //
-            // Inflate/deflate buffers.
-            //
+    //
+    // Offset in ZIP archive to put next File Header added.
+    //
 
-            std::vector<std::uint8_t> m_zipInBuffer;
-            std::vector<std::uint8_t> m_zipOutBuffer;
+    std::uint64_t m_offsetToEndOfLocalFileHeaders{0};
 
-            //
-            //  ZIP(64) archive End Of Central Directory record  and  Central Directory
-            // 
+    //
+    // Offset in ZIP archive to put next File Header added.
+    //
 
-            std::vector<CentralDirectoryFileHeader> m_zipCentralDirectory;
+    std::uint64_t m_zipIOBufferSize{kZIPDefaultBufferSize};
+};
 
-            //
-            // Offset in ZIP archive to put next File Header added.
-            //
-
-            std::uint64_t m_offsetToEndOfLocalFileHeaders{ 0};
-
-
-            //
-            // Offset in ZIP archive to put next File Header added.
-            //
-
-            std::uint64_t m_zipIOBufferSize{ kZIPDefaultBufferSize};
-
-        };
-
-    } // namespace ZIP
-} // namespace Antik
+} // namespace Antik::ZIP
 
 #endif /* CZIP_HPP */
-
