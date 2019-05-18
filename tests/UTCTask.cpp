@@ -106,8 +106,8 @@ protected:
 
         // Create test actions
         
-        testTaskAction1.reset(new TestAction1("Test1"));
-        testTaskAction2.reset(new TestAction2("Test2"));
+        testTaskAction1 = std::make_shared<TestAction1>("Test1");
+        testTaskAction2 = std::make_shared<TestAction2>("Test2");
         
         // Create watch folder.
 
@@ -210,7 +210,7 @@ void UTCTask::createFiles(int fileCount) {
 
     std::unique_ptr<std::thread> taskThread;
 
-    taskThread.reset(new std::thread(&CTask::monitor, &task));
+    taskThread = std::make_unique<std::thread>(&CTask::monitor, &task);
      
     filePath = UTCTask::kWatchFolder;
 
@@ -409,7 +409,7 @@ TEST_F(UTCTask, ActionFunctionException) {
 
     std::unique_ptr<std::thread> taskThread;
 
-    taskThread.reset(new std::thread(&CTask::monitor, &task));
+    taskThread = std::make_unique<std::thread>(&CTask::monitor, &task);
     
     // Create one file to trigger action function
 
