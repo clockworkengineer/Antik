@@ -16,7 +16,7 @@
 // Description: Class to provide file extension to MIME type mapping, amongst
 // other MIME processing functionality.
 //
-// Dependencies:   C11++     - Language standard features used.
+// Dependencies:   C17++     - Language standard features used.
 //                 CMailSMTP - Base64 decoding.
 //
 

@@ -20,7 +20,7 @@
 // Note: That it only connects using TLS/SSL and  server URLs that
 // use the "imap://" prefix instead of "imaps://" will not work.
 //
-// Dependencies:   C11++     - Language standard features used.
+// Dependencies:   C17++     - Language standard features used.
 //                 CSocket   - Used to talk to IMAP server.
 //
 
@@ -305,7 +305,7 @@ void CIMAP::connect(void)
 
         // Allocate IO Buffer
 
-        m_ioBuffer.reset(new char[m_ioBufferSize]);
+        m_ioBuffer = std::make_unique<char[]>(m_ioBufferSize);
 
         // Login using set credentials
 
@@ -413,7 +413,7 @@ void CIMAP::setIOBufferSize(std::uint32_t bufferSize)
 {
 
     m_ioBufferSize = bufferSize;
-    m_ioBuffer.reset(new char[m_ioBufferSize]);
+    m_ioBuffer = std::make_unique<char[]>(m_ioBufferSize);
 }
 
 //

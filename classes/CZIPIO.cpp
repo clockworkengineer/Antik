@@ -17,7 +17,7 @@
 // It is the base class for CFileZIP but may be used standalone for
 // reading/writing ZIP archive information as and when required.
 //
-// Dependencies:   C11++     - Language standard features used.
+// Dependencies:   C17++     - Language standard features used.
 //
 
 // =================

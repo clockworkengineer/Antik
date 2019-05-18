@@ -53,7 +53,7 @@ public:
     void term(void) override {
     };
 
-    bool process(const std::string &/*file*/) override {
+    bool process([[maybe_unused]] const std::string &file) override {
         fileCount++;
         return true;
     }
@@ -77,7 +77,7 @@ public:
 
     void init(void) override {};
     void term(void) override {} ;
-    bool process(const std::string &/*file*/) override {
+    bool process([[maybe_unused]] const std::string &file) override {
          throw std::logic_error("Just an example.");
          return true;
     }

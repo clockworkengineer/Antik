@@ -17,7 +17,7 @@
 // 
 // Dependencies: 
 // 
-// C11++              : Use of C11++ features.
+// C17++              : Use of C17++ features.
 // Antik classes      : CSSHChannel
 //
 
@@ -159,7 +159,7 @@ namespace Antik {
             channel.requestShell();
 
             if (ioContext.useInternalInput()) {
-                shellInputThread.reset(new std::thread(readShellInput, std::ref(keyBuffer), std::ref(keyBuffferLock), std::ref(stopShellInput), std::ref(thrownException)));
+                 shellInputThread = std::make_unique<std::thread>(readShellInput, std::ref(keyBuffer), std::ref(keyBuffferLock), std::ref(stopShellInput), std::ref(thrownException));
             }
 
             while (channel.isOpen() && !channel.isEndOfFile()) {

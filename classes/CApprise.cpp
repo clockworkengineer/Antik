@@ -20,7 +20,7 @@
 // watches to be added/removed respectively. If no file event handler is passed then
 // it defaults to the Linux inotify implementation.
 //
-// Dependencies: C11++               - Language standard features used.
+// Dependencies: C17++               - Language standard features used.
 //
 
 // =================
@@ -95,7 +95,7 @@ CApprise::CApprise(const std::string &watchFolder, int watchDepth,
         }
         else
         {
-            m_fileEventNotifier.reset(new CFileEventNotifier());
+            m_fileEventNotifier = std::make_shared<CFileEventNotifier>();
         }
 
         if (!watchFolder.empty())
@@ -240,7 +240,7 @@ void CApprise::startWatching(bool clearQueue)
         {
             m_fileEventNotifier->clearEventQueue();
         }
-        m_watcherThread.reset(new std::thread(&IFileEventNotifier::generateEvents, m_fileEventNotifier));
+        m_watcherThread = std::make_unique<std::thread>(&IFileEventNotifier::generateEvents, m_fileEventNotifier);
     }
     catch (const std::exception &e)
     {

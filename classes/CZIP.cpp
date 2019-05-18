@@ -20,7 +20,7 @@
 // instead of stat for 64 bit files. The current class compiles and works on
 // Linux/CYGWIN and it marks the archives as created on Unix.
 //
-// Dependencies:   C11++     - Language standard features used.
+// Dependencies:   C17++     - Language standard features used.
 //                 ziplib    - File compression/decompression
 //                 Linux     - stat64 call for file information.
 //

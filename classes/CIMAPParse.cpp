@@ -22,7 +22,7 @@
 // this is mirrored back in the response. So perform case-insensitive compares
 // for any commands in responses.
 //
-// Dependencies:   C11++     - Language standard features used.
+// Dependencies:   C17++     - Language standard features used.
 //
 
 // =================
@@ -198,7 +198,7 @@ void CIMAPParse::parseList(const std::string &item, FetchRespData &fetchData, st
 // response map to distinguish between multiple octet fetches that might occur.
 //
 
-void CIMAPParse::parseOctets(const std::string &/*item*/, FetchRespData &fetchData, std::string &line, std::istringstream &responseStream)
+void CIMAPParse::parseOctets([[maybe_unused]] const std::string &item, FetchRespData &fetchData, std::string &line, std::istringstream &responseStream)
 {
 
     std::string octet;
@@ -793,7 +793,7 @@ CIMAPParse::COMMANDRESPONSE CIMAPParse::parseResponse(const std::string &command
     // Create command parse/response  data
 
     CommandData commandData{stringTag(commandLine), commandLine, responseStream};
-    commandData.resp.reset(new CommandResponse{findCommandCode->second});
+    commandData.resp = std::make_unique<CommandResponse>(findCommandCode->second);
 
     // Find parse function or use default if none present
 

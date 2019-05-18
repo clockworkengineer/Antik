@@ -19,7 +19,7 @@
 // The code to restore the original output streams is called from the objects
 // destructor thus providing convenient for restoring the original stream.
 //
-// Dependencies: C11++ - Language standard features used.
+// Dependencies: C17++ - Language standard features used.
 //
 
 // =================
@@ -120,7 +120,7 @@ CRedirect::~CRedirect()
 
 void CRedirect::change(const std::string &outfileName, std::ios_base::openmode mode)
 {
-    m_newFileStream.reset(new std::ofstream{outfileName, mode});
+    m_newFileStream = std::make_unique<std::ofstream>(outfileName, mode);
     m_outputBuffer = m_savedStream->rdbuf();
     m_savedStream->rdbuf((m_newFileStream)->rdbuf());
 }

@@ -17,7 +17,7 @@
 // just a simple adapter class for any boost file system path functionality that
 // is required.
 //
-// Dependencies:   C11++ - Language standard features used.
+// Dependencies:   C17++ - Language standard features used.
 //                 Boost - Filesystem.
 //
 

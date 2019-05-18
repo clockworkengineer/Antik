@@ -18,7 +18,7 @@
 //
 // Note: TLS/SSL connections are supported.
 //
-// Dependencies:   C11++        - Language standard features used.
+// Dependencies:   C17++        - Language standard features used.
 //                 CSocket   -  - Used to talk to FTP server.
 //
 
@@ -504,7 +504,7 @@ std::uint16_t CFTP::connect(void)
 
         // Allocate IO Buffer
 
-        m_ioBuffer.reset(new char[m_ioBufferSize]);
+        m_ioBuffer = std::make_unique<char[]>(m_ioBufferSize);
 
         m_dataChannelSocket.setHostAddress(Antik::Network::CSocket::localIPAddress());
         ;

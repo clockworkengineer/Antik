@@ -19,7 +19,7 @@
 // only has basic TLS/SSL support and is geared more towards client support but this may
 // change in future.
 //
-// Dependencies:   C11++        - Language standard features used.
+// Dependencies:   C17++        - Language standard features used.
 //                 BOOST ASIO   - Used to talk to FTP server.
 //
 
@@ -89,7 +89,7 @@ void CSocket::connectionListener()
 
         m_isListenThreadRunning = true;
 
-        std::unique_ptr<SSLSocket> socket{new SSLSocket(m_ioService, *m_sslContext)};
+        std::unique_ptr<SSLSocket> socket = std::make_unique<SSLSocket>(m_ioService, *m_sslContext); 
         if (!socket)
         {
             throw std::runtime_error("Could not create socket.");
@@ -164,7 +164,7 @@ void CSocket::listenForConnection()
 
         // Start connection listener thread and wait until its listening
 
-        m_socketListenThread.reset(new std::thread(&CSocket::connectionListener, this));
+        m_socketListenThread = std::make_unique<std::thread>(&CSocket::connectionListener, this);
         while (!m_isListenThreadRunning)
         {
             continue;
@@ -219,7 +219,7 @@ void CSocket::connect()
     try
     {
 
-        std::unique_ptr<SSLSocket> socket{new SSLSocket(m_ioService, *m_sslContext)};
+        std::unique_ptr<SSLSocket> socket = std::make_unique<SSLSocket>(m_ioService, *m_sslContext);
         if (!socket)
         {
             throw std::runtime_error("Could not create socket.");
@@ -428,13 +428,13 @@ void CSocket::setTLSVersion(TLSVerion version)
     switch (m_tlsVersion)
     {
     case TLSVerion::v1_0:
-        m_sslContext.reset(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
+        m_sslContext = std::make_unique<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv1);
         break;
     case TLSVerion::v1_1:
-        m_sslContext.reset(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv11));
+        m_sslContext = std::make_unique<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv11);
         break;
     case TLSVerion::v1_2:
-        m_sslContext.reset(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv12));
+        m_sslContext = std::make_unique<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12);
         break;
     }
 }

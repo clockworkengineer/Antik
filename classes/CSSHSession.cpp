@@ -18,7 +18,7 @@
 // three main client authorization methods then it can be used as a base class. It is very much
 // a wrapper class for libssh session functionality but it also wraps the main data structures
 // in unique pointers with there own custom deleters. It tries to hide as much of its
-// implementation using libssh as possible and use/return C11++ data structure/exceptions.
+// implementation using libssh as possible and use/return C17++ data structure/exceptions.
 // It is not complete by any means but may be updated to future to use more libssh features.
 //
 // Note: The libssh documentation says that sessions may be reused after they are disconnected;
@@ -27,7 +27,7 @@
 //
 // Dependencies:
 //
-// C11++        - Language standard features used.
+// C17++        - Language standard features used.
 // libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.7.5)
 //
 

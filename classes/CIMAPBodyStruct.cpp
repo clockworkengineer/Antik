@@ -17,7 +17,7 @@
 // and allow it to be traversed in-order and calling a user provided function
 // for each body part to do things such as search and store attachment data.
 //
-// Dependencies:   C11++     - Language standard features used.
+// Dependencies:   C17++     - Language standard features used.
 //
 
 // =================
@@ -112,7 +112,7 @@ void CIMAPBodyStruct::parseBodyPart(BodyPart &bodyPart)
 
     std::string part{bodyPart.part.substr(1)};
 
-    bodyPart.parsedPart.reset(new BodyPartParsed());
+    bodyPart.parsedPart = std::make_unique<BodyPartParsed>();
 
     parseNext(part, bodyPart.parsedPart->type);
     parseNext(part, bodyPart.parsedPart->subtype);
@@ -190,7 +190,7 @@ void CIMAPBodyStruct::createBodyStructTree(std::unique_ptr<BodyNode> &bodyNode, 
         else if (part[1] == '(')
         {
             bodyNode->bodyParts.push_back({"", "", nullptr, nullptr});
-            bodyNode->bodyParts.back().child.reset(new BodyNode());
+            bodyNode->bodyParts.back().child = std::make_unique<BodyNode>();
             bodyNode->bodyParts.back().child->partLevel = bodyNode->partLevel + std::to_string(partNo);
             createBodyStructTree(bodyNode->bodyParts.back().child, part);
         }
@@ -210,7 +210,7 @@ void CIMAPBodyStruct::createBodyStructTree(std::unique_ptr<BodyNode> &bodyNode, 
 // If a body structure part contains file attachment details then extract them.
 //
 
-void CIMAPBodyStruct::attachmentFn(std::unique_ptr<BodyNode> &/*bodyNode*/, BodyPart &bodyPart, std::shared_ptr<void> &attachmentData)
+void CIMAPBodyStruct::attachmentFn([[maybe_unused]] std::unique_ptr<BodyNode> &bodyNode, BodyPart &bodyPart, std::shared_ptr<void> &attachmentData)
 {
 
     AttachmentData *attachments{static_cast<AttachmentData *>(attachmentData.get())};

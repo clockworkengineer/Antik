@@ -16,7 +16,7 @@
 // Description: File event notifier pass to CApprise class constructor. This is
 // the default Linux inotify implementation.
 //
-// Dependencies: C11++               - Language standard features used.
+// Dependencies: C17++               - Language standard features used.
 //               inotify/Linux       - Linux file system events
 //
 
@@ -154,7 +154,7 @@ CFileEventNotifier::CFileEventNotifier() : m_doWork{true}
 
     // Allocate inotify read buffer
 
-    m_inotifyBuffer.reset(new std::uint8_t[kInotifyEventBuffLen]);
+    m_inotifyBuffer = std::make_unique<std::uint8_t[]>(kInotifyEventBuffLen);
 
     // Create watch table
 
@@ -435,7 +435,7 @@ void CFileEventNotifier::generateEvents(void)
                 switch (event->mask)
                 {
 
-                    // Flag file as being created
+                // Flag file as being created
 
                 case IN_CREATE:
                 {
@@ -443,7 +443,7 @@ void CFileEventNotifier::generateEvents(void)
                     break;
                 }
 
-                    // If file not being created send Event_change
+                // If file not being created send Event_change
 
                 case IN_MODIFY:
                 {
@@ -455,7 +455,7 @@ void CFileEventNotifier::generateEvents(void)
                     break;
                 }
 
-                    // Add watch for new directory and send Event_addir
+                // Add watch for new directory and send Event_addir
 
                 case (IN_ISDIR | IN_CREATE):
                 case (IN_ISDIR | IN_MOVED_TO):
@@ -465,7 +465,7 @@ void CFileEventNotifier::generateEvents(void)
                     break;
                 }
 
-                    // Directory deleted send Event_unlinkdir
+                // Directory deleted send Event_unlinkdir
 
                 case (IN_ISDIR | IN_DELETE):
                 {
@@ -473,7 +473,7 @@ void CFileEventNotifier::generateEvents(void)
                     break;
                 }
 
-                    // Remove watch for deleted/moved directory
+                // Remove watch for deleted/moved directory
 
                 case (IN_ISDIR | IN_MOVED_FROM):
                 case IN_DELETE_SELF:
@@ -482,7 +482,7 @@ void CFileEventNotifier::generateEvents(void)
                     break;
                 }
 
-                    // File deleted send Event_unlink
+                // File deleted send Event_unlink
 
                 case IN_DELETE:
                 {
@@ -490,7 +490,7 @@ void CFileEventNotifier::generateEvents(void)
                     break;
                 }
 
-                    // File moved into directory send Event_add.
+                // File moved into directory send Event_add.
 
                 case IN_MOVED_TO:
                 {
@@ -498,7 +498,7 @@ void CFileEventNotifier::generateEvents(void)
                     break;
                 }
 
-                    // File closed. If being created send Event_add otherwise Event_change.
+                // File closed. If being created send Event_add otherwise Event_change.
 
                 case IN_CLOSE_WRITE:
                 {

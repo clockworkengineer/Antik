@@ -17,12 +17,12 @@
 // commands on remote files. It is very much a wrapper class for libssh scp functionality
 // but it also wraps the main data structures in unique pointers with there own custom deleters.
 // It also tries to hide as much of its implementation using libssh as possible and use/return
-// C11++ data structures/exceptions. It is not complete by any means but may be updated to
+// C17++ data structures/exceptions. It is not complete by any means but may be updated to
 // future to use more libssh features.
 //
 // Dependencies:
 //
-// C11++        - Language standard features used.
+// C17++        - Language standard features used.
 // libssh       - Used to talk to SSH server (https://www.libssh.org/) (0.7.5)
 //
 
@@ -336,7 +336,7 @@ void CSCP::setIoBufferSize(std::uint32_t ioBufferSize)
 {
 
     m_ioBufferSize = ioBufferSize;
-    m_ioBuffer.reset(new char[m_ioBufferSize]);
+    m_ioBuffer = std::make_unique<char[]>(m_ioBufferSize);
 }
 
 std::uint32_t CSCP::getIoBufferSize() const

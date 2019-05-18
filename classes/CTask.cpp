@@ -17,7 +17,7 @@
 // on a watch folder and to process each file added with a task action function
 // provided as a parameter in its constructor.
 //
-// Dependencies: C11++               - Language standard features used.
+// Dependencies: C17++               - Language standard features used.
 //               Class CLogger       - Logging functionality.
 //               Class CFileApprise  - File event handling abstraction.
 //
@@ -87,7 +87,8 @@ CTask::CTask(
 
     // Create CFileApprise watcher object.
 
-    m_watcher.reset(new CApprise{watchFolder, watchDepth});
+    m_watcher = std::make_unique<CApprise>(watchFolder, watchDepth);
+    
 }
 
 //

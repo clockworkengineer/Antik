@@ -14,7 +14,7 @@
 //
 // Description:    Simple C++ wrapper class for the libcurl easy interface.
 //
-// Dependencies:   C11++     - Language standard features used.
+// Dependencies:   C17++     - Language standard features used.
 //                 libcurl   - Used to talk to servers.
 //
 

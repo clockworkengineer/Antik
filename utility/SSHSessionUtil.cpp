@@ -17,7 +17,7 @@
 // 
 // Dependencies: 
 // 
-// C11++              : Use of C11++ features.
+// C17++              : Use of C17++ features.
 // Antik classes      : CSSHSession
 //
 

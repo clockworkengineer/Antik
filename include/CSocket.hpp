@@ -88,7 +88,7 @@ public:
     CSocket()
     {
         // Default SSL context use TLS v1.2
-        m_sslContext.reset(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv12));
+        m_sslContext = std::make_unique<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12);
     }
 
     // ==========
