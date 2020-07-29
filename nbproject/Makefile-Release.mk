@@ -14,14 +14,14 @@ GREP=grep
 NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
-CC=clang
-CCC=clang++
-CXX=clang++
+CC=gcc
+CCC=g++
+CXX=g++
 FC=gfortran
 AS=as
 
 # Macros
-CND_PLATFORM=CLang-Linux
+CND_PLATFORM=GNU-Linux
 CND_DLIB_EXT=so
 CND_CONF=Release
 CND_DISTDIR=dist
@@ -242,27 +242,27 @@ ${OBJECTDIR}/utility/SSHSessionUtil.o: utility/SSHSessionUtil.cpp
 
 ${TESTDIR}/TestFiles/f1: ${TESTDIR}/tests/ITCApprise.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc} -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS}   -lboost_system -lboost_filesystem `pkg-config --libs libssh` `pkg-config --libs libssh_threads` `pkg-config --libs zlib` `pkg-config --libs libcurl` `pkg-config --libs openssl` -lpthread  -lgtest   
+	${LINK.cc} -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS}   -lboost_system -lboost_filesystem `pkg-config --libs libssh` `pkg-config --libs zlib` `pkg-config --libs libcurl` `pkg-config --libs openssl` -lpthread  -lgtest   
 
 ${TESTDIR}/TestFiles/f2: ${TESTDIR}/tests/UTCFile.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc} -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS}   -lboost_system -lboost_filesystem `pkg-config --libs libssh` `pkg-config --libs libssh_threads` `pkg-config --libs zlib` `pkg-config --libs libcurl` `pkg-config --libs openssl` -lpthread  -lgtest   
+	${LINK.cc} -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS}   -lboost_system -lboost_filesystem `pkg-config --libs libssh` `pkg-config --libs zlib` `pkg-config --libs libcurl` `pkg-config --libs openssl` -lpthread  -lgtest   
 
 ${TESTDIR}/TestFiles/f3: ${TESTDIR}/tests/UTCIMAPParse.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc} -o ${TESTDIR}/TestFiles/f3 $^ ${LDLIBSOPTIONS}   -lboost_system -lboost_filesystem `pkg-config --libs libssh` `pkg-config --libs libssh_threads` `pkg-config --libs zlib` `pkg-config --libs libcurl` `pkg-config --libs openssl` -lpthread  -lgtest   
+	${LINK.cc} -o ${TESTDIR}/TestFiles/f3 $^ ${LDLIBSOPTIONS}   -lboost_system -lboost_filesystem `pkg-config --libs libssh` `pkg-config --libs zlib` `pkg-config --libs libcurl` `pkg-config --libs openssl` -lpthread  -lgtest   
 
 ${TESTDIR}/TestFiles/f4: ${TESTDIR}/tests/UTCPath.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc} -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS}   -lboost_system -lboost_filesystem `pkg-config --libs libssh` `pkg-config --libs libssh_threads` `pkg-config --libs zlib` `pkg-config --libs libcurl` `pkg-config --libs openssl` -lpthread  -lgtest   
+	${LINK.cc} -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS}   -lboost_system -lboost_filesystem `pkg-config --libs libssh` `pkg-config --libs zlib` `pkg-config --libs libcurl` `pkg-config --libs openssl` -lpthread  -lgtest   
 
 ${TESTDIR}/TestFiles/f5: ${TESTDIR}/tests/UTCSMTP.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc} -o ${TESTDIR}/TestFiles/f5 $^ ${LDLIBSOPTIONS}   -lboost_system -lboost_filesystem `pkg-config --libs libssh` `pkg-config --libs libssh_threads` `pkg-config --libs zlib` `pkg-config --libs libcurl` `pkg-config --libs openssl` -lpthread  -lgtest   
+	${LINK.cc} -o ${TESTDIR}/TestFiles/f5 $^ ${LDLIBSOPTIONS}   -lboost_system -lboost_filesystem `pkg-config --libs libssh` `pkg-config --libs zlib` `pkg-config --libs libcurl` `pkg-config --libs openssl` -lpthread  -lgtest   
 
 ${TESTDIR}/TestFiles/f6: ${TESTDIR}/tests/UTCTask.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc} -o ${TESTDIR}/TestFiles/f6 $^ ${LDLIBSOPTIONS}   -lboost_system -lboost_filesystem `pkg-config --libs libssh` `pkg-config --libs libssh_threads` `pkg-config --libs zlib` `pkg-config --libs libcurl` `pkg-config --libs openssl` -lpthread  -lgtest   
+	${LINK.cc} -o ${TESTDIR}/TestFiles/f6 $^ ${LDLIBSOPTIONS}   -lboost_system -lboost_filesystem `pkg-config --libs libssh` `pkg-config --libs zlib` `pkg-config --libs libcurl` `pkg-config --libs openssl` -lpthread  -lgtest   
 
 
 ${TESTDIR}/tests/ITCApprise.o: tests/ITCApprise.cpp 

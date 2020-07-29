@@ -124,7 +124,7 @@
             <pElem>include</pElem>
             <pElem>classes/implementation</pElem>
           </incDir>
-          <commandLine>-Wall -Werror -Wextra -std=c++17 -fsanitize=address</commandLine>
+          <commandLine>-Wall -Werror -Wextra -std=c++17</commandLine>
         </ccTool>
         <archiverTool>
         </archiverTool>
@@ -189,7 +189,7 @@
       </item>
       <folder path="TestFiles">
         <ccTool>
-          <commandLine>-Wall -Werror -std=c++17</commandLine>
+          <commandLine>-Wall -Werror -std=c++17 -fsanitize=address</commandLine>
         </ccTool>
         <linkerTool>
           <linkerLibItems>
@@ -463,7 +463,6 @@
             <linkerOptionItem>-lboost_system</linkerOptionItem>
             <linkerOptionItem>-lboost_filesystem</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs libssh`</linkerOptionItem>
-            <linkerOptionItem>`pkg-config --libs libssh_threads`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs libcurl`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs openssl`</linkerOptionItem>

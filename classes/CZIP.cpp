@@ -168,6 +168,8 @@ std::uint32_t CZIP::inflateFile(const std::string &fileName, std::uint64_t fileS
             {
             case Z_NEED_DICT:
                 inflateResult = Z_DATA_ERROR;
+                inflateEnd(&inlateZIPStream);
+                throw Exception("Error inflating ZIP archive. = " + std::to_string(inflateResult));
             case Z_DATA_ERROR:
             case Z_MEM_ERROR:
                 inflateEnd(&inlateZIPStream);

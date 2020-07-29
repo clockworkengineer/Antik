@@ -324,7 +324,7 @@ int CSSHSession::userAuthorizationWithKeyboardInteractive()
 int CSSHSession::isServerKnown()
 {
 
-    return (ssh_is_server_known(m_session));
+    return (ssh_session_is_known_server(m_session)==SSH_KNOWN_HOSTS_OK);
 }
 
 //
@@ -393,7 +393,7 @@ std::string CSSHSession::convertKeyHashToHex(std::vector<unsigned char> &keyHash
 void CSSHSession::writeKnownHost()
 {
 
-    if (ssh_write_knownhost(m_session) != SSH_OK)
+    if (ssh_session_update_known_hosts(m_session) != SSH_OK)
     {
         throw Exception(*this, __func__);
     }

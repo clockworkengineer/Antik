@@ -14,14 +14,14 @@ GREP=grep
 NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
-CC=clang
-CCC=clang++
-CXX=clang++
+CC=gcc
+CCC=g++
+CXX=g++
 FC=gfortran
 AS=as
 
 # Macros
-CND_PLATFORM=CLang-Linux
+CND_PLATFORM=GNU-Linux
 CND_DLIB_EXT=so
 CND_CONF=Debug
 CND_DISTDIR=dist
@@ -86,8 +86,8 @@ TESTOBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-Wall -Werror -Wextra -std=c++17 -fsanitize=address
-CXXFLAGS=-Wall -Werror -Wextra -std=c++17 -fsanitize=address
+CCFLAGS=-Wall -Werror -Wextra -std=c++17
+CXXFLAGS=-Wall -Werror -Wextra -std=c++17
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -268,37 +268,37 @@ ${TESTDIR}/TestFiles/f6: ${TESTDIR}/tests/UTCTask.o ${OBJECTFILES:%.o=%_nomain.o
 ${TESTDIR}/tests/ITCApprise.o: tests/ITCApprise.cpp 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -Iclasses/implementation -I. -Wall -Werror -std=c++17 -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/ITCApprise.o tests/ITCApprise.cpp
+	$(COMPILE.cc) -g -Iinclude -Iclasses/implementation -I. -Wall -Werror -std=c++17 -fsanitize=address -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/ITCApprise.o tests/ITCApprise.cpp
 
 
 ${TESTDIR}/tests/UTCFile.o: tests/UTCFile.cpp 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -Iclasses/implementation -I. -Wall -Werror -std=c++17 -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCFile.o tests/UTCFile.cpp
+	$(COMPILE.cc) -g -Iinclude -Iclasses/implementation -I. -Wall -Werror -std=c++17 -fsanitize=address -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCFile.o tests/UTCFile.cpp
 
 
 ${TESTDIR}/tests/UTCIMAPParse.o: tests/UTCIMAPParse.cpp 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -Iclasses/implementation -I. -Wall -Werror -std=c++17 -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCIMAPParse.o tests/UTCIMAPParse.cpp
+	$(COMPILE.cc) -g -Iinclude -Iclasses/implementation -I. -Wall -Werror -std=c++17 -fsanitize=address -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCIMAPParse.o tests/UTCIMAPParse.cpp
 
 
 ${TESTDIR}/tests/UTCPath.o: tests/UTCPath.cpp 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -Iclasses/implementation -I. -Wall -Werror -std=c++17 -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCPath.o tests/UTCPath.cpp
+	$(COMPILE.cc) -g -Iinclude -Iclasses/implementation -I. -Wall -Werror -std=c++17 -fsanitize=address -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCPath.o tests/UTCPath.cpp
 
 
 ${TESTDIR}/tests/UTCSMTP.o: tests/UTCSMTP.cpp 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -Iclasses/implementation -I. -Wall -Werror -std=c++17 -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCSMTP.o tests/UTCSMTP.cpp
+	$(COMPILE.cc) -g -Iinclude -Iclasses/implementation -I. -Wall -Werror -std=c++17 -fsanitize=address -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCSMTP.o tests/UTCSMTP.cpp
 
 
 ${TESTDIR}/tests/UTCTask.o: tests/UTCTask.cpp 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -Iclasses/implementation -I. -Wall -Werror -std=c++17 -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCTask.o tests/UTCTask.cpp
+	$(COMPILE.cc) -g -Iinclude -Iclasses/implementation -I. -Wall -Werror -std=c++17 -fsanitize=address -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/UTCTask.o tests/UTCTask.cpp
 
 
 ${OBJECTDIR}/classes/CApprise_nomain.o: ${OBJECTDIR}/classes/CApprise.o classes/CApprise.cpp 
