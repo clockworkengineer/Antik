@@ -1,15 +1,4 @@
 #include "HOST.hpp"
-/*
- * File:   CRedirect.cpp
- * 
- * Author: Robert Tizzard
- *
- * Created on October 24, 2016, 2:34 PM
- * 
- * Copyright 2016.
- *
- */
-
 // Class: CRedirect
 //
 // Description: This is a small self contained utility class designed

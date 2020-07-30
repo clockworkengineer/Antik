@@ -31,7 +31,7 @@
       <itemPath>include/CommonUtil.hpp</itemPath>
       <itemPath>include/FTPUtil.hpp</itemPath>
       <itemPath>include/HOST.hpp</itemPath>
-      <itemPath>/home/robt/Projects/NetBeansProjects/Antik/include/IApprise.hpp</itemPath>
+      <itemPath>include/IApprise.hpp</itemPath>
       <itemPath>include/SCPUtil.hpp</itemPath>
       <itemPath>include/SFTPUtil.hpp</itemPath>
       <itemPath>include/SSHChannelUtil.hpp</itemPath>
@@ -129,11 +129,6 @@
         <archiverTool>
         </archiverTool>
       </compileType>
-      <item path="/home/robt/Projects/NetBeansProjects/Antik/include/IApprise.hpp"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="classes/CApprise.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="classes/CCurl.cpp" ex="false" tool="1" flavor2="0">
@@ -341,6 +336,8 @@
       </item>
       <item path="include/HOST.hpp" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="include/IApprise.hpp" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="include/SCPUtil.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/SFTPUtil.hpp" ex="false" tool="3" flavor2="0">
@@ -399,11 +396,6 @@
         <archiverTool>
         </archiverTool>
       </compileType>
-      <item path="/home/robt/Projects/NetBeansProjects/Antik/include/IApprise.hpp"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="classes/CApprise.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="classes/CCurl.cpp" ex="false" tool="1" flavor2="0">
@@ -606,6 +598,8 @@
       <item path="include/FTPUtil.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/HOST.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/IApprise.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/SCPUtil.hpp" ex="false" tool="3" flavor2="0">
       </item>

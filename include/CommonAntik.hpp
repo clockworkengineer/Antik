@@ -1,14 +1,3 @@
-/*
- * File:   CommonAntik.hpp
- * 
- * Author: Robert Tizzard
- * 
- * Created on September 23, 2017, 2:33 PM
- *
- * Copyright 2017.
- *
- */
-
 #ifndef COMMON_ANTIK_HPP
 #define COMMON_ANTIK_HPP
 

@@ -1,14 +1,3 @@
-/*
- * File:   CSocket.hpp
- * 
- * Author: Robert Tizzard
- * 
- * Created on September 23, 2017, 2:33 PM
- *
- * Copyright 2017.
- *
- */
-
 #ifndef CSOCKET_HPP
 #define CSOCKET_HPP
 

@@ -1,14 +1,3 @@
-/*
- * File:   CRedirect.hpp
- * 
- * Author: Robert Tizzard
- *
- * Created on October 24, 2016, 2:34 PM
- *
- * Copyright 2016.
- *
- */
-
 #ifndef REDIRECT_HPP
 #define REDIRECT_HPP
 

@@ -1,14 +1,4 @@
-/*
- * File:   CCurl.cpp
- *  
- * Author: Robert Tizzard
- * 
- * Created on October 04, 2018, 2:33 PM
- *
- * Copyright 2016.
- *
- */
-
+#include "HOST.hpp"
 //
 // Class: CCurl
 //

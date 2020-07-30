@@ -1,15 +1,4 @@
 #include "HOST.hpp"
-/*
- * File:   CZIPIO.cpp
- * 
- * Author: Robert Tizzard
- * 
- * Created on March 24, 2017, 2:33 PM
- *
- * Copyright 2017.
- *
- */
-
 //
 // Class: CZIPIO
 //

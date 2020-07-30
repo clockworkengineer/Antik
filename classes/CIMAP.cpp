@@ -1,15 +1,4 @@
 #include "HOST.hpp"
-/*
- * File:   CIMAP.cpp
- * 
- * Author: Robert Tizzard
- * 
- * Created on January 24, 2017, 2:33 PM
- *
- * Copyright 2016.
- *
- */
-
 //
 // Class: CIMAP
 //

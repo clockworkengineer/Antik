@@ -1,14 +1,3 @@
-/*
- * File:   CSFTP.hpp
- * 
- * Author: Robert Tizzard
- * 
- * Created on September 23, 2017, 2:33 PM
- *
- * Copyright 2017.
- *
- */
-
 #ifndef CSFTP_HPP
 #define CSFTP_HPP
 

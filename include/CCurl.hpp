@@ -1,14 +1,3 @@
-/*
- * File:   Curl.hpp
- * 
- * Author: Robert Tizzard
- * 
- * Created on August 04, 2018, 2:33 PM
- *
- * Copyright 2017.
- *
- */
-
 #ifndef CURL_HPP
 #define CURL_HPP
 

@@ -1,15 +1,4 @@
 #include "HOST.hpp"
-/*
- * File:   FTPUtil.cpp
- * 
- * Author: Robert Tizzard
- *
- * Created on October 10, 2017, 2:34 PM
- * 
- * Copyright 2017.
- * 
- */
-
 //
 // Module: FTPUtil
 //

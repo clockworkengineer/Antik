@@ -1,14 +1,3 @@
-/*
- * File:   CSCP.hpp
- * 
- * Author: Robert Tizzard
- * 
- * Created on September 23, 2017, 2:33 PM
- *
- * Copyright 2017.
- *
- */
-
 #ifndef CSCP_HPP
 #define CSCP_HPP
 

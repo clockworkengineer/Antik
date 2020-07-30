@@ -1,14 +1,3 @@
-/*
- * File:   CommonUtil.hpp
- * 
- * Author: Robert Tizzard
- *
- * Created on April 10, 2017, 2:34 PM
- * 
- * Copyright 2017.
- * 
- */
-
 #ifndef COMMONUTIL_HPP
 #define COMMONUTIL_HPP
 

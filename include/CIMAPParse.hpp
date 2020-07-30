@@ -1,14 +1,3 @@
-/*
- * File:   ClIMAPParse.hpp
- * 
- * Author: Robert Tizzard
- * 
- * Created on January 24, 2017, 2:33 PM
- *
- * Copyright 2016.
- *
- */
-
 #ifndef CIMAPPARSE_HPP
 #define CIMAPPARSE_HPP
 

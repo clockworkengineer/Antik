@@ -1,15 +1,4 @@
 #include "HOST.hpp"
-/*
- * File:   CSFTP.cpp
- * 
- * Author: Robert Tizzard
- * 
- * Created on September 23, 2017, 2:33 PM
- *
- * Copyright 2017.
- *
- */
-
 //
 // Class: CSFTP
 //

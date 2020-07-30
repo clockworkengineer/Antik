@@ -1,14 +1,3 @@
-/*
- * File:   SSHChannelUtil.hpp
- * 
- * Author: Robert Tizzard
- *
- * Created on April 10, 2017, 2:34 PM
- * 
- * Copyright 2017.
- * 
- */
-
 #ifndef SSHCHANNELUTIL_HPP
 #define SSHCHANNELUTIL_HPP
 

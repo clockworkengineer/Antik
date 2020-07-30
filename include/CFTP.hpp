@@ -1,14 +1,3 @@
-/*
- * File:   CFTP.hpp
- * 
- * Author: Robert Tizzard
- * 
- * Created on September 23, 2017, 2:33 PM
- *
- * Copyright 2017.
- *
- */
-
 #ifndef CFTP_HPP
 #define CFTP_HPP
 

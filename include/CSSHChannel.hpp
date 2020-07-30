@@ -1,14 +1,3 @@
-/*
- * File:   CSSHChannel.hpp
- * 
- * Author: Robert Tizzard
- * 
- * Created on September 23, 2017, 2:33 PM
- *
- * Copyright 2017.
- *
- */
-
 #ifndef CSSHCHANNEL_HPP
 #define CSSHCHANNEL_HPP
 

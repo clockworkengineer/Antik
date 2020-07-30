@@ -1,15 +1,4 @@
 #include "HOST.hpp"
-/*
- * File:   CSocket.cpp
- * 
- * Author: Robert Tizzard
- * 
- * Created on October 10, 2017, 2:33 PM
- *
- * Copyright 2017.
- *
- */
-
 //
 // Class: CSocket
 //

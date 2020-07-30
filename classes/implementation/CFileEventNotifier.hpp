@@ -1,13 +1,3 @@
-/*
- * File:   CFileEventNotifier.hpp
- * 
- * Author: Robert Tizzard
- * 
- * Created on October 24, 2016, 2:33 PM
- *
- * Copyright 2016.
- *
- */
 
 #ifndef CFILEEVENTNOTIFIER_HPP
 #define CFILEEVENTNOTIFIER_HPP

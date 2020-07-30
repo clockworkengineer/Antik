@@ -1,14 +1,3 @@
-/*
- * File:   SFTPUtil.hpp
- * 
- * Author: Robert Tizzard
- *
- * Created on April 10, 2017, 2:34 PM
- * 
- * Copyright 2017.
- * 
- */
-
 #ifndef SFTPUTIL_HPP
 #define SFTPUTIL_HPP
 
