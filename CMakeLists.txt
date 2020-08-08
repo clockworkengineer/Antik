@@ -35,7 +35,7 @@ file(GLOB ANTIK_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp" "${CMAKE_CU
 
 add_library(${PROJECT_NAME} STATIC ${ANTIK_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/classes/implementation)
-target_link_libraries(${PROJECT_NAME} Boost::program_options Boost::filesystem Threads::Threads curl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_LIBRARIES} ssh ssh_threads)
+target_link_libraries(${PROJECT_NAME} PRIVATE Boost::program_options Boost::filesystem Threads::Threads curl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_LIBRARIES} ssh)
 
 #install(TARGETS ${PROJECT_NAME} DESTINATION ${PROJECT_NAME}/lib)
 #install(FILES ${ANTIK_INCLUDES} DESTINATION ${PROJECT_NAME}/include)
