@@ -1,11 +1,17 @@
 cmake_minimum_required(VERSION 3.10.2)
 
-project("antik" VERSION 0.1.0 DESCRIPTION "Antik C++ Static Library")
+project("Antik C++ Library" VERSION 0.1.0 DESCRIPTION "Antik C++ Static Library")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra")
+
+set(ANTIK_LIBRARY_NAME antik)
+
+# Enable unit tests
+
+enable_testing()
 
 # Add Boost, threads, curl, libssh, openssl, zlib libraries
 
@@ -33,10 +39,12 @@ file(GLOB ANTIK_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp" "${CMAKE_CU
 
 # Antik library
 
-add_library(${PROJECT_NAME} STATIC ${ANTIK_SOURCES})
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/classes/implementation)
-target_link_libraries(${PROJECT_NAME} PRIVATE Boost::program_options Boost::filesystem Threads::Threads curl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_LIBRARIES} ssh)
+add_library(${ANTIK_LIBRARY_NAME} STATIC ${ANTIK_SOURCES})
+target_include_directories(${ANTIK_LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/classes/implementation)
+target_link_libraries(${ANTIK_LIBRARY_NAME} PRIVATE Boost::program_options Boost::filesystem Threads::Threads curl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_LIBRARIES} ssh)
 
-#install(TARGETS ${PROJECT_NAME} DESTINATION ${PROJECT_NAME}/lib)
-#install(FILES ${ANTIK_INCLUDES} DESTINATION ${PROJECT_NAME}/include)
+add_subdirectory(tests)
+
+install(TARGETS ${PROJECT_NANTIK_LIBRARY} DESTINATION ${ANTIK_LIBRARY_NAME}/lib)
+install(FILES ${ANTIK_INCLUDES} DESTINATION ${ANTIK_LIBRARY_NAME}/include)
 

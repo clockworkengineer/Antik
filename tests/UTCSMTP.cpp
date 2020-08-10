@@ -202,12 +202,3 @@ TEST_F(UTCSMTP, CheckForNulls) {
     EXPECT_TRUE(mailMessage.find('\0') == std::string::npos);
 
 }
-
-// =====================
-// RUN GOOGLE UNIT TESTS
-// =====================
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}

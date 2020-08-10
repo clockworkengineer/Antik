@@ -200,12 +200,3 @@ TEST_F(UTCPath, AbsolutePath) {
     ASSERT_STREQ((CPath::currentPath()+"/test").c_str(), path.absolutePath().c_str());
 
 }
-
-// =====================
-// RUN GOOGLE UNIT TESTS
-// =====================
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}

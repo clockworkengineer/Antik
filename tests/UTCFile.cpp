@@ -390,12 +390,3 @@ TEST_F(UTCFile, RemoveFile) {
     EXPECT_FALSE(CFile::exists(kTestPathName1));
     
 }
-
-// =====================
-// RUN GOOGLE UNIT TESTS
-// =====================
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}

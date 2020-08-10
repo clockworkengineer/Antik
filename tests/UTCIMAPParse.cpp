@@ -742,12 +742,3 @@ TEST_F(UTCIMAPParse, FETCHValidWithBYE) {
     EXPECT_TRUE(parsedResponse->byeSent);
     
 }
-
-// =====================
-// RUN GOOGLE UNIT TESTS
-// =====================
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
