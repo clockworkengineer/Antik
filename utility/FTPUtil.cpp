@@ -1,4 +1,3 @@
-#include "HOST.hpp"
 //
 // Module: FTPUtil
 //

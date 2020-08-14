@@ -1,4 +1,4 @@
-#include "HOST.hpp"
+//
 // Class: CRedirect
 //
 // Description: This is a small self contained utility class designed

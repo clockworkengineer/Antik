@@ -1,4 +1,3 @@
-#include "HOST.hpp"
 //
 // Class: CFileEventNotifier
 //
@@ -32,6 +31,8 @@
 //
 
 #include <sys/ioctl.h>
+#include <unistd.h>
+
 
 // =========
 // NAMESPACE

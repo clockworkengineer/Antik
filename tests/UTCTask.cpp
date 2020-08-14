@@ -1,4 +1,3 @@
-#include "HOST.hpp"
 /*
  * File:   UTCTask.cpp
  * 
