@@ -34,8 +34,63 @@ find_package(Threads REQUIRED)
 
 # Antik sources and includes
 
-file(GLOB ANTIK_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/classes/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/classes/implementation/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/utility/*.cpp")
-file(GLOB ANTIK_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp" "${CMAKE_CURRENT_SOURCE_DIR}/classes/implementation/*.hpp")
+set (ANTIK_SOURCES
+    ./classes/CApprise.cpp
+    ./classes/CCurl.cpp
+    ./classes/CFile.cpp
+    ./classes/CFTP.cpp
+    ./classes/CIMAPBodyStruct.cpp
+    ./classes/CIMAP.cpp
+    ./classes/CIMAPParse.cpp
+    ./classes/CMIME.cpp
+    ./classes/CPath.cpp
+    ./classes/CRedirect.cpp
+    ./classes/CSCP.cpp
+    ./classes/CSFTP.cpp
+    ./classes/CSMTP.cpp
+    ./classes/CSocket.cpp
+    ./classes/CSSHChannel.cpp
+    ./classes/CSSHSession.cpp
+    ./classes/CTask.cpp
+    ./classes/CZIP.cpp
+    ./classes/CZIPIO.cpp
+    ./classes/implementation/CFileEventNotifier.cpp
+    ./utility/FTPUtil.cpp
+    ./utility/SCPUtil.cpp
+    ./utility/SFTPUtil.cpp
+    ./utility/SSHChannelUtil.cpp
+    ./utility/SSHSessionUtil.cpp
+)
+
+set (ANTIK_INCLUDES
+    ./include/CApprise.hpp
+    ./include/CCurl.hpp
+    ./include/CFile.hpp
+    ./include/CFTP.hpp
+    ./include/CIMAPBodyStruct.hpp
+    ./include/CIMAP.hpp
+    ./include/CIMAPParse.hpp
+    ./include/CMIME.hpp
+    ./include/CommonAntik.hpp
+    ./include/CommonUtil.hpp
+    ./include/CPath.hpp
+    ./include/CRedirect.hpp
+    ./include/CSCP.hpp
+    ./include/CSFTP.hpp
+    ./include/CSMTP.hpp
+    ./include/CSocket.hpp
+    ./include/CSSHChannel.hpp
+    ./include/CSSHSession.hpp
+    ./include/CTask.hpp
+    ./include/CZIP.hpp
+    ./include/CZIPIO.hpp
+    ./include/FTPUtil.hpp
+    ./include/IApprise.hpp
+    ./include/SCPUtil.hpp
+    ./include/SFTPUtil.hpp
+    ./include/SSHChannelUtil.hpp
+    ./include/SSHSessionUtil.hpp
+)
 
 # Antik library
 

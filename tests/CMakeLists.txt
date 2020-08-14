@@ -9,9 +9,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra")
 
 set(TEST_EXECUTABLE ${ANTIK_LIBRARY_NAME}_tests)
 
-file(GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/UTC*.cpp")
-
-set(SOURCES ${TEST_SOURCES})
+set(TEST_SOURCES
+    UTCApprise.cpp
+    UTCFile.cpp
+    UTCIMAPParse.cpp
+    UTCPath.cpp
+    UTCSMTP.cpp
+    UTCTask.cpp
+)
 
 add_executable(${TEST_EXECUTABLE} ${TEST_SOURCES})
 target_include_directories(${TEST_EXECUTABLE} PUBLIC ../include ../classes/implementation)
