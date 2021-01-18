@@ -61,9 +61,9 @@ bool CFile::exists(const CPath &filePath)
 {
     try
     {
-        return (boost::filesystem::exists(filePath.toString()));
+        return (std::filesystem::exists(filePath.toString()));
     }
-    catch (const boost::filesystem::filesystem_error &e)
+    catch (const std::filesystem::filesystem_error &e)
     {
         throw Exception(e.what());
     }
@@ -77,9 +77,9 @@ bool CFile::isFile(const CPath &filePath)
 {
     try
     {
-        return (boost::filesystem::is_regular(filePath.toString()));
+        return std::filesystem::is_regular_file(filePath.toString());
     }
-    catch (const boost::filesystem::filesystem_error &e)
+    catch (const std::filesystem::filesystem_error &e)
     {
         throw Exception(e.what());
     }
@@ -93,9 +93,9 @@ CFile::Status CFile::fileStatus(const CPath &filePath)
 {
     try
     {
-        return (boost::filesystem::status(filePath.toString()));
+        return (std::filesystem::status(filePath.toString()));
     }
-    catch (const boost::filesystem::filesystem_error &e)
+    catch (const std::filesystem::filesystem_error &e)
     {
         throw Exception(e.what());
     }
@@ -109,9 +109,9 @@ bool CFile::isDirectory(const CPath &filePath)
 {
     try
     {
-        return (boost::filesystem::is_directory(filePath.toString()));
+        return (std::filesystem::is_directory(filePath.toString()));
     }
-    catch (const boost::filesystem::filesystem_error &e)
+    catch (const std::filesystem::filesystem_error &e)
     {
         throw Exception(e.what());
     }
@@ -125,9 +125,9 @@ bool CFile::createDirectory(const CPath &directoryPath)
 {
     try
     {
-        return (boost::filesystem::create_directories(directoryPath.toString()));
+        return (std::filesystem::create_directories(directoryPath.toString()));
     }
-    catch (const boost::filesystem::filesystem_error &e)
+    catch (const std::filesystem::filesystem_error &e)
     {
         throw Exception(e.what());
     }
@@ -141,9 +141,9 @@ void CFile::remove(const CPath &filePath)
 {
     try
     {
-        boost::filesystem::remove(filePath.toString());
+        std::filesystem::remove(filePath.toString());
     }
-    catch (const boost::filesystem::filesystem_error &e)
+    catch (const std::filesystem::filesystem_error &e)
     {
         throw Exception(e.what());
     }
@@ -157,9 +157,9 @@ void CFile::setPermissions(const CPath &filePath, Permissions permissions)
 {
     try
     {
-        boost::filesystem::permissions(filePath.toString(), permissions);
+        std::filesystem::permissions(filePath.toString(), permissions);
     }
-    catch (const boost::filesystem::filesystem_error &e)
+    catch (const std::filesystem::filesystem_error &e)
     {
         throw Exception(e.what());
     }
@@ -173,10 +173,10 @@ void CFile::copy(const CPath &sourcePath, const CPath &destinationPath)
 {
     try
     {
-        boost::filesystem::copy_file(sourcePath.toString(), destinationPath.toString(),
-                                     boost::filesystem::copy_option::none);
+        std::filesystem::copy_file(sourcePath.toString(), destinationPath.toString(),
+                                     std::filesystem::copy_options::none);
     }
-    catch (const boost::filesystem::filesystem_error &e)
+    catch (const std::filesystem::filesystem_error &e)
     {
         throw Exception(e.what());
     }
@@ -190,9 +190,9 @@ void CFile::rename(const CPath &sourcePath, const CPath &destinationPath)
 {
     try
     {
-        boost::filesystem::rename(sourcePath.toString(), destinationPath.toString());
+        std::filesystem::rename(sourcePath.toString(), destinationPath.toString());
     }
-    catch (const boost::filesystem::filesystem_error &e)
+    catch (const std::filesystem::filesystem_error &e)
     {
         throw Exception(e.what());
     }
@@ -210,13 +210,13 @@ FileList CFile::directoryContentsList(const CPath &localDirectory)
     try
     {
 
-        for (auto &directoryEntry : boost::filesystem::
+        for (auto &directoryEntry : std::filesystem::
                  recursive_directory_iterator{localDirectory.toString()})
         {
             fileList.emplace_back(directoryEntry.path().string());
         }
     }
-    catch (const boost::filesystem::filesystem_error &e)
+    catch (const std::filesystem::filesystem_error &e)
     {
         throw Exception(e.what());
     }
@@ -233,9 +233,9 @@ CFile::Time CFile::lastWriteTime(const CPath &filePath)
 
     try
     {
-        return (boost::filesystem::last_write_time(filePath.toString()));
+        return (std::filesystem::last_write_time(filePath.toString()));
     }
-    catch (const boost::filesystem::filesystem_error &e)
+    catch (const std::filesystem::filesystem_error &e)
     {
         throw Exception(e.what());
     }

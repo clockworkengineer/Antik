@@ -6,6 +6,7 @@
 //
 
 #include <stdexcept>
+#include <filesystem>
 
 //
 // Antik classes
@@ -49,9 +50,9 @@ public:
     // File information, permissions and Time structures.
     //
 
-    using Status = boost::filesystem::file_status;
-    using Permissions = boost::filesystem::perms;
-    using Time = time_t;
+    using Status = std::filesystem::file_status;
+    using Permissions = std::filesystem::perms;
+    using Time = std::filesystem::file_time_type;
 
     // ============
     // CONSTRUCTORS

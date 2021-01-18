@@ -249,7 +249,7 @@ namespace Antik {
 
                     fileStatus = CFile::fileStatus(sourceFile);
 
-                    remoteFile = sftpServer.openFile(destinationFile, O_CREAT | O_WRONLY | O_TRUNC, fileStatus.permissions());
+                    remoteFile = sftpServer.openFile(destinationFile, O_CREAT | O_WRONLY | O_TRUNC, (int) fileStatus.permissions());
 
                     for (;;) {
 
