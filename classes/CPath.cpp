@@ -2,11 +2,11 @@
 // Class: CPath
 //
 // Description: File path interrogation and manipulation.  At present this is
-// just a simple adapter class for any boost file system path functionality that
-// is required.
+// just a simple adapter class for any std::filesystem library functionality
+// required and should gradually be phased out to using the std::filesystem
+// directly.
 //
 // Dependencies:   C17++ - Language standard features used.
-//                 Boost - Filesystem.
 //
 
 // =================
@@ -30,121 +30,129 @@
 namespace Antik::File
 {
 
-// ===========================
-// PRIVATE TYPES AND CONSTANTS
-// ===========================
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
 
-// ==========================
-// PUBLIC TYPES AND CONSTANTS
-// ==========================
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
 
-// ========================
-// PRIVATE STATIC VARIABLES
-// ========================
+    // ========================
+    // PRIVATE STATIC VARIABLES
+    // ========================
 
-// =======================
-// PUBLIC STATIC VARIABLES
-// =======================
+    // =======================
+    // PUBLIC STATIC VARIABLES
+    // =======================
 
-// ===============
-// PRIVATE METHODS
-// ===============
+    // ===============
+    // PRIVATE METHODS
+    // ===============
 
-// ==============
-// PUBLIC METHODS
-// ==============
+    // ==============
+    // PUBLIC METHODS
+    // ==============
 
-//
-// Return path value as string
-//
+    //
+    // Return path value as string
+    //
 
-std::string CPath::toString(void) const
-{
-    return m_path.string();
-};
+    std::string CPath::toString(void) const
+    {
+        return m_path.string();
+    };
 
-//
-// Return parent directory CPath
-//
+    //
+    // Return parent directory CPath
+    //
 
-CPath CPath::parentPath(void)
-{
-    return (m_path.parent_path().string());
-}
+    CPath CPath::parentPath(void)
+    {
+        return (m_path.parent_path().string());
+    }
 
-//
-// Return path filename (including extension).
-//
+    //
+    // Return path filename (including extension).
+    //
 
-std::string CPath::fileName(void) const
-{
-    return m_path.filename().string();
-};
+    std::string CPath::fileName(void) const
+    {
+        return m_path.filename().string();
+    };
 
-//
-// Return path base file name (without extension).
-//
+    //
+    // Return path base file name (without extension).
+    //
 
-std::string CPath::baseName(void) const
-{
-    return m_path.stem().string();
-};
+    std::string CPath::baseName(void) const
+    {
+        return m_path.stem().string();
+    };
 
-//
-// Return path extension.
-//
+    //
+    // Return path extension.
+    //
 
-std::string CPath::extension(void) const
-{
-    return m_path.extension().string();
-};
+    std::string CPath::extension(void) const
+    {
+        return m_path.extension().string();
+    };
 
-//
-// Append partial path to path.
-//
+    //
+    // Append partial path to path.
+    //
 
-void CPath::join(const std::string &partialPath)
-{
-    m_path /= partialPath;
-}
+    void CPath::join(const std::string &partialPath)
+    {
+        m_path /= partialPath;
+    }
 
-//
-// Replace paths extension.
-//
+    //
+    // Replace paths extension.
+    //
 
-void CPath::replaceExtension(const std::string &extension)
-{
-    m_path.replace_extension(extension);
-}
+    void CPath::replaceExtension(const std::string &extension)
+    {
+        m_path.replace_extension(extension);
+    }
 
-//
-// Normalize path.
-//
+    //
+    // Normalize path.
+    //
 
-void CPath::normalize(void)
-{
-    m_path = m_path.normalize();
-}
+    void CPath::normalize(void)
+    {
+        m_path = std::filesystem::canonical(m_path);
+    }
 
-//
-// Return absolute path value.
-//
+    //
+    // Return absolute path value.
+    //
 
-std::string CPath::absolutePath()
-{
-    std::string path = boost::filesystem::absolute(m_path).lexically_normal().string();
-    if (path.back() == '.')
-        path.pop_back();
-    return (path);
-}
+    std::string CPath::absolutePath()
+    {
+        std::string path;
+        if (!m_path.string().empty())
+        {
+            path = std::filesystem::absolute(m_path).lexically_normal().string();
+            if (path.back() == '.')
+            {
+                path.pop_back();
+            }
+        } else {
+            path = currentPath();
+        }
+        return (path);
+    }
 
-//
-// Return current set path value.
-//
+    //
+    // Return current set path value.
+    //
 
-std::string CPath::currentPath()
-{
-    return (boost::filesystem::current_path().string());
-}
+    std::string CPath::currentPath()
+    {
+        return (std::filesystem::current_path().string());
+    }
 
 } // namespace Antik::File

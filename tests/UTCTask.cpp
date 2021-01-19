@@ -23,6 +23,7 @@
 
 #include <stdexcept>
 #include <sstream>
+#include <fstream>
 
 // CTask class
 

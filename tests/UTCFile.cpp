@@ -22,6 +22,7 @@
 // C++ STL
 
 #include <stdexcept>
+#include <fstream>
 
 // CTask class
 

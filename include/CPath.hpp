@@ -6,19 +6,13 @@
 //
 
 #include <stdexcept>
+#include <filesystem>
 
 //
 // Antik classes
 //
 
 #include "CommonAntik.hpp"
-
-//
-// BOOST filesystem, iterators
-//
-
-#include <boost/filesystem.hpp>
-#include <boost/range/iterator_range.hpp>
 
 // =========
 // NAMESPACE
@@ -108,7 +102,7 @@ private:
     // PRIVATE VARIABLES
     // =================
 
-    boost::filesystem::path m_path;
+    std::filesystem::path m_path;
 };
 
 } // namespace Antik::File
