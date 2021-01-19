@@ -238,8 +238,6 @@ namespace Antik {
 
             } catch (const CFTP::Exception &e) {
                 std::cerr << e.what() << std::endl;
-            } catch (const boost::filesystem::filesystem_error & e) {
-                std::cerr << e.what() << std::endl;
             } catch (const std::exception &e) {
                 std::cerr << e.what() << std::endl;
             }
@@ -344,8 +342,7 @@ namespace Antik {
 
             } catch (const CFTP::Exception &e) {
                 std::cerr << e.what() << std::endl;
-            } catch (const boost::filesystem::filesystem_error & e) {
-                std::cerr << e.what() << std::endl;
+
             } catch (const std::exception &e) {
                 std::cerr << e.what() << std::endl;
             }

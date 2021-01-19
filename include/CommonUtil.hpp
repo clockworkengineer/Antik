@@ -9,10 +9,13 @@
 // C++ STL
 //
 
+#include <filesystem>
+
 //
 // Antik classes
 //
 
+#include "CPath.hpp"
 #include "CommonAntik.hpp"
 
 //
@@ -54,16 +57,16 @@ public:
 
     std::string toLocal(const std::string &filePath)
     {
-        boost::filesystem::path localPath{m_localDirectory + kServerPathSep + filePath.substr(m_remoteDirectory.size())};
+        File::CPath localPath{m_localDirectory + kServerPathSep + filePath.substr(m_remoteDirectory.size())};
         localPath.normalize();
-        return (localPath.string());
+        return (localPath.toString());
     }
 
     std::string toRemote(const std::string &filePath)
     {
-        boost::filesystem::path remotePath{m_remoteDirectory + kServerPathSep + filePath.substr(m_localDirectory.size())};
+        File::CPath remotePath{m_remoteDirectory + kServerPathSep + filePath.substr(m_localDirectory.size())};
         remotePath.normalize();
-        return (remotePath.string());
+        return (remotePath.toString());
     }
 
     std::string getRemoteDirectory() const
@@ -88,7 +91,7 @@ private:
 static inline void listLocalRecursive(const std::string &localDirectory, FileList &fileList, FileFeedBackFn localFileFeedbackFn = nullptr)
 {
 
-    for (auto directoryEntry : boost::filesystem::recursive_directory_iterator{localDirectory})
+    for (auto directoryEntry : std::filesystem::recursive_directory_iterator{localDirectory})
     {
         fileList.push_back(directoryEntry.path().string());
         if (localFileFeedbackFn)
