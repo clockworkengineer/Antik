@@ -19,7 +19,7 @@ set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_RUNTIME OFF)
 
-find_package(Boost COMPONENTS filesystem program_options) 
+find_package(Boost COMPONENTS program_options) 
 
 find_package(OpenSSL REQUIRED)
 
@@ -96,7 +96,7 @@ set (ANTIK_INCLUDES
 
 add_library(${ANTIK_LIBRARY_NAME} STATIC ${ANTIK_SOURCES})
 target_include_directories(${ANTIK_LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/classes/implementation)
-target_link_libraries(${ANTIK_LIBRARY_NAME} PRIVATE Boost::program_options Boost::filesystem Threads::Threads curl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_LIBRARIES} ssh)
+target_link_libraries(${ANTIK_LIBRARY_NAME} PRIVATE Boost::program_options Threads::Threads curl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_LIBRARIES} ssh)
 
 add_subdirectory(tests)
 
