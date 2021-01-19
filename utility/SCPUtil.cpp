@@ -9,7 +9,6 @@
 // 
 // C17++              : Use of C17++ features.
 // Antik classes      : CSCP
-// Boost              : File system.
 //
 
 // =============
@@ -22,18 +21,13 @@
 
 #include <iostream>
 #include <system_error>
+#include <filesystem>
 
 //
 // SCP utility definitions
 //
 
 #include "SCPUtil.hpp"
-
-//
-// Boost file system
-//
-
-#include <boost/filesystem.hpp>
 
 // =========
 // NAMESPACE
@@ -45,8 +39,6 @@ namespace Antik {
         // =======
         // IMPORTS
         // =======
-
-        namespace fs = boost::filesystem;
 
         // ===============
         // LOCAL FUNCTIONS
@@ -60,7 +52,7 @@ namespace Antik {
         static void makeRemotePath(CSCP &scpServer, const std::string &remotePath, const CSCP::FilePermissions permissions) {
 
             std::vector<std::string> pathComponents;
-            fs::path currentPath{ std::string(1, kServerPathSep)};
+            std::filesystem::path currentPath{ std::string(1, kServerPathSep)};
 
             boost::split(pathComponents, remotePath, boost::is_any_of(std::string(1, kServerPathSep)));
 
@@ -90,8 +82,8 @@ namespace Antik {
 
             scpServer.acceptRequest();
 
-            if (!fs::exists(fs::path(destinationFile).parent_path())) {
-                fs::create_directories(fs::path(destinationFile).parent_path());
+            if (!std::filesystem::exists(std::filesystem::path(destinationFile).parent_path())) {
+                std::filesystem::create_directories(std::filesystem::path(destinationFile).parent_path());
             }
 
             localFile.open(destinationFile, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
@@ -115,7 +107,7 @@ namespace Antik {
 
             localFile.close();
 
-            fs::permissions(destinationFile, static_cast<fs::perms> (filePermissions));
+            std::filesystem::permissions(destinationFile, static_cast<std::filesystem::perms> (filePermissions));
 
         }
 
@@ -161,30 +153,30 @@ namespace Antik {
 
 
             std::ifstream localFile;
-            fs::file_status fileStatus;
+            std::filesystem::file_status fileStatus;
 
             localFile.open(sourceFile, std::ios_base::in | std::ios_base::binary);
             if (!localFile) {
                 throw std::system_error(errno, std::system_category());
             }
 
-            fileStatus = fs::status(fs::path(sourceFile).parent_path().string());
+            fileStatus = std::filesystem::status(std::filesystem::path(sourceFile).parent_path().string());
 
             CSCP scpServer{ sshSession, SSH_SCP_WRITE | SSH_SCP_RECURSIVE, std::string(1, kServerPathSep)};
 
             scpServer.open();
 
-            if (fs::is_directory(sourceFile)) {
+            if (std::filesystem::is_directory(sourceFile)) {
 
-                makeRemotePath(scpServer, fs::path(destinationFile).string(), fileStatus.permissions());
+                makeRemotePath(scpServer, std::filesystem::path(destinationFile).string(), (CSCP::FilePermissions) fileStatus.permissions());
 
-            } else if (fs::is_regular_file(sourceFile)) {
+            } else if (std::filesystem::is_regular_file(sourceFile)) {
 
-                makeRemotePath(scpServer, fs::path(destinationFile).parent_path().string(), fileStatus.permissions());
+                makeRemotePath(scpServer, std::filesystem::path(destinationFile).parent_path().string(), (CSCP::FilePermissions) fileStatus.permissions());
 
-                fileStatus = fs::status(fs::path(sourceFile));
+                fileStatus = std::filesystem::status(std::filesystem::path(sourceFile));
 
-                scpServer.pushFile(fs::path(destinationFile).filename().string(), fs::file_size(sourceFile), fileStatus.permissions());
+                scpServer.pushFile(std::filesystem::path(destinationFile).filename().string(), std::filesystem::file_size(sourceFile), (CSCP::FilePermissions) fileStatus.permissions());
 
                 for (;;) {
 
@@ -222,8 +214,8 @@ namespace Antik {
                 CSCP scpServer{ sshSession, SSH_SCP_READ | SSH_SCP_RECURSIVE, fileMapper.getRemoteDirectory()};
 
                 int pullStatus;
-                fs::path currentPath{ fileMapper.getRemoteDirectory()};
-                fs::path localFilePath;
+                std::filesystem::path currentPath{ fileMapper.getRemoteDirectory()};
+                std::filesystem::path localFilePath;
 
                 scpServer.open();
 
@@ -252,10 +244,10 @@ namespace Antik {
 
                         case SSH_SCP_REQUEST_NEWDIR:
                             currentPath /= scpServer.requestFileName();
-                            if (!fs::exists(fileMapper.toLocal(currentPath.string()))) {
-                                fs::create_directories(fileMapper.toLocal(currentPath.string()));
-                                fs::permissions(fileMapper.toLocal(currentPath.string()),
-                                        static_cast<fs::perms> (scpServer.requestFilePermissions()));
+                            if (!std::filesystem::exists(fileMapper.toLocal(currentPath.string()))) {
+                                std::filesystem::create_directories(fileMapper.toLocal(currentPath.string()));
+                                std::filesystem::permissions(fileMapper.toLocal(currentPath.string()),
+                                        static_cast<std::filesystem::perms> (scpServer.requestFilePermissions()));
                                 successList.push_back(fileMapper.toLocal(currentPath.string()));
                                 if (completionFn) {
                                     completionFn(successList.back());
