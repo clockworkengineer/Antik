@@ -8,254 +8,200 @@
 // watches to be added/removed respectively. If no file event handler is passed then
 // it defaults to the Linux inotify implementation.
 //
-// Dependencies: C17++               - Language standard features used.
+// Dependencies: C20++               - Language standard features used.
 //
-
 // =================
 // CLASS DEFINITIONS
 // =================
-
 #include "CApprise.hpp"
 #include "CFileEventNotifier.hpp"
-
 // ====================
 // CLASS IMPLEMENTATION
 // ====================
-
 //
 // C++ STL
 //
-
 #include <cassert>
 #include <algorithm>
-
 // =========
 // NAMESPACE
 // =========
-
 namespace Antik::File
 {
-
-// ===========================
-// PRIVATE TYPES AND CONSTANTS
-// ===========================
-
-// ==========================
-// PUBLIC TYPES AND CONSTANTS
-// ==========================
-
-// ========================
-// PRIVATE STATIC VARIABLES
-// ========================
-
-// =======================
-// PUBLIC STATIC VARIABLES
-// =======================
-
-// ===============
-// PRIVATE METHODS
-// ===============
-
-// ==============
-// PUBLIC METHODS
-// ==============
-
-//
-// Main CApprise object constructor.
-//
-
-CApprise::CApprise(const std::string &watchFolder, int watchDepth,
-                   std::shared_ptr<IFileEventNotifier> fileEventNotifier) : m_watchFolder{watchFolder}, m_watchDepth{watchDepth}
-{
-
-    // ASSERT if passed parameters invalid
-
-    assert(watchDepth >= -1); // < -1
-
-    try
+    // ===========================
+    // PRIVATE TYPES AND CONSTANTS
+    // ===========================
+    // ==========================
+    // PUBLIC TYPES AND CONSTANTS
+    // ==========================
+    // ========================
+    // PRIVATE STATIC VARIABLES
+    // ========================
+    // =======================
+    // PUBLIC STATIC VARIABLES
+    // =======================
+    // ===============
+    // PRIVATE METHODS
+    // ===============
+    // ==============
+    // PUBLIC METHODS
+    // ==============
+    //
+    // Main CApprise object constructor.
+    //
+    CApprise::CApprise(const std::string &watchFolder, int watchDepth,
+                       std::shared_ptr<IFileEventNotifier> fileEventNotifier) : m_watchFolder{watchFolder}, m_watchDepth{watchDepth}
     {
-
-        // If no handler passed then use default
-
-        if (fileEventNotifier.get())
+        // ASSERT if passed parameters invalid
+        assert(watchDepth >= -1); // < -1
+        try
         {
-            m_fileEventNotifier = fileEventNotifier;
-        }
-        else
-        {
-            m_fileEventNotifier = std::make_shared<CFileEventNotifier>();
-        }
-
-        if (!watchFolder.empty())
-        {
-
-            // Remove path trailing '/'
-
-            if ((m_watchFolder).back() == '/')
+            // If no handler passed then use default
+            if (fileEventNotifier.get())
             {
-                (m_watchFolder).pop_back();
+                m_fileEventNotifier = fileEventNotifier;
             }
-
-            // Save away max watch depth and modify with watch folder depth value if not all (-1).
-
-            m_watchDepth = watchDepth;
-            if (watchDepth != -1)
+            else
             {
-                m_watchDepth += std::count(watchFolder.begin(), watchFolder.end(), '/');
+                m_fileEventNotifier = std::make_shared<CFileEventNotifier>();
+            }
+            if (!watchFolder.empty())
+            {
+                // Remove path trailing '/'
+                if ((m_watchFolder).back() == '/')
+                {
+                    (m_watchFolder).pop_back();
+                }
+                // Save away max watch depth and modify with watch folder depth value if not all (-1).
+                m_watchDepth = watchDepth;
+                if (watchDepth != -1)
+                {
+                    m_watchDepth += std::count(watchFolder.begin(), watchFolder.end(), '/');
+                }
+            }
+            // Set watch depth for notifier
+            m_fileEventNotifier->setWatchDepth(watchDepth);
+            // Add non empty watch folder
+            if (!m_watchFolder.empty())
+            {
+                m_fileEventNotifier->addWatch(m_watchFolder);
             }
         }
-
-        // Set watch depth for notifier
-
-        m_fileEventNotifier->setWatchDepth(watchDepth);
-
-        // Add non empty watch folder
-
-        if (!m_watchFolder.empty())
+        catch (const std::exception &e)
         {
-            m_fileEventNotifier->addWatch(m_watchFolder);
+            throw Exception(e.what());
         }
     }
-    catch (const std::exception &e)
+    //
+    // CApprise Destructor
+    //
+    CApprise::~CApprise()
     {
-        throw Exception(e.what());
     }
-}
-
-//
-// CApprise Destructor
-//
-
-CApprise::~CApprise()
-{
-}
-
-//
-// CApprise still watching folder(s)
-//
-
-bool CApprise::stillWatching(void)
-{
-
-    try
+    //
+    // CApprise still watching folder(s)
+    //
+    bool CApprise::stillWatching(void)
     {
-        return (m_fileEventNotifier->stillWatching());
-    }
-    catch (const std::exception &e)
-    {
-        throw Exception(e.what());
-    }
-}
-
-//
-// Check whether termination of CApprise was the result of any thrown exception
-//
-
-std::exception_ptr CApprise::getThrownException(void)
-{
-
-    try
-    {
-        return (m_fileEventNotifier->getThrownException());
-    }
-    catch (const std::exception &e)
-    {
-        throw Exception(e.what());
-    }
-}
-
-//
-// Add watch (file or directory)
-//
-
-void CApprise::addWatch(const std::string &filePath)
-{
-
-    try
-    {
-        m_fileEventNotifier->addWatch(filePath);
-    }
-    catch (const std::exception &e)
-    {
-        throw Exception(e.what());
-    }
-}
-
-//
-// Remove watch
-//
-
-void CApprise::removeWatch(const std::string &filePath)
-{
-
-    try
-    {
-        m_fileEventNotifier->removeWatch(filePath);
-    }
-    catch (const std::exception &e)
-    {
-        throw Exception(e.what());
-    }
-}
-
-//
-// Get next CApprise event in queue.
-//
-
-void CApprise::getNextEvent(CApprise::Event &evt)
-{
-
-    try
-    {
-        m_fileEventNotifier->getNextEvent(evt);
-    }
-    catch (const std::exception &e)
-    {
-        throw Exception(e.what());
-    }
-}
-
-//
-// Start watching for file events
-//
-
-void CApprise::startWatching(bool clearQueue)
-{
-
-    try
-    {
-        if (clearQueue)
+        try
         {
-            m_fileEventNotifier->clearEventQueue();
+            return (m_fileEventNotifier->stillWatching());
         }
-        m_watcherThread = std::make_unique<std::thread>(&IFileEventNotifier::generateEvents, m_fileEventNotifier);
-    }
-    catch (const std::exception &e)
-    {
-        throw Exception(e.what());
-    }
-}
-
-//
-// Stop watching for file events
-//
-
-void CApprise::stopWatching(void)
-{
-
-    try
-    {
-        m_fileEventNotifier->stopEventGeneration();
-
-        if (m_watcherThread)
+        catch (const std::exception &e)
         {
-            m_watcherThread->join();
+            throw Exception(e.what());
         }
     }
-    catch (const std::exception &e)
+    //
+    // Check whether termination of CApprise was the result of any thrown exception
+    //
+    std::exception_ptr CApprise::getThrownException(void)
     {
-        throw Exception(e.what());
+        try
+        {
+            return (m_fileEventNotifier->getThrownException());
+        }
+        catch (const std::exception &e)
+        {
+            throw Exception(e.what());
+        }
     }
-}
-
+    //
+    // Add watch (file or directory)
+    //
+    void CApprise::addWatch(const std::string &filePath)
+    {
+        try
+        {
+            m_fileEventNotifier->addWatch(filePath);
+        }
+        catch (const std::exception &e)
+        {
+            throw Exception(e.what());
+        }
+    }
+    //
+    // Remove watch
+    //
+    void CApprise::removeWatch(const std::string &filePath)
+    {
+        try
+        {
+            m_fileEventNotifier->removeWatch(filePath);
+        }
+        catch (const std::exception &e)
+        {
+            throw Exception(e.what());
+        }
+    }
+    //
+    // Get next CApprise event in queue.
+    //
+    void CApprise::getNextEvent(CApprise::Event &evt)
+    {
+        try
+        {
+            m_fileEventNotifier->getNextEvent(evt);
+        }
+        catch (const std::exception &e)
+        {
+            throw Exception(e.what());
+        }
+    }
+    //
+    // Start watching for file events
+    //
+    void CApprise::startWatching(bool clearQueue)
+    {
+        try
+        {
+            if (clearQueue)
+            {
+                m_fileEventNotifier->clearEventQueue();
+            }
+            m_watcherThread = std::make_unique<std::thread>(&IFileEventNotifier::generateEvents, m_fileEventNotifier);
+        }
+        catch (const std::exception &e)
+        {
+            throw Exception(e.what());
+        }
+    }
+    //
+    // Stop watching for file events
+    //
+    void CApprise::stopWatching(void)
+    {
+        try
+        {
+            m_fileEventNotifier->stopEventGeneration();
+            if (m_watcherThread)
+            {
+                m_watcherThread->join();
+            }
+        }
+        catch (const std::exception &e)
+        {
+            throw Exception(e.what());
+        }
+    }
 } // namespace Antik::File

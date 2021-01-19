@@ -7,230 +7,176 @@
  * 
  * Description: Google unit tests for class CIMAPParse.
  *
- * Copyright 2016.
+ * Copyright 2021.
  *
  */
-
 // =============
 // INCLUDE FILES
 // =============
-
 // Google test
-
 #include "gtest/gtest.h"
-
 // C++ STL
-
 #include <stdexcept>
-
 // CIMAP/CIMAPParse class
-
-#include "CIMAP.hpp" 
+#include "CIMAP.hpp"
 #include "CIMAPParse.hpp"
-
 using namespace Antik::IMAP;
-
 // =======================
 // UNIT TEST FIXTURE CLASS
 // =======================
-
-class UTCIMAPParse : public ::testing::Test {
+class UTCIMAPParse : public ::testing::Test
+{
 protected:
-
     // Empty constructor
-
-    UTCIMAPParse() {
+    UTCIMAPParse()
+    {
     }
-
     // Empty destructor
-
-    ~UTCIMAPParse() override {
+    ~UTCIMAPParse() override
+    {
     }
-
-    void SetUp() override {
+    void SetUp() override
+    {
     }
-
-    void TearDown() override {
+    void TearDown() override
+    {
     }
-    
     static void checkListRespData(CIMAPParse::ListRespData &respData, std::uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr);
-
-
 };
-
 // =================
 // FIXTURE CONSTANTS
 // =================
-
 // ===============
 // FIXTURE METHODS
 // ===============
-
-void UTCIMAPParse::checkListRespData(CIMAPParse::ListRespData &respData, std::uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr) {
-
+void UTCIMAPParse::checkListRespData(CIMAPParse::ListRespData &respData, std::uint8_t hierDel, const std::string &attributesStr, const std::string &mailBoxNameStr)
+{
     EXPECT_EQ(hierDel, respData.hierDel);
     ASSERT_STREQ(attributesStr.c_str(), respData.attributes.c_str());
     ASSERT_STREQ(mailBoxNameStr.c_str(), respData.mailBoxName.c_str());
-
 }
-
 // =====================
 // TASK CLASS UNIT TESTS
 // =====================
-
-TEST_F(UTCIMAPParse, SELECTValid) {
-
+TEST_F(UTCIMAPParse, SELECTValid)
+{
     std::vector<std::string> selectResponseStr = {
-        { "A000001 SELECT INBOX"},
-        { "* 1 EXISTS"},
-        { "* 0 RECENT"},
-        { "* FLAGS (\\Seen \\Answered \\Flagged \\Deleted \\Draft $MDNSent)"},
-        { "* OK [PERMANENTFLAGS (\\Seen \\Answered \\Flagged \\Deleted \\Draft $MDNSent)] Permanent flags"},
-        { "* OK [UIDVALIDITY 14] UIDVALIDITY value"},
-        { "* OK [UIDNEXT 4554] The next unique identifier value"},
-        { "A000001 OK [READ-WRITE] SELECT completed."}
-    };
-    
+        {"A000001 SELECT INBOX"},
+        {"* 1 EXISTS"},
+        {"* 0 RECENT"},
+        {"* FLAGS (\\Seen \\Answered \\Flagged \\Deleted \\Draft $MDNSent)"},
+        {"* OK [PERMANENTFLAGS (\\Seen \\Answered \\Flagged \\Deleted \\Draft $MDNSent)] Permanent flags"},
+        {"* OK [UIDVALIDITY 14] UIDVALIDITY value"},
+        {"* OK [UIDNEXT 4554] The next unique identifier value"},
+        {"A000001 OK [READ-WRITE] SELECT completed."}};
     std::string commandResponseStr;
- 
-    for (auto str : selectResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : selectResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-  
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
     EXPECT_EQ(8, parsedResponse->responseMap.size());
-    EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("RECENT")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("FLAGS")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("PERMANENTFLAGS")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("UIDVALIDITY")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("UIDNEXT")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-NAME")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-ACCESS")!=parsedResponse->responseMap.end());
-
+    EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("RECENT") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("FLAGS") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("PERMANENTFLAGS") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("UIDVALIDITY") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("UIDNEXT") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-NAME") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-ACCESS") != parsedResponse->responseMap.end());
     ASSERT_STREQ("INBOX", CIMAPParse::stringToUpper(parsedResponse->responseMap["MAILBOX-NAME"]).c_str());
-    ASSERT_STREQ( "READ-WRITE", parsedResponse->responseMap["MAILBOX-ACCESS"].c_str());
+    ASSERT_STREQ("READ-WRITE", parsedResponse->responseMap["MAILBOX-ACCESS"].c_str());
     ASSERT_STREQ("1", parsedResponse->responseMap["EXISTS"].c_str());
-    ASSERT_STREQ("0", parsedResponse->responseMap["RECENT"].c_str());    
+    ASSERT_STREQ("0", parsedResponse->responseMap["RECENT"].c_str());
     ASSERT_STREQ("(\\Seen \\Answered \\Flagged \\Deleted \\Draft $MDNSent)", parsedResponse->responseMap["FLAGS"].c_str());
-    ASSERT_STREQ( "(\\Seen \\Answered \\Flagged \\Deleted \\Draft $MDNSent)", parsedResponse->responseMap["PERMANENTFLAGS"].c_str());
-    ASSERT_STREQ("14", parsedResponse->responseMap["UIDVALIDITY"].c_str());    
-    ASSERT_STREQ("4554", parsedResponse->responseMap["UIDNEXT"].c_str());    
-
+    ASSERT_STREQ("(\\Seen \\Answered \\Flagged \\Deleted \\Draft $MDNSent)", parsedResponse->responseMap["PERMANENTFLAGS"].c_str());
+    ASSERT_STREQ("14", parsedResponse->responseMap["UIDVALIDITY"].c_str());
+    ASSERT_STREQ("4554", parsedResponse->responseMap["UIDNEXT"].c_str());
     EXPECT_FALSE(parsedResponse->byeSent);
-    
 }
-
-TEST_F(UTCIMAPParse, SELECTInvalidMailBox) {
-
+TEST_F(UTCIMAPParse, SELECTInvalidMailBox)
+{
     std::vector<std::string> selectResponseStr = {
-        { "A000002 SELECT NOTHERE"},
-        { "A000002 NO NOTHERE doesn't exist."}
-    };
-    
+        {"A000002 SELECT NOTHERE"},
+        {"A000002 NO NOTHERE doesn't exist."}};
     std::string commandResponseStr;
- 
-    for (auto str : selectResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : selectResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-    
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::NO);
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::NO);
     ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessage.c_str());
-
     EXPECT_FALSE(parsedResponse->byeSent);
-    
 }
-
-TEST_F(UTCIMAPParse, EXAMINEValid) {
-
+TEST_F(UTCIMAPParse, EXAMINEValid)
+{
     std::vector<std::string> examineResponseStr = {
         {"A000002 EXAMINE INBOX"},
-        { "* 11 EXISTS"},
-        { "* 0 RECENT"},
-        { "* FLAGS (\\Seen \\Answered \\Flagged \\Deleted \\Draft $MDNSent)"},
-        { "* OK [PERMANENTFLAGS ()] Permanent flags"},
-        { "* OK [UNSEEN 1] Is the first unseen message"},
-        { "* OK [UIDVALIDITY 18] UIDVALIDITY value"},
-        { "* OK [UIDNEXT 4584] The next unique identifier value"},
-        { "A000002 OK [READ-ONLY] EXAMINE completed."}
-      };
-    
+        {"* 11 EXISTS"},
+        {"* 0 RECENT"},
+        {"* FLAGS (\\Seen \\Answered \\Flagged \\Deleted \\Draft $MDNSent)"},
+        {"* OK [PERMANENTFLAGS ()] Permanent flags"},
+        {"* OK [UNSEEN 1] Is the first unseen message"},
+        {"* OK [UIDVALIDITY 18] UIDVALIDITY value"},
+        {"* OK [UIDNEXT 4584] The next unique identifier value"},
+        {"A000002 OK [READ-ONLY] EXAMINE completed."}};
     std::string commandResponseStr;
- 
-    for (auto str : examineResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : examineResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-       
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
     EXPECT_EQ(9, parsedResponse->responseMap.size());
-    EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("RECENT")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("FLAGS")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("PERMANENTFLAGS")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("UNSEEN")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("UIDVALIDITY")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("UIDNEXT")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-NAME")!=parsedResponse->responseMap.end());
-    EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-ACCESS")!=parsedResponse->responseMap.end());
-
+    EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("RECENT") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("FLAGS") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("PERMANENTFLAGS") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("UNSEEN") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("UIDVALIDITY") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("UIDNEXT") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-NAME") != parsedResponse->responseMap.end());
+    EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-ACCESS") != parsedResponse->responseMap.end());
     ASSERT_STREQ("INBOX", CIMAPParse::stringToUpper(parsedResponse->responseMap["MAILBOX-NAME"]).c_str());
-    ASSERT_STREQ( "READ-ONLY", parsedResponse->responseMap["MAILBOX-ACCESS"].c_str());
+    ASSERT_STREQ("READ-ONLY", parsedResponse->responseMap["MAILBOX-ACCESS"].c_str());
     ASSERT_STREQ("11", parsedResponse->responseMap["EXISTS"].c_str());
-    ASSERT_STREQ("0", parsedResponse->responseMap["RECENT"].c_str());    
+    ASSERT_STREQ("0", parsedResponse->responseMap["RECENT"].c_str());
     ASSERT_STREQ("(\\Seen \\Answered \\Flagged \\Deleted \\Draft $MDNSent)", parsedResponse->responseMap["FLAGS"].c_str());
-    ASSERT_STREQ( "()", parsedResponse->responseMap["PERMANENTFLAGS"].c_str());
+    ASSERT_STREQ("()", parsedResponse->responseMap["PERMANENTFLAGS"].c_str());
     ASSERT_STREQ("1", parsedResponse->responseMap["UNSEEN"].c_str());
-    ASSERT_STREQ("18", parsedResponse->responseMap["UIDVALIDITY"].c_str());    
-    ASSERT_STREQ("4584", parsedResponse->responseMap["UIDNEXT"].c_str());    
-
+    ASSERT_STREQ("18", parsedResponse->responseMap["UIDVALIDITY"].c_str());
+    ASSERT_STREQ("4584", parsedResponse->responseMap["UIDNEXT"].c_str());
     EXPECT_FALSE(parsedResponse->byeSent);
-       
 }
-
-TEST_F(UTCIMAPParse, EXAMINEInvalidMailBox) {
-
+TEST_F(UTCIMAPParse, EXAMINEInvalidMailBox)
+{
     std::vector<std::string> examineResponseStr = {
-        { "A000002 EXAMINE NOTTHERE"},
-        { "A000002 NO NOTHERE doesn't exist."}
-    };
-    
+        {"A000002 EXAMINE NOTTHERE"},
+        {"A000002 NO NOTHERE doesn't exist."}};
     std::string commandResponseStr;
- 
-    for (auto str : examineResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : examineResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-    
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::NO);
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::NO);
     ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessage.c_str());
-
     EXPECT_FALSE(parsedResponse->byeSent);
-       
 }
-
-TEST_F(UTCIMAPParse, STATUSValid) {
-
+TEST_F(UTCIMAPParse, STATUSValid)
+{
     std::vector<std::string> statusResponseStr = {
-       { "A000003 STATUS INBOX (UIDNEXT MESSAGES RECENT UIDVALIDITY UNSEEN)" },
-       { "* STATUS Inbox (UIDNEXT 4584 MESSAGES 11 RECENT 0 UIDVALIDITY 14 UNSEEN 2)" }, 
-       { "A000003 OK STATUS completed."}
-    };
-    
+        {"A000003 STATUS INBOX (UIDNEXT MESSAGES RECENT UIDVALIDITY UNSEEN)"},
+        {"* STATUS Inbox (UIDNEXT 4584 MESSAGES 11 RECENT 0 UIDVALIDITY 14 UNSEEN 2)"},
+        {"A000003 OK STATUS completed."}};
     std::string commandResponseStr;
- 
-    for (auto str : statusResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : statusResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-
     EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
     EXPECT_EQ(6, parsedResponse->responseMap.size());
     EXPECT_TRUE(parsedResponse->responseMap.find("UIDNEXT") != parsedResponse->responseMap.end());
@@ -239,77 +185,62 @@ TEST_F(UTCIMAPParse, STATUSValid) {
     EXPECT_TRUE(parsedResponse->responseMap.find("UIDVALIDITY") != parsedResponse->responseMap.end());
     EXPECT_TRUE(parsedResponse->responseMap.find("UNSEEN") != parsedResponse->responseMap.end());
     EXPECT_TRUE(parsedResponse->responseMap.find("MAILBOX-NAME") != parsedResponse->responseMap.end());
-
     ASSERT_STREQ("INBOX", CIMAPParse::stringToUpper(parsedResponse->responseMap["MAILBOX-NAME"]).c_str());
     ASSERT_STREQ("4584", parsedResponse->responseMap["UIDNEXT"].c_str());
     ASSERT_STREQ("11", parsedResponse->responseMap["MESSAGES"].c_str());
     ASSERT_STREQ("0", parsedResponse->responseMap["RECENT"].c_str());
     ASSERT_STREQ("14", parsedResponse->responseMap["UIDVALIDITY"].c_str());
     ASSERT_STREQ("2", parsedResponse->responseMap["UNSEEN"].c_str());
-
     EXPECT_FALSE(parsedResponse->byeSent);
-
 }
-
-TEST_F(UTCIMAPParse, STATUSInvalidMailBox) {
-
+TEST_F(UTCIMAPParse, STATUSInvalidMailBox)
+{
     std::vector<std::string> statusResponseStr = {
-        { "A000002 STATUS NOTTHERE (UIDNEXT MESSAGES RECENT UIDVALIDITY UNSEEN)"},
-        { "A000002 NO NOTHERE doesn't exist."}
-    };
-    
+        {"A000002 STATUS NOTTHERE (UIDNEXT MESSAGES RECENT UIDVALIDITY UNSEEN)"},
+        {"A000002 NO NOTHERE doesn't exist."}};
     std::string commandResponseStr;
- 
-    for (auto str : statusResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : statusResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-    
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::NO);
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::NO);
     ASSERT_STREQ("A000002 NO NOTHERE doesn't exist.", parsedResponse->errorMessage.c_str());
-
     EXPECT_FALSE(parsedResponse->byeSent);
-       
 }
-
-TEST_F(UTCIMAPParse, LISTValid) {
-
-    std::vector<std::string> listResponseStr = { 
-        { "A000002 LIST \"\" *"},
-        { "* LIST (\\HasNoChildren) \"/\" \"DDNS\""},
-        { "* LIST (\\HasNoChildren) \"/\" \"EDO\""},
-        { "* LIST (\\HasNoChildren) \"/\" \"INBOX\""},
-        { "* LIST (\\HasNoChildren) \"/\" \"Microsoft\""},
-        { "* LIST (\\HasNoChildren) \"/\" \"Personal\""},
-        { "* LIST (\\HasNoChildren) \"/\" \"Receipts\""},
-        { "* LIST (\\HasNoChildren) \"/\" \"Sent\""},
-        { "* LIST (\\HasNoChildren) \"/\" \"Trash\""},
-        { "* LIST (\\HasNoChildren) \"/\" \"Travel\""},
-        { "* LIST (\\HasNoChildren) \"/\" \"Work\""},
-        { "* LIST (\\HasChildren \\Noselect) \"/\" \"[Google Mail]\""},
-        { "* LIST (\\All \\HasNoChildren) \"/\" \"[Google Mail]/All Mail\""},
-        { "* LIST (\\Drafts \\HasNoChildren) \"/\" \"[Google Mail]/Drafts\""},
-        { "* LIST (\\HasNoChildren \\Important) \"/\" \"[Google Mail]/Important\""},
-        { "* LIST (\\HasNoChildren \\Sent) \"/\" \"[Google Mail]/Sent Mail\""},
-        { "* LIST (\\HasNoChildren \\Junk) \"/\" \"[Google Mail]/Spam\""},
-        { "* LIST (\\Flagged \\HasNoChildren) \"/\" \"[Google Mail]/Starred\""},
-        { "* LIST (\\HasNoChildren \\Trash) \"/\" \"[Google Mail]/Trash\""},
-        { "A000002 OK Success"}
-    };
-
+TEST_F(UTCIMAPParse, LISTValid)
+{
+    std::vector<std::string> listResponseStr = {
+        {"A000002 LIST \"\" *"},
+        {"* LIST (\\HasNoChildren) \"/\" \"DDNS\""},
+        {"* LIST (\\HasNoChildren) \"/\" \"EDO\""},
+        {"* LIST (\\HasNoChildren) \"/\" \"INBOX\""},
+        {"* LIST (\\HasNoChildren) \"/\" \"Microsoft\""},
+        {"* LIST (\\HasNoChildren) \"/\" \"Personal\""},
+        {"* LIST (\\HasNoChildren) \"/\" \"Receipts\""},
+        {"* LIST (\\HasNoChildren) \"/\" \"Sent\""},
+        {"* LIST (\\HasNoChildren) \"/\" \"Trash\""},
+        {"* LIST (\\HasNoChildren) \"/\" \"Travel\""},
+        {"* LIST (\\HasNoChildren) \"/\" \"Work\""},
+        {"* LIST (\\HasChildren \\Noselect) \"/\" \"[Google Mail]\""},
+        {"* LIST (\\All \\HasNoChildren) \"/\" \"[Google Mail]/All Mail\""},
+        {"* LIST (\\Drafts \\HasNoChildren) \"/\" \"[Google Mail]/Drafts\""},
+        {"* LIST (\\HasNoChildren \\Important) \"/\" \"[Google Mail]/Important\""},
+        {"* LIST (\\HasNoChildren \\Sent) \"/\" \"[Google Mail]/Sent Mail\""},
+        {"* LIST (\\HasNoChildren \\Junk) \"/\" \"[Google Mail]/Spam\""},
+        {"* LIST (\\Flagged \\HasNoChildren) \"/\" \"[Google Mail]/Starred\""},
+        {"* LIST (\\HasNoChildren \\Trash) \"/\" \"[Google Mail]/Trash\""},
+        {"A000002 OK Success"}};
     std::string commandResponseStr;
- 
-    for (auto str : listResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : listResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-    
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
     EXPECT_EQ(18, parsedResponse->mailBoxList.size());
-
-    if (parsedResponse->mailBoxList.size() == 18) {
+    if (parsedResponse->mailBoxList.size() == 18)
+    {
         checkListRespData(parsedResponse->mailBoxList[0], '/', "(\\HasNoChildren)", "\"DDNS\"");
         checkListRespData(parsedResponse->mailBoxList[1], '/', "(\\HasNoChildren)", "\"EDO\"");
         checkListRespData(parsedResponse->mailBoxList[2], '/', "(\\HasNoChildren)", "\"INBOX\"");
@@ -329,31 +260,24 @@ TEST_F(UTCIMAPParse, LISTValid) {
         checkListRespData(parsedResponse->mailBoxList[16], '/', "(\\Flagged \\HasNoChildren)", "\"[Google Mail]/Starred\"");
         checkListRespData(parsedResponse->mailBoxList[17], '/', "(\\HasNoChildren \\Trash)", "\"[Google Mail]/Trash\"");
     }
-    
     EXPECT_FALSE(parsedResponse->byeSent);
-       
 }
-
-TEST_F(UTCIMAPParse, SEARCHValid) {
-
+TEST_F(UTCIMAPParse, SEARCHValid)
+{
     std::vector<std::string> searchResponseStr = {
-        { "A000002 SEARCH 1:*"},
-        { "* SEARCH 1 2 3 4 5 6 7 8 9 10"},
-        { "A000002 OK SEARCH completed (Success)" }
-    };
-    
+        {"A000002 SEARCH 1:*"},
+        {"* SEARCH 1 2 3 4 5 6 7 8 9 10"},
+        {"A000002 OK SEARCH completed (Success)"}};
     std::string commandResponseStr;
- 
-    for (auto str : searchResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : searchResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-    
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
-    EXPECT_EQ (10, parsedResponse->indexes.size());
-
-    if (parsedResponse->indexes.size() == 10) {
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
+    EXPECT_EQ(10, parsedResponse->indexes.size());
+    if (parsedResponse->indexes.size() == 10)
+    {
         EXPECT_EQ(1, parsedResponse->indexes[0]);
         EXPECT_EQ(2, parsedResponse->indexes[1]);
         EXPECT_EQ(3, parsedResponse->indexes[2]);
@@ -365,31 +289,24 @@ TEST_F(UTCIMAPParse, SEARCHValid) {
         EXPECT_EQ(9, parsedResponse->indexes[8]);
         EXPECT_EQ(10, parsedResponse->indexes[9]);
     }
-    
     EXPECT_FALSE(parsedResponse->byeSent);
-       
 }
-
-TEST_F(UTCIMAPParse, UIDSEARCHValid) {
-
+TEST_F(UTCIMAPParse, UIDSEARCHValid)
+{
     std::vector<std::string> searchResponseStr = {
-        { "A000002 UID SEARCH 1:*"},
-        { "* SEARCH 998 999 1000 1003 1009 1010 1011 1012 1013 1014"},
-        { "A000002 OK SEARCH completed (Success)" }
-    };
-    
+        {"A000002 UID SEARCH 1:*"},
+        {"* SEARCH 998 999 1000 1003 1009 1010 1011 1012 1013 1014"},
+        {"A000002 OK SEARCH completed (Success)"}};
     std::string commandResponseStr;
- 
-    for (auto str : searchResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : searchResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-
     EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
     EXPECT_EQ(10, parsedResponse->indexes.size());
-
-    if (parsedResponse->indexes.size() == 10) {
+    if (parsedResponse->indexes.size() == 10)
+    {
         EXPECT_EQ(998, parsedResponse->indexes[0]);
         EXPECT_EQ(999, parsedResponse->indexes[1]);
         EXPECT_EQ(1000, parsedResponse->indexes[2]);
@@ -401,48 +318,41 @@ TEST_F(UTCIMAPParse, UIDSEARCHValid) {
         EXPECT_EQ(1013, parsedResponse->indexes[8]);
         EXPECT_EQ(1014, parsedResponse->indexes[9]);
     }
-
     EXPECT_FALSE(parsedResponse->byeSent);
-       
 }
-
-TEST_F(UTCIMAPParse, LSUBValid) {
-
-    std::vector<std::string> LSubResponseStr = { 
-        { "A000002 LSUB \"\" *"},
-        { "* LSUB (\\HasNoChildren) \"/\" \"DDNS\""},
-        { "* LSUB (\\HasNoChildren) \"/\" \"EDO\""},
-        { "* LSUB (\\HasNoChildren) \"/\" \"INBOX\""},
-        { "* LSUB (\\HasNoChildren) \"/\" \"Microsoft\""},
-        { "* LSUB (\\HasNoChildren) \"/\" \"Personal\""},
-        { "* LSUB (\\HasNoChildren) \"/\" \"Receipts\""},
-        { "* LSUB (\\HasNoChildren) \"/\" \"Sent\""},
-        { "* LSUB (\\HasNoChildren) \"/\" \"Trash\""},
-        { "* LSUB (\\HasNoChildren) \"/\" \"Travel\""},
-        { "* LSUB (\\HasNoChildren) \"/\" \"Work\""},
-        { "* LSUB (\\HasChildren \\Noselect) \"/\" \"[Google Mail]\""},
-        { "* LSUB (\\All \\HasNoChildren) \"/\" \"[Google Mail]/All Mail\""},
-        { "* LSUB (\\Drafts \\HasNoChildren) \"/\" \"[Google Mail]/Drafts\""},
-        { "* LSUB (\\HasNoChildren \\Important) \"/\" \"[Google Mail]/Important\""},
-        { "* LSUB (\\HasNoChildren \\Sent) \"/\" \"[Google Mail]/Sent Mail\""},
-        { "* LSUB (\\HasNoChildren \\Junk) \"/\" \"[Google Mail]/Spam\""},
-        { "* LSUB (\\Flagged \\HasNoChildren) \"/\" \"[Google Mail]/Starred\""},
-        { "* LSUB (\\HasNoChildren \\Trash) \"/\" \"[Google Mail]/Trash\""},
-        { "A000002 OK Success"}
-    };
-
+TEST_F(UTCIMAPParse, LSUBValid)
+{
+    std::vector<std::string> LSubResponseStr = {
+        {"A000002 LSUB \"\" *"},
+        {"* LSUB (\\HasNoChildren) \"/\" \"DDNS\""},
+        {"* LSUB (\\HasNoChildren) \"/\" \"EDO\""},
+        {"* LSUB (\\HasNoChildren) \"/\" \"INBOX\""},
+        {"* LSUB (\\HasNoChildren) \"/\" \"Microsoft\""},
+        {"* LSUB (\\HasNoChildren) \"/\" \"Personal\""},
+        {"* LSUB (\\HasNoChildren) \"/\" \"Receipts\""},
+        {"* LSUB (\\HasNoChildren) \"/\" \"Sent\""},
+        {"* LSUB (\\HasNoChildren) \"/\" \"Trash\""},
+        {"* LSUB (\\HasNoChildren) \"/\" \"Travel\""},
+        {"* LSUB (\\HasNoChildren) \"/\" \"Work\""},
+        {"* LSUB (\\HasChildren \\Noselect) \"/\" \"[Google Mail]\""},
+        {"* LSUB (\\All \\HasNoChildren) \"/\" \"[Google Mail]/All Mail\""},
+        {"* LSUB (\\Drafts \\HasNoChildren) \"/\" \"[Google Mail]/Drafts\""},
+        {"* LSUB (\\HasNoChildren \\Important) \"/\" \"[Google Mail]/Important\""},
+        {"* LSUB (\\HasNoChildren \\Sent) \"/\" \"[Google Mail]/Sent Mail\""},
+        {"* LSUB (\\HasNoChildren \\Junk) \"/\" \"[Google Mail]/Spam\""},
+        {"* LSUB (\\Flagged \\HasNoChildren) \"/\" \"[Google Mail]/Starred\""},
+        {"* LSUB (\\HasNoChildren \\Trash) \"/\" \"[Google Mail]/Trash\""},
+        {"A000002 OK Success"}};
     std::string commandResponseStr;
- 
-    for (auto str : LSubResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : LSubResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-    
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
     EXPECT_EQ(18, parsedResponse->mailBoxList.size());
-
-    if (parsedResponse->mailBoxList.size() == 18) {
+    if (parsedResponse->mailBoxList.size() == 18)
+    {
         checkListRespData(parsedResponse->mailBoxList[0], '/', "(\\HasNoChildren)", "\"DDNS\"");
         checkListRespData(parsedResponse->mailBoxList[1], '/', "(\\HasNoChildren)", "\"EDO\"");
         checkListRespData(parsedResponse->mailBoxList[2], '/', "(\\HasNoChildren)", "\"INBOX\"");
@@ -462,69 +372,52 @@ TEST_F(UTCIMAPParse, LSUBValid) {
         checkListRespData(parsedResponse->mailBoxList[16], '/', "(\\Flagged \\HasNoChildren)", "\"[Google Mail]/Starred\"");
         checkListRespData(parsedResponse->mailBoxList[17], '/', "(\\HasNoChildren \\Trash)", "\"[Google Mail]/Trash\"");
     }
-    
     EXPECT_FALSE(parsedResponse->byeSent);
-       
 }
-
-TEST_F(UTCIMAPParse, EXPUNGEValid) {
-
-    std::vector<std::string> ExpungeResponseStr = { 
-        { "A000002 EXPUNGE" },
-        { "* 3 EXPUNGE" },
-        { "* 3 EXPUNGE" },
-        { "* 3 EXPUNGE" },
-        { "* 8 EXPUNGE" },
-        { "A000002 OK EXPUNGE Success" }
-   
-    };
-
+TEST_F(UTCIMAPParse, EXPUNGEValid)
+{
+    std::vector<std::string> ExpungeResponseStr = {
+        {"A000002 EXPUNGE"},
+        {"* 3 EXPUNGE"},
+        {"* 3 EXPUNGE"},
+        {"* 3 EXPUNGE"},
+        {"* 8 EXPUNGE"},
+        {"A000002 OK EXPUNGE Success"}};
     std::string commandResponseStr;
- 
-    for (auto str : ExpungeResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : ExpungeResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-    
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
-    
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
     ASSERT_STREQ("3 3 3 8", parsedResponse->responseMap["EXPUNGE"].c_str());
-            
     EXPECT_FALSE(parsedResponse->byeSent);
-
 }
-
-TEST_F(UTCIMAPParse, STOREValid) {
-
-    std::vector<std::string> StoreResponseStr = { 
-       { "A000008 STORE 1:* +FLAGS (\\Deleted)"},
-       { "* 1 FETCH (FLAGS (\\Seen \\Deleted))"},
-       { "* 2 FETCH (FLAGS (\\Seen \\Deleted))"},
-       { "* 3 FETCH (FLAGS (\\Seen \\Deleted))"},
-       { "* 4 FETCH (FLAGS (\\Seen \\Deleted))"},
-       { "* 5 FETCH (FLAGS (\\Deleted))"},
-       { "* 6 FETCH (FLAGS (\\Deleted))"},
-       { "* 7 FETCH (FLAGS (\\Deleted))"},
-       { "* 8 FETCH (FLAGS (\\Deleted))"},
-       { "* 9 FETCH (FLAGS (\\Deleted))"},
-       { "* 10 FETCH (FLAGS (\\Deleted))"},
-       { "A000008 OK Success"}  
-    };
-
+TEST_F(UTCIMAPParse, STOREValid)
+{
+    std::vector<std::string> StoreResponseStr = {
+        {"A000008 STORE 1:* +FLAGS (\\Deleted)"},
+        {"* 1 FETCH (FLAGS (\\Seen \\Deleted))"},
+        {"* 2 FETCH (FLAGS (\\Seen \\Deleted))"},
+        {"* 3 FETCH (FLAGS (\\Seen \\Deleted))"},
+        {"* 4 FETCH (FLAGS (\\Seen \\Deleted))"},
+        {"* 5 FETCH (FLAGS (\\Deleted))"},
+        {"* 6 FETCH (FLAGS (\\Deleted))"},
+        {"* 7 FETCH (FLAGS (\\Deleted))"},
+        {"* 8 FETCH (FLAGS (\\Deleted))"},
+        {"* 9 FETCH (FLAGS (\\Deleted))"},
+        {"* 10 FETCH (FLAGS (\\Deleted))"},
+        {"A000008 OK Success"}};
     std::string commandResponseStr;
- 
-    for (auto str : StoreResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : StoreResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-    
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
     EXPECT_EQ(10, parsedResponse->storeList.size());
-    
-    if (parsedResponse->storeList.size() == 10) {
-
+    if (parsedResponse->storeList.size() == 10)
+    {
         EXPECT_EQ(1, parsedResponse->storeList[0].index);
         EXPECT_EQ(2, parsedResponse->storeList[1].index);
         EXPECT_EQ(3, parsedResponse->storeList[2].index);
@@ -535,7 +428,6 @@ TEST_F(UTCIMAPParse, STOREValid) {
         EXPECT_EQ(8, parsedResponse->storeList[7].index);
         EXPECT_EQ(9, parsedResponse->storeList[8].index);
         EXPECT_EQ(10, parsedResponse->storeList[9].index);
-
         ASSERT_STREQ("(\\Seen \\Deleted)", parsedResponse->storeList[0].flagsList.c_str());
         ASSERT_STREQ("(\\Seen \\Deleted)", parsedResponse->storeList[1].flagsList.c_str());
         ASSERT_STREQ("(\\Seen \\Deleted)", parsedResponse->storeList[2].flagsList.c_str());
@@ -546,198 +438,153 @@ TEST_F(UTCIMAPParse, STOREValid) {
         ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[7].flagsList.c_str());
         ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[8].flagsList.c_str());
         ASSERT_STREQ("(\\Deleted)", parsedResponse->storeList[9].flagsList.c_str());
-
     }
-
     EXPECT_FALSE(parsedResponse->byeSent);
-       
 }
-
-TEST_F(UTCIMAPParse, CAPABILITYValid) {
-
-    std::vector<std::string> capabilityResponseStr = { 
-       { "A000002 CAPABILITY"},
-       { "* CAPABILITY IMAP4rev1 UNSELECT IDLE NAMESPACE QUOTA ID XLIST CHILDREN X-GM-EXT-1 "
+TEST_F(UTCIMAPParse, CAPABILITYValid)
+{
+    std::vector<std::string> capabilityResponseStr = {
+        {"A000002 CAPABILITY"},
+        {"* CAPABILITY IMAP4rev1 UNSELECT IDLE NAMESPACE QUOTA ID XLIST CHILDREN X-GM-EXT-1 "
          "UIDPLUS COMPRESS=DEFLATE ENABLE MOVE CONDSTORE ESEARCH UTF8=ACCEPT LIST-EXTENDED "
-         "LIST-STATUS LITERAL- APPENDLIMIT=35651584 SPECIAL-USE" },
-       { "A000002 OK Success"}
-    };
-
+         "LIST-STATUS LITERAL- APPENDLIMIT=35651584 SPECIAL-USE"},
+        {"A000002 OK Success"}};
     std::string commandResponseStr;
- 
-    for (auto str : capabilityResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : capabilityResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-    
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
-    ASSERT_STREQ("IMAP4rev1 UNSELECT IDLE NAMESPACE QUOTA ID XLIST CHILDREN X-GM-EXT-1 "
-         "UIDPLUS COMPRESS=DEFLATE ENABLE MOVE CONDSTORE ESEARCH UTF8=ACCEPT LIST-EXTENDED "
-         "LIST-STATUS LITERAL- APPENDLIMIT=35651584 SPECIAL-USE", parsedResponse->responseMap["CAPABILITY"].c_str());
-    
-    EXPECT_FALSE(parsedResponse->byeSent);
-
-}
-
-TEST_F(UTCIMAPParse, NOOPValid) {
-
-    std::vector<std::string> noOpResponseStr = { 
-       { "A000002 NOOP" },
-       { "* 8 EXISTS" },
-       { "A000002 OK Success" }
-    };
-
-    std::string commandResponseStr;
- 
-    for (auto str : noOpResponseStr) {
-        commandResponseStr.append( str + kEOL);
-    }
-    
-    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-    
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
-    EXPECT_EQ(1, parsedResponse->responseMap.size());
-    EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS") != parsedResponse->responseMap.end());
- 
-    if (parsedResponse->responseMap.size() == 1) {
-        ASSERT_STREQ("8",parsedResponse->responseMap["EXISTS"].c_str());
-    }
-    
-    EXPECT_FALSE(parsedResponse->byeSent);
-    
-}
-TEST_F(UTCIMAPParse, IDLEValid) {
-
-    std::vector<std::string> idleResponseStr = { 
-       { "A000002 IDLE" },
-       { "* 1 EXISTS" },
-       { "A000002 OK IDLE terminated (Success)" }
-    };
-
-    std::string commandResponseStr;
- 
-    for (auto str : idleResponseStr) {
-        commandResponseStr.append( str + kEOL);
-    }
-    
-    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-    
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
-    EXPECT_EQ(1, parsedResponse->responseMap.size());
-    EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS") != parsedResponse->responseMap.end());
- 
-    if (parsedResponse->responseMap.size() == 1) {
-        ASSERT_STREQ("1",parsedResponse->responseMap["EXISTS"].c_str());
-    }
-   
-    EXPECT_FALSE(parsedResponse->byeSent);
-    
-}
-
-TEST_F(UTCIMAPParse, LOGOUTValid) {
-
-    std::vector<std::string> logOutResponseStr = { 
-       { "A000003 LOGOUT" },
-       { "* BYE LOGOUT Requested" },
-       { "A000003 OK 73 good day (Success)" }
-    };
-
-    std::string commandResponseStr;
- 
-    for (auto str : logOutResponseStr) {
-        commandResponseStr.append( str + kEOL);
-    }
-
-    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-
     EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
-    
-    EXPECT_TRUE(parsedResponse->byeSent);
-    
-}
-
-TEST_F(UTCIMAPParse, FETCHValid) {
-
-    std::vector<std::string> fetchResponseStr = { 
-       { "A000004 FETCH 1 (BODYSTRUCTURE FLAGS UID)" },
-       { "* 1 FETCH (UID 1015 FLAGS () BODYSTRUCTURE ((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"iso-8859-1\") NIL "
-         "NIL \"QUOTED-PRINTABLE\" 355 20 NIL NIL NIL)(\"TEXT\" \"HTML\" (\"CHARSET\" \"iso-8859-1\") NIL "
-         "NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" "
-         "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL))"},
-       { "A000004 OK Success" }
-    };
-
-    std::string commandResponseStr;
- 
-    for (auto str : fetchResponseStr) {
-        commandResponseStr.append( str + kEOL);
-    }
-    
-    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-    
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
-
-    EXPECT_EQ(1, parsedResponse->fetchList.size());
-
-    if (parsedResponse->fetchList.size() == 1) {
-        EXPECT_EQ(1, parsedResponse->fetchList[0].index);
-        EXPECT_EQ(3, parsedResponse->fetchList[0].responseMap.size());
-        EXPECT_TRUE(parsedResponse->fetchList[0].responseMap.find("UID") != parsedResponse->fetchList[0].responseMap.end());
-        EXPECT_TRUE(parsedResponse->fetchList[0].responseMap.find("FLAGS") != parsedResponse->fetchList[0].responseMap.end());
-        EXPECT_TRUE(parsedResponse->fetchList[0].responseMap.find("BODYSTRUCTURE") != parsedResponse->fetchList[0].responseMap.end());
-
-        ASSERT_STREQ("1015", parsedResponse->fetchList[0].responseMap["UID"].c_str());
-        ASSERT_STREQ("()", parsedResponse->fetchList[0].responseMap["FLAGS"].c_str());
-        ASSERT_STREQ("((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"iso-8859-1\") NIL "
-                    "NIL \"QUOTED-PRINTABLE\" 355 20 NIL NIL NIL)(\"TEXT\" \"HTML\" (\"CHARSET\" \"iso-8859-1\") NIL "
-                    "NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" "
-                    "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL)", parsedResponse->fetchList[0].responseMap["BODYSTRUCTURE"].c_str());
-    }
-    
+    ASSERT_STREQ("IMAP4rev1 UNSELECT IDLE NAMESPACE QUOTA ID XLIST CHILDREN X-GM-EXT-1 "
+                 "UIDPLUS COMPRESS=DEFLATE ENABLE MOVE CONDSTORE ESEARCH UTF8=ACCEPT LIST-EXTENDED "
+                 "LIST-STATUS LITERAL- APPENDLIMIT=35651584 SPECIAL-USE",
+                 parsedResponse->responseMap["CAPABILITY"].c_str());
     EXPECT_FALSE(parsedResponse->byeSent);
-
 }
-
-TEST_F(UTCIMAPParse, FETCHValidWithBYE) {
-
-    std::vector<std::string> fetchResponseStr = { 
-       { "A000004 FETCH 1 (BODYSTRUCTURE FLAGS UID)" },
-       { "* 1 FETCH (UID 1015 FLAGS () BODYSTRUCTURE ((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"iso-8859-1\") NIL "
+TEST_F(UTCIMAPParse, NOOPValid)
+{
+    std::vector<std::string> noOpResponseStr = {
+        {"A000002 NOOP"},
+        {"* 8 EXISTS"},
+        {"A000002 OK Success"}};
+    std::string commandResponseStr;
+    for (auto str : noOpResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
+    }
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
+    EXPECT_EQ(1, parsedResponse->responseMap.size());
+    EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS") != parsedResponse->responseMap.end());
+    if (parsedResponse->responseMap.size() == 1)
+    {
+        ASSERT_STREQ("8", parsedResponse->responseMap["EXISTS"].c_str());
+    }
+    EXPECT_FALSE(parsedResponse->byeSent);
+}
+TEST_F(UTCIMAPParse, IDLEValid)
+{
+    std::vector<std::string> idleResponseStr = {
+        {"A000002 IDLE"},
+        {"* 1 EXISTS"},
+        {"A000002 OK IDLE terminated (Success)"}};
+    std::string commandResponseStr;
+    for (auto str : idleResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
+    }
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
+    EXPECT_EQ(1, parsedResponse->responseMap.size());
+    EXPECT_TRUE(parsedResponse->responseMap.find("EXISTS") != parsedResponse->responseMap.end());
+    if (parsedResponse->responseMap.size() == 1)
+    {
+        ASSERT_STREQ("1", parsedResponse->responseMap["EXISTS"].c_str());
+    }
+    EXPECT_FALSE(parsedResponse->byeSent);
+}
+TEST_F(UTCIMAPParse, LOGOUTValid)
+{
+    std::vector<std::string> logOutResponseStr = {
+        {"A000003 LOGOUT"},
+        {"* BYE LOGOUT Requested"},
+        {"A000003 OK 73 good day (Success)"}};
+    std::string commandResponseStr;
+    for (auto str : logOutResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
+    }
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
+    EXPECT_TRUE(parsedResponse->byeSent);
+}
+TEST_F(UTCIMAPParse, FETCHValid)
+{
+    std::vector<std::string> fetchResponseStr = {
+        {"A000004 FETCH 1 (BODYSTRUCTURE FLAGS UID)"},
+        {"* 1 FETCH (UID 1015 FLAGS () BODYSTRUCTURE ((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"iso-8859-1\") NIL "
          "NIL \"QUOTED-PRINTABLE\" 355 20 NIL NIL NIL)(\"TEXT\" \"HTML\" (\"CHARSET\" \"iso-8859-1\") NIL "
          "NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" "
          "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL))"},
-       { "* BYE Close down." },
-       { "A000004 OK Success" }
-    };
-
+        {"A000004 OK Success"}};
     std::string commandResponseStr;
- 
-    for (auto str : fetchResponseStr) {
-        commandResponseStr.append( str + kEOL);
+    for (auto str : fetchResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
     }
-    
     CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
-    
-    EXPECT_TRUE(parsedResponse->status==CIMAPParse::RespCode::OK);
-
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
     EXPECT_EQ(1, parsedResponse->fetchList.size());
-
-    if (parsedResponse->fetchList.size() == 1) {
+    if (parsedResponse->fetchList.size() == 1)
+    {
         EXPECT_EQ(1, parsedResponse->fetchList[0].index);
         EXPECT_EQ(3, parsedResponse->fetchList[0].responseMap.size());
         EXPECT_TRUE(parsedResponse->fetchList[0].responseMap.find("UID") != parsedResponse->fetchList[0].responseMap.end());
         EXPECT_TRUE(parsedResponse->fetchList[0].responseMap.find("FLAGS") != parsedResponse->fetchList[0].responseMap.end());
         EXPECT_TRUE(parsedResponse->fetchList[0].responseMap.find("BODYSTRUCTURE") != parsedResponse->fetchList[0].responseMap.end());
-
         ASSERT_STREQ("1015", parsedResponse->fetchList[0].responseMap["UID"].c_str());
         ASSERT_STREQ("()", parsedResponse->fetchList[0].responseMap["FLAGS"].c_str());
         ASSERT_STREQ("((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"iso-8859-1\") NIL "
-                    "NIL \"QUOTED-PRINTABLE\" 355 20 NIL NIL NIL)(\"TEXT\" \"HTML\" (\"CHARSET\" \"iso-8859-1\") NIL "
-                    "NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" "
-                    "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL)", parsedResponse->fetchList[0].responseMap["BODYSTRUCTURE"].c_str());
+                     "NIL \"QUOTED-PRINTABLE\" 355 20 NIL NIL NIL)(\"TEXT\" \"HTML\" (\"CHARSET\" \"iso-8859-1\") NIL "
+                     "NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" "
+                     "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL)",
+                     parsedResponse->fetchList[0].responseMap["BODYSTRUCTURE"].c_str());
     }
-    
+    EXPECT_FALSE(parsedResponse->byeSent);
+}
+TEST_F(UTCIMAPParse, FETCHValidWithBYE)
+{
+    std::vector<std::string> fetchResponseStr = {
+        {"A000004 FETCH 1 (BODYSTRUCTURE FLAGS UID)"},
+        {"* 1 FETCH (UID 1015 FLAGS () BODYSTRUCTURE ((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"iso-8859-1\") NIL "
+         "NIL \"QUOTED-PRINTABLE\" 355 20 NIL NIL NIL)(\"TEXT\" \"HTML\" (\"CHARSET\" \"iso-8859-1\") NIL "
+         "NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" "
+         "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL))"},
+        {"* BYE Close down."},
+        {"A000004 OK Success"}};
+    std::string commandResponseStr;
+    for (auto str : fetchResponseStr)
+    {
+        commandResponseStr.append(str + kEOL);
+    }
+    CIMAPParse::COMMANDRESPONSE parsedResponse(CIMAPParse::parseResponse(commandResponseStr));
+    EXPECT_TRUE(parsedResponse->status == CIMAPParse::RespCode::OK);
+    EXPECT_EQ(1, parsedResponse->fetchList.size());
+    if (parsedResponse->fetchList.size() == 1)
+    {
+        EXPECT_EQ(1, parsedResponse->fetchList[0].index);
+        EXPECT_EQ(3, parsedResponse->fetchList[0].responseMap.size());
+        EXPECT_TRUE(parsedResponse->fetchList[0].responseMap.find("UID") != parsedResponse->fetchList[0].responseMap.end());
+        EXPECT_TRUE(parsedResponse->fetchList[0].responseMap.find("FLAGS") != parsedResponse->fetchList[0].responseMap.end());
+        EXPECT_TRUE(parsedResponse->fetchList[0].responseMap.find("BODYSTRUCTURE") != parsedResponse->fetchList[0].responseMap.end());
+        ASSERT_STREQ("1015", parsedResponse->fetchList[0].responseMap["UID"].c_str());
+        ASSERT_STREQ("()", parsedResponse->fetchList[0].responseMap["FLAGS"].c_str());
+        ASSERT_STREQ("((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"iso-8859-1\") NIL "
+                     "NIL \"QUOTED-PRINTABLE\" 355 20 NIL NIL NIL)(\"TEXT\" \"HTML\" (\"CHARSET\" \"iso-8859-1\") NIL "
+                     "NIL \"QUOTED-PRINTABLE\" 1667 54 NIL NIL NIL) \"ALTERNATIVE\" (\"BOUNDARY\" "
+                     "\"_000_DB4PR08MB0174985090CE13C6BC7D7237E6510DB4PR08MB0174eurp_\") NIL NIL)",
+                     parsedResponse->fetchList[0].responseMap["BODYSTRUCTURE"].c_str());
+    }
     EXPECT_TRUE(parsedResponse->byeSent);
-    
 }
